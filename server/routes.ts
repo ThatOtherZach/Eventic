@@ -4,7 +4,59 @@ import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Middleware to extract userId from Supabase auth header
+function extractUserId(req: any): string | null {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return null;
+  
+  try {
+    // Parse Supabase JWT to get user ID
+    const token = authHeader.replace('Bearer ', '');
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    return payload.sub || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // User-specific routes
+  app.get("/api/user/tickets", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const tickets = await storage.getTicketsByUserId(userId);
+      // Fetch event data for each ticket
+      const ticketsWithEvents = await Promise.all(
+        tickets.map(async (ticket) => {
+          const event = await storage.getEvent(ticket.eventId);
+          return { ...ticket, event };
+        })
+      );
+      
+      res.json(ticketsWithEvents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user tickets" });
+    }
+  });
+
+  app.get("/api/user/events", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const events = await storage.getEventsByUserId(userId);
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user events" });
+    }
+  });
+
   // Events routes
   app.get("/api/events", async (req, res) => {
     try {
@@ -29,7 +81,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events", async (req, res) => {
     try {
-      const validatedData = insertEventSchema.parse(req.body);
+      const userId = extractUserId(req);
+      const validatedData = insertEventSchema.parse({
+        ...req.body,
+        userId, // Associate event with logged-in user
+      });
       const event = await storage.createEvent(validatedData);
       res.status(201).json(event);
     } catch (error) {
@@ -89,6 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events/:eventId/tickets", async (req, res) => {
     try {
+      const userId = extractUserId(req);
       const event = await storage.getEvent(req.params.eventId);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
@@ -105,6 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const ticketData = {
         eventId: req.params.eventId,
+        userId, // Associate ticket with logged-in user
         ticketNumber,
         qrData,
       };

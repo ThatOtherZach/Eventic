@@ -1,13 +1,19 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, QrCode, Ticket } from "lucide-react";
+import { Calendar, QrCode, Ticket, User, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Navigation() {
   const [location] = useLocation();
+  const { user, signOut } = useAuth();
 
   const navItems = [
     { path: "/events", label: "Events", icon: Calendar },
     { path: "/scanner", label: "Scanner", icon: QrCode },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
@@ -50,6 +56,33 @@ export function Navigation() {
                 </li>
               );
             })}
+            
+            {user && (
+              <>
+                <li className="nav-item">
+                  <Link
+                    href="/account"
+                    className={`nav-link d-flex align-items-center ${
+                      location === "/account" ? "active" : ""
+                    }`}
+                    data-testid="link-nav-account"
+                  >
+                    <User className="me-1" size={18} />
+                    Account
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className="nav-link btn btn-link d-flex align-items-center"
+                    onClick={handleSignOut}
+                    data-testid="button-nav-signout"
+                  >
+                    <LogOut className="me-1" size={18} />
+                    Sign Out
+                  </button>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>
