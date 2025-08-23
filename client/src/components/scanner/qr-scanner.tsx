@@ -27,10 +27,14 @@ export function QrScanner() {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const addDebugInfo = (message: string) => {
+    console.log("QR Scanner:", message);
+    setDebugInfo(prev => [message, ...prev.slice(0, 4)]);
+  };
 
   const validateTicketMutation = useMutation({
     mutationFn: async (qrData: string) => {
@@ -77,7 +81,10 @@ export function QrScanner() {
 
   const checkCameraSupport = async () => {
     try {
+      addDebugInfo("Checking camera support...");
+      
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        addDebugInfo("❌ No mediaDevices support");
         setHasCamera(false);
         setCameraError("Camera not supported in this browser");
         return false;
@@ -87,124 +94,86 @@ export function QrScanner() {
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       const cameraAvailable = videoDevices.length > 0;
       
+      addDebugInfo(`${cameraAvailable ? "✅" : "❌"} Found ${videoDevices.length} camera(s)`);
+      
       setHasCamera(cameraAvailable);
       if (!cameraAvailable) {
         setCameraError("No camera found on this device");
       }
       return cameraAvailable;
-    } catch (error) {
-      console.error("Camera check failed:", error);
+    } catch (error: any) {
+      addDebugInfo(`❌ Camera check failed: ${error.message}`);
       setHasCamera(false);
       setCameraError("Camera support check failed");
       return false;
     }
   };
 
-  const loadQRCodeScanner = async () => {
-    try {
-      // Dynamically import the QR scanner library
-      const QrScannerLib = (await import('qr-scanner')).default;
-      return QrScannerLib;
-    } catch (error) {
-      console.error("Failed to load QR scanner library:", error);
-      return null;
-    }
-  };
-
-  const scanQRCodeFromVideo = async () => {
-    if (!videoRef.current || !canvasRef.current) return null;
-
-    try {
-      const QrScannerLib = await loadQRCodeScanner();
-      if (!QrScannerLib) return null;
-
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      const context = canvas.getContext('2d');
-      
-      if (!context) return null;
-
-      // Set canvas size to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      // Draw current video frame to canvas
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Try to scan QR code from the canvas
-      const result = await QrScannerLib.scanImage(canvas);
-      return result;
-    } catch (error) {
-      // QR code not found or scan failed - this is normal
-      return null;
-    }
-  };
-
-  const startContinuousScanning = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-    }
-
-    scanIntervalRef.current = setInterval(async () => {
-      const qrResult = await scanQRCodeFromVideo();
-      if (qrResult) {
-        console.log("QR Code detected:", qrResult);
-        validateTicketMutation.mutate(qrResult);
-      }
-    }, 500); // Scan every 500ms
-  };
-
-  const startScanner = async () => {
-    if (!videoRef.current || isScanning) {
-      console.log("Cannot start scanner: video ref missing or already scanning");
+  const handleStartClick = () => {
+    addDebugInfo("🔵 Start button clicked!");
+    
+    if (isScanning) {
+      addDebugInfo("❌ Already scanning, ignoring click");
       return;
     }
 
+    if (!videoRef.current) {
+      addDebugInfo("❌ No video element reference");
+      return;
+    }
+
+    startScanner();
+  };
+
+  const startScanner = async () => {
     try {
+      addDebugInfo("🚀 Starting scanner...");
+      
       // Reset states
       setCameraError("");
       setValidationResult(null);
       
       // Stop any existing stream
       if (stream) {
+        addDebugInfo("🛑 Stopping existing stream");
         stream.getTracks().forEach(track => track.stop());
         setStream(null);
       }
 
-      console.log("Checking camera support...");
+      // Check camera support
       const cameraAvailable = await checkCameraSupport();
       if (!cameraAvailable) {
-        console.log("Camera not available");
+        addDebugInfo("❌ Camera not available, stopping");
         return;
       }
 
-      console.log("Requesting camera access...");
+      addDebugInfo("📷 Requesting camera access...");
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
           facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 640 },
+          height: { ideal: 480 }
         }
       });
 
-      console.log("Camera access granted, setting up video...");
-      videoRef.current.srcObject = mediaStream;
+      addDebugInfo("✅ Camera access granted!");
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        addDebugInfo("✅ Video stream set");
+      }
+      
       setStream(mediaStream);
       setIsScanning(true);
 
-      // Wait for video to load and start scanning
-      videoRef.current.onloadedmetadata = () => {
-        console.log("Video loaded, starting continuous scanning...");
-        startContinuousScanning();
-      };
-
       toast({
         title: "📷 Camera Started",
-        description: "Point camera at QR code to scan",
+        description: "Camera is now active",
       });
 
     } catch (error: any) {
-      console.error("Camera start failed:", error);
+      addDebugInfo(`❌ Camera start failed: ${error.name} - ${error.message}`);
       
       // Reset states on error
       setIsScanning(false);
@@ -231,25 +200,26 @@ export function QrScanner() {
     }
   };
 
-  const stopScanner = () => {
-    console.log("Stopping scanner...");
-    
-    try {
-      // Stop scanning interval
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-        scanIntervalRef.current = null;
-      }
+  const handleStopClick = () => {
+    addDebugInfo("🔴 Stop button clicked!");
+    stopScanner();
+  };
 
+  const stopScanner = () => {
+    try {
+      addDebugInfo("🛑 Stopping scanner...");
+      
       // Stop media stream
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         setStream(null);
+        addDebugInfo("✅ Stream stopped");
       }
       
       // Clear video element
       if (videoRef.current) {
         videoRef.current.srcObject = null;
+        addDebugInfo("✅ Video cleared");
       }
       
       setIsScanning(false);
@@ -260,8 +230,9 @@ export function QrScanner() {
         title: "📷 Camera Stopped",
         description: "Scanner has been stopped",
       });
-    } catch (error) {
-      console.error("Error stopping scanner:", error);
+
+    } catch (error: any) {
+      addDebugInfo(`❌ Error stopping scanner: ${error.message}`);
       // Force reset states even if cleanup fails
       setIsScanning(false);
       setStream(null);
@@ -273,41 +244,28 @@ export function QrScanner() {
     setValidationResult(null);
   };
 
+  const clearDebugInfo = () => {
+    setDebugInfo([]);
+  };
+
+  const simulateQRScan = () => {
+    addDebugInfo("🧪 Simulating QR scan for testing...");
+    // Create a fake QR data for testing
+    const testQrData = JSON.stringify({
+      eventId: "test-event-123",
+      ticketNumber: "TEST-001",
+      timestamp: Date.now(),
+    });
+    validateTicketMutation.mutate(testQrData);
+  };
+
   useEffect(() => {
-    // Check camera support on component mount
+    addDebugInfo("📱 Component mounted, checking camera...");
     checkCameraSupport();
-
-    // Cleanup on unmount
-    return () => {
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-      }
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
   }, []);
-
-  // Additional cleanup effect for page visibility changes
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && isScanning) {
-        stopScanner();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isScanning]);
 
   return (
     <div className="animate-fade-in">
-      {/* Hidden canvas for QR scanning */}
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-      
       {/* Camera Container */}
       <div className="card mb-4 overflow-hidden position-relative">
         <div className="scanner-container position-relative">
@@ -320,7 +278,7 @@ export function QrScanner() {
                 muted
                 className="w-100 h-100 object-fit-cover"
                 data-testid="video-scanner"
-                style={{ transform: "scaleX(-1)" }} // Mirror for better UX
+                style={{ transform: "scaleX(-1)" }}
               />
               
               {/* QR Code Targeting Overlay */}
@@ -372,54 +330,68 @@ export function QrScanner() {
             </div>
           )}
         </div>
-        
-        {/* Camera error overlay */}
-        {cameraError && !isScanning && (
-          <div className="position-absolute top-0 start-0 w-100 h-100 bg-danger bg-opacity-10 d-flex align-items-center justify-content-center">
-            <div className="text-center text-danger">
-              <AlertCircle size={32} className="mb-2" />
-              <p className="fw-medium mb-1">Camera Error</p>
-              <p className="small">{cameraError}</p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Scanner Controls */}
       <div className="row mb-4">
-        <div className="col-6 pe-2">
+        <div className="col-4 pe-1">
           <button
-            onClick={startScanner}
+            onClick={handleStartClick}
             disabled={isScanning || hasCamera === false}
             className="btn btn-primary w-100"
             data-testid="button-start-scanner"
           >
-            <Play className="me-2" size={18} />
-            {isScanning ? "Scanning..." : "Start Scanner"}
+            <Play className="me-1" size={16} />
+            Start
           </button>
         </div>
-        <div className="col-6 ps-2">
+        <div className="col-4 px-1">
           <button
-            onClick={stopScanner}
+            onClick={handleStopClick}
             disabled={!isScanning}
             className="btn btn-outline-secondary w-100"
             data-testid="button-stop-scanner"
           >
-            <Square className="me-2" size={18} />
-            Stop Scanner
+            <Square className="me-1" size={16} />
+            Stop
+          </button>
+        </div>
+        <div className="col-4 ps-1">
+          <button
+            onClick={simulateQRScan}
+            className="btn btn-outline-info w-100"
+            data-testid="button-test-scan"
+          >
+            Test
           </button>
         </div>
       </div>
 
       {/* Debug Info */}
-      <div className="card mb-4 bg-light">
+      <div className="card mb-4">
+        <div className="card-header bg-light d-flex justify-content-between align-items-center">
+          <h6 className="card-title mb-0">Debug Info</h6>
+          <button onClick={clearDebugInfo} className="btn btn-sm btn-outline-secondary">Clear</button>
+        </div>
         <div className="card-body">
-          <h6 className="card-title">Debug Info</h6>
           <div className="small">
-            <p className="mb-1"><strong>Has Camera:</strong> {hasCamera === null ? "Checking..." : hasCamera ? "Yes" : "No"}</p>
-            <p className="mb-1"><strong>Is Scanning:</strong> {isScanning ? "Yes" : "No"}</p>
-            <p className="mb-1"><strong>Stream Active:</strong> {stream ? "Yes" : "No"}</p>
-            {cameraError && <p className="mb-0 text-danger"><strong>Error:</strong> {cameraError}</p>}
+            <p className="mb-1"><strong>Has Camera:</strong> {hasCamera === null ? "Checking..." : hasCamera ? "✅ Yes" : "❌ No"}</p>
+            <p className="mb-1"><strong>Is Scanning:</strong> {isScanning ? "✅ Yes" : "❌ No"}</p>
+            <p className="mb-1"><strong>Stream Active:</strong> {stream ? "✅ Yes" : "❌ No"}</p>
+            {cameraError && <p className="mb-2 text-danger"><strong>Error:</strong> {cameraError}</p>}
+            
+            <div className="mt-2">
+              <strong>Debug Log:</strong>
+              <div className="bg-dark text-light p-2 rounded mt-1" style={{ fontSize: "0.75rem", maxHeight: "150px", overflowY: "auto" }}>
+                {debugInfo.length === 0 ? (
+                  <div className="text-muted">No debug info yet...</div>
+                ) : (
+                  debugInfo.map((info, index) => (
+                    <div key={index} className="mb-1">{info}</div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -491,7 +463,7 @@ export function QrScanner() {
         <div className="card-body p-0" style={{ maxHeight: "300px", overflowY: "auto" }}>
           {recentValidations.length === 0 ? (
             <div className="p-4 text-center text-muted">
-              <p className="small mb-0">No validations yet</p>
+              <p className="small mb-0">No validations yet - use the "Test" button to try validation</p>
             </div>
           ) : (
             recentValidations.map((validation, index) => (
