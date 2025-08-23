@@ -14,6 +14,20 @@ type AuthContextType = {
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
+// Helper to get the correct redirect URL
+function getRedirectUrl() {
+  // Check if we're running on Replit
+  const replitDomain = import.meta.env.VITE_REPLIT_DEV_DOMAIN || import.meta.env.REPLIT_DEV_DOMAIN;
+  
+  if (replitDomain) {
+    // We're on Replit, use the public URL
+    return `https://${replitDomain}`;
+  }
+  
+  // Fallback to current origin (works for both localhost and production)
+  return window.location.origin;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
@@ -100,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string) => {
     try {
-      // Get the current URL origin (handles both localhost and production)
-      const redirectTo = window.location.origin;
+      const redirectTo = getRedirectUrl();
+      console.log('Using redirect URL:', redirectTo);
       
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -115,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast({
         title: "Check your email",
-        description: "We've sent you a login link. Click the link or use the 6-digit code.",
+        description: "We've sent you a login link. You can click the link or use the 6-digit code.",
       });
     } catch (error: any) {
       toast({
