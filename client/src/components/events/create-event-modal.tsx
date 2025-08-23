@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -78,22 +79,25 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
+          <DialogTitle className="d-flex justify-content-between align-items-center">
             Create New Event
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-muted"
               data-testid="button-close-modal"
             >
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
+          <DialogDescription>
+            Fill out the form below to create a new event and start selling tickets.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="vstack gap-3">
             <FormField
               control={form.control}
               name="name"
@@ -112,42 +116,46 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        type="date"
-                        data-testid="input-event-date"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Time</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        type="time"
-                        data-testid="input-event-time"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="row">
+              <div className="col-6">
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="date"
+                          data-testid="input-event-date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="col-6">
+                <FormField
+                  control={form.control}
+                  name="time"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Time</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="time"
+                          data-testid="input-event-time"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <FormField
@@ -177,6 +185,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                   <FormControl>
                     <Textarea 
                       {...field} 
+                      value={field.value || ""}
                       rows={3}
                       placeholder="Enter event description"
                       data-testid="textarea-event-description"
@@ -187,60 +196,64 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="ticketPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ticket Price</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+            <div className="row">
+              <div className="col-6">
+                <FormField
+                  control={form.control}
+                  name="ticketPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ticket Price</FormLabel>
+                      <FormControl>
+                        <div className="position-relative">
+                          <span className="position-absolute" style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6c757d" }}>$</span>
+                          <Input 
+                            {...field} 
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            style={{ paddingLeft: "28px" }}
+                            placeholder="0.00"
+                            data-testid="input-ticket-price"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="col-6">
+                <FormField
+                  control={form.control}
+                  name="maxTickets"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Max Tickets</FormLabel>
+                      <FormControl>
                         <Input 
                           {...field} 
                           type="number"
-                          step="0.01"
-                          min="0"
-                          className="pl-7"
-                          placeholder="0.00"
-                          data-testid="input-ticket-price"
+                          min="1"
+                          placeholder="Unlimited"
+                          data-testid="input-max-tickets"
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                         />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="maxTickets"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max Tickets</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        type="number"
-                        min="1"
-                        placeholder="Unlimited"
-                        data-testid="input-max-tickets"
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            <div className="flex space-x-3 pt-4">
+            <div className="d-flex gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1"
+                className="flex-fill"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel-create"
               >
@@ -248,7 +261,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-primary hover:bg-primary-dark"
+                className="flex-fill btn-primary"
                 disabled={createEventMutation.isPending}
                 data-testid="button-submit-create"
               >
