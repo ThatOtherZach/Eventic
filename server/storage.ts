@@ -1,10 +1,22 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
+  // Users
+  getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUserLoginTime(id: string): Promise<User | undefined>;
+  
+  // Auth Tokens
+  createAuthToken(token: InsertAuthToken): Promise<AuthToken>;
+  getAuthToken(token: string): Promise<AuthToken | undefined>;
+  markTokenAsUsed(id: string): Promise<AuthToken | undefined>;
+  
   // Events
   getEvents(): Promise<Event[]>;
   getEvent(id: string): Promise<Event | undefined>;
+  getEventsByUserId(userId: string): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
@@ -12,6 +24,7 @@ export interface IStorage {
   // Tickets
   getTickets(): Promise<Ticket[]>;
   getTicketsByEventId(eventId: string): Promise<Ticket[]>;
+  getTicketsByUserId(userId: string): Promise<Ticket[]>;
   getTicket(id: string): Promise<Ticket | undefined>;
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
@@ -26,14 +39,81 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, User>;
+  private authTokens: Map<string, AuthToken>;
   private events: Map<string, Event>;
   private tickets: Map<string, Ticket>;
 
   constructor() {
+    this.users = new Map();
+    this.authTokens = new Map();
     this.events = new Map();
     this.tickets = new Map();
   }
 
+  // Users
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = randomUUID();
+    const user: User = {
+      ...insertUser,
+      id,
+      createdAt: new Date(),
+      lastLoginAt: null,
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUserLoginTime(id: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = {
+      ...user,
+      lastLoginAt: new Date(),
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  // Auth Tokens
+  async createAuthToken(insertToken: InsertAuthToken): Promise<AuthToken> {
+    const id = randomUUID();
+    const authToken: AuthToken = {
+      ...insertToken,
+      id,
+      used: false,
+      createdAt: new Date(),
+    };
+    this.authTokens.set(id, authToken);
+    return authToken;
+  }
+
+  async getAuthToken(token: string): Promise<AuthToken | undefined> {
+    return Array.from(this.authTokens.values()).find(t => t.token === token && !t.used);
+  }
+
+  async markTokenAsUsed(id: string): Promise<AuthToken | undefined> {
+    const token = this.authTokens.get(id);
+    if (!token) return undefined;
+    
+    const updatedToken = {
+      ...token,
+      used: true,
+    };
+    this.authTokens.set(id, updatedToken);
+    return updatedToken;
+  }
+
+  // Events
   async getEvents(): Promise<Event[]> {
     return Array.from(this.events.values()).sort((a, b) => 
       new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
@@ -44,12 +124,19 @@ export class MemStorage implements IStorage {
     return this.events.get(id);
   }
 
+  async getEventsByUserId(userId: string): Promise<Event[]> {
+    return Array.from(this.events.values())
+      .filter(event => event.userId === userId)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
     const id = randomUUID();
     const event: Event = {
       ...insertEvent,
       id,
       description: insertEvent.description || null,
+      userId: insertEvent.userId || null,
       createdAt: new Date(),
     };
     this.events.set(id, event);
@@ -76,6 +163,7 @@ export class MemStorage implements IStorage {
     return deleted;
   }
 
+  // Tickets
   async getTickets(): Promise<Ticket[]> {
     return Array.from(this.tickets.values()).sort((a, b) => 
       new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
@@ -85,6 +173,12 @@ export class MemStorage implements IStorage {
   async getTicketsByEventId(eventId: string): Promise<Ticket[]> {
     return Array.from(this.tickets.values())
       .filter(ticket => ticket.eventId === eventId)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
+  async getTicketsByUserId(userId: string): Promise<Ticket[]> {
+    return Array.from(this.tickets.values())
+      .filter(ticket => ticket.userId === userId)
       .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   }
 
@@ -101,6 +195,7 @@ export class MemStorage implements IStorage {
     const ticket: Ticket = {
       ...insertTicket,
       id,
+      userId: insertTicket.userId || null,
       isValidated: false,
       validatedAt: null,
       createdAt: new Date(),
