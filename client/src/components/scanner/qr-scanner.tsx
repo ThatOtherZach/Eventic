@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, CheckCircle, XCircle, AlertCircle, RotateCcw } from "lucide-react";
-import QrScannerLib from "qr-scanner";
+import { Camera, CheckCircle, XCircle, AlertCircle, RotateCcw, Play, Square } from "lucide-react";
 import type { Event, Ticket } from "@shared/schema";
 
 interface ValidationResult {
@@ -27,9 +26,11 @@ export function QrScanner() {
   const [cameraError, setCameraError] = useState<string>("");
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
-  const [qrScanner, setQrScanner] = useState<QrScannerLib | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const validateTicketMutation = useMutation({
     mutationFn: async (qrData: string) => {
@@ -76,9 +77,21 @@ export function QrScanner() {
 
   const checkCameraSupport = async () => {
     try {
-      const hasCamera = await QrScannerLib.hasCamera();
-      setHasCamera(hasCamera);
-      return hasCamera;
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setHasCamera(false);
+        setCameraError("Camera not supported in this browser");
+        return false;
+      }
+
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      const cameraAvailable = videoDevices.length > 0;
+      
+      setHasCamera(cameraAvailable);
+      if (!cameraAvailable) {
+        setCameraError("No camera found on this device");
+      }
+      return cameraAvailable;
     } catch (error) {
       console.error("Camera check failed:", error);
       setHasCamera(false);
@@ -87,47 +100,104 @@ export function QrScanner() {
     }
   };
 
-  const startScanner = async () => {
-    if (!videoRef.current || isScanning) return;
+  const loadQRCodeScanner = async () => {
+    try {
+      // Dynamically import the QR scanner library
+      const QrScannerLib = (await import('qr-scanner')).default;
+      return QrScannerLib;
+    } catch (error) {
+      console.error("Failed to load QR scanner library:", error);
+      return null;
+    }
+  };
+
+  const scanQRCodeFromVideo = async () => {
+    if (!videoRef.current || !canvasRef.current) return null;
 
     try {
-      // Clean up any existing scanner first
-      if (qrScanner) {
-        qrScanner.stop();
-        qrScanner.destroy();
-        setQrScanner(null);
-      }
+      const QrScannerLib = await loadQRCodeScanner();
+      if (!QrScannerLib) return null;
 
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
+      
+      if (!context) return null;
+
+      // Set canvas size to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Draw current video frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Try to scan QR code from the canvas
+      const result = await QrScannerLib.scanImage(canvas);
+      return result;
+    } catch (error) {
+      // QR code not found or scan failed - this is normal
+      return null;
+    }
+  };
+
+  const startContinuousScanning = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+    }
+
+    scanIntervalRef.current = setInterval(async () => {
+      const qrResult = await scanQRCodeFromVideo();
+      if (qrResult) {
+        console.log("QR Code detected:", qrResult);
+        validateTicketMutation.mutate(qrResult);
+      }
+    }, 500); // Scan every 500ms
+  };
+
+  const startScanner = async () => {
+    if (!videoRef.current || isScanning) {
+      console.log("Cannot start scanner: video ref missing or already scanning");
+      return;
+    }
+
+    try {
+      // Reset states
       setCameraError("");
       setValidationResult(null);
       
-      // Check camera support first
+      // Stop any existing stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+
+      console.log("Checking camera support...");
       const cameraAvailable = await checkCameraSupport();
       if (!cameraAvailable) {
-        setCameraError("No camera found on this device");
+        console.log("Camera not available");
         return;
       }
 
-      // Create QR scanner instance
-      const scanner = new QrScannerLib(
-        videoRef.current,
-        (result) => {
-          if (result?.data) {
-            console.log("QR Code detected:", result.data);
-            validateTicketMutation.mutate(result.data);
-          }
-        },
-        {
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-          preferredCamera: "environment", // Use back camera on mobile
+      console.log("Requesting camera access...");
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
-      );
+      });
 
-      await scanner.start();
-      setQrScanner(scanner);
+      console.log("Camera access granted, setting up video...");
+      videoRef.current.srcObject = mediaStream;
+      setStream(mediaStream);
       setIsScanning(true);
-      
+
+      // Wait for video to load and start scanning
+      videoRef.current.onloadedmetadata = () => {
+        console.log("Video loaded, starting continuous scanning...");
+        startContinuousScanning();
+      };
+
       toast({
         title: "📷 Camera Started",
         description: "Point camera at QR code to scan",
@@ -138,7 +208,7 @@ export function QrScanner() {
       
       // Reset states on error
       setIsScanning(false);
-      setQrScanner(null);
+      setStream(null);
       
       let errorMessage = "Failed to access camera";
       
@@ -162,11 +232,19 @@ export function QrScanner() {
   };
 
   const stopScanner = () => {
+    console.log("Stopping scanner...");
+    
     try {
-      if (qrScanner) {
-        qrScanner.stop();
-        qrScanner.destroy();
-        setQrScanner(null);
+      // Stop scanning interval
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
+
+      // Stop media stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
       }
       
       // Clear video element
@@ -185,8 +263,8 @@ export function QrScanner() {
     } catch (error) {
       console.error("Error stopping scanner:", error);
       // Force reset states even if cleanup fails
-      setQrScanner(null);
       setIsScanning(false);
+      setStream(null);
       setCameraError("");
     }
   };
@@ -201,16 +279,14 @@ export function QrScanner() {
 
     // Cleanup on unmount
     return () => {
-      if (qrScanner) {
-        try {
-          qrScanner.stop();
-          qrScanner.destroy();
-        } catch (error) {
-          console.error("Cleanup error:", error);
-        }
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+      }
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [qrScanner]);
+  }, []);
 
   // Additional cleanup effect for page visibility changes
   useEffect(() => {
@@ -229,6 +305,9 @@ export function QrScanner() {
 
   return (
     <div className="animate-fade-in">
+      {/* Hidden canvas for QR scanning */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      
       {/* Camera Container */}
       <div className="card mb-4 overflow-hidden position-relative">
         <div className="scanner-container position-relative">
@@ -236,6 +315,9 @@ export function QrScanner() {
             <>
               <video
                 ref={videoRef}
+                autoPlay
+                playsInline
+                muted
                 className="w-100 h-100 object-fit-cover"
                 data-testid="video-scanner"
                 style={{ transform: "scaleX(-1)" }} // Mirror for better UX
@@ -247,16 +329,16 @@ export function QrScanner() {
                 <div className="position-relative w-100 h-100">
                   {/* Corner brackets */}
                   <div className="position-absolute" style={{ top: "0", left: "0", width: "30px", height: "30px" }}>
-                    <div className="border-top border-start border-3 border-primary w-100 h-100"></div>
+                    <div className="border-top border-start border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
                   </div>
                   <div className="position-absolute" style={{ top: "0", right: "0", width: "30px", height: "30px" }}>
-                    <div className="border-top border-end border-3 border-primary w-100 h-100"></div>
+                    <div className="border-top border-end border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
                   </div>
                   <div className="position-absolute" style={{ bottom: "0", left: "0", width: "30px", height: "30px" }}>
-                    <div className="border-bottom border-start border-3 border-primary w-100 h-100"></div>
+                    <div className="border-bottom border-start border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
                   </div>
                   <div className="position-absolute" style={{ bottom: "0", right: "0", width: "30px", height: "30px" }}>
-                    <div className="border-bottom border-end border-3 border-primary w-100 h-100"></div>
+                    <div className="border-bottom border-end border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
                   </div>
                   
                   {/* Center guidance text */}
@@ -292,7 +374,7 @@ export function QrScanner() {
         </div>
         
         {/* Camera error overlay */}
-        {cameraError && (
+        {cameraError && !isScanning && (
           <div className="position-absolute top-0 start-0 w-100 h-100 bg-danger bg-opacity-10 d-flex align-items-center justify-content-center">
             <div className="text-center text-danger">
               <AlertCircle size={32} className="mb-2" />
@@ -312,7 +394,7 @@ export function QrScanner() {
             className="btn btn-primary w-100"
             data-testid="button-start-scanner"
           >
-            <Camera className="me-2" size={18} />
+            <Play className="me-2" size={18} />
             {isScanning ? "Scanning..." : "Start Scanner"}
           </button>
         </div>
@@ -323,9 +405,22 @@ export function QrScanner() {
             className="btn btn-outline-secondary w-100"
             data-testid="button-stop-scanner"
           >
-            <XCircle className="me-2" size={18} />
+            <Square className="me-2" size={18} />
             Stop Scanner
           </button>
+        </div>
+      </div>
+
+      {/* Debug Info */}
+      <div className="card mb-4 bg-light">
+        <div className="card-body">
+          <h6 className="card-title">Debug Info</h6>
+          <div className="small">
+            <p className="mb-1"><strong>Has Camera:</strong> {hasCamera === null ? "Checking..." : hasCamera ? "Yes" : "No"}</p>
+            <p className="mb-1"><strong>Is Scanning:</strong> {isScanning ? "Yes" : "No"}</p>
+            <p className="mb-1"><strong>Stream Active:</strong> {stream ? "Yes" : "No"}</p>
+            {cameraError && <p className="mb-0 text-danger"><strong>Error:</strong> {cameraError}</p>}
+          </div>
         </div>
       </div>
 
