@@ -38,7 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: window.location.origin,
+          // Don't use magic links, only OTP codes
+          shouldCreateUser: true,
         },
       });
       
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast({
         title: "Check your email",
-        description: "We've sent you a login code. Please check your email.",
+        description: "We've sent you a 6-digit login code. Please check your email.",
       });
     } catch (error: any) {
       toast({

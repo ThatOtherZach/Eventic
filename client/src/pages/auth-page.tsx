@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Ticket, Mail, Lock } from "lucide-react";
+import { Ticket, Mail, Lock, AlertCircle } from "lucide-react";
 
 export default function AuthPage() {
   const { user, signUp, verifyOtp } = useAuth();
@@ -94,6 +94,15 @@ export default function AuthPage() {
                   </div>
                 </div>
 
+                <div className="alert alert-info d-flex align-items-start">
+                  <AlertCircle className="me-2 flex-shrink-0 mt-1" size={18} />
+                  <div>
+                    <strong>Important:</strong> You'll receive a 6-digit code in your email. 
+                    <br />
+                    <small>Don't click any links - just copy the code and enter it on the next screen.</small>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   className="btn btn-primary w-100"
@@ -123,8 +132,8 @@ export default function AuthPage() {
                   </button>
                 </div>
 
-                <div className="alert alert-info mb-4">
-                  <small>We sent a login code to <strong>{email}</strong></small>
+                <div className="alert alert-success mb-4">
+                  <small>We sent a 6-digit login code to <strong>{email}</strong></small>
                 </div>
 
                 <div className="mb-4">
@@ -137,26 +146,38 @@ export default function AuthPage() {
                     </span>
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control form-control-lg text-center"
                       id="otp"
-                      placeholder="Enter 6-digit code"
+                      placeholder="000000"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       required
                       autoFocus
                       maxLength={6}
+                      pattern="[0-9]{6}"
+                      style={{ letterSpacing: '0.5em', fontFamily: 'monospace' }}
                       data-testid="input-otp"
                     />
                   </div>
                   <small className="text-muted">
-                    Check your email for the 6-digit code
+                    Enter the 6-digit code from your email (not the link)
                   </small>
+                </div>
+
+                <div className="alert alert-warning d-flex align-items-start">
+                  <AlertCircle className="me-2 flex-shrink-0 mt-1" size={18} />
+                  <div>
+                    <small>
+                      <strong>Note:</strong> Use the 6-digit code from the email, not any links. 
+                      If you clicked a link and got an error, just copy the code from the email instead.
+                    </small>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   className="btn btn-primary w-100"
-                  disabled={isLoading || !otp}
+                  disabled={isLoading || otp.length !== 6}
                   data-testid="button-verify"
                 >
                   {isLoading ? (
