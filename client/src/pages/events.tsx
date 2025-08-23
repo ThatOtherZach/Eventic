@@ -3,7 +3,7 @@ import { StatsCards } from "@/components/events/stats-cards";
 import { EventList } from "@/components/events/event-list";
 import { CreateEventModal } from "@/components/events/create-event-modal";
 import { TicketPreviewModal } from "@/components/tickets/ticket-preview-modal";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import type { Event } from "@shared/schema";
 
@@ -17,6 +17,11 @@ export default function Events() {
     setIsTicketModalOpen(true);
   };
 
+  const handleCreateEventClick = () => {
+    console.log("Create Event button clicked!");
+    setIsCreateModalOpen(true);
+  };
+
   return (
     <div className="animate-fade-in">
       {/* Header Section */}
@@ -26,14 +31,14 @@ export default function Events() {
           <p className="text-muted mb-0">Create and manage your events and tickets</p>
         </div>
         <div className="col-12 col-md-4 text-md-end">
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
+          <button
+            onClick={handleCreateEventClick}
             className="btn btn-primary w-100 w-md-auto"
             data-testid="button-create-event"
           >
             <Plus className="me-2" size={18} />
             Create Event
-          </Button>
+          </button>
         </div>
       </div>
 

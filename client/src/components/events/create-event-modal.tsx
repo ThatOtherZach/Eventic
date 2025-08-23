@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 interface CreateEventModalProps {
@@ -81,15 +81,14 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
         <DialogHeader>
           <DialogTitle className="d-flex justify-content-between align-items-center">
             Create New Event
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => onOpenChange(false)}
-              className="text-muted"
+              className="btn btn-sm btn-outline-secondary"
               data-testid="button-close-modal"
             >
               <X className="h-4 w-4" />
-            </Button>
+            </button>
           </DialogTitle>
           <DialogDescription>
             Fill out the form below to create a new event and start selling tickets.
@@ -250,23 +249,22 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
             </div>
 
             <div className="d-flex gap-3 pt-4">
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                className="flex-fill"
+                className="btn btn-outline-secondary flex-fill"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel-create"
               >
                 Cancel
-              </Button>
-              <Button
+              </button>
+              <button
                 type="submit"
-                className="flex-fill btn-primary"
+                className="btn btn-primary flex-fill"
                 disabled={createEventMutation.isPending}
                 data-testid="button-submit-create"
               >
                 {createEventMutation.isPending ? "Creating..." : "Create Event"}
-              </Button>
+              </button>
             </div>
           </form>
         </Form>
