@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Ticket, Mail, Lock, AlertCircle } from "lucide-react";
+import { Ticket, Mail, Lock, AlertCircle, Info } from "lucide-react";
 
 export default function AuthPage() {
   const { user, signUp, verifyOtp } = useAuth();
@@ -39,7 +39,7 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       await verifyOtp(email, otp);
-      setLocation("/");
+      // Redirect is handled in the auth hook after successful verification
     } catch (error) {
       // Error is handled in the hook
     } finally {
@@ -66,7 +66,7 @@ export default function AuthPage() {
               <p className="text-muted">
                 {stage === "email" 
                   ? "Enter your email to get started" 
-                  : "Enter the code we sent to your email"}
+                  : "Check your email for login options"}
               </p>
             </div>
 
@@ -94,15 +94,6 @@ export default function AuthPage() {
                   </div>
                 </div>
 
-                <div className="alert alert-info d-flex align-items-start">
-                  <AlertCircle className="me-2 flex-shrink-0 mt-1" size={18} />
-                  <div>
-                    <strong>Important:</strong> You'll receive a 6-digit code in your email. 
-                    <br />
-                    <small>Don't click any links - just copy the code and enter it on the next screen.</small>
-                  </div>
-                </div>
-
                 <button
                   type="submit"
                   className="btn btn-primary w-100"
@@ -112,10 +103,10 @@ export default function AuthPage() {
                   {isLoading ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" />
-                      Sending Code...
+                      Sending...
                     </>
                   ) : (
-                    "Send Login Code"
+                    "Send Login Email"
                   )}
                 </button>
               </form>
@@ -133,12 +124,30 @@ export default function AuthPage() {
                 </div>
 
                 <div className="alert alert-success mb-4">
-                  <small>We sent a 6-digit login code to <strong>{email}</strong></small>
+                  <small>We sent a login email to <strong>{email}</strong></small>
+                </div>
+
+                <div className="card mb-4">
+                  <div className="card-body">
+                    <h6 className="card-title d-flex align-items-center">
+                      <Info className="me-2 text-primary" size={18} />
+                      Two Ways to Log In
+                    </h6>
+                    <ol className="mb-0 small">
+                      <li className="mb-2">
+                        <strong>Click the link in your email</strong> - It might show an error about port 3000, but 
+                        just change the URL to use port 5000 instead and refresh the page.
+                      </li>
+                      <li>
+                        <strong>Or use the 6-digit code below</strong> - Find the code in your email and enter it here.
+                      </li>
+                    </ol>
+                  </div>
                 </div>
 
                 <div className="mb-4">
                   <label htmlFor="otp" className="form-label">
-                    Login Code
+                    6-Digit Code (Optional)
                   </label>
                   <div className="input-group">
                     <span className="input-group-text">
@@ -151,7 +160,6 @@ export default function AuthPage() {
                       placeholder="000000"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      required
                       autoFocus
                       maxLength={6}
                       pattern="[0-9]{6}"
@@ -160,18 +168,8 @@ export default function AuthPage() {
                     />
                   </div>
                   <small className="text-muted">
-                    Enter the 6-digit code from your email (not the link)
+                    Enter the code if you prefer not to click the link
                   </small>
-                </div>
-
-                <div className="alert alert-warning d-flex align-items-start">
-                  <AlertCircle className="me-2 flex-shrink-0 mt-1" size={18} />
-                  <div>
-                    <small>
-                      <strong>Note:</strong> Use the 6-digit code from the email, not any links. 
-                      If you clicked a link and got an error, just copy the code from the email instead.
-                    </small>
-                  </div>
                 </div>
 
                 <button
@@ -186,7 +184,7 @@ export default function AuthPage() {
                       Verifying...
                     </>
                   ) : (
-                    "Verify & Login"
+                    "Verify Code & Login"
                   )}
                 </button>
 
@@ -197,7 +195,7 @@ export default function AuthPage() {
                   disabled={isLoading}
                   data-testid="button-resend"
                 >
-                  Resend Code
+                  Resend Login Email
                 </button>
               </form>
             )}
