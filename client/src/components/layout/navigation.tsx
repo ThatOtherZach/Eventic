@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, QrCode, Ticket, User, LogOut } from "lucide-react";
+import { Calendar, QrCode, Ticket, User, LogOut, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export function Navigation() {
@@ -57,7 +57,7 @@ export function Navigation() {
               );
             })}
             
-            {user && (
+            {user ? (
               <>
                 <li className="nav-item">
                   <Link
@@ -82,6 +82,19 @@ export function Navigation() {
                   </button>
                 </li>
               </>
+            ) : (
+              <li className="nav-item">
+                <Link
+                  href="/auth"
+                  className={`nav-link d-flex align-items-center ${
+                    location === "/auth" ? "active" : ""
+                  }`}
+                  data-testid="link-nav-signin"
+                >
+                  <LogIn className="me-1" size={18} />
+                  Sign In
+                </Link>
+              </li>
             )}
           </ul>
         </div>

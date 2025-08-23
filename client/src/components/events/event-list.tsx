@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Eye, Ticket, Edit } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Eye, Ticket, Edit, ShoppingCart } from "lucide-react";
 import type { Event } from "@shared/schema";
 
 interface EventListProps {
@@ -7,6 +8,7 @@ interface EventListProps {
 }
 
 export function EventList({ onGenerateTickets }: EventListProps) {
+  const { user } = useAuth();
   const { data: events, isLoading } = useQuery<Event[]>({
     queryKey: ["/api/events"],
   });
@@ -43,7 +45,11 @@ export function EventList({ onGenerateTickets }: EventListProps) {
           <div className="text-muted">
             <Ticket className="mx-auto mb-3 opacity-50" size={48} />
             <h5 className="fw-medium mb-2">No events yet</h5>
-            <p className="small mb-0">Create your first event to get started</p>
+            <p className="small mb-0">
+              {user 
+                ? "Create your first event to get started" 
+                : "Sign in to create events"}
+            </p>
           </div>
         </div>
       </div>
@@ -53,7 +59,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
   return (
     <div className="card">
       <div className="card-header bg-white">
-        <h5 className="card-title mb-0 fw-medium">Recent Events</h5>
+        <h5 className="card-title mb-0 fw-medium">Available Events</h5>
       </div>
       <div className="card-body p-0">
         {events.map((event, index) => (
@@ -96,20 +102,22 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-primary"
-                      title="Generate Tickets"
+                      title="Buy Tickets"
                       onClick={() => onGenerateTickets(event)}
-                      data-testid={`button-generate-tickets-${event.id}`}
+                      data-testid={`button-buy-tickets-${event.id}`}
                     >
-                      <Ticket size={16} />
+                      <ShoppingCart size={16} />
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-secondary"
-                      title="Edit Event"
-                      data-testid={`button-edit-${event.id}`}
-                    >
-                      <Edit size={16} />
-                    </button>
+                    {user && event.userId === user.id && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        title="Edit Event"
+                        data-testid={`button-edit-${event.id}`}
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
