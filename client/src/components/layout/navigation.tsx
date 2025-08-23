@@ -10,37 +10,47 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <Ticket className="text-primary text-2xl mr-2" />
-              <h1 className="text-xl font-semibold text-gray-900">EventTicket Pro</h1>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
+    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      <div className="container-fluid px-3 px-md-4">
+        <Link href="/events" className="navbar-brand d-flex align-items-center">
+          <Ticket className="text-primary me-2" size={28} />
+          <span className="fw-bold">EventTicket Pro</span>
+        </Link>
+        
+        <button 
+          className="navbar-toggler" 
+          type="button" 
+          data-bs-toggle="collapse" 
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav" 
+          aria-expanded="false" 
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path || (location === "/" && item.path === "/events");
               
               return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    isActive
-                      ? "text-gray-900 font-medium"
-                      : "text-gray-500 hover:text-primary"
-                  }`}
-                  data-testid={`link-nav-${item.label.toLowerCase()}`}
-                >
-                  <Icon className="mr-1 h-4 w-4 inline" />
-                  {item.label}
-                </Link>
+                <li key={item.path} className="nav-item">
+                  <Link
+                    href={item.path}
+                    className={`nav-link d-flex align-items-center ${
+                      isActive ? "active" : ""
+                    }`}
+                    data-testid={`link-nav-${item.label.toLowerCase()}`}
+                  >
+                    <Icon className="me-1" size={18} />
+                    {item.label}
+                  </Link>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </div>
       </div>
     </nav>

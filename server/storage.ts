@@ -49,6 +49,7 @@ export class MemStorage implements IStorage {
     const event: Event = {
       ...insertEvent,
       id,
+      description: insertEvent.description || null,
       createdAt: new Date(),
     };
     this.events.set(id, event);
@@ -67,7 +68,7 @@ export class MemStorage implements IStorage {
   async deleteEvent(id: string): Promise<boolean> {
     const deleted = this.events.delete(id);
     // Also delete associated tickets
-    for (const [ticketId, ticket] of this.tickets.entries()) {
+    for (const [ticketId, ticket] of Array.from(this.tickets.entries())) {
       if (ticket.eventId === id) {
         this.tickets.delete(ticketId);
       }

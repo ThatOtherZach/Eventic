@@ -18,20 +18,20 @@ export default function Events() {
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Event Management</h2>
-          <p className="mt-1 text-sm text-gray-500">Create and manage your events and tickets</p>
+      <div className="row align-items-center mb-4">
+        <div className="col-12 col-md-8 mobile-mb">
+          <h2 className="h3 fw-semibold text-dark mb-2">Event Management</h2>
+          <p className="text-muted mb-0">Create and manage your events and tickets</p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        <div className="col-12 col-md-4 text-md-end">
           <Button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-primary hover:bg-primary-dark"
+            className="btn btn-primary w-100 w-md-auto"
             data-testid="button-create-event"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2" size={18} />
             Create Event
           </Button>
         </div>

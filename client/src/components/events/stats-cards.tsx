@@ -3,25 +3,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Ticket, CheckCircle } from "lucide-react";
 
 export function StatsCards() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading } = useQuery<{
+    totalEvents: number;
+    totalTickets: number;
+    validatedTickets: number;
+  }>({
     queryKey: ["/api/stats"],
   });
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="row mb-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-gray-200 mr-4 w-12 h-12"></div>
-                <div>
-                  <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-12"></div>
+          <div key={i} className="col-12 col-md-4 mb-3">
+            <div className="card placeholder-glow">
+              <div className="card-body d-flex align-items-center">
+                <div className="placeholder rounded-circle me-3" style={{width: '48px', height: '48px'}}></div>
+                <div className="flex-grow-1">
+                  <div className="placeholder col-6 mb-2"></div>
+                  <div className="placeholder col-4"></div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -52,28 +56,28 @@ export function StatsCards() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div className="row mb-4">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title}>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className={`p-3 rounded-full ${card.bgColor} mr-4`}>
-                  <Icon className={`${card.iconColor} h-5 w-5`} />
+          <div key={card.title} className="col-12 col-md-4 mb-3">
+            <div className="card h-100 border-0 shadow-sm">
+              <div className="card-body d-flex align-items-center">
+                <div className={`p-3 rounded-circle ${card.bgColor} me-3 d-flex align-items-center justify-content-center`}>
+                  <Icon className={`${card.iconColor}`} size={24} />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">{card.title}</p>
+                <div className="flex-grow-1">
+                  <p className="text-muted small mb-1 fw-medium">{card.title}</p>
                   <p 
-                    className="text-2xl font-semibold text-gray-900"
+                    className="h4 fw-semibold text-dark mb-0"
                     data-testid={`text-${card.title.toLowerCase().replace(' ', '-')}`}
                   >
                     {card.value}
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       })}
     </div>

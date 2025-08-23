@@ -15,40 +15,40 @@ export function EventList({ onGenerateTickets }: EventListProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
+      <div className="card">
+        <div className="card-body">
+          <div className="placeholder-glow">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center space-x-4">
-                <div className="h-12 w-12 bg-gray-200 rounded-lg"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+              <div key={i} className="d-flex align-items-center mb-4">
+                <div className="placeholder rounded me-3" style={{width: '48px', height: '48px'}}></div>
+                <div className="flex-grow-1">
+                  <div className="placeholder col-6 mb-2"></div>
+                  <div className="placeholder col-4"></div>
                 </div>
-                <div className="flex space-x-2">
-                  <div className="h-8 w-8 bg-gray-200 rounded"></div>
-                  <div className="h-8 w-8 bg-gray-200 rounded"></div>
-                  <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                <div className="d-flex gap-2">
+                  <div className="placeholder rounded" style={{width: '32px', height: '32px'}}></div>
+                  <div className="placeholder rounded" style={{width: '32px', height: '32px'}}></div>
+                  <div className="placeholder rounded" style={{width: '32px', height: '32px'}}></div>
                 </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (!events?.length) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <div className="text-gray-500">
-            <Ticket className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">No events yet</h3>
-            <p className="text-sm">Create your first event to get started</p>
+      <div className="card">
+        <div className="card-body text-center py-5">
+          <div className="text-muted">
+            <Ticket className="mx-auto mb-3 opacity-50" size={48} />
+            <h5 className="fw-medium mb-2">No events yet</h5>
+            <p className="small mb-0">Create your first event to get started</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 

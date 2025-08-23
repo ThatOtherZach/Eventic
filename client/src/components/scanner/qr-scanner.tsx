@@ -125,47 +125,50 @@ export function QrScanner() {
   return (
     <div>
       {/* Camera Container */}
-      <Card className="mb-6 overflow-hidden">
-        <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
+      <div className="card mb-4 overflow-hidden">
+        <div className="scanner-container">
           {isScanning ? (
             <video
               ref={videoRef}
               autoPlay
               playsInline
-              className="w-full h-full object-cover"
+              className="w-100 h-100 object-fit-cover"
               data-testid="video-scanner"
             />
           ) : (
-            <div className="text-center" data-testid="camera-placeholder">
-              <Camera className="text-gray-400 text-4xl mb-4 mx-auto" />
-              <p className="text-gray-600 font-medium">Tap to start camera</p>
-              <p className="text-sm text-gray-500 mt-1">Point camera at QR code</p>
+            <div className="scanner-placeholder" data-testid="camera-placeholder">
+              <Camera className="text-muted mb-3" size={48} />
+              <p className="fw-medium mb-2">Tap to start camera</p>
+              <p className="small text-muted mb-0">Point camera at QR code</p>
             </div>
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Scanner Controls */}
-      <div className="flex space-x-3 mb-6">
-        <Button
-          onClick={startScanner}
-          disabled={isScanning}
-          className="flex-1 bg-primary hover:bg-primary-dark"
-          data-testid="button-start-scanner"
-        >
-          <Play className="mr-2 h-4 w-4" />
-          Start Scanner
-        </Button>
-        <Button
-          onClick={stopScanner}
-          disabled={!isScanning}
-          variant="outline"
-          className="flex-1"
-          data-testid="button-stop-scanner"
-        >
-          <Square className="mr-2 h-4 w-4" />
-          Stop Scanner
-        </Button>
+      <div className="row mb-4">
+        <div className="col-6 pe-2">
+          <button
+            onClick={startScanner}
+            disabled={isScanning}
+            className="btn btn-primary w-100"
+            data-testid="button-start-scanner"
+          >
+            <Play className="me-2" size={18} />
+            Start Scanner
+          </button>
+        </div>
+        <div className="col-6 ps-2">
+          <button
+            onClick={stopScanner}
+            disabled={!isScanning}
+            className="btn btn-outline-secondary w-100"
+            data-testid="button-stop-scanner"
+          >
+            <Square className="me-2" size={18} />
+            Stop Scanner
+          </button>
+        </div>
       </div>
 
       {/* Scan Result */}

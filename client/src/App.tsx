@@ -23,10 +23,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="min-h-screen bg-surface">
+        <div className="min-vh-100 bg-light">
           <Navigation />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <Router />
+          <main className="container-fluid px-3 px-md-4 py-4">
+            <div className="row justify-content-center">
+              <div className="col-12 col-xl-10">
+                <Router />
+              </div>
+            </div>
           </main>
         </div>
         <Toaster />
