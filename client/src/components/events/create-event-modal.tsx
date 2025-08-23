@@ -5,13 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertEventSchema, type InsertEvent } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import {
   Form,
   FormControl,
@@ -22,8 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-// import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -76,46 +68,36 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="d-flex justify-content-between align-items-center">
-            Create New Event
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="btn btn-sm btn-outline-secondary"
-              data-testid="button-close-modal"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </DialogTitle>
-          <DialogDescription>
-            Fill out the form below to create a new event and start selling tickets.
-          </DialogDescription>
-        </DialogHeader>
+    <Modal open={open} onOpenChange={onOpenChange} className="modal-lg">
+      <ModalHeader onClose={() => onOpenChange(false)}>
+        Create New Event
+      </ModalHeader>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <ModalBody>
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Enter event name"
+                        className="form-control"
+                        data-testid="input-event-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="vstack gap-3">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Enter event name"
-                      data-testid="input-event-name"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="row">
+            <div className="row mb-3">
               <div className="col-6">
                 <FormField
                   control={form.control}
@@ -127,6 +109,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                         <Input 
                           {...field} 
                           type="date"
+                          className="form-control"
                           data-testid="input-event-date"
                         />
                       </FormControl>
@@ -147,6 +130,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                         <Input 
                           {...field} 
                           type="time"
+                          className="form-control"
                           data-testid="input-event-time"
                         />
                       </FormControl>
@@ -157,43 +141,49 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               </div>
             </div>
 
-            <FormField
-              control={form.control}
-              name="venue"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Venue</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Enter venue"
-                      data-testid="input-event-venue"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="venue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Venue</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Enter venue"
+                        className="form-control"
+                        data-testid="input-event-venue"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      {...field} 
-                      value={field.value || ""}
-                      rows={3}
-                      placeholder="Enter event description"
-                      data-testid="textarea-event-description"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        {...field} 
+                        value={field.value || ""}
+                        rows={3}
+                        placeholder="Enter event description"
+                        className="form-control"
+                        data-testid="textarea-event-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="row">
               <div className="col-6">
@@ -204,14 +194,14 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                     <FormItem>
                       <FormLabel>Ticket Price</FormLabel>
                       <FormControl>
-                        <div className="position-relative">
-                          <span className="position-absolute" style={{ left: "12px", top: "50%", transform: "translateY(-50%)", color: "#6c757d" }}>$</span>
+                        <div className="input-group">
+                          <span className="input-group-text">$</span>
                           <Input 
                             {...field} 
                             type="number"
                             step="0.01"
                             min="0"
-                            style={{ paddingLeft: "28px" }}
+                            className="form-control"
                             placeholder="0.00"
                             data-testid="input-ticket-price"
                           />
@@ -236,6 +226,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                           type="number"
                           min="1"
                           placeholder="Unlimited"
+                          className="form-control"
                           data-testid="input-max-tickets"
                           value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
@@ -247,28 +238,28 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 />
               </div>
             </div>
-
-            <div className="d-flex gap-3 pt-4">
-              <button
-                type="button"
-                className="btn btn-outline-secondary flex-fill"
-                onClick={() => onOpenChange(false)}
-                data-testid="button-cancel-create"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary flex-fill"
-                disabled={createEventMutation.isPending}
-                data-testid="button-submit-create"
-              >
-                {createEventMutation.isPending ? "Creating..." : "Create Event"}
-              </button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </ModalBody>
+          
+          <ModalFooter>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => onOpenChange(false)}
+              data-testid="button-cancel-create"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={createEventMutation.isPending}
+              data-testid="button-submit-create"
+            >
+              {createEventMutation.isPending ? "Creating..." : "Create Event"}
+            </button>
+          </ModalFooter>
+        </form>
+      </Form>
+    </Modal>
   );
 }
