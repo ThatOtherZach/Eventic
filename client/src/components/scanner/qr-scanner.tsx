@@ -269,18 +269,22 @@ export function QrScanner() {
       {/* Camera Container */}
       <div className="card mb-4 overflow-hidden position-relative">
         <div className="scanner-container position-relative">
-          {isScanning ? (
+          {/* Video element always present but conditionally visible */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-100 h-100 object-fit-cover"
+            data-testid="video-scanner"
+            style={{ 
+              transform: "scaleX(-1)",
+              display: isScanning ? "block" : "none"
+            }}
+          />
+          
+          {isScanning && (
             <>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-100 h-100 object-fit-cover"
-                data-testid="video-scanner"
-                style={{ transform: "scaleX(-1)" }}
-              />
-              
               {/* QR Code Targeting Overlay */}
               <div className="position-absolute top-50 start-50 translate-middle" 
                    style={{ width: "250px", height: "250px", zIndex: 10 }}>
@@ -308,7 +312,9 @@ export function QrScanner() {
                 </div>
               </div>
             </>
-          ) : (
+          )}
+
+          {!isScanning && (
             <div className="scanner-placeholder d-flex flex-column align-items-center justify-content-center" data-testid="camera-placeholder">
               {hasCamera === false ? (
                 <>
