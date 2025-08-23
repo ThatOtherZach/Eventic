@@ -8,7 +8,6 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   signUp: (email: string) => Promise<void>;
-  verifyOtp: (email: string, token: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -128,34 +127,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       toast({
-        title: "Check your email",
-        description: "We've sent you a login link. You can click the link or use the 6-digit code.",
+        title: "Email sent!",
+        description: "Check your inbox for the login link.",
       });
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to send login email",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  const verifyOtp = async (email: string, token: string) => {
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'email',
-      });
-      
-      if (error) throw error;
-      
-      // Success toast is handled by onAuthStateChange
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Invalid or expired code",
         variant: "destructive",
       });
       throw error;
@@ -187,7 +165,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         signUp,
-        verifyOtp,
         signOut,
       }}
     >

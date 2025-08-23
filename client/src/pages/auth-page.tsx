@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Ticket, Mail, Lock, AlertCircle, Info } from "lucide-react";
+import { Ticket, Mail, CheckCircle } from "lucide-react";
 
 export default function AuthPage() {
-  const { user, signUp, verifyOtp } = useAuth();
+  const { user, signUp } = useAuth();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [stage, setStage] = useState<"email" | "otp">("email");
+  const [emailSent, setEmailSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -24,32 +23,25 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       await signUp(email);
-      setStage("otp");
+      setEmailSent(true);
     } catch (error) {
       // Error is handled in the hook
+      setEmailSent(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp) return;
-    
+  const handleResend = async () => {
     setIsLoading(true);
     try {
-      await verifyOtp(email, otp);
-      // Redirect is handled in the auth hook after successful verification
+      await signUp(email);
+      setEmailSent(true);
     } catch (error) {
       // Error is handled in the hook
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleBack = () => {
-    setStage("email");
-    setOtp("");
   };
 
   return (
@@ -64,13 +56,11 @@ export default function AuthPage() {
               </div>
               <h2 className="h3 fw-bold">Welcome to EventTicket Pro</h2>
               <p className="text-muted">
-                {stage === "email" 
-                  ? "Enter your email to get started" 
-                  : "Check your email for login options"}
+                Enter your email to sign in
               </p>
             </div>
 
-            {stage === "email" ? (
+            {!emailSent ? (
               <form onSubmit={handleEmailSubmit}>
                 <div className="mb-4">
                   <label htmlFor="email" className="form-label">
@@ -106,98 +96,59 @@ export default function AuthPage() {
                       Sending...
                     </>
                   ) : (
-                    "Send Login Email"
+                    "Send Login Link"
                   )}
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleOtpSubmit}>
-                <div className="mb-3">
-                  <button
-                    type="button"
-                    className="btn btn-link p-0 text-decoration-none"
-                    onClick={handleBack}
-                    data-testid="button-back"
-                  >
-                    ← Back to email
-                  </button>
-                </div>
-
-                <div className="alert alert-success mb-4">
-                  <small>We sent a login email to <strong>{email}</strong></small>
-                </div>
-
-                <div className="card mb-4">
-                  <div className="card-body">
-                    <h6 className="card-title d-flex align-items-center">
-                      <Info className="me-2 text-primary" size={18} />
-                      Two Ways to Log In
-                    </h6>
-                    <ol className="mb-0 small">
-                      <li className="mb-2">
-                        <strong>Click the link in your email</strong> - It might show an error about port 3000, but 
-                        just change the URL to use port 5000 instead and refresh the page.
-                      </li>
-                      <li>
-                        <strong>Or use the 6-digit code below</strong> - Find the code in your email and enter it here.
-                      </li>
-                    </ol>
+              <div>
+                <div className="text-center mb-4">
+                  <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <CheckCircle className="text-success" size={32} />
                   </div>
+                  <h5 className="fw-bold mb-3">Check Your Email</h5>
+                  <p className="text-muted">
+                    We've sent a login link to:
+                    <br />
+                    <strong className="text-dark">{email}</strong>
+                  </p>
                 </div>
 
-                <div className="mb-4">
-                  <label htmlFor="otp" className="form-label">
-                    6-Digit Code (Optional)
-                  </label>
-                  <div className="input-group">
-                    <span className="input-group-text">
-                      <Lock size={18} />
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control form-control-lg text-center"
-                      id="otp"
-                      placeholder="000000"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      autoFocus
-                      maxLength={6}
-                      pattern="[0-9]{6}"
-                      style={{ letterSpacing: '0.5em', fontFamily: 'monospace' }}
-                      data-testid="input-otp"
-                    />
-                  </div>
-                  <small className="text-muted">
-                    Enter the code if you prefer not to click the link
+                <div className="alert alert-info">
+                  <small>
+                    Click the link in your email to sign in. The link will expire in 60 minutes.
                   </small>
                 </div>
 
                 <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={isLoading || otp.length !== 6}
-                  data-testid="button-verify"
+                  type="button"
+                  className="btn btn-outline-primary w-100 mb-3"
+                  onClick={handleResend}
+                  disabled={isLoading}
+                  data-testid="button-resend"
                 >
                   {isLoading ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" />
-                      Verifying...
+                      Sending...
                     </>
                   ) : (
-                    "Verify Code & Login"
+                    "Resend Login Link"
                   )}
                 </button>
 
                 <button
                   type="button"
-                  className="btn btn-link w-100 mt-3 text-decoration-none"
-                  onClick={handleEmailSubmit}
-                  disabled={isLoading}
-                  data-testid="button-resend"
+                  className="btn btn-link w-100 text-decoration-none"
+                  onClick={() => {
+                    setEmailSent(false);
+                    setEmail("");
+                  }}
+                  data-testid="button-change-email"
                 >
-                  Resend Login Email
+                  Use a Different Email
                 </button>
-              </form>
+              </div>
             )}
           </div>
         </div>
