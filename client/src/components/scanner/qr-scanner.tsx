@@ -88,10 +88,18 @@ export function QrScanner() {
   };
 
   const startScanner = async () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || isScanning) return;
 
     try {
+      // Clean up any existing scanner first
+      if (qrScanner) {
+        qrScanner.stop();
+        qrScanner.destroy();
+        setQrScanner(null);
+      }
+
       setCameraError("");
+      setValidationResult(null);
       
       // Check camera support first
       const cameraAvailable = await checkCameraSupport();
@@ -127,6 +135,11 @@ export function QrScanner() {
 
     } catch (error: any) {
       console.error("Camera start failed:", error);
+      
+      // Reset states on error
+      setIsScanning(false);
+      setQrScanner(null);
+      
       let errorMessage = "Failed to access camera";
       
       if (error.name === "NotAllowedError") {
@@ -135,6 +148,8 @@ export function QrScanner() {
         errorMessage = "No camera found on this device";
       } else if (error.name === "NotSupportedError") {
         errorMessage = "Camera not supported in this browser";
+      } else if (error.name === "NotReadableError") {
+        errorMessage = "Camera is already in use by another application";
       }
       
       setCameraError(errorMessage);
@@ -147,19 +162,33 @@ export function QrScanner() {
   };
 
   const stopScanner = () => {
-    if (qrScanner) {
-      qrScanner.stop();
-      qrScanner.destroy();
+    try {
+      if (qrScanner) {
+        qrScanner.stop();
+        qrScanner.destroy();
+        setQrScanner(null);
+      }
+      
+      // Clear video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      
+      setIsScanning(false);
+      setValidationResult(null);
+      setCameraError("");
+      
+      toast({
+        title: "📷 Camera Stopped",
+        description: "Scanner has been stopped",
+      });
+    } catch (error) {
+      console.error("Error stopping scanner:", error);
+      // Force reset states even if cleanup fails
       setQrScanner(null);
+      setIsScanning(false);
+      setCameraError("");
     }
-    setIsScanning(false);
-    setValidationResult(null);
-    setCameraError("");
-    
-    toast({
-      title: "📷 Camera Stopped",
-      description: "Scanner has been stopped",
-    });
   };
 
   const resetValidation = () => {
@@ -173,11 +202,30 @@ export function QrScanner() {
     // Cleanup on unmount
     return () => {
       if (qrScanner) {
-        qrScanner.stop();
-        qrScanner.destroy();
+        try {
+          qrScanner.stop();
+          qrScanner.destroy();
+        } catch (error) {
+          console.error("Cleanup error:", error);
+        }
       }
     };
-  }, []);
+  }, [qrScanner]);
+
+  // Additional cleanup effect for page visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isScanning) {
+        stopScanner();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isScanning]);
 
   return (
     <div className="animate-fade-in">
