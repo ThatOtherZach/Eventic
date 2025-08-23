@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Ticket, CheckCircle } from "lucide-react";
 
 export function StatsCards() {
@@ -36,22 +35,22 @@ export function StatsCards() {
       title: "Total Events",
       value: stats?.totalEvents || 0,
       icon: Calendar,
-      bgColor: "bg-blue-100",
-      iconColor: "text-primary",
+      bgColor: "primary",
+      bgOpacity: "10",
     },
     {
       title: "Tickets Sold",
       value: stats?.totalTickets || 0,
       icon: Ticket,
-      bgColor: "bg-green-100",
-      iconColor: "text-success",
+      bgColor: "success",
+      bgOpacity: "10",
     },
     {
       title: "Validated",
       value: stats?.validatedTickets || 0,
       icon: CheckCircle,
-      bgColor: "bg-purple-100",
-      iconColor: "text-purple-600",
+      bgColor: "info",
+      bgOpacity: "10",
     },
   ];
 
@@ -63,8 +62,8 @@ export function StatsCards() {
           <div key={card.title} className="col-12 col-md-4 mb-3">
             <div className="card h-100 border-0 shadow-sm">
               <div className="card-body d-flex align-items-center">
-                <div className={`p-3 rounded-circle ${card.bgColor} me-3 d-flex align-items-center justify-content-center`}>
-                  <Icon className={`${card.iconColor}`} size={24} />
+                <div className={`bg-${card.bgColor} bg-opacity-${card.bgOpacity} rounded-circle p-3 me-3 d-flex align-items-center justify-content-center`}>
+                  <Icon className={`text-${card.bgColor}`} size={24} />
                 </div>
                 <div className="flex-grow-1">
                   <p className="text-muted small mb-1 fw-medium">{card.title}</p>

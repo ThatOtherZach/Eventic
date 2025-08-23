@@ -3,15 +3,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { generateQRCode } from "@/lib/qr-utils";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import type { Event, Ticket } from "@shared/schema";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { X, QrCode, Download } from "lucide-react";
+import { QrCode, Download } from "lucide-react";
 
 interface TicketPreviewModalProps {
   open: boolean;
@@ -33,6 +27,7 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
     onSuccess: (newTicket: Ticket) => {
       setTicket(newTicket);
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       toast({
         title: "Success",
         description: "Ticket created successfully",
@@ -85,88 +80,76 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Event Ticket
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="text-gray-400 hover:text-gray-600"
-              data-testid="button-close-ticket-modal"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
-        </DialogHeader>
-
+    <Modal open={open} onOpenChange={onOpenChange} className="modal-md">
+      <ModalHeader onClose={() => onOpenChange(false)}>
+        Event Ticket
+      </ModalHeader>
+      
+      <ModalBody>
         {/* Ticket Design */}
-        <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
-          <div className="text-center border-b border-gray-200 pb-4 mb-4">
-            <h4 className="text-lg font-semibold text-gray-900">{event.name}</h4>
-            <p className="text-sm text-gray-600">{event.venue}</p>
-            <p className="text-sm text-gray-500">{event.date} at {event.time}</p>
+        <div className="border border-2 border-secondary border-opacity-25 rounded p-4 mb-4" style={{ borderStyle: "dashed" }}>
+          <div className="text-center border-bottom pb-3 mb-3">
+            <h5 className="fw-semibold text-dark">{event.name}</h5>
+            <p className="text-muted small mb-1">{event.venue}</p>
+            <p className="text-muted small">{event.date} at {event.time}</p>
           </div>
 
-          <div className="flex justify-between items-start mb-4">
+          <div className="d-flex justify-content-between align-items-start mb-3">
             <div>
-              <p className="text-xs text-gray-500">Ticket ID</p>
-              <p className="text-sm font-mono text-gray-900" data-testid="text-ticket-id">
+              <p className="text-muted small mb-1">Ticket ID</p>
+              <p className="fw-semibold font-monospace small" data-testid="text-ticket-id">
                 {ticket?.ticketNumber || "Loading..."}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Price</p>
-              <p className="text-lg font-semibold text-primary">${event.ticketPrice}</p>
+            <div className="text-end">
+              <p className="text-muted small mb-1">Price</p>
+              <p className="h5 fw-semibold text-primary">${event.ticketPrice}</p>
             </div>
           </div>
 
           {/* QR Code Container */}
-          <div className="bg-white border-2 border-gray-200 rounded-lg p-4 mx-auto w-32 h-32 flex items-center justify-center mb-4">
-            {qrCodeUrl ? (
-              <img 
-                src={qrCodeUrl} 
-                alt="Ticket QR Code" 
-                className="w-full h-full object-contain"
-                data-testid="img-qr-code"
-              />
-            ) : (
-              <div className="text-center" data-testid="qr-placeholder">
-                <QrCode className="text-gray-400 text-3xl mb-2 mx-auto" />
-                <p className="text-xs text-gray-500">QR Code</p>
-              </div>
-            )}
-          </div>
-
-          <div className="text-center text-xs text-gray-500">
-            <p>Present this QR code at the event entrance</p>
+          <div className="text-center">
+            <div className="bg-light border rounded p-3 mx-auto mb-3" style={{ width: "150px", height: "150px" }}>
+              {qrCodeUrl ? (
+                <img 
+                  src={qrCodeUrl} 
+                  alt="Ticket QR Code" 
+                  className="w-100 h-100"
+                  style={{ objectFit: "contain" }}
+                  data-testid="img-qr-code"
+                />
+              ) : (
+                <div className="d-flex flex-column align-items-center justify-content-center h-100" data-testid="qr-placeholder">
+                  <QrCode className="text-muted mb-2" size={40} />
+                  <p className="text-muted small mb-0">QR Code</p>
+                </div>
+              )}
+            </div>
+            <p className="text-muted small">Present this QR code at the event entrance</p>
           </div>
         </div>
-
-        <div className="flex space-x-3">
-          <Button
-            onClick={generateQR}
-            className="flex-1 bg-primary hover:bg-primary-dark"
-            disabled={!ticket || !!qrCodeUrl}
-            data-testid="button-generate-qr"
-          >
-            <QrCode className="mr-2 h-4 w-4" />
-            {qrCodeUrl ? "QR Generated" : "Generate QR"}
-          </Button>
-          <Button
-            onClick={downloadTicket}
-            variant="outline"
-            className="flex-1"
-            disabled={!qrCodeUrl}
-            data-testid="button-download-ticket"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </ModalBody>
+      
+      <ModalFooter>
+        <button
+          onClick={generateQR}
+          className="btn btn-primary"
+          disabled={!ticket || !!qrCodeUrl}
+          data-testid="button-generate-qr"
+        >
+          <QrCode className="me-2" size={16} />
+          {qrCodeUrl ? "QR Generated" : "Generate QR"}
+        </button>
+        <button
+          onClick={downloadTicket}
+          className="btn btn-outline-secondary"
+          disabled={!qrCodeUrl}
+          data-testid="button-download-ticket"
+        >
+          <Download className="me-2" size={16} />
+          Download
+        </button>
+      </ModalFooter>
+    </Modal>
   );
 }
