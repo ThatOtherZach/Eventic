@@ -1,4 +1,5 @@
 import { QrScanner } from "@/components/scanner/qr-scanner";
+import { QrCode } from "lucide-react";
 
 export default function Scanner() {
   return (

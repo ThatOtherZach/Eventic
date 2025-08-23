@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Play, Square, Camera, CheckCircle, XCircle } from "lucide-react";
+import { Camera, CheckCircle, XCircle, AlertCircle, RotateCcw } from "lucide-react";
+import QrScannerLib from "qr-scanner";
 import type { Event, Ticket } from "@shared/schema";
 
 interface ValidationResult {
@@ -14,16 +13,22 @@ interface ValidationResult {
   event?: Event;
 }
 
+interface ValidationHistory {
+  eventName: string;
+  ticketNumber: string;
+  timestamp: string;
+  valid: boolean;
+}
+
 export function QrScanner() {
   const { toast } = useToast();
   const [isScanning, setIsScanning] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [hasCamera, setHasCamera] = useState<boolean | null>(null);
+  const [cameraError, setCameraError] = useState<string>("");
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [recentValidations, setRecentValidations] = useState<Array<{
-    eventName: string;
-    timestamp: string;
-    valid: boolean;
-  }>>([]);
+  const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
+  const [qrScanner, setQrScanner] = useState<QrScannerLib | null>(null);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const validateTicketMutation = useMutation({
@@ -33,21 +38,23 @@ export function QrScanner() {
     },
     onSuccess: (result: ValidationResult) => {
       setValidationResult(result);
-      const validation = {
+      
+      const validation: ValidationHistory = {
         eventName: result.event?.name || "Unknown Event",
-        timestamp: "Just now",
+        ticketNumber: result.ticket?.ticketNumber || "Unknown",
+        timestamp: new Date().toLocaleTimeString(),
         valid: result.valid,
       };
       setRecentValidations(prev => [validation, ...prev.slice(0, 9)]);
       
       if (result.valid) {
         toast({
-          title: "Valid Ticket",
-          description: "Ticket validated successfully",
+          title: "✅ Valid Ticket",
+          description: `Ticket for ${result.event?.name} validated successfully`,
         });
       } else {
         toast({
-          title: "Invalid Ticket",
+          title: "❌ Invalid Ticket",
           description: result.message,
           variant: "destructive",
         });
@@ -60,89 +67,192 @@ export function QrScanner() {
       };
       setValidationResult(result);
       toast({
-        title: "Validation Error",
+        title: "❌ Validation Error",
         description: result.message,
         variant: "destructive",
       });
     },
   });
 
-  const startScanner = async () => {
+  const checkCameraSupport = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      });
+      const hasCamera = await QrScannerLib.hasCamera();
+      setHasCamera(hasCamera);
+      return hasCamera;
+    } catch (error) {
+      console.error("Camera check failed:", error);
+      setHasCamera(false);
+      setCameraError("Camera support check failed");
+      return false;
+    }
+  };
+
+  const startScanner = async () => {
+    if (!videoRef.current) return;
+
+    try {
+      setCameraError("");
       
-      setStream(mediaStream);
-      setIsScanning(true);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+      // Check camera support first
+      const cameraAvailable = await checkCameraSupport();
+      if (!cameraAvailable) {
+        setCameraError("No camera found on this device");
+        return;
       }
 
-      // Simulate QR detection after 3 seconds for demo
-      setTimeout(() => {
-        if (isScanning) {
-          const mockQrData = JSON.stringify({
-            eventId: "demo-event",
-            ticketNumber: "DEMO-001",
-            timestamp: Date.now(),
-          });
-          validateTicketMutation.mutate(mockQrData);
+      // Create QR scanner instance
+      const scanner = new QrScannerLib(
+        videoRef.current,
+        (result) => {
+          if (result?.data) {
+            console.log("QR Code detected:", result.data);
+            validateTicketMutation.mutate(result.data);
+          }
+        },
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          preferredCamera: "environment", // Use back camera on mobile
         }
-      }, 3000);
+      );
 
-    } catch (error) {
+      await scanner.start();
+      setQrScanner(scanner);
+      setIsScanning(true);
+      
       toast({
-        title: "Camera Error",
-        description: "Camera access is required for QR code scanning",
+        title: "📷 Camera Started",
+        description: "Point camera at QR code to scan",
+      });
+
+    } catch (error: any) {
+      console.error("Camera start failed:", error);
+      let errorMessage = "Failed to access camera";
+      
+      if (error.name === "NotAllowedError") {
+        errorMessage = "Camera permission denied. Please allow camera access and try again.";
+      } else if (error.name === "NotFoundError") {
+        errorMessage = "No camera found on this device";
+      } else if (error.name === "NotSupportedError") {
+        errorMessage = "Camera not supported in this browser";
+      }
+      
+      setCameraError(errorMessage);
+      toast({
+        title: "❌ Camera Error",
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
 
   const stopScanner = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+    if (qrScanner) {
+      qrScanner.stop();
+      qrScanner.destroy();
+      setQrScanner(null);
     }
     setIsScanning(false);
     setValidationResult(null);
+    setCameraError("");
+    
+    toast({
+      title: "📷 Camera Stopped",
+      description: "Scanner has been stopped",
+    });
   };
 
-  const scanAnother = () => {
+  const resetValidation = () => {
     setValidationResult(null);
   };
 
   useEffect(() => {
+    // Check camera support on component mount
+    checkCameraSupport();
+
+    // Cleanup on unmount
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (qrScanner) {
+        qrScanner.stop();
+        qrScanner.destroy();
       }
     };
-  }, [stream]);
+  }, []);
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Camera Container */}
-      <div className="card mb-4 overflow-hidden">
-        <div className="scanner-container">
+      <div className="card mb-4 overflow-hidden position-relative">
+        <div className="scanner-container position-relative">
           {isScanning ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-100 h-100 object-fit-cover"
-              data-testid="video-scanner"
-            />
+            <>
+              <video
+                ref={videoRef}
+                className="w-100 h-100 object-fit-cover"
+                data-testid="video-scanner"
+                style={{ transform: "scaleX(-1)" }} // Mirror for better UX
+              />
+              
+              {/* QR Code Targeting Overlay */}
+              <div className="position-absolute top-50 start-50 translate-middle" 
+                   style={{ width: "250px", height: "250px", zIndex: 10 }}>
+                <div className="position-relative w-100 h-100">
+                  {/* Corner brackets */}
+                  <div className="position-absolute" style={{ top: "0", left: "0", width: "30px", height: "30px" }}>
+                    <div className="border-top border-start border-3 border-primary w-100 h-100"></div>
+                  </div>
+                  <div className="position-absolute" style={{ top: "0", right: "0", width: "30px", height: "30px" }}>
+                    <div className="border-top border-end border-3 border-primary w-100 h-100"></div>
+                  </div>
+                  <div className="position-absolute" style={{ bottom: "0", left: "0", width: "30px", height: "30px" }}>
+                    <div className="border-bottom border-start border-3 border-primary w-100 h-100"></div>
+                  </div>
+                  <div className="position-absolute" style={{ bottom: "0", right: "0", width: "30px", height: "30px" }}>
+                    <div className="border-bottom border-end border-3 border-primary w-100 h-100"></div>
+                  </div>
+                  
+                  {/* Center guidance text */}
+                  <div className="position-absolute top-50 start-50 translate-middle text-center">
+                    <div className="bg-dark bg-opacity-75 text-white px-3 py-2 rounded">
+                      <small className="fw-medium">Position QR code here</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
-            <div className="scanner-placeholder" data-testid="camera-placeholder">
-              <Camera className="text-muted mb-3" size={48} />
-              <p className="fw-medium mb-2">Tap to start camera</p>
-              <p className="small text-muted mb-0">Point camera at QR code</p>
+            <div className="scanner-placeholder d-flex flex-column align-items-center justify-content-center" data-testid="camera-placeholder">
+              {hasCamera === false ? (
+                <>
+                  <AlertCircle className="text-danger mb-3" size={48} />
+                  <p className="fw-medium text-danger mb-2">No Camera Available</p>
+                  <p className="small text-muted text-center mb-0">
+                    {cameraError || "This device doesn't have a camera or camera access is not available"}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Camera className="text-muted mb-3" size={48} />
+                  <p className="fw-medium mb-2">Ready to Scan</p>
+                  <p className="small text-muted text-center mb-0">
+                    Tap "Start Scanner" to begin scanning QR codes
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>
+        
+        {/* Camera error overlay */}
+        {cameraError && (
+          <div className="position-absolute top-0 start-0 w-100 h-100 bg-danger bg-opacity-10 d-flex align-items-center justify-content-center">
+            <div className="text-center text-danger">
+              <AlertCircle size={32} className="mb-2" />
+              <p className="fw-medium mb-1">Camera Error</p>
+              <p className="small">{cameraError}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Scanner Controls */}
@@ -150,12 +260,12 @@ export function QrScanner() {
         <div className="col-6 pe-2">
           <button
             onClick={startScanner}
-            disabled={isScanning}
+            disabled={isScanning || hasCamera === false}
             className="btn btn-primary w-100"
             data-testid="button-start-scanner"
           >
-            <Play className="me-2" size={18} />
-            Start Scanner
+            <Camera className="me-2" size={18} />
+            {isScanning ? "Scanning..." : "Start Scanner"}
           </button>
         </div>
         <div className="col-6 ps-2">
@@ -165,110 +275,109 @@ export function QrScanner() {
             className="btn btn-outline-secondary w-100"
             data-testid="button-stop-scanner"
           >
-            <Square className="me-2" size={18} />
+            <XCircle className="me-2" size={18} />
             Stop Scanner
           </button>
         </div>
       </div>
 
-      {/* Scan Result */}
+      {/* Validation Result */}
       {validationResult && (
-        <Card className="mb-6" data-testid="scan-result">
-          <CardContent className="p-6">
-            <div className="flex items-center mb-4">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                validationResult.valid ? "bg-success" : "bg-error"
-              }`}>
+        <div className="card mb-4" data-testid="scan-result">
+          <div className="card-body">
+            <div className="d-flex align-items-center mb-3">
+              <div className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
+                validationResult.valid ? "bg-success" : "bg-danger"
+              }`} style={{ width: "40px", height: "40px" }}>
                 {validationResult.valid ? (
-                  <CheckCircle className="text-white text-sm" />
+                  <CheckCircle className="text-white" size={20} />
                 ) : (
-                  <XCircle className="text-white text-sm" />
+                  <XCircle className="text-white" size={20} />
                 )}
               </div>
-              <div>
-                <h4 className="text-lg font-medium text-gray-900">
-                  {validationResult.valid ? "Valid Ticket" : "Invalid Ticket"}
-                </h4>
-                <p className="text-sm text-gray-500">
+              <div className="flex-grow-1">
+                <h6 className="fw-semibold mb-1">
+                  {validationResult.valid ? "✅ Valid Ticket" : "❌ Invalid Ticket"}
+                </h6>
+                <p className="text-muted small mb-0">
                   {validationResult.valid ? "Ticket successfully validated" : validationResult.message}
                 </p>
               </div>
             </div>
 
             {validationResult.valid && validationResult.event && validationResult.ticket && (
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 mb-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Event:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {validationResult.event.name}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Ticket ID:</span>
-                  <span className="text-sm font-mono text-gray-900">
-                    {validationResult.ticket.ticketNumber}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Scanned:</span>
-                  <span className="text-sm text-gray-600">Just now</span>
+              <div className="bg-light rounded p-3 mb-3">
+                <div className="row">
+                  <div className="col-6 mb-2">
+                    <span className="text-muted small">Event:</span>
+                    <p className="fw-medium mb-0 small">{validationResult.event.name}</p>
+                  </div>
+                  <div className="col-6 mb-2">
+                    <span className="text-muted small">Venue:</span>
+                    <p className="fw-medium mb-0 small">{validationResult.event.venue}</p>
+                  </div>
+                  <div className="col-6 mb-2">
+                    <span className="text-muted small">Ticket ID:</span>
+                    <p className="fw-medium mb-0 small font-monospace">{validationResult.ticket.ticketNumber}</p>
+                  </div>
+                  <div className="col-6 mb-2">
+                    <span className="text-muted small">Date & Time:</span>
+                    <p className="fw-medium mb-0 small">{validationResult.event.date} {validationResult.event.time}</p>
+                  </div>
                 </div>
               </div>
             )}
 
-            <Button
-              onClick={scanAnother}
-              className="w-full bg-primary hover:bg-primary-dark"
+            <button
+              onClick={resetValidation}
+              className="btn btn-primary w-100"
               data-testid="button-scan-another"
             >
+              <RotateCcw className="me-2" size={18} />
               Scan Another Ticket
-            </Button>
-          </CardContent>
-        </Card>
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Recent Validations */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Recent Validations</h3>
-          </div>
-          <div className="divide-y divide-gray-200 max-h-64 overflow-y-auto">
-            {recentValidations.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                <p className="text-sm">No validations yet</p>
-              </div>
-            ) : (
-              recentValidations.map((validation, index) => (
-                <div 
-                  key={index} 
-                  className="p-4 flex items-center justify-between"
-                  data-testid={`validation-${index}`}
-                >
-                  <div className="flex items-center">
-                    <div className={`w-2 h-2 rounded-full mr-3 ${
-                      validation.valid ? "bg-success" : "bg-error"
-                    }`}></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {validation.eventName}
-                      </p>
-                      <p className="text-xs text-gray-500">{validation.timestamp}</p>
-                    </div>
+      <div className="card">
+        <div className="card-header bg-white border-bottom">
+          <h6 className="card-title mb-0 fw-medium">Recent Validations</h6>
+        </div>
+        <div className="card-body p-0" style={{ maxHeight: "300px", overflowY: "auto" }}>
+          {recentValidations.length === 0 ? (
+            <div className="p-4 text-center text-muted">
+              <p className="small mb-0">No validations yet</p>
+            </div>
+          ) : (
+            recentValidations.map((validation, index) => (
+              <div 
+                key={index} 
+                className="d-flex align-items-center justify-content-between p-3 border-bottom"
+                data-testid={`validation-${index}`}
+              >
+                <div className="d-flex align-items-center flex-grow-1">
+                  <div className={`rounded-circle me-3 ${
+                    validation.valid ? "bg-success" : "bg-danger"
+                  }`} style={{ width: "8px", height: "8px" }}></div>
+                  <div className="flex-grow-1">
+                    <p className="fw-medium mb-1 small">{validation.eventName}</p>
+                    <p className="text-muted mb-0" style={{ fontSize: "0.75rem" }}>
+                      {validation.ticketNumber} • {validation.timestamp}
+                    </p>
                   </div>
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    validation.valid 
-                      ? "text-success bg-green-100" 
-                      : "text-error bg-red-100"
-                  }`}>
-                    {validation.valid ? "Valid" : "Invalid"}
-                  </span>
                 </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                <span className={`badge ${
+                  validation.valid ? "bg-success" : "bg-danger"
+                } fw-medium`} style={{ fontSize: "0.65rem" }}>
+                  {validation.valid ? "Valid" : "Invalid"}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

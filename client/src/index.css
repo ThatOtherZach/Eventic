@@ -248,6 +248,73 @@ h4 { font-size: 1.125rem; }
   padding: 2rem;
 }
 
+/* QR Targeting Overlay */
+.qr-target-overlay {
+  pointer-events: none;
+  user-select: none;
+}
+
+.qr-target-corner {
+  width: 40px;
+  height: 40px;
+  border-width: 3px !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 767px) {
+  .qr-target-corner {
+    width: 30px;
+    height: 30px;
+    border-width: 2px !important;
+  }
+}
+
+/* Camera video element */
+video {
+  object-fit: cover;
+  background-color: #000000;
+}
+
+/* Hover effects for mobile-friendly buttons */
+.hover-bg-light:hover {
+  background-color: rgba(248, 250, 252, 0.8) !important;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Status indicators */
+.validation-indicator {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Scanner button states */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Mobile-specific camera improvements */
+@media (max-width: 767px) {
+  .scanner-container {
+    height: 280px;
+  }
+  
+  .scanner-placeholder {
+    padding: 1.5rem;
+  }
+  
+  /* Ensure video fills container on mobile */
+  video {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
 /* Status badge styles */
 .status-badge {
   font-size: 0.75rem;
