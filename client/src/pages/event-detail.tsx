@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
+import { BoostEventModal } from "@/components/boost/boost-event-modal";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -23,6 +24,7 @@ export default function EventDetailPage() {
   const [validatorEmail, setValidatorEmail] = useState("");
   const [isAddingValidator, setIsAddingValidator] = useState(false);
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
+  const [isBoostModalOpen, setIsBoostModalOpen] = useState(false);
 
   const { data: event, isLoading, error } = useQuery<EventWithStats>({
     queryKey: [`/api/events/${id}`],
@@ -360,10 +362,18 @@ export default function EventDetailPage() {
 
               {isOwner && (
                 <div>
-                  <Link href={`/events/${id}/edit`} className="btn btn-outline-primary w-100">
+                  <Link href={`/events/${id}/edit`} className="btn btn-outline-primary w-100 mb-2">
                     <Edit size={18} className="me-2" />
                     Edit Event
                   </Link>
+                  <button 
+                    onClick={() => setIsBoostModalOpen(true)}
+                    className="btn btn-warning w-100"
+                    data-testid="button-boost-event"
+                  >
+                    <Star size={18} className="me-2" />
+                    Boost to Featured
+                  </button>
                   <div className="alert alert-info mt-3">
                     <small>You own this event</small>
                   </div>
@@ -438,6 +448,15 @@ export default function EventDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Boost Event Modal */}
+      {isOwner && (
+        <BoostEventModal 
+          eventId={id!}
+          open={isBoostModalOpen}
+          onOpenChange={setIsBoostModalOpen}
+        />
+      )}
     </div>
   );
 }

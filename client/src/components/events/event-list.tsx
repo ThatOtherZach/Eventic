@@ -1,18 +1,51 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { Eye, Ticket, Edit, ShoppingCart } from "lucide-react";
+import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Event } from "@shared/schema";
 
 interface EventListProps {
   onGenerateTickets: (event: Event) => void;
 }
 
+interface PaginatedEventsResponse {
+  events: Event[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 export function EventList({ onGenerateTickets }: EventListProps) {
   const { user } = useAuth();
-  const { data: events, isLoading } = useQuery<Event[]>({
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Get first 50 events for initial page
+  const { data: initialEvents, isLoading: isLoadingInitial } = useQuery<Event[]>({
     queryKey: ["/api/events"],
   });
+
+  // Get paginated events for subsequent pages
+  const { data: paginatedData, isLoading: isLoadingPaginated } = useQuery<PaginatedEventsResponse>({
+    queryKey: ["/api/events-paginated", currentPage],
+    enabled: currentPage > 1, // Only fetch paginated data for pages after the first
+  });
+
+  // Use initial events for page 1, paginated events for other pages
+  const events = currentPage === 1 ? initialEvents?.slice(0, 50) : paginatedData?.events;
+  const isLoading = currentPage === 1 ? isLoadingInitial : isLoadingPaginated;
+  
+  // Calculate pagination info
+  const totalEvents = currentPage === 1 ? (initialEvents?.length || 0) : (paginatedData?.pagination.total || 0);
+  const eventsPerPage = currentPage === 1 ? 50 : 25;
+  const totalPages = Math.ceil(totalEvents / (currentPage === 1 ? 50 : 25));
+  const hasNext = currentPage < totalPages;
+  const hasPrev = currentPage > 1;
 
   if (isLoading) {
     return (
@@ -134,6 +167,43 @@ export function EventList({ onGenerateTickets }: EventListProps) {
           </div>
         ))}
       </div>
+      
+      {/* Pagination Controls */}
+      {(hasNext || hasPrev) && (
+        <div className="card-footer bg-white border-top-0">
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="text-muted small">
+              Showing {events?.length || 0} of {totalEvents} events
+              {currentPage === 1 && totalEvents > 50 && (
+                <span className="ms-2 text-primary">(Showing newest 50 events)</span>
+              )}
+            </div>
+            <div className="d-flex gap-2">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={!hasPrev || isLoading}
+                data-testid="button-prev-page"
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+              <span className="align-self-center mx-2 small text-muted">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={!hasNext || isLoading}
+                data-testid="button-next-page"
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

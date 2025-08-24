@@ -5,6 +5,7 @@ import { StatsCards } from "@/components/events/stats-cards";
 import { EventList } from "@/components/events/event-list";
 import { CreateEventModal } from "@/components/events/create-event-modal";
 import { TicketPreviewModal } from "@/components/tickets/ticket-preview-modal";
+import { FeaturedCarousel } from "@/components/featured/featured-carousel";
 import { Plus, LogIn } from "lucide-react";
 import type { Event } from "@shared/schema";
 
@@ -71,6 +72,9 @@ export default function Events() {
 
       {/* Stats Cards */}
       <StatsCards />
+
+      {/* Featured Events Carousel */}
+      <FeaturedCarousel />
 
       {/* Events List */}
       <EventList onGenerateTickets={handleGenerateTickets} />

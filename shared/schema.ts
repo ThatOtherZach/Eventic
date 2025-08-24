@@ -110,6 +110,19 @@ export const archivedTickets = pgTable("archived_tickets", {
   archivedAt: timestamp("archived_at").defaultNow(),
 });
 
+// Featured Events table for boosted events
+export const featuredEvents = pgTable("featured_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  duration: text("duration").notNull(), // "1hour", "6hours", "12hours", "24hours"
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  pricePaid: decimal("price_paid", { precision: 10, scale: 2 }).notNull(),
+  isBumped: boolean("is_bumped").default(false), // Whether this was a bump-in for 2x price
+  position: integer("position").notNull(), // Position in the carousel (1-100)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // NFT Registry table for minted tickets
 export const registryRecords = pgTable("registry_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -212,6 +225,17 @@ export const insertRegistryTransactionSchema = createInsertSchema(registryTransa
   transactionDate: true,
 });
 
+export const insertFeaturedEventSchema = createInsertSchema(featuredEvents).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  duration: z.enum(["1hour", "6hours", "12hours", "24hours"]),
+  startTime: z.date(),
+  endTime: z.date(),
+  pricePaid: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
+  position: z.number().min(1).max(100),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -232,3 +256,5 @@ export type InsertRegistryRecord = z.infer<typeof insertRegistryRecordSchema>;
 export type RegistryRecord = typeof registryRecords.$inferSelect;
 export type InsertRegistryTransaction = z.infer<typeof insertRegistryTransactionSchema>;
 export type RegistryTransaction = typeof registryTransactions.$inferSelect;
+export type InsertFeaturedEvent = z.infer<typeof insertFeaturedEventSchema>;
+export type FeaturedEvent = typeof featuredEvents.$inferSelect;

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEventSchema, insertTicketSchema } from "@shared/schema";
+import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { logError, logWarning, logInfo } from "./logger";
@@ -1107,6 +1107,175 @@ export async function registerRoutes(app: Express): Promise<Server> {
         request: req
       });
       res.status(500).json({ message: "Failed to fetch registry records" });
+    }
+  });
+
+  // Featured Events Routes
+  app.get("/api/featured-events", async (req, res) => {
+    try {
+      // Clean up expired featured events first
+      await storage.cleanupExpiredFeaturedEvents();
+      
+      const featuredEvents = await storage.getFeaturedEventsWithDetails();
+      res.json(featuredEvents);
+    } catch (error) {
+      await logError(error, "GET /api/featured-events", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch featured events" });
+    }
+  });
+
+  app.get("/api/events/:id/boost-info", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = extractUserId(req);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if event exists and belongs to user
+      const event = await storage.getEvent(id);
+      if (!event || event.userId !== userId) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Check if event can be boosted
+      const canBoost = await storage.canBoostEvent(id);
+      const featuredCount = await storage.getFeaturedEventCount();
+      const nextPosition = await storage.getNextAvailablePosition();
+      const price = storage.getBoostPrice(featuredCount);
+      const bumpPrice = price * 2;
+
+      res.json({
+        canBoost,
+        currentFeaturedCount: featuredCount,
+        maxSlots: 100,
+        nextPosition,
+        price: price.toFixed(2),
+        bumpPrice: bumpPrice.toFixed(2),
+        allSlotsTaken: nextPosition === null
+      });
+    } catch (error) {
+      await logError(error, "GET /api/events/:id/boost-info", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to get boost info" });
+    }
+  });
+
+  app.post("/api/events/:id/boost", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { duration, isBump = false } = req.body;
+      const userId = extractUserId(req);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Validate duration
+      if (!["1hour", "6hours", "12hours", "24hours"].includes(duration)) {
+        return res.status(400).json({ message: "Invalid duration" });
+      }
+
+      // Check if event exists and belongs to user
+      const event = await storage.getEvent(id);
+      if (!event || event.userId !== userId) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Check if event can be boosted
+      const canBoost = await storage.canBoostEvent(id);
+      if (!canBoost) {
+        return res.status(400).json({ message: "Event is already featured" });
+      }
+
+      const featuredCount = await storage.getFeaturedEventCount();
+      let position = await storage.getNextAvailablePosition();
+      let price = storage.getBoostPrice(featuredCount);
+
+      // Handle bump-in scenario
+      if (isBump) {
+        if (position !== null) {
+          return res.status(400).json({ message: "Bump not needed, slots available" });
+        }
+        price = price * 2;
+        position = 1; // Bump to position 1
+        
+        // Shift all existing positions down by 1
+        // This would require additional logic to update existing featured events
+        // For now, we'll just place it at position 1
+      } else if (position === null) {
+        return res.status(400).json({ message: "All featured slots are taken" });
+      }
+
+      // Calculate end time based on duration
+      const now = new Date();
+      const durationMs = {
+        "1hour": 60 * 60 * 1000,
+        "6hours": 6 * 60 * 60 * 1000,
+        "12hours": 12 * 60 * 60 * 1000,
+        "24hours": 24 * 60 * 60 * 1000
+      }[duration as "1hour" | "6hours" | "12hours" | "24hours"];
+
+      const endTime = new Date(now.getTime() + durationMs);
+
+      // Create featured event record
+      const featuredEvent = await storage.createFeaturedEvent({
+        eventId: id,
+        duration,
+        startTime: now,
+        endTime,
+        pricePaid: price.toString(),
+        isBumped: isBump,
+        position: position!
+      });
+
+      res.json({
+        success: true,
+        featuredEvent,
+        price: price.toFixed(2),
+        endTime
+      });
+    } catch (error) {
+      await logError(error, "POST /api/events/:id/boost", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to boost event" });
+    }
+  });
+
+  app.get("/api/events-paginated", async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 25;
+      
+      if (page < 1 || limit < 1 || limit > 100) {
+        return res.status(400).json({ message: "Invalid pagination parameters" });
+      }
+
+      const events = await storage.getEventsPaginated(page, limit);
+      const total = await storage.getTotalEventsCount();
+      const totalPages = Math.ceil(total / limit);
+
+      res.json({
+        events,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      });
+    } catch (error) {
+      await logError(error, "GET /api/events-paginated", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch paginated events" });
     }
   });
 

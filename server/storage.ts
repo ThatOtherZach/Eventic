@@ -1,6 +1,6 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -74,6 +74,18 @@ export interface IStorage {
   getRegistryRecordsByUser(userId: string): Promise<RegistryRecord[]>;
   canMintTicket(ticketId: string): Promise<boolean>;
   createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction>;
+  
+  // Featured Events Management
+  getActiveFeaturedEvents(): Promise<FeaturedEvent[]>;
+  getFeaturedEventsWithDetails(): Promise<(FeaturedEvent & { event: Event })[]>;
+  createFeaturedEvent(featuredEvent: InsertFeaturedEvent): Promise<FeaturedEvent>;
+  getBoostPrice(count: number): number;
+  getFeaturedEventCount(): Promise<number>;
+  canBoostEvent(eventId: string): Promise<boolean>;
+  getNextAvailablePosition(): Promise<number | null>;
+  cleanupExpiredFeaturedEvents(): Promise<void>;
+  getEventsPaginated(page: number, limit: number): Promise<Event[]>;
+  getTotalEventsCount(): Promise<number>;
 }
 
 interface ValidationSession {
@@ -723,6 +735,108 @@ export class DatabaseStorage implements IStorage {
   async createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction> {
     const [newTransaction] = await db.insert(registryTransactions).values(transaction).returning();
     return newTransaction;
+  }
+
+  // Featured Events Management
+  async getActiveFeaturedEvents(): Promise<FeaturedEvent[]> {
+    const now = new Date();
+    return db
+      .select()
+      .from(featuredEvents)
+      .where(gt(featuredEvents.endTime, now))
+      .orderBy(featuredEvents.position);
+  }
+
+  async getFeaturedEventsWithDetails(): Promise<(FeaturedEvent & { event: Event })[]> {
+    const now = new Date();
+    const results = await db
+      .select({
+        id: featuredEvents.id,
+        eventId: featuredEvents.eventId,
+        duration: featuredEvents.duration,
+        startTime: featuredEvents.startTime,
+        endTime: featuredEvents.endTime,
+        pricePaid: featuredEvents.pricePaid,
+        isBumped: featuredEvents.isBumped,
+        position: featuredEvents.position,
+        createdAt: featuredEvents.createdAt,
+        event: events
+      })
+      .from(featuredEvents)
+      .innerJoin(events, eq(featuredEvents.eventId, events.id))
+      .where(gt(featuredEvents.endTime, now))
+      .orderBy(featuredEvents.position);
+    
+    return results.map(row => ({
+      ...row,
+      event: row.event
+    }));
+  }
+
+  async createFeaturedEvent(featuredEvent: InsertFeaturedEvent): Promise<FeaturedEvent> {
+    const [newFeaturedEvent] = await db.insert(featuredEvents).values(featuredEvent).returning();
+    return newFeaturedEvent;
+  }
+
+  getBoostPrice(count: number): number {
+    // Base price starts at $5, increases by $0.50 per existing featured event
+    return 5 + (count * 0.5);
+  }
+
+  async getFeaturedEventCount(): Promise<number> {
+    const now = new Date();
+    const [result] = await db
+      .select({ count: count() })
+      .from(featuredEvents)
+      .where(gt(featuredEvents.endTime, now));
+    return result?.count || 0;
+  }
+
+  async canBoostEvent(eventId: string): Promise<boolean> {
+    // Check if event is not already featured
+    const now = new Date();
+    const [existing] = await db
+      .select()
+      .from(featuredEvents)
+      .where(and(eq(featuredEvents.eventId, eventId), gt(featuredEvents.endTime, now)));
+    
+    return !existing;
+  }
+
+  async getNextAvailablePosition(): Promise<number | null> {
+    const activeFeatured = await this.getActiveFeaturedEvents();
+    
+    // If less than 100 slots used, return next position
+    if (activeFeatured.length < 100) {
+      const usedPositions = new Set(activeFeatured.map(f => f.position));
+      for (let i = 1; i <= 100; i++) {
+        if (!usedPositions.has(i)) {
+          return i;
+        }
+      }
+    }
+    
+    return null; // All 100 slots taken
+  }
+
+  async cleanupExpiredFeaturedEvents(): Promise<void> {
+    const now = new Date();
+    await db.delete(featuredEvents).where(lt(featuredEvents.endTime, now));
+  }
+
+  async getEventsPaginated(page: number, limit: number): Promise<Event[]> {
+    const offset = (page - 1) * limit;
+    return db
+      .select()
+      .from(events)
+      .orderBy(desc(events.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getTotalEventsCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(events);
+    return result?.count || 0;
   }
 }
 
