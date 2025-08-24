@@ -40,6 +40,15 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   const queryClient = useQueryClient();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [ticketBackgroundUrl, setTicketBackgroundUrl] = useState<string>("");
+  
+  // Calculate min and max dates for event creation
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().split('T')[0];
+  
+  const fiveYearsFromNow = new Date();
+  fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
+  const maxDate = fiveYearsFromNow.toISOString().split('T')[0];
 
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
@@ -89,6 +98,34 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   });
 
   const onSubmit = (data: InsertEvent) => {
+    // Validate start date is at least 1 day in the future
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0); // Set to start of day
+    
+    const eventDate = new Date(`${data.date}T${data.time}`);
+    
+    if (eventDate < tomorrow) {
+      form.setError('date', {
+        type: 'manual',
+        message: 'Event must be scheduled at least one day in advance'
+      });
+      return;
+    }
+    
+    // Validate event date is not more than 5 years in the future
+    const fiveYearsFromNow = new Date(now);
+    fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
+    
+    if (eventDate > fiveYearsFromNow) {
+      form.setError('date', {
+        type: 'manual',
+        message: 'Event cannot be scheduled more than 5 years in advance'
+      });
+      return;
+    }
+    
     // Validate end date/time if both are provided
     if (data.endDate && data.endTime) {
       const startDateTime = new Date(`${data.date}T${data.time}`);
@@ -230,6 +267,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                             type="date"
                             className="form-control"
                             data-testid="input-event-date"
+                            min={minDate}
+                            max={maxDate}
                           />
                         </FormControl>
                         <FormMessage />
@@ -276,7 +315,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                             type="date"
                             className="form-control"
                             data-testid="input-event-end-date"
-                            min={form.watch('date')}
+                            min={form.watch('date') || minDate}
+                            max={maxDate}
                           />
                         </FormControl>
                         <FormMessage />
