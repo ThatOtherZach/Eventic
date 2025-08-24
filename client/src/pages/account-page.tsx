@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, LogOut, Eye } from "lucide-react";
+import { Calendar, Ticket, User, LogOut, Eye, Sparkles } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
-import type { Ticket as TicketType, Event } from "@shared/schema";
+import type { Ticket as TicketType, Event, RegistryRecord } from "@shared/schema";
 
 export default function AccountPage() {
   const { user, signOut } = useAuth();
@@ -26,6 +26,15 @@ export default function AccountPage() {
     queryKey: ["/api/user/events"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/user/events");
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
+  const { data: registryRecords, isLoading: registryLoading } = useQuery<RegistryRecord[]>({
+    queryKey: ["/api/user/registry"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/user/registry");
       return response.json();
     },
     enabled: !!user,
@@ -158,6 +167,76 @@ export default function AccountPage() {
           )}
         </div>
       </div>
+
+      {/* NFT Registry Section - Only show if user has minted NFTs */}
+      {registryRecords && registryRecords.length > 0 && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <h4 className="h5 fw-semibold mb-3">
+              <Sparkles className="me-2" size={20} />
+              My NFT Collection
+            </h4>
+            
+            {registryLoading ? (
+              <div className="card">
+                <div className="card-body">
+                  <div className="placeholder-glow">
+                    <div className="placeholder col-12 mb-2"></div>
+                    <div className="placeholder col-8"></div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="row g-3">
+                {registryRecords.map((record) => (
+                  <div key={record.id} className="col-md-6">
+                    <div className="card">
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start mb-3">
+                          <div>
+                            <h6 className="card-title mb-1">{record.title}</h6>
+                            <p className="text-muted small mb-0">
+                              {record.eventName} • {record.eventDate}
+                            </p>
+                          </div>
+                          <span className="badge bg-info">NFT</span>
+                        </div>
+                        
+                        <p className="card-text small">{record.description}</p>
+                        
+                        <div className="border-top pt-2 mt-2">
+                          <div className="row g-2 text-muted small">
+                            <div className="col-6">
+                              <strong>Ticket #:</strong> {record.ticketNumber}
+                            </div>
+                            <div className="col-6">
+                              <strong>Venue:</strong> {record.eventVenue}
+                            </div>
+                            <div className="col-6">
+                              <strong>Validated:</strong> {record.validatedAt ? new Date(record.validatedAt).toLocaleDateString() : 'N/A'}
+                            </div>
+                            <div className="col-6">
+                              <strong>Minted:</strong> {new Date(record.mintedAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {record.transferCount && record.transferCount > 0 && (
+                          <div className="mt-2">
+                            <span className="badge bg-secondary">
+                              {record.transferCount} Transfer{record.transferCount !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* My Events Section */}
       <div className="row">
