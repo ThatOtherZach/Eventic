@@ -142,12 +142,15 @@ type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
   // Create a unique key for deduplication based on title and description
-  const toastKey = `${props.title || ''}-${props.description || ''}`
+  // Normalize the description to handle slight variations
+  const normalizedDesc = (props.description || '').toString().toLowerCase().trim()
+  const normalizedTitle = (props.title || '').toString().toLowerCase().trim()
+  const toastKey = `${normalizedTitle}-${normalizedDesc}`
   const now = Date.now()
   
-  // Check if this toast was recently shown (within 1 second)
+  // Check if this toast was recently shown (within 3 seconds for better deduplication)
   const lastShown = recentToasts.get(toastKey)
-  if (lastShown && now - lastShown < 1000) {
+  if (lastShown && now - lastShown < 3000) {
     // Skip duplicate toast
     return {
       id: '',
@@ -159,10 +162,10 @@ function toast({ ...props }: Toast) {
   // Track this toast
   recentToasts.set(toastKey, now)
   
-  // Clean up old entries after 2 seconds
+  // Clean up old entries after 5 seconds
   setTimeout(() => {
     recentToasts.delete(toastKey)
-  }, 2000)
+  }, 5000)
   
   const id = genId()
 
