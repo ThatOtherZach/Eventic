@@ -62,11 +62,20 @@ export function QrScannerImplementation() {
       setRecentValidations(prev => [validation, ...prev.slice(0, 9)]);
       
       if (result.valid && result.canValidate) {
-        // User is authorized and ticket was validated
-        toast({
-          title: "✅ Ticket Validated",
-          description: `Ticket for ${result.event?.name} has been validated successfully`,
-        });
+        // Check if this is a golden ticket winner!
+        if (result.ticket?.isGoldenTicket) {
+          toast({
+            title: "🎫 GOLDEN TICKET WINNER! 🎫",
+            description: `CONGRATULATIONS! ${result.ticket?.ticketNumber} for ${result.event?.name} is a GOLDEN TICKET WINNER!`,
+            className: "bg-yellow-100 border-yellow-400 text-yellow-900",
+          });
+        } else {
+          // Regular validated ticket
+          toast({
+            title: "✅ Ticket Validated",
+            description: `Ticket for ${result.event?.name} has been validated successfully`,
+          });
+        }
       } else if (result.isAuthentic && !result.canValidate) {
         // Ticket is authentic but user not authorized to validate
         toast({

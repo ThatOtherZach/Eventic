@@ -241,14 +241,32 @@ export class DatabaseStorage implements IStorage {
     // Append suffix to validation code for backend uniqueness
     const fullValidationCode = validationCode ? validationCode + codeSuffix : null;
     
-    // Update ticket with incremented use count
+    // Check for golden ticket on first validation
+    let isGoldenTicket = currentTicket.isGoldenTicket || false;
+    if (!currentTicket.isValidated && event.goldenTicketEnabled && event.goldenTicketNumber !== null) {
+      // Generate random number using current timestamp as seed
+      const timestamp = Date.now();
+      // Simple seeded random using timestamp
+      const seed = timestamp % 10000;
+      const random = (seed * 9301 + 49297) % 233280;
+      const randomNumber = Math.floor((random / 233280) * 5001); // 0-5000
+      
+      // Check if it matches the golden ticket number
+      if (randomNumber === event.goldenTicketNumber) {
+        isGoldenTicket = true;
+        console.log(`🎫 GOLDEN TICKET WINNER! Ticket ${id} won with number ${randomNumber}`);
+      }
+    }
+    
+    // Update ticket with incremented use count and golden ticket status
     const [ticket] = await db
       .update(tickets)
       .set({ 
         isValidated: true, 
         validatedAt: new Date(),
         validationCode: fullValidationCode,
-        useCount: (currentTicket.useCount || 0) + 1
+        useCount: (currentTicket.useCount || 0) + 1,
+        isGoldenTicket: isGoldenTicket
       })
       .where(eq(tickets.id, id))
       .returning();

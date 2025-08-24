@@ -56,6 +56,10 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       imageUrl: undefined,
       ticketBackgroundUrl: undefined,
       earlyValidation: "Allow at Anytime",
+      reentryType: "No Reentry (Single Use)",
+      maxUses: 1,
+      goldenTicketEnabled: false,
+      goldenTicketNumber: undefined,
     },
   });
 
@@ -152,6 +156,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     validatedAt: null,
     validationCode: null,
     useCount: 0,
+    isGoldenTicket: false,
     createdAt: new Date(),
   };
 
@@ -173,6 +178,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     earlyValidation: watchedValues.earlyValidation || "Allow at Anytime",
     reentryType: watchedValues.reentryType || "No Reentry (Single Use)",
     maxUses: watchedValues.maxUses || 1,
+    goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
+    goldenTicketNumber: watchedValues.goldenTicketNumber || null,
     createdAt: new Date(),
   };
 
@@ -496,6 +503,73 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                         />
                       </FormControl>
                       <div className="form-text">How many times the ticket can be used (minimum 2, maximum 24)</div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="goldenTicketEnabled"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="goldenTicketEnabled"
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        data-testid="checkbox-golden-ticket"
+                      />
+                      <label className="form-check-label" htmlFor="goldenTicketEnabled">
+                        <span className="badge bg-warning text-dark me-2">🎫</span>
+                        Enable Golden Ticket Contest
+                      </label>
+                    </div>
+                    <div className="form-text">A random ticket will win based on validation timing</div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {form.watch('goldenTicketEnabled') && (
+              <div className="mb-3">
+                <FormField
+                  control={form.control}
+                  name="goldenTicketNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Golden Ticket Number (0-5000)</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          min="0"
+                          max="5000"
+                          placeholder="Enter golden ticket number"
+                          className="form-control"
+                          data-testid="input-golden-number"
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            if (isNaN(value)) {
+                              field.onChange(undefined);
+                            } else if (value < 0) {
+                              field.onChange(0);
+                            } else if (value > 5000) {
+                              field.onChange(5000);
+                            } else {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <div className="form-text">Random number generated on validation will be compared to this</div>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -36,6 +36,8 @@ export const events = pgTable("events", {
   earlyValidation: text("early_validation").default("Allow at Anytime"),
   reentryType: text("reentry_type").default("No Reentry (Single Use)"),
   maxUses: integer("max_uses").default(1),
+  goldenTicketEnabled: boolean("golden_ticket_enabled").default(false),
+  goldenTicketNumber: integer("golden_ticket_number"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -49,6 +51,7 @@ export const tickets = pgTable("tickets", {
   validatedAt: timestamp("validated_at"),
   validationCode: text("validation_code"), // The unique 4-digit code used when ticket was validated
   useCount: integer("use_count").default(0), // Number of times this ticket has been used
+  isGoldenTicket: boolean("is_golden_ticket").default(false), // Whether this ticket won the golden ticket contest
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -102,6 +105,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
   earlyValidation: z.enum(["At Start Time", "One Hour Before", "Two Hours Before", "Allow at Anytime"]).optional().default("Allow at Anytime"),
   reentryType: z.enum(["No Reentry (Single Use)", "Pass (Multiple Use)", "No Limit"]).optional().default("No Reentry (Single Use)"),
   maxUses: z.number().min(1).max(24).optional().default(1),
+  goldenTicketEnabled: z.boolean().optional().default(false),
+  goldenTicketNumber: z.number().min(0).max(5000).optional(),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({

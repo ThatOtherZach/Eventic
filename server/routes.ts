@@ -427,11 +427,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle image URL normalization if provided
       let updateData = { ...req.body };
       
-      // Remove name, earlyValidation, and re-entry fields to prevent them from being updated
+      // Remove name, earlyValidation, re-entry, and golden ticket fields to prevent them from being updated
       delete updateData.name;
       delete updateData.earlyValidation;
       delete updateData.reentryType;
       delete updateData.maxUses;
+      delete updateData.goldenTicketEnabled;
+      delete updateData.goldenTicketNumber;
       
       // Validate maxTickets if provided
       if (updateData.maxTickets !== undefined && updateData.maxTickets !== null) {

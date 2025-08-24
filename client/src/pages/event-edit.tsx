@@ -38,6 +38,8 @@ export default function EventEditPage() {
     earlyValidation: "Allow at Anytime",
     reentryType: "No Reentry (Single Use)",
     maxUses: 1,
+    goldenTicketEnabled: false,
+    goldenTicketNumber: undefined as number | undefined,
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -73,6 +75,8 @@ export default function EventEditPage() {
         earlyValidation: event.earlyValidation || "Allow at Anytime",
         reentryType: event.reentryType || "No Reentry (Single Use)",
         maxUses: event.maxUses || 1,
+        goldenTicketEnabled: event.goldenTicketEnabled || false,
+        goldenTicketNumber: event.goldenTicketNumber || undefined,
       });
       
       // Store tickets sold for validation
@@ -216,6 +220,7 @@ export default function EventEditPage() {
     validatedAt: null,
     validationCode: null,
     useCount: 0,
+    isGoldenTicket: false,
     createdAt: new Date(),
   };
 
@@ -236,6 +241,8 @@ export default function EventEditPage() {
     earlyValidation: formData.earlyValidation || "Allow at Anytime",
     reentryType: formData.reentryType || "No Reentry (Single Use)",
     maxUses: formData.maxUses || 1,
+    goldenTicketEnabled: formData.goldenTicketEnabled || false,
+    goldenTicketNumber: formData.goldenTicketNumber || null,
     createdAt: new Date(),
   };
 
@@ -478,6 +485,45 @@ export default function EventEditPage() {
                 />
                 <small className="text-muted">
                   Number of uses cannot be changed after event creation
+                </small>
+              </div>
+            )}
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="goldenTicketEnabled"
+                  checked={formData.goldenTicketEnabled}
+                  disabled
+                  title="Golden ticket contest cannot be changed after creation"
+                />
+                <label className="form-check-label" htmlFor="goldenTicketEnabled">
+                  <span className="badge bg-warning text-dark me-2">🎫</span>
+                  Golden Ticket Contest Enabled
+                </label>
+              </div>
+              <small className="text-muted">
+                Golden ticket contest settings cannot be changed after event creation
+              </small>
+            </div>
+
+            {formData.goldenTicketEnabled && (
+              <div className="mb-3">
+                <label htmlFor="goldenTicketNumber" className="form-label">
+                  Golden Ticket Number
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  id="goldenTicketNumber"
+                  value={formData.goldenTicketNumber || ''}
+                  disabled
+                  title="Golden ticket number cannot be changed after creation"
+                />
+                <small className="text-muted">
+                  The winning number cannot be changed after event creation
                 </small>
               </div>
             )}

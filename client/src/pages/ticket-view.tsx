@@ -299,6 +299,16 @@ export default function TicketViewPage(): React.ReactElement {
                 Ticket Validation
               </h5>
 
+              {/* Golden Ticket Badge */}
+              {ticket.isGoldenTicket && (
+                <div className="alert alert-warning text-center mb-3">
+                  <h5 className="mb-2">
+                    <span className="badge bg-warning text-dark">🎫 GOLDEN TICKET WINNER! 🎫</span>
+                  </h5>
+                  <p className="mb-0">Congratulations! This ticket won the golden ticket contest!</p>
+                </div>
+              )}
+
               {ticket.isValidated && event.reentryType === 'No Reentry (Single Use)' ? (
                 <div className="text-center py-4">
                   <CheckCircle size={48} className="text-success mb-3" />
