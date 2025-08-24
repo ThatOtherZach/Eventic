@@ -24,7 +24,9 @@ function extractUserId(req: any): string | null {
 // Helper function to check if a ticket is within its valid time window
 function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
   const now = new Date();
-  const startDate = new Date(event.startDate);
+  // Combine date and time fields for start date
+  const startDateTime = `${event.date}T${event.time}:00`;
+  const startDate = new Date(startDateTime);
   
   // Check if event hasn't started yet
   if (now < startDate) {
@@ -34,9 +36,10 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
     };
   }
   
-  // If event has an end date, check if we're past it
-  if (event.endDate) {
-    const endDate = new Date(event.endDate);
+  // If event has an end date and time, check if we're past it
+  if (event.endDate && event.endTime) {
+    const endDateTime = `${event.endDate}T${event.endTime}:00`;
+    const endDate = new Date(endDateTime);
     if (now > endDate) {
       return {
         valid: false,

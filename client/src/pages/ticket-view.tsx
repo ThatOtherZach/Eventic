@@ -13,6 +13,47 @@ interface ValidationSession {
   expiresAt: string;
 }
 
+// Helper function to check if a ticket is within its valid time window
+function isTicketWithinValidTime(event: Event | undefined): { valid: boolean; message?: string } {
+  if (!event) return { valid: false, message: "Event data not available" };
+  
+  const now = new Date();
+  // Combine date and time fields for start date using ISO format
+  const startDateTime = `${event.date}T${event.time}:00`;
+  const startDate = new Date(startDateTime);
+  
+  // Check if event hasn't started yet
+  if (now < startDate) {
+    return {
+      valid: false,
+      message: `Event has not started yet. It begins on ${startDate.toLocaleString()}`
+    };
+  }
+  
+  // If event has an end date and time, check if we're past it
+  if (event.endDate && event.endTime) {
+    const endDateTime = `${event.endDate}T${event.endTime}:00`;
+    const endDate = new Date(endDateTime);
+    if (now > endDate) {
+      return {
+        valid: false,
+        message: `Event has ended. It ended on ${endDate.toLocaleString()}`
+      };
+    }
+  } else {
+    // No end date - check if we're within 24 hours of start
+    const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+    if (now > twentyFourHoursAfterStart) {
+      return {
+        valid: false,
+        message: `Ticket has expired. It was valid for 24 hours after ${startDate.toLocaleString()}`
+      };
+    }
+  }
+  
+  return { valid: true };
+}
+
 export default function TicketViewPage(): React.ReactElement {
   const { ticketId } = useParams<{ ticketId: string }>();
   const { toast } = useToast();
@@ -190,6 +231,7 @@ export default function TicketViewPage(): React.ReactElement {
   }
 
   const { ticket, event } = ticketData;
+  const timeValidation = isTicketWithinValidTime(event);
 
   return (
     <div className="container py-5">
@@ -272,20 +314,37 @@ export default function TicketViewPage(): React.ReactElement {
                 </div>
               ) : (
                 <div>
-                  <p className="text-muted mb-3">
-                    Click the button below to generate a time-limited validation code. 
-                    The QR code will be valid for 3 minutes and can only be used once.
-                  </p>
+                  {!timeValidation.valid ? (
+                    <div className="alert alert-warning mb-3">
+                      <div className="d-flex align-items-center">
+                        <Clock size={20} className="me-2" />
+                        <div>
+                          <h6 className="mb-1">Ticket Validation Unavailable</h6>
+                          <p className="mb-0 small">{timeValidation.message}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted mb-3">
+                      Click the button below to generate a time-limited validation code. 
+                      The QR code will be valid for 3 minutes and can only be used once.
+                    </p>
+                  )}
                   <button
                     className="btn btn-primary w-100"
                     onClick={() => startValidationMutation.mutate()}
-                    disabled={startValidationMutation.isPending}
+                    disabled={startValidationMutation.isPending || !timeValidation.valid}
                     data-testid="button-validate-ticket"
                   >
                     {startValidationMutation.isPending ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                         Starting...
+                      </>
+                    ) : !timeValidation.valid ? (
+                      <>
+                        <Clock size={18} className="me-2" />
+                        Validation Expired
                       </>
                     ) : (
                       <>
