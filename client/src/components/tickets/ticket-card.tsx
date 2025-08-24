@@ -20,8 +20,8 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         qrCanvasRef.current,
         ticket.qrData,
         {
-          width: 120,
-          height: 120,
+          width: 180,
+          height: 180,
           margin: 1,
           color: {
             dark: "#000000",
@@ -98,7 +98,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         <div 
           className="d-flex align-items-center justify-content-center"
           style={{
-            width: '140px',
+            width: '210px',
             backgroundColor: 'white',
             borderRadius: '0 8px 8px 0',
           }}
@@ -108,7 +108,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
               <img 
                 src={dynamicQrUrl} 
                 alt="Validation QR Code" 
-                style={{ width: '120px', height: '120px' }}
+                style={{ width: '180px', height: '180px' }}
               />
               <div className="small text-muted mt-1" style={{ fontSize: '10px' }}>Validation Code</div>
             </div>
