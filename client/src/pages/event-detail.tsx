@@ -297,9 +297,31 @@ export default function EventDetailPage() {
                 )}
               </div>
 
-              {isOwner ? (
+              {/* Purchase Button for everyone including owners */}
+              <button
+                className="btn btn-primary w-100 mb-3"
+                onClick={handlePurchase}
+                disabled={isSoldOut || isPurchasing}
+                data-testid="button-purchase"
+              >
+                {isPurchasing ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" />
+                    Processing...
+                  </>
+                ) : isSoldOut ? (
+                  "Sold Out"
+                ) : (
+                  <>
+                    <Ticket size={18} className="me-2" />
+                    Purchase Ticket
+                  </>
+                )}
+              </button>
+
+              {isOwner && (
                 <div>
-                  <Link href={`/events/${id}/edit`} className="btn btn-primary w-100">
+                  <Link href={`/events/${id}/edit`} className="btn btn-outline-primary w-100">
                     <Edit size={18} className="me-2" />
                     Edit Event
                   </Link>
@@ -364,27 +386,6 @@ export default function EventDetailPage() {
                     )}
                   </div>
                 </div>
-              ) : (
-                <button
-                  className="btn btn-primary w-100"
-                  onClick={handlePurchase}
-                  disabled={isSoldOut || isPurchasing}
-                  data-testid="button-purchase"
-                >
-                  {isPurchasing ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" />
-                      Processing...
-                    </>
-                  ) : isSoldOut ? (
-                    "Sold Out"
-                  ) : (
-                    <>
-                      <Ticket size={18} className="me-2" />
-                      Purchase Ticket
-                    </>
-                  )}
-                </button>
               )}
 
               {!user && !isOwner && (
