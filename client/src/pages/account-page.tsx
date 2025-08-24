@@ -101,22 +101,20 @@ export default function AccountPage() {
             <div className="row g-3">
               {tickets?.map((ticket) => (
                 <div key={ticket.id} className="col-md-4">
-                  <TicketCard 
-                    ticket={ticket}
-                    event={ticket.event}
-                    showQR={false}
-                  />
-                  <div className="d-flex justify-content-center gap-2 mt-2">
-                    {ticket.isValidated && (
+                  <Link href={`/tickets/${ticket.id}`}>
+                    <a className="text-decoration-none d-block" style={{ cursor: 'pointer' }}>
+                      <TicketCard 
+                        ticket={ticket}
+                        event={ticket.event}
+                        showQR={false}
+                      />
+                    </a>
+                  </Link>
+                  {ticket.isValidated && (
+                    <div className="text-center mt-2">
                       <span className="badge bg-success">Used</span>
-                    )}
-                    <Link href={`/tickets/${ticket.id}`}>
-                      <a className="btn btn-sm btn-outline-primary" data-testid={`button-view-ticket-${ticket.id}`}>
-                        <Eye size={14} className="me-1" />
-                        View Ticket
-                      </a>
-                    </Link>
-                  </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

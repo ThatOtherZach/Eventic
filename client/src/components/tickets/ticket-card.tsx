@@ -49,8 +49,21 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         background: event.ticketBackgroundUrl 
           ? `url(${event.ticketBackgroundUrl}) center/cover` 
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        transition: 'transform 0.2s, box-shadow 0.2s',
       }}
       data-testid={`ticket-card-${ticket.id}`}
+      onMouseEnter={(e) => {
+        if (!showQR && !isValidating) {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!showQR && !isValidating) {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        }
+      }}
     >
       {/* Semi-transparent overlay for text readability */}
       <div 
