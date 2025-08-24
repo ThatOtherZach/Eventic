@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
 import type { Event } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -139,6 +140,33 @@ export default function EventDetailPage() {
               </p>
             </div>
           )}
+
+          <div className="card bg-light mb-4">
+            <div className="card-body">
+              <h6 className="card-title mb-3">Add to Calendar</h6>
+              <div className="d-flex gap-2 flex-wrap">
+                <button
+                  className="btn btn-outline-primary"
+                  onClick={() => downloadICalendar(event)}
+                  data-testid="button-icalendar"
+                >
+                  <Download size={18} className="me-2" />
+                  iCalendar (.ics)
+                </button>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => addToGoogleCalendar(event)}
+                  data-testid="button-google-calendar"
+                >
+                  <CalendarPlus size={18} className="me-2" />
+                  Google Calendar
+                </button>
+              </div>
+              <small className="text-muted d-block mt-2">
+                Download for Apple Calendar, Outlook, or add to Google Calendar
+              </small>
+            </div>
+          </div>
         </div>
 
         <div className="col-lg-4">
