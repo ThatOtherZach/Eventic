@@ -381,6 +381,15 @@ video {
   outline-offset: 2px;
 }
 
+/* Remove underlines from ticket card links */
+.ticket-card-link,
+.ticket-card-link:hover,
+.ticket-card-link:focus,
+.ticket-card-link:active,
+.ticket-card-link:visited {
+  text-decoration: none !important;
+}
+
 /* Print styles */
 @media print {
   .qr-container {

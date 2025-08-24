@@ -102,7 +102,10 @@ export default function AccountPage() {
               {tickets?.map((ticket) => (
                 <div key={ticket.id} className="col-md-4">
                   <Link href={`/tickets/${ticket.id}`}>
-                    <a className="text-decoration-none d-block" style={{ cursor: 'pointer' }}>
+                    <a 
+                      className="ticket-card-link d-block" 
+                      style={{ cursor: 'pointer' }}
+                    >
                       <TicketCard 
                         ticket={ticket}
                         event={ticket.event}
