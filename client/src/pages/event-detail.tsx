@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -20,6 +20,8 @@ export default function EventDetailPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [validatorEmail, setValidatorEmail] = useState("");
+  const [isAddingValidator, setIsAddingValidator] = useState(false);
 
   const { data: event, isLoading, error } = useQuery<EventWithStats>({
     queryKey: [`/api/events/${id}`],
@@ -32,6 +34,58 @@ export default function EventDetailPage() {
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/events/${id}/user-tickets`);
       return response.json();
+    },
+  });
+
+  const { data: validators } = useQuery<any[]>({
+    queryKey: [`/api/events/${id}/validators`],
+    enabled: !!id && !!user && event?.userId === user.id,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/events/${id}/validators`);
+      return response.json();
+    },
+  });
+
+  const addValidatorMutation = useMutation({
+    mutationFn: async (email: string) => {
+      return apiRequest("POST", `/api/events/${id}/validators`, { email });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success!",
+        description: "Delegated validator added successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/validators`] });
+      setValidatorEmail("");
+      setIsAddingValidator(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add validator",
+        variant: "destructive",
+      });
+      setIsAddingValidator(false);
+    },
+  });
+
+  const removeValidatorMutation = useMutation({
+    mutationFn: async (validatorId: string) => {
+      return apiRequest("DELETE", `/api/events/${id}/validators/${validatorId}`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success!",
+        description: "Validator removed successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/validators`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove validator",
+        variant: "destructive",
+      });
     },
   });
 
@@ -251,6 +305,63 @@ export default function EventDetailPage() {
                   </Link>
                   <div className="alert alert-info mt-3">
                     <small>You own this event</small>
+                  </div>
+                  
+                  {/* Delegated Validators Section */}
+                  <div className="mt-4">
+                    <h6 className="fw-semibold mb-3">Delegated Validators</h6>
+                    <p className="small text-muted mb-3">
+                      Allow others to validate tickets for this event by adding their email address.
+                    </p>
+                    
+                    <div className="input-group mb-3">
+                      <input
+                        type="email"
+                        className="form-control"
+                        placeholder="Enter email address"
+                        value={validatorEmail}
+                        onChange={(e) => setValidatorEmail(e.target.value)}
+                        disabled={isAddingValidator}
+                      />
+                      <button
+                        className="btn btn-outline-primary"
+                        onClick={() => {
+                          if (validatorEmail) {
+                            setIsAddingValidator(true);
+                            addValidatorMutation.mutate(validatorEmail);
+                          }
+                        }}
+                        disabled={!validatorEmail || isAddingValidator}
+                      >
+                        {isAddingValidator ? (
+                          <span className="spinner-border spinner-border-sm" />
+                        ) : (
+                          <UserPlus size={16} />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {validators && validators.length > 0 && (
+                      <div className="list-group">
+                        {validators.map((validator: any) => (
+                          <div key={validator.id} className="list-group-item d-flex justify-content-between align-items-center">
+                            <small>{validator.email}</small>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => removeValidatorMutation.mutate(validator.id)}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {(!validators || validators.length === 0) && (
+                      <div className="text-muted small">
+                        No delegated validators added yet
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (

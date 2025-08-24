@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, users, authTokens, events, tickets } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, users, authTokens, events, tickets, delegatedValidators } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -38,6 +38,13 @@ export interface IStorage {
   createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }>;
   createValidationToken(ticketId: string): Promise<string>;
   validateDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }>;
+  checkDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }>;
+  
+  // Delegated Validators
+  getDelegatedValidatorsByEvent(eventId: string): Promise<DelegatedValidator[]>;
+  canUserValidateForEvent(userId: string, email: string, eventId: string): Promise<boolean>;
+  addDelegatedValidator(validator: InsertDelegatedValidator): Promise<DelegatedValidator>;
+  removeDelegatedValidator(id: string): Promise<boolean>;
   
   // Stats
   getEventStats(): Promise<{
@@ -271,6 +278,68 @@ export class DatabaseStorage implements IStorage {
     });
 
     return { valid: true, ticketId };
+  }
+
+  async checkDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }> {
+    const ticketId = this.validationTokens.get(token);
+    if (!ticketId) {
+      return { valid: false };
+    }
+
+    const session = this.validationSessions.get(ticketId);
+    if (!session || session.expiresAt < new Date()) {
+      return { valid: false };
+    }
+
+    const ticket = await this.getTicket(ticketId);
+    if (!ticket) {
+      return { valid: false };
+    }
+
+    // Just check validity without marking as validated
+    return { valid: true, ticketId };
+  }
+
+  // Delegated Validators
+  async getDelegatedValidatorsByEvent(eventId: string): Promise<DelegatedValidator[]> {
+    return await db
+      .select()
+      .from(delegatedValidators)
+      .where(eq(delegatedValidators.eventId, eventId));
+  }
+
+  async canUserValidateForEvent(userId: string, email: string, eventId: string): Promise<boolean> {
+    // Check if user is the event owner
+    const event = await this.getEvent(eventId);
+    if (event?.userId === userId) {
+      return true;
+    }
+
+    // Check if user is a delegated validator
+    const [validator] = await db
+      .select()
+      .from(delegatedValidators)
+      .where(and(
+        eq(delegatedValidators.eventId, eventId),
+        eq(delegatedValidators.email, email)
+      ));
+    
+    return !!validator;
+  }
+
+  async addDelegatedValidator(validator: InsertDelegatedValidator): Promise<DelegatedValidator> {
+    const [newValidator] = await db
+      .insert(delegatedValidators)
+      .values(validator)
+      .returning();
+    return newValidator;
+  }
+
+  async removeDelegatedValidator(id: string): Promise<boolean> {
+    const result = await db
+      .delete(delegatedValidators)
+      .where(eq(delegatedValidators.id, id));
+    return true;
   }
 
   async getEventStats(): Promise<{

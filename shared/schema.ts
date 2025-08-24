@@ -45,6 +45,14 @@ export const tickets = pgTable("tickets", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const delegatedValidators = pgTable("delegated_validators", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  email: text("email").notNull(),
+  addedBy: varchar("added_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -67,6 +75,11 @@ export const insertTicketSchema = createInsertSchema(tickets).omit({
   createdAt: true,
 });
 
+export const insertDelegatedValidatorSchema = createInsertSchema(delegatedValidators).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -75,3 +88,5 @@ export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
 export type InsertTicket = z.infer<typeof insertTicketSchema>;
 export type Ticket = typeof tickets.$inferSelect;
+export type InsertDelegatedValidator = z.infer<typeof insertDelegatedValidatorSchema>;
+export type DelegatedValidator = typeof delegatedValidators.$inferSelect;

@@ -11,6 +11,9 @@ interface ValidationResult {
   message: string;
   ticket?: Ticket;
   event?: Event;
+  canValidate?: boolean;
+  isAuthentic?: boolean;
+  alreadyValidated?: boolean;
 }
 
 interface ValidationHistory {
@@ -42,23 +45,38 @@ export function QrScannerImplementation() {
       const response = await apiRequest("POST", "/api/validate", { qrData });
       return response.json();
     },
-    onSuccess: (result: ValidationResult) => {
+    onSuccess: (result: any) => {
       setValidationResult(result);
       
       const validation: ValidationHistory = {
         eventName: result.event?.name || "Unknown Event",
         ticketNumber: result.ticket?.ticketNumber || "Unknown",
         timestamp: new Date().toLocaleTimeString(),
-        valid: result.valid,
+        valid: result.valid && result.canValidate,
       };
       setRecentValidations(prev => [validation, ...prev.slice(0, 9)]);
       
-      if (result.valid) {
+      if (result.valid && result.canValidate) {
+        // User is authorized and ticket was validated
         toast({
-          title: "✅ Valid Ticket",
-          description: `Ticket for ${result.event?.name} validated successfully`,
+          title: "✅ Ticket Validated",
+          description: `Ticket for ${result.event?.name} has been validated successfully`,
+        });
+      } else if (result.isAuthentic && !result.canValidate) {
+        // Ticket is authentic but user not authorized to validate
+        toast({
+          title: "✔️ Authentic Ticket",
+          description: `Valid ticket for ${result.event?.name}, but you're not authorized to validate. Only the event owner or delegated validators can validate.`,
+        });
+      } else if (result.alreadyValidated) {
+        // Ticket was already validated
+        toast({
+          title: "⚠️ Already Validated",
+          description: `This ticket for ${result.event?.name} has already been validated`,
+          variant: "destructive",
         });
       } else {
+        // Invalid ticket
         toast({
           title: "❌ Invalid Ticket",
           description: result.message,
@@ -344,7 +362,8 @@ export function QrScannerImplementation() {
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">
               <div className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
-                validationResult.valid ? "bg-success" : "bg-danger"
+                validationResult.canValidate && validationResult.valid ? "bg-success" : 
+                validationResult.isAuthentic ? "bg-info" : "bg-danger"
               }`} style={{ width: "40px", height: "40px" }}>
                 {validationResult.valid ? (
                   <CheckCircle className="text-white" size={20} />
@@ -354,15 +373,17 @@ export function QrScannerImplementation() {
               </div>
               <div className="flex-grow-1">
                 <h6 className="fw-semibold mb-1">
-                  {validationResult.valid ? "✅ Valid Ticket" : "❌ Invalid Ticket"}
+                  {validationResult.canValidate && validationResult.valid ? "✅ Ticket Validated" : 
+                   validationResult.isAuthentic ? "✔️ Authentic Ticket" :
+                   validationResult.alreadyValidated ? "⚠️ Already Validated" : "❌ Invalid Ticket"}
                 </h6>
                 <p className="text-muted small mb-0">
-                  {validationResult.valid ? "Ticket successfully validated" : validationResult.message}
+                  {validationResult.message || "Ticket status checked"}
                 </p>
               </div>
             </div>
 
-            {validationResult.valid && validationResult.event && validationResult.ticket && (
+            {validationResult.event && validationResult.ticket && (
               <div className="bg-light rounded p-3 mb-3">
                 <div className="row">
                   <div className="col-6 mb-2">
@@ -381,7 +402,21 @@ export function QrScannerImplementation() {
                     <span className="text-muted small">Date & Time:</span>
                     <p className="fw-medium mb-0 small">{validationResult.event.date} {validationResult.event.time}</p>
                   </div>
+                  {validationResult.ticket.isValidated && (
+                    <div className="col-12 mt-2">
+                      <span className="badge bg-secondary">Already Validated</span>
+                    </div>
+                  )}
                 </div>
+                
+                {!validationResult.canValidate && validationResult.isAuthentic && (
+                  <div className="alert alert-info mt-3 mb-0">
+                    <small>
+                      <strong>Note:</strong> Only the event owner or delegated validators can mark tickets as validated. 
+                      <a href={`/events/${validationResult.event.id}`} className="alert-link ms-1">View Event Details →</a>
+                    </small>
+                  </div>
+                )}
               </div>
             )}
 

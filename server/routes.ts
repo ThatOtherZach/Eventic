@@ -20,6 +20,21 @@ function extractUserId(req: any): string | null {
   }
 }
 
+// Helper function to extract user email from the request
+function extractUserEmail(req: any): string | null {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return null;
+    
+    // Parse Supabase JWT to get email
+    const token = authHeader.replace('Bearer ', '');
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    return payload.email || null;
+  } catch (error) {
+    return null;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
@@ -397,17 +412,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "QR data is required" });
       }
 
+      const userId = extractUserId(req);
+      const userEmail = extractUserEmail(req);
+
       // First check if it's a dynamic validation token
-      const dynamicValidation = await storage.validateDynamicToken(qrData);
-      if (dynamicValidation.valid && dynamicValidation.ticketId) {
-        const ticket = await storage.getTicket(dynamicValidation.ticketId);
+      const tokenCheck = await storage.checkDynamicToken(qrData);
+      
+      if (tokenCheck.valid && tokenCheck.ticketId) {
+        const ticket = await storage.getTicket(tokenCheck.ticketId);
         const event = await storage.getEvent(ticket!.eventId);
-        return res.json({ 
-          message: "Ticket validated successfully", 
-          valid: true,
-          ticket,
-          event 
-        });
+        
+        // Check if user is authorized to validate for this event
+        const canValidate = userId && userEmail ? 
+          await storage.canUserValidateForEvent(userId, userEmail, event!.id) : false;
+        
+        if (canValidate) {
+          // User is authorized - perform actual validation
+          const validation = await storage.validateDynamicToken(qrData);
+          if (validation.valid) {
+            return res.json({ 
+              message: "Ticket validated successfully", 
+              valid: true,
+              canValidate: true,
+              ticket,
+              event 
+            });
+          }
+        } else {
+          // User not authorized - just verify authenticity
+          return res.json({
+            message: "Ticket is authentic but you are not authorized to validate it",
+            valid: true,
+            canValidate: false,
+            isAuthentic: true,
+            ticket: { ...ticket, isValidated: ticket.isValidated },
+            event
+          });
+        }
       }
 
       // Otherwise try to validate as a regular ticket QR code
@@ -419,23 +460,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      const event = await storage.getEvent(ticket.eventId);
+      
+      // Check if user is authorized to validate for this event
+      const canValidate = userId && userEmail ? 
+        await storage.canUserValidateForEvent(userId, userEmail, event!.id) : false;
+
       if (ticket.isValidated) {
-        return res.status(400).json({ 
+        return res.json({ 
           message: "Ticket already validated", 
           valid: false,
-          ticket 
+          canValidate,
+          isAuthentic: true,
+          alreadyValidated: true,
+          ticket,
+          event
         });
       }
 
-      const validatedTicket = await storage.validateTicket(ticket.id);
-      const event = await storage.getEvent(ticket.eventId);
-
-      res.json({ 
-        message: "Ticket validated successfully", 
-        valid: true,
-        ticket: validatedTicket,
-        event 
-      });
+      if (canValidate) {
+        // User is authorized - perform actual validation
+        const validatedTicket = await storage.validateTicket(ticket.id);
+        return res.json({ 
+          message: "Ticket validated successfully", 
+          valid: true,
+          canValidate: true,
+          ticket: validatedTicket,
+          event 
+        });
+      } else {
+        // User not authorized - just verify authenticity
+        return res.json({
+          message: "Ticket is authentic but you are not authorized to validate it",
+          valid: true,
+          canValidate: false,
+          isAuthentic: true,
+          ticket: { ...ticket, isValidated: ticket.isValidated },
+          event
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to validate ticket" });
     }
@@ -448,6 +511,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Delegated Validators routes
+  app.get("/api/events/:eventId/validators", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const event = await storage.getEvent(req.params.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Only event owner can view validators
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const validators = await storage.getDelegatedValidatorsByEvent(req.params.eventId);
+      res.json(validators);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch validators" });
+    }
+  });
+
+  app.post("/api/events/:eventId/validators", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const event = await storage.getEvent(req.params.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Only event owner can add validators
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const validator = await storage.addDelegatedValidator({
+        eventId: req.params.eventId,
+        email,
+        addedBy: userId
+      });
+
+      res.status(201).json(validator);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add validator" });
+    }
+  });
+
+  app.delete("/api/events/:eventId/validators/:validatorId", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const event = await storage.getEvent(req.params.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Only event owner can remove validators
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      await storage.removeDelegatedValidator(req.params.validatorId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove validator" });
     }
   });
 
