@@ -1,4 +1,6 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, users, authTokens, events, tickets } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -50,199 +52,159 @@ interface ValidationSession {
   tokens: Set<string>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private authTokens: Map<string, AuthToken>;
-  private events: Map<string, Event>;
-  private tickets: Map<string, Ticket>;
+export class DatabaseStorage implements IStorage {
+  // In-memory cache for validation sessions (temporary data)
   private validationSessions: Map<string, ValidationSession>;
   private validationTokens: Map<string, string>; // token -> ticketId
 
   constructor() {
-    this.users = new Map();
-    this.authTokens = new Map();
-    this.events = new Map();
-    this.tickets = new Map();
     this.validationSessions = new Map();
     this.validationTokens = new Map();
   }
 
   // Users
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = {
-      ...insertUser,
-      id,
-      createdAt: new Date(),
-      lastLoginAt: null,
-    };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async updateUserLoginTime(id: string): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-    
-    const updatedUser = {
-      ...user,
-      lastLoginAt: new Date(),
-    };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    const [user] = await db
+      .update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
   }
 
   // Auth Tokens
   async createAuthToken(insertToken: InsertAuthToken): Promise<AuthToken> {
-    const id = randomUUID();
-    const authToken: AuthToken = {
-      ...insertToken,
-      id,
-      used: false,
-      createdAt: new Date(),
-    };
-    this.authTokens.set(id, authToken);
-    return authToken;
+    const [token] = await db.insert(authTokens).values(insertToken).returning();
+    return token;
   }
 
   async getAuthToken(token: string): Promise<AuthToken | undefined> {
-    return Array.from(this.authTokens.values()).find(t => t.token === token && !t.used);
+    const [authToken] = await db
+      .select()
+      .from(authTokens)
+      .where(eq(authTokens.token, token));
+    return authToken || undefined;
   }
 
   async markTokenAsUsed(id: string): Promise<AuthToken | undefined> {
-    const token = this.authTokens.get(id);
-    if (!token) return undefined;
-    
-    const updatedToken = {
-      ...token,
-      used: true,
-    };
-    this.authTokens.set(id, updatedToken);
-    return updatedToken;
+    const [token] = await db
+      .update(authTokens)
+      .set({ used: true })
+      .where(eq(authTokens.id, id))
+      .returning();
+    return token || undefined;
   }
 
   // Events
   async getEvents(): Promise<Event[]> {
-    return Array.from(this.events.values()).sort((a, b) => 
-      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-    );
+    return db.select().from(events).orderBy(desc(events.createdAt));
   }
 
   async getEvent(id: string): Promise<Event | undefined> {
-    return this.events.get(id);
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    return event || undefined;
   }
 
   async getEventsByUserId(userId: string): Promise<Event[]> {
-    return Array.from(this.events.values())
-      .filter(event => event.userId === userId)
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    return db
+      .select()
+      .from(events)
+      .where(eq(events.userId, userId))
+      .orderBy(desc(events.createdAt));
   }
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
-    const id = randomUUID();
-    const event: Event = {
-      ...insertEvent,
-      id,
-      description: insertEvent.description || null,
-      userId: insertEvent.userId || null,
-      maxTickets: insertEvent.maxTickets || null,
-      imageUrl: insertEvent.imageUrl || null,
-      ticketBackgroundUrl: insertEvent.ticketBackgroundUrl || null,
-      createdAt: new Date(),
-    };
-    this.events.set(id, event);
+    const [event] = await db.insert(events).values(insertEvent).returning();
     return event;
   }
 
   async updateEvent(id: string, updateData: Partial<InsertEvent>): Promise<Event | undefined> {
-    const event = this.events.get(id);
-    if (!event) return undefined;
-
-    const updatedEvent = { ...event, ...updateData };
-    this.events.set(id, updatedEvent);
-    return updatedEvent;
+    const [event] = await db
+      .update(events)
+      .set(updateData)
+      .where(eq(events.id, id))
+      .returning();
+    return event || undefined;
   }
 
   async deleteEvent(id: string): Promise<boolean> {
-    const deleted = this.events.delete(id);
-    // Also delete associated tickets
-    for (const [ticketId, ticket] of Array.from(this.tickets.entries())) {
-      if (ticket.eventId === id) {
-        this.tickets.delete(ticketId);
-      }
-    }
-    return deleted;
+    // Delete associated tickets first
+    await db.delete(tickets).where(eq(tickets.eventId, id));
+    
+    // Delete the event
+    const result = await db.delete(events).where(eq(events.id, id)).returning();
+    return result.length > 0;
   }
 
   // Tickets
   async getTickets(): Promise<Ticket[]> {
-    return Array.from(this.tickets.values()).sort((a, b) => 
-      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-    );
+    return db.select().from(tickets).orderBy(desc(tickets.createdAt));
   }
 
   async getTicketsByEventId(eventId: string): Promise<Ticket[]> {
-    return Array.from(this.tickets.values())
-      .filter(ticket => ticket.eventId === eventId)
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    return db
+      .select()
+      .from(tickets)
+      .where(eq(tickets.eventId, eventId))
+      .orderBy(desc(tickets.createdAt));
   }
 
   async getTicketsByUserId(userId: string): Promise<Ticket[]> {
-    return Array.from(this.tickets.values())
-      .filter(ticket => ticket.userId === userId)
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    return db
+      .select()
+      .from(tickets)
+      .where(eq(tickets.userId, userId))
+      .orderBy(desc(tickets.createdAt));
   }
 
   async getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]> {
-    return Array.from(this.tickets.values())
-      .filter(ticket => ticket.eventId === eventId && ticket.userId === userId)
-      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    return db
+      .select()
+      .from(tickets)
+      .where(and(eq(tickets.eventId, eventId), eq(tickets.userId, userId)))
+      .orderBy(desc(tickets.createdAt));
   }
 
   async getTicket(id: string): Promise<Ticket | undefined> {
-    return this.tickets.get(id);
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
+    return ticket || undefined;
   }
 
   async getTicketByQrData(qrData: string): Promise<Ticket | undefined> {
-    return Array.from(this.tickets.values()).find(ticket => ticket.qrData === qrData);
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.qrData, qrData));
+    return ticket || undefined;
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
-    const id = randomUUID();
-    const ticket: Ticket = {
-      ...insertTicket,
-      id,
-      userId: insertTicket.userId || null,
-      isValidated: false,
-      validatedAt: null,
-      createdAt: new Date(),
-    };
-    this.tickets.set(id, ticket);
+    const [ticket] = await db.insert(tickets).values(insertTicket).returning();
     return ticket;
   }
 
   async validateTicket(id: string): Promise<Ticket | undefined> {
-    const ticket = this.tickets.get(id);
-    if (!ticket) return undefined;
-
-    const validatedTicket = {
-      ...ticket,
-      isValidated: true,
-      validatedAt: new Date(),
-    };
-    this.tickets.set(id, validatedTicket);
-    return validatedTicket;
+    const [ticket] = await db
+      .update(tickets)
+      .set({ isValidated: true, validatedAt: new Date() })
+      .where(eq(tickets.id, id))
+      .returning();
+    return ticket || undefined;
   }
 
-  // Validation Sessions
+  // Validation Sessions (in-memory for temporary tokens)
   async createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }> {
     const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes from now
     const session: ValidationSession = {
@@ -288,7 +250,7 @@ export class MemStorage implements IStorage {
       return { valid: false };
     }
 
-    const ticket = this.tickets.get(ticketId);
+    const ticket = await this.getTicket(ticketId);
     if (!ticket || ticket.isValidated) {
       return { valid: false };
     }
@@ -300,7 +262,7 @@ export class MemStorage implements IStorage {
     this.validationSessions.delete(ticketId);
     Array.from(session.tokens).forEach(sessionToken => {
       this.validationTokens.delete(sessionToken);
-    })
+    });
 
     return { valid: true, ticketId };
   }
@@ -310,17 +272,25 @@ export class MemStorage implements IStorage {
     totalTickets: number;
     validatedTickets: number;
   }> {
-    const totalEvents = this.events.size;
-    const totalTickets = this.tickets.size;
-    const validatedTickets = Array.from(this.tickets.values())
-      .filter(ticket => ticket.isValidated).length;
+    const [eventResult] = await db
+      .select({ count: db.$count(events) })
+      .from(events);
+    
+    const [ticketResult] = await db
+      .select({ count: db.$count(tickets) })
+      .from(tickets);
+    
+    const [validatedResult] = await db
+      .select({ count: db.$count(tickets) })
+      .from(tickets)
+      .where(eq(tickets.isValidated, true));
 
     return {
-      totalEvents,
-      totalTickets,
-      validatedTickets,
+      totalEvents: eventResult?.count || 0,
+      totalTickets: ticketResult?.count || 0,
+      validatedTickets: validatedResult?.count || 0,
     };
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
