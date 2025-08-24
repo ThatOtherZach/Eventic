@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Calendar, Ticket, User, LogOut, Eye } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import type { Ticket as TicketType, Event } from "@shared/schema";
 
 export default function AccountPage() {
   const { user, signOut } = useAuth();
+  const [, setLocation] = useLocation();
   
   const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
     queryKey: ["/api/user/tickets"],
@@ -101,22 +102,18 @@ export default function AccountPage() {
             <div className="row g-3">
               {tickets?.map((ticket) => (
                 <div key={ticket.id} className="col-md-4">
-                  <Link href={`/tickets/${ticket.id}`}>
-                    <div 
-                      className="d-block" 
-                      style={{ 
-                        cursor: 'pointer',
-                        textDecoration: 'none',
-                        color: 'inherit'
-                      }}
-                    >
-                      <TicketCard 
-                        ticket={ticket}
-                        event={ticket.event}
-                        showQR={false}
-                      />
-                    </div>
-                  </Link>
+                  <div 
+                    onClick={() => setLocation(`/tickets/${ticket.id}`)}
+                    style={{ 
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <TicketCard 
+                      ticket={ticket}
+                      event={ticket.event}
+                      showQR={false}
+                    />
+                  </div>
                   {ticket.isValidated && (
                     <div className="text-center mt-2">
                       <span className="badge bg-success">Used</span>
