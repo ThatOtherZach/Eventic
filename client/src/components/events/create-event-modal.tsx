@@ -159,7 +159,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Event Name</FormLabel>
+                    <FormLabel>Event Name <span className="text-danger">*</span></FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
@@ -181,7 +181,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel>Date <span className="text-danger">*</span></FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
@@ -202,7 +202,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                   name="time"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Time</FormLabel>
+                      <FormLabel>Time <span className="text-danger">*</span></FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
@@ -224,7 +224,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 name="venue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Venue</FormLabel>
+                    <FormLabel>Venue <span className="text-danger">*</span></FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
@@ -343,7 +343,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               
               {/* Ticket Preview */}
               <div className="mb-3">
-                <h6 className="mb-2">Ticket Preview:</h6>
                 <div className="d-flex justify-content-center p-3 bg-light rounded">
                   <TicketCard 
                     ticket={sampleTicket} 
@@ -360,7 +359,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 currentImageUrl={ticketBackgroundUrl}
               >
                 <CreditCard size={18} className="me-2" />
-                Choose Ticket Background
+                Upload Background Image
               </ObjectUploader>
               <small className="text-muted d-block mt-2">
                 The ticket will display event details on the left and a QR code on the right.
