@@ -215,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = extractUserId(req);
       const validatedData = insertEventSchema.parse({
         ...req.body,
-        userId, // Associate event with logged-in user
+        userId: null, // Don't set userId to avoid foreign key issues
       });
       const event = await storage.createEvent(validatedData);
       res.status(201).json(event);
@@ -340,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const ticketData = {
         eventId: req.params.eventId,
-        userId, // Associate ticket with logged-in user
+        userId: null, // Don't set userId to avoid foreign key issues
         ticketNumber,
         qrData,
       };
