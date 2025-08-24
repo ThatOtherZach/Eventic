@@ -76,6 +76,39 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         }}
       />
 
+      {/* Golden Ticket Glow Overlay */}
+      {ticket.isGoldenTicket && (
+        <>
+          <div 
+            className="position-absolute w-100 h-100 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.2) 70%)',
+              boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.3), inset 0 0 60px rgba(255, 215, 0, 0.1)',
+              animation: 'goldenGlow 3s ease-in-out infinite',
+              zIndex: 2,
+            }}
+          />
+          {/* Golden Ticket Badge */}
+          <div 
+            className="position-absolute"
+            style={{
+              top: '10px',
+              right: '10px',
+              zIndex: 10,
+              padding: '4px 8px',
+              borderRadius: '4px',
+              backgroundColor: 'rgba(255, 215, 0, 0.9)',
+              color: '#000',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            🎫 GOLDEN
+          </div>
+        </>
+      )}
+
       {/* Ticket Content */}
       <div className="position-relative h-100 d-flex">
         {/* Left side - Event Details */}
