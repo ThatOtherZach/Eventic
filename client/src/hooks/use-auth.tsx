@@ -50,6 +50,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (data.session) {
           setUser(data.session.user);
+          
+          // Sync user to local database
+          try {
+            await fetch('/api/auth/sync-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                email: data.session.user.email,
+                name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
+              }),
+            });
+          } catch (error) {
+            console.error('Failed to sync user:', error);
+          }
+          
           toast({
             title: "Success",
             description: "You've been successfully logged in!",
@@ -90,21 +108,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleMagicLink();
 
     // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        
+        // Sync user to local database
+        try {
+          await fetch('/api/auth/sync-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              email: session.user.email,
+              name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to sync user:', error);
+        }
+      } else {
+        setUser(null);
+      }
       setIsLoading(false);
     });
 
     // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      
-      if (event === 'SIGNED_IN') {
-        toast({
-          title: "Success",
-          description: "You've been successfully logged in!",
-        });
-        setLocation('/');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        
+        // Sync user to local database on auth state change
+        if (event === 'SIGNED_IN') {
+          try {
+            await fetch('/api/auth/sync-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({
+                email: session.user.email,
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+              }),
+            });
+          } catch (error) {
+            console.error('Failed to sync user:', error);
+          }
+          
+          toast({
+            title: "Success",
+            description: "You've been successfully logged in!",
+          });
+          setLocation('/');
+        }
+      } else {
+        setUser(null);
       }
     });
 

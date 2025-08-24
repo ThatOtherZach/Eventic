@@ -23,6 +23,36 @@ function extractUserId(req: any): string | null {
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
+  // Sync/create user in local database when they login via Supabase
+  app.post("/api/auth/sync-user", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { email, name } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserById(userId);
+      if (existingUser) {
+        return res.json(existingUser);
+      }
+
+      // Create new user in local database
+      const newUser = await storage.createUser({
+        id: userId,
+        email: email || `user_${userId}@placeholder.com`,
+        name: name || "User",
+      });
+      
+      res.json(newUser);
+    } catch (error) {
+      console.error("Error syncing user:", error);
+      res.status(500).json({ message: "Failed to sync user" });
+    }
+  });
+
   // Object Storage routes
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
@@ -215,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = extractUserId(req);
       const validatedData = insertEventSchema.parse({
         ...req.body,
-        userId: null, // Don't set userId to avoid foreign key issues
+        userId, // Now we can use the actual userId since user exists in DB
       });
       const event = await storage.createEvent(validatedData);
       res.status(201).json(event);
@@ -340,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const ticketData = {
         eventId: req.params.eventId,
-        userId: null, // Don't set userId to avoid foreign key issues
+        userId, // Now we can use the actual userId since user exists in DB
         ticketNumber,
         qrData,
       };
