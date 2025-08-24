@@ -24,7 +24,7 @@ export function Toaster() {
       title: toast.title?.toString(),
       description: toast.description?.toString(),
       variant,
-      duration: 15000, // 15 seconds
+      duration: 5000, // 5 seconds
     };
   });
 

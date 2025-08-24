@@ -5,8 +5,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 15500 // 15 seconds + animation time
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 5500 // 5 seconds + animation time
 
 type ToasterToast = ToastProps & {
   id: string
@@ -143,15 +143,25 @@ type Toast = Omit<ToasterToast, "id">
 function toast({ ...props }: Toast) {
   // Create a unique key for deduplication based on title and description
   // Normalize the description to handle slight variations
-  const normalizedDesc = (props.description || '').toString().toLowerCase().trim()
-  const normalizedTitle = (props.title || '').toString().toLowerCase().trim()
+  const normalizedDesc = (props.description || '').toString().toLowerCase().trim().replace(/[^a-z0-9]/g, '')
+  const normalizedTitle = (props.title || '').toString().toLowerCase().trim().replace(/[^a-z0-9]/g, '')
   const toastKey = `${normalizedTitle}-${normalizedDesc}`
   const now = Date.now()
   
-  // Check if this toast was recently shown (within 3 seconds for better deduplication)
+  // Check if this exact toast was recently shown (within 10 seconds)
   const lastShown = recentToasts.get(toastKey)
-  if (lastShown && now - lastShown < 3000) {
+  if (lastShown && now - lastShown < 10000) {
     // Skip duplicate toast
+    return {
+      id: '',
+      dismiss: () => {},
+      update: () => {},
+    }
+  }
+  
+  // Also check if we have too many toasts showing right now
+  if (memoryState.toasts.length >= TOAST_LIMIT) {
+    // Don't add more toasts if we're at the limit
     return {
       id: '',
       dismiss: () => {},
@@ -162,10 +172,10 @@ function toast({ ...props }: Toast) {
   // Track this toast
   recentToasts.set(toastKey, now)
   
-  // Clean up old entries after 5 seconds
+  // Clean up old entries after 15 seconds
   setTimeout(() => {
     recentToasts.delete(toastKey)
-  }, 5000)
+  }, 15000)
   
   const id = genId()
 
