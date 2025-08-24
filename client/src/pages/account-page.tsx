@@ -98,9 +98,9 @@ export default function AccountPage() {
               </div>
             </div>
           ) : (
-            <div className="d-flex flex-wrap gap-3">
+            <div className="row g-3">
               {tickets?.map((ticket) => (
-                <div key={ticket.id}>
+                <div key={ticket.id} className="col-md-6">
                   <TicketCard 
                     ticket={ticket}
                     event={ticket.event}
