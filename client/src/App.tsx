@@ -7,6 +7,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { Navigation } from "@/components/layout/navigation";
 import Events from "@/pages/events";
+import EventDetail from "@/pages/event-detail";
+import EventEdit from "@/pages/event-edit";
 import Scanner from "@/pages/scanner";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
@@ -17,6 +19,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Events} />
       <Route path="/events" component={Events} />
+      <Route path="/events/:id" component={EventDetail} />
+      <ProtectedRoute path="/events/:id/edit" component={EventEdit} />
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
       <Route path="/auth" component={AuthPage} />

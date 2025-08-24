@@ -29,6 +29,7 @@ export const events = pgTable("events", {
   ticketPrice: decimal("ticket_price", { precision: 10, scale: 2 }).notNull(),
   maxTickets: integer("max_tickets"),
   userId: varchar("user_id").references(() => users.id),
+  imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

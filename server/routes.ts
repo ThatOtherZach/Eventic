@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema } from "@shared/schema";
 import { z } from "zod";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 // Middleware to extract userId from Supabase auth header
 function extractUserId(req: any): string | null {
@@ -20,6 +21,56 @@ function extractUserId(req: any): string | null {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const objectStorageService = new ObjectStorageService();
+
+  // Object Storage routes
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectPath = `/objects/${req.params.objectPath}`;
+      const privateObjectDir = objectStorageService.getPrivateObjectDir();
+      const fullPath = `${privateObjectDir}/uploads/${req.params.objectPath}`;
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const bucket = objectStorageService['objectStorageClient'].bucket(bucketName);
+      const file = bucket.file(objectName);
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.sendStatus(404);
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error checking object access:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  app.post("/api/objects/upload", async (req, res) => {
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
   // User-specific routes
   app.get("/api/user/tickets", async (req, res) => {
     try {
@@ -73,7 +124,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
-      res.json(event);
+      
+      // Get ticket count for the event
+      const tickets = await storage.getTicketsByEventId(req.params.id);
+      const ticketsSold = tickets.length;
+      const ticketsAvailable = event.maxTickets ? event.maxTickets - ticketsSold : null;
+      
+      res.json({
+        ...event,
+        ticketsSold,
+        ticketsAvailable
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch event" });
     }
@@ -98,12 +159,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/events/:id", async (req, res) => {
     try {
-      const validatedData = insertEventSchema.partial().parse(req.body);
-      const event = await storage.updateEvent(req.params.id, validatedData);
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user owns the event
+      const event = await storage.getEvent(req.params.id);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
-      res.json(event);
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "You can only edit your own events" });
+      }
+      
+      // Handle image URL normalization if provided
+      let updateData = { ...req.body };
+      if (updateData.imageUrl && updateData.imageUrl.startsWith("https://storage.googleapis.com/")) {
+        updateData.imageUrl = objectStorageService.normalizeObjectEntityPath(updateData.imageUrl);
+      }
+      
+      const validatedData = insertEventSchema.partial().parse(updateData);
+      const updatedEvent = await storage.updateEvent(req.params.id, validatedData);
+      res.json(updatedEvent);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid event data", errors: error.errors });
@@ -114,10 +192,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/events/:id", async (req, res) => {
     try {
-      const deleted = await storage.deleteEvent(req.params.id);
-      if (!deleted) {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user owns the event
+      const event = await storage.getEvent(req.params.id);
+      if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own events" });
+      }
+      
+      const deleted = await storage.deleteEvent(req.params.id);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete event" });
@@ -151,7 +240,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
 
+      // Check if event is sold out
       const existingTickets = await storage.getTicketsByEventId(req.params.eventId);
+      if (event.maxTickets && existingTickets.length >= event.maxTickets) {
+        return res.status(400).json({ message: "Event is sold out" });
+      }
+
       const ticketNumber = `${event.name.substring(0, 3).toUpperCase()}-${existingTickets.length + 1}`;
       
       const qrData = JSON.stringify({
@@ -228,4 +322,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+function parseObjectPath(path: string): {
+  bucketName: string;
+  objectName: string;
+} {
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
+  }
+  const pathParts = path.split("/");
+  if (pathParts.length < 3) {
+    throw new Error("Invalid path: must contain at least a bucket name");
+  }
+  const bucketName = pathParts[1];
+  const objectName = pathParts.slice(2).join("/");
+  return { bucketName, objectName };
 }

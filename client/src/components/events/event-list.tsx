@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 import { Eye, Ticket, Edit, ShoppingCart } from "lucide-react";
 import type { Event } from "@shared/schema";
 
@@ -71,9 +72,18 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             <div className="row align-items-center">
               <div className="col-12 col-md-6">
                 <div className="d-flex align-items-center">
-                  <div className="bg-primary bg-opacity-10 rounded p-2 me-3">
-                    <Ticket className="text-primary" size={24} />
-                  </div>
+                  {event.imageUrl ? (
+                    <img 
+                      src={event.imageUrl} 
+                      alt={event.name}
+                      className="rounded me-3"
+                      style={{ width: '48px', height: '48px', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div className="bg-primary bg-opacity-10 rounded p-2 me-3">
+                      <Ticket className="text-primary" size={24} />
+                    </div>
+                  )}
                   <div>
                     <h6 className="mb-1 fw-semibold">{event.name}</h6>
                     <p className="text-muted small mb-0">
@@ -91,32 +101,31 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     <p className="text-muted small mb-0">per ticket</p>
                   </div>
                   <div className="btn-group" role="group">
-                    <button
-                      type="button"
+                    <Link 
+                      href={`/events/${event.id}`}
                       className="btn btn-sm btn-outline-secondary"
                       title="View Event"
                       data-testid={`button-view-${event.id}`}
                     >
                       <Eye size={16} />
-                    </button>
-                    <button
-                      type="button"
+                    </Link>
+                    <Link
+                      href={`/events/${event.id}`}
                       className="btn btn-sm btn-outline-primary"
                       title="Buy Tickets"
-                      onClick={() => onGenerateTickets(event)}
                       data-testid={`button-buy-tickets-${event.id}`}
                     >
                       <ShoppingCart size={16} />
-                    </button>
+                    </Link>
                     {user && event.userId === user.id && (
-                      <button
-                        type="button"
+                      <Link
+                        href={`/events/${event.id}/edit`}
                         className="btn btn-sm btn-outline-secondary"
                         title="Edit Event"
                         data-testid={`button-edit-${event.id}`}
                       >
                         <Edit size={16} />
-                      </button>
+                      </Link>
                     )}
                   </div>
                 </div>
