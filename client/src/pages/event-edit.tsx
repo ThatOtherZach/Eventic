@@ -11,11 +11,17 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import type { Event, Ticket } from "@shared/schema";
 
+interface EventWithTicketInfo extends Event {
+  ticketsSold?: number;
+  ticketsAvailable?: number | null;
+}
+
 export default function EventEditPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [ticketsSold, setTicketsSold] = useState(0);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,7 +35,7 @@ export default function EventEditPage() {
     ticketBackgroundUrl: "",
   });
 
-  const { data: event, isLoading } = useQuery<Event>({
+  const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
     queryKey: [`/api/events/${id}`],
     enabled: !!id,
   });
@@ -58,6 +64,9 @@ export default function EventEditPage() {
         imageUrl: event.imageUrl || "",
         ticketBackgroundUrl: event.ticketBackgroundUrl || "",
       });
+      
+      // Store tickets sold for validation
+      setTicketsSold(event.ticketsSold || 0);
     }
   }, [event, user, toast, setLocation, id]);
 
@@ -86,6 +95,16 @@ export default function EventEditPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate max tickets against tickets sold
+    if (formData.maxTickets && parseInt(formData.maxTickets) < ticketsSold) {
+      toast({
+        title: "Invalid ticket limit",
+        description: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     const updateData: any = {
       name: formData.name,
@@ -312,13 +331,18 @@ export default function EventEditPage() {
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min={ticketsSold || 1}
                   className="form-control"
                   id="maxTickets"
                   value={formData.maxTickets}
                   onChange={(e) => setFormData({ ...formData, maxTickets: e.target.value })}
                   placeholder="Leave empty for unlimited"
                 />
+                {ticketsSold > 0 && (
+                  <small className="text-muted">
+                    Minimum: {ticketsSold} (tickets already sold)
+                  </small>
+                )}
               </div>
             </div>
 

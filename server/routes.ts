@@ -306,11 +306,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only edit your own events" });
       }
       
+      // Get ticket count for validation
+      const tickets = await storage.getTicketsByEventId(req.params.id);
+      const ticketsSold = tickets.length;
+      
       // Handle image URL normalization if provided
       let updateData = { ...req.body };
       
       // Remove name field to prevent it from being updated
       delete updateData.name;
+      
+      // Validate maxTickets if provided
+      if (updateData.maxTickets !== undefined && updateData.maxTickets !== null) {
+        const newMaxTickets = parseInt(updateData.maxTickets);
+        if (newMaxTickets < ticketsSold) {
+          return res.status(400).json({ 
+            message: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)` 
+          });
+        }
+      }
       
       if (updateData.imageUrl && updateData.imageUrl.startsWith("https://storage.googleapis.com/")) {
         updateData.imageUrl = objectStorageService.normalizeObjectEntityPath(updateData.imageUrl);
