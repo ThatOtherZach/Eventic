@@ -36,7 +36,7 @@ export interface IStorage {
   
   // Validation Sessions
   createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }>;
-  createValidationToken(ticketId: string): Promise<string>;
+  createValidationToken(ticketId: string): Promise<{ token: string; code: string }>;
   validateDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }>;
   checkDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }>;
   
@@ -66,16 +66,19 @@ interface ValidationSession {
   ticketId: string;
   expiresAt: Date;
   tokens: Set<string>;
+  codes: Map<string, number>; // code -> timestamp
 }
 
 export class DatabaseStorage implements IStorage {
   // In-memory cache for validation sessions (temporary data)
   private validationSessions: Map<string, ValidationSession>;
   private validationTokens: Map<string, string>; // token -> ticketId
+  private validationCodes: Map<string, string>; // code -> ticketId
 
   constructor() {
     this.validationSessions = new Map();
     this.validationTokens = new Map();
+    this.validationCodes = new Map();
   }
 
   // Users
@@ -232,15 +235,16 @@ export class DatabaseStorage implements IStorage {
       ticketId,
       expiresAt,
       tokens: new Set(),
+      codes: new Map(),
     };
     this.validationSessions.set(ticketId, session);
     
     // Create initial token
-    const token = await this.createValidationToken(ticketId);
-    return { token, expiresAt };
+    const tokenData = await this.createValidationToken(ticketId);
+    return { token: tokenData.token, expiresAt };
   }
 
-  async createValidationToken(ticketId: string): Promise<string> {
+  async createValidationToken(ticketId: string): Promise<{ token: string; code: string }> {
     const session = this.validationSessions.get(ticketId);
     if (!session || session.expiresAt < new Date()) {
       throw new Error("Validation session expired or not found");
@@ -251,17 +255,43 @@ export class DatabaseStorage implements IStorage {
     session.tokens.add(token);
     this.validationTokens.set(token, ticketId);
     
-    // Clean up old tokens after a delay (keep them valid for 15 seconds to handle network delays)
+    // Generate 4-digit code
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    const now = Date.now();
+    
+    // Clean up old codes (older than 15 seconds)
+    for (const [oldCode, timestamp] of session.codes.entries()) {
+      if (now - timestamp > 15000) {
+        session.codes.delete(oldCode);
+        this.validationCodes.delete(oldCode);
+      }
+    }
+    
+    // Store new code
+    session.codes.set(code, now);
+    this.validationCodes.set(code, ticketId);
+    
+    // Clean up tokens and codes after a delay (keep them valid for 15 seconds to handle network delays)
     setTimeout(() => {
       this.validationTokens.delete(token);
       session.tokens.delete(token);
+      session.codes.delete(code);
+      this.validationCodes.delete(code);
     }, 15000);
     
-    return token;
+    return { token, code };
   }
 
   async validateDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }> {
-    const ticketId = this.validationTokens.get(token);
+    let ticketId: string | undefined;
+    
+    // Check if it's a 4-digit code
+    if (/^\d{4}$/.test(token)) {
+      ticketId = this.validationCodes.get(token);
+    } else {
+      ticketId = this.validationTokens.get(token);
+    }
+    
     if (!ticketId) {
       return { valid: false };
     }
@@ -284,11 +314,35 @@ export class DatabaseStorage implements IStorage {
     Array.from(session.tokens).forEach(sessionToken => {
       this.validationTokens.delete(sessionToken);
     });
+    Array.from(session.codes.keys()).forEach(code => {
+      this.validationCodes.delete(code);
+    });
 
     return { valid: true, ticketId };
   }
 
   async checkDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }> {
+    // First check if it's a 4-digit code
+    if (/^\d{4}$/.test(token)) {
+      const ticketId = this.validationCodes.get(token);
+      if (!ticketId) {
+        return { valid: false };
+      }
+      
+      const session = this.validationSessions.get(ticketId);
+      if (!session || session.expiresAt < new Date()) {
+        return { valid: false };
+      }
+      
+      const ticket = await this.getTicket(ticketId);
+      if (!ticket) {
+        return { valid: false };
+      }
+      
+      return { valid: true, ticketId };
+    }
+    
+    // Otherwise check as normal token
     const ticketId = this.validationTokens.get(token);
     if (!ticketId) {
       return { valid: false };

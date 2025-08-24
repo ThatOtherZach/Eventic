@@ -82,6 +82,7 @@ export default function TicketViewPage(): React.ReactElement {
   const { toast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
   const [currentToken, setCurrentToken] = useState<string>("");
+  const [currentCode, setCurrentCode] = useState<string>("");
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -110,7 +111,7 @@ export default function TicketViewPage(): React.ReactElement {
       startCountdown();
       toast({
         title: "Validation Started",
-        description: "Show the QR code to the scanner. It will refresh every 10 seconds.",
+        description: "Show the QR code or validation code to the scanner.",
       });
     },
     onError: (error: any) => {
@@ -154,6 +155,7 @@ export default function TicketViewPage(): React.ReactElement {
       const response = await apiRequest("GET", `/api/tickets/${ticketId}/validation-token`);
       const data = await response.json();
       setCurrentToken(data.token);
+      setCurrentCode(data.code || ""); // Store the 4-digit code
       await generateQRCode(data.token);
     } catch (error) {
       console.error("Error fetching validation token:", error);
@@ -188,6 +190,7 @@ export default function TicketViewPage(): React.ReactElement {
   const stopValidation = () => {
     setIsValidating(false);
     setCurrentToken("");
+    setCurrentCode("");
     setQrDataUrl("");
     setTimeRemaining(0);
     
@@ -316,13 +319,24 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   </div>
 
-                  {/* Validation Status */}
+                  {/* Validation Code Display */}
                   <div className="text-center mb-3">
                     <div className="alert alert-success">
                       <h6 className="mb-2">Validation Active</h6>
-                      <p className="mb-0 small">
-                        Show your ticket to the scanner. The QR code on your ticket refreshes every 10 seconds.
+                      <p className="mb-2 small">
+                        Show your ticket to the scanner. The code refreshes every 10 seconds.
                       </p>
+                      {currentCode && (
+                        <div className="mt-3">
+                          <div className="d-inline-block p-3 bg-white rounded border border-2 border-success">
+                            <p className="text-muted small mb-1">Manual Entry Code:</p>
+                            <h2 className="mb-0 font-monospace fw-bold text-dark">{currentCode}</h2>
+                          </div>
+                          <p className="text-muted small mt-2 mb-0">
+                            If QR scanning fails, provide this 4-digit code
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -349,8 +363,8 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   ) : (
                     <p className="text-muted mb-3">
-                      Click the button below to generate a time-limited validation code. 
-                      The QR code will be valid for 3 minutes and can only be used once.
+                      Click the button below to generate a time-limited validation session. 
+                      The QR code and manual entry code will be valid for 3 minutes.
                     </p>
                   )}
                   <button

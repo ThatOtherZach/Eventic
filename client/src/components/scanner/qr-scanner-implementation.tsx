@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import QrScanner from "qr-scanner";
-import { Camera, CheckCircle, XCircle, Play, Square, AlertCircle, RotateCcw } from "lucide-react";
+import { Camera, CheckCircle, XCircle, Play, Square, AlertCircle, RotateCcw, Keyboard } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,11 +34,11 @@ export function QrScannerImplementation() {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [selectedCamera, setSelectedCamera] = useState<string>('environment');
   const [availableCameras, setAvailableCameras] = useState<{ id: string; label: string }[]>([]);
-  const [showUploadOption, setShowUploadOption] = useState(false);
+  const [manualCode, setManualCode] = useState<string>("");
+  const [showManualEntry, setShowManualEntry] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addDebugInfo = (message: string) => {
     console.log("QR Scanner:", message);
@@ -233,11 +233,11 @@ export function QrScannerImplementation() {
       } else if (error?.name === "NotReadableError" || errorMsg.includes("NotReadable")) {
         errorMessage = "Camera is already in use by another app. Please close other camera apps and try again.";
       } else if (error?.name === "OverconstrainedError" || errorMsg.includes("Overconstrained")) {
-        errorMessage = "Camera settings not supported. Try using the upload option instead.";
-        setShowUploadOption(true);
+        errorMessage = "Camera settings not supported. Try using manual code entry instead.";
+        setShowManualEntry(true);
       } else {
-        errorMessage = `Camera error: ${errorMsg}. Try the upload option if camera doesn't work.`;
-        setShowUploadOption(true);
+        errorMessage = `Camera error: ${errorMsg}. Try manual code entry if camera doesn't work.`;
+        setShowManualEntry(true);
       }
       
       setCameraError(errorMessage);
@@ -284,31 +284,19 @@ export function QrScannerImplementation() {
     validateTicketMutation.mutate(testToken);
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      addDebugInfo("🖼️ Processing uploaded image...");
-      const result = await QrScanner.scanImage(file, {
-        returnDetailedScanResult: true,
-      });
-      
-      addDebugInfo(`✅ QR code found in image: ${result.data.substring(0, 50)}...`);
-      validateTicketMutation.mutate(result.data);
-    } catch (error) {
-      addDebugInfo("❌ No QR code found in uploaded image");
+  const handleManualCodeSubmit = () => {
+    if (!manualCode || manualCode.length !== 4) {
       toast({
-        title: "❌ No QR Code Found",
-        description: "Could not find a QR code in the uploaded image. Please try another image.",
+        title: "❌ Invalid Code",
+        description: "Please enter a 4-digit validation code",
         variant: "destructive",
       });
+      return;
     }
     
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    addDebugInfo(`🕹️ Manual code entered: ${manualCode}`);
+    validateTicketMutation.mutate(manualCode);
+    setManualCode("");
   };
 
   useEffect(() => {
@@ -377,13 +365,13 @@ export function QrScannerImplementation() {
                   {cameraError && (
                     <div className="alert alert-warning small mt-3">
                       <strong>Tip:</strong> {cameraError}
-                      {showUploadOption && (
+                      {showManualEntry && (
                         <div className="mt-2">
                           <button
                             className="btn btn-sm btn-warning"
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={() => setShowManualEntry(true)}
                           >
-                            Try Upload Option Instead
+                            Use Manual Code Entry
                           </button>
                         </div>
                       )}
@@ -396,57 +384,89 @@ export function QrScannerImplementation() {
         </div>
       </div>
 
-      {/* Camera Selection and Upload Options */}
+      {/* Camera Selection and Manual Entry */}
+      {availableCameras.length > 1 && (
+        <div className="card mb-3">
+          <div className="card-body">
+            <label className="form-label small fw-medium">Select Camera:</label>
+            <select 
+              className="form-select"
+              value={selectedCamera}
+              onChange={(e) => {
+                setSelectedCamera(e.target.value);
+                if (isScanning) {
+                  stopScanner();
+                  setTimeout(() => startScanner(), 100);
+                }
+              }}
+              disabled={isScanning}
+            >
+              <option value="environment">Back Camera (Default)</option>
+              <option value="user">Front Camera</option>
+              {availableCameras.map((cam) => (
+                <option key={cam.id} value={cam.id}>
+                  {cam.label}
+                </option>
+              ))}
+            </select>
+            <small className="text-muted d-block mt-1">
+              If the scanner shows a black screen, try switching cameras
+            </small>
+          </div>
+        </div>
+      )}
+      
+      {/* Manual Code Entry */}
       <div className="card mb-3">
         <div className="card-body">
-          {availableCameras.length > 1 && (
-            <>
-              <label className="form-label small fw-medium">Select Camera:</label>
-              <select 
-                className="form-select mb-3"
-                value={selectedCamera}
-                onChange={(e) => {
-                  setSelectedCamera(e.target.value);
-                  if (isScanning) {
-                    stopScanner();
-                    setTimeout(() => startScanner(), 100);
-                  }
-                }}
-                disabled={isScanning}
-              >
-                <option value="environment">Back Camera (Default)</option>
-                <option value="user">Front Camera</option>
-                {availableCameras.map((cam) => (
-                  <option key={cam.id} value={cam.id}>
-                    {cam.label}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
-          
-          {/* Upload Option */}
-          <div className="border-top pt-3 mt-3">
-            <p className="small fw-medium mb-2">📷 Having trouble with the camera?</p>
-            <p className="small text-muted mb-3">
-              You can also upload a photo of the QR code
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              style={{ display: 'none' }}
-            />
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6 className="card-title mb-0">
+              <Keyboard className="me-2" size={18} />
+              Manual Code Entry
+            </h6>
             <button
-              className="btn btn-outline-primary w-100"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={validateTicketMutation.isPending}
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => setShowManualEntry(!showManualEntry)}
             >
-              <Camera className="me-2" size={16} />
-              Upload QR Code Image
+              {showManualEntry ? "Hide" : "Show"}
             </button>
           </div>
+          
+          {showManualEntry && (
+            <>
+              <p className="small text-muted mb-3">
+                If QR scanning doesn't work, the ticket holder can provide a 4-digit code that refreshes every 10 seconds.
+              </p>
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control text-center font-monospace fw-bold"
+                  placeholder="Enter 4-digit code"
+                  value={manualCode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    setManualCode(value);
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleManualCodeSubmit();
+                    }
+                  }}
+                  maxLength={4}
+                  disabled={validateTicketMutation.isPending}
+                  data-testid="input-manual-code"
+                />
+                <button
+                  className="btn btn-primary"
+                  onClick={handleManualCodeSubmit}
+                  disabled={validateTicketMutation.isPending || manualCode.length !== 4}
+                  data-testid="button-submit-code"
+                >
+                  Validate
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

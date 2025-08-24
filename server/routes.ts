@@ -263,8 +263,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const token = await storage.createValidationToken(req.params.ticketId);
-      res.json({ token });
+      const tokenData = await storage.createValidationToken(req.params.ticketId);
+      res.json({ token: tokenData.token, code: tokenData.code });
     } catch (error: any) {
       if (error.message === "Validation session expired or not found") {
         await logWarning(
