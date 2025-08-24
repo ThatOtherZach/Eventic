@@ -147,7 +147,6 @@ export default function EventEditPage() {
       endDate: formData.endDate || null,
       endTime: formData.endTime || null,
       ticketPrice: formData.ticketPrice,
-      earlyValidation: formData.earlyValidation,
     };
 
     if (formData.maxTickets) {
@@ -423,7 +422,8 @@ export default function EventEditPage() {
                 className="form-select"
                 id="earlyValidation"
                 value={formData.earlyValidation}
-                onChange={(e) => setFormData({ ...formData, earlyValidation: e.target.value })}
+                disabled
+                title="Validation timing cannot be changed after creation"
               >
                 <option value="Allow at Anytime">Allow at Anytime</option>
                 <option value="Two Hours Before">Two Hours Before</option>
@@ -431,7 +431,7 @@ export default function EventEditPage() {
                 <option value="At Start Time">At Start Time</option>
               </select>
               <small className="text-muted">
-                When ticket validation can begin relative to event start time
+                Validation timing cannot be changed after event creation
               </small>
             </div>
 
