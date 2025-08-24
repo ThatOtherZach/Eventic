@@ -211,20 +211,21 @@ export default function TicketViewPage(): React.ReactElement {
         </div>
       </div>
 
-      {/* Ticket Display */}
-      <div className="row mb-4">
-        <div className="col-12 col-md-6">
-          <TicketCard 
-            ticket={ticket} 
-            event={event} 
-            showQR={true}
-            dynamicQrUrl={qrDataUrl}
-            isValidating={isValidating}
-          />
-        </div>
+      {/* Ticket and Validation Section */}
+      <div className="row justify-content-center">
+        <div className="col-12 col-md-8 col-lg-6">
+          {/* Ticket Display */}
+          <div className="d-flex justify-content-center mb-4">
+            <TicketCard 
+              ticket={ticket} 
+              event={event} 
+              showQR={true}
+              dynamicQrUrl={qrDataUrl}
+              isValidating={isValidating}
+            />
+          </div>
 
-        {/* Validation Section */}
-        <div className="col-12 col-md-6">
+          {/* Validation Section */}
           <div className="card">
             <div className="card-body">
               <h5 className="card-title mb-3">
