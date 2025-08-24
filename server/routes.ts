@@ -88,12 +88,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const objectPath = `/objects/${req.params.objectPath}`;
       const privateObjectDir = objectStorageService.getPrivateObjectDir();
-      const fullPath = `${privateObjectDir}/uploads/${req.params.objectPath}`;
-      const { bucketName, objectName } = parseObjectPath(fullPath);
-      const bucket = objectStorageService['objectStorageClient'].bucket(bucketName);
+      // The objectPath already includes "uploads/" so we don't need to add it again
+      const fullPath = `${privateObjectDir}/${req.params.objectPath}`;
+      // Parse the path to extract bucket and object name
+      const pathParts = fullPath.split('/');
+      const bucketName = pathParts[1];
+      const objectName = pathParts.slice(2).join('/');
+      // Access the objectStorageClient through the service instance
+      const bucket = (objectStorageService as any).objectStorageClient.bucket(bucketName);
       const file = bucket.file(objectName);
       const [exists] = await file.exists();
       if (!exists) {
+        console.log("File not found:", fullPath);
         return res.sendStatus(404);
       }
       objectStorageService.downloadObject(file, res);
