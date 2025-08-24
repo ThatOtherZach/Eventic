@@ -39,7 +39,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       name: "",
       description: "",
       venue: "",
-      venueUrl: "",
       date: "",
       time: "",
       ticketPrice: "0",
@@ -135,7 +134,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     name: watchedValues.name || "Event Name",
     description: watchedValues.description || null,
     venue: watchedValues.venue || "Venue",
-    venueUrl: watchedValues.venueUrl || null,
     date: watchedValues.date || "2024-01-01",
     time: watchedValues.time || "19:00",
     ticketPrice: watchedValues.ticketPrice || "0",
@@ -235,29 +233,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                         data-testid="input-event-venue"
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="mb-3">
-              <FormField
-                control={form.control}
-                name="venueUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Venue URL (Google Maps)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field}
-                        value={field.value || ""}
-                        placeholder="Paste Google Maps URL (optional)"
-                        className="form-control"
-                        data-testid="input-event-venue-url"
-                      />
-                    </FormControl>
-                    <small className="text-muted">Add a Google Maps link to show a map on the event page</small>
                     <FormMessage />
                   </FormItem>
                 )}
