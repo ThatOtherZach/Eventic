@@ -217,7 +217,9 @@ export default function TicketViewPage(): React.ReactElement {
           <TicketCard 
             ticket={ticket} 
             event={event} 
-            showQR={!isValidating} 
+            showQR={true}
+            dynamicQrUrl={qrDataUrl}
+            isValidating={isValidating}
           />
         </div>
 
@@ -248,23 +250,14 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   </div>
 
-                  {/* Dynamic QR Code */}
+                  {/* Validation Status */}
                   <div className="text-center mb-3">
-                    <h6 className="mb-3">Show this QR code to the scanner</h6>
-                    <div className="bg-white p-3 rounded border d-inline-block">
-                      {qrDataUrl ? (
-                        <img src={qrDataUrl} alt="Validation QR Code" style={{ width: '200px', height: '200px' }} />
-                      ) : (
-                        <div style={{ width: '200px', height: '200px' }} className="d-flex align-items-center justify-content-center">
-                          <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading QR...</span>
-                          </div>
-                        </div>
-                      )}
+                    <div className="alert alert-success">
+                      <h6 className="mb-2">Validation Active</h6>
+                      <p className="mb-0 small">
+                        Show your ticket to the scanner. The QR code on your ticket refreshes every 10 seconds.
+                      </p>
                     </div>
-                    <p className="text-muted small mt-2">
-                      QR code refreshes every 10 seconds
-                    </p>
                   </div>
 
                   {/* Stop Button */}

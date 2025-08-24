@@ -7,9 +7,11 @@ interface TicketCardProps {
   ticket: Ticket;
   event: Event;
   showQR?: boolean;
+  dynamicQrUrl?: string;
+  isValidating?: boolean;
 }
 
-export function TicketCard({ ticket, event, showQR = true }: TicketCardProps) {
+export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValidating = false }: TicketCardProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -101,7 +103,16 @@ export function TicketCard({ ticket, event, showQR = true }: TicketCardProps) {
             borderRadius: '0 8px 8px 0',
           }}
         >
-          {showQR ? (
+          {isValidating && dynamicQrUrl ? (
+            <div className="text-center">
+              <img 
+                src={dynamicQrUrl} 
+                alt="Validation QR Code" 
+                style={{ width: '120px', height: '120px' }}
+              />
+              <div className="small text-muted mt-1" style={{ fontSize: '10px' }}>Validation Code</div>
+            </div>
+          ) : showQR ? (
             <canvas
               ref={qrCanvasRef}
               style={{ display: 'block' }}
