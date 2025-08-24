@@ -1,4 +1,4 @@
-import { QrScanner } from "@/components/scanner/qr-scanner";
+import { QrScannerImplementation } from "@/components/scanner/qr-scanner-implementation";
 import { QrCode } from "lucide-react";
 
 export default function Scanner() {
@@ -13,7 +13,7 @@ export default function Scanner() {
           <p className="text-muted mb-0">Scan QR codes to validate event tickets</p>
         </div>
 
-        <QrScanner />
+        <QrScannerImplementation />
       </div>
     </div>
   );

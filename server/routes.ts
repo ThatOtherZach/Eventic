@@ -111,8 +111,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ticket not found" });
       }
       
-      // Only allow ticket owner to view
-      if (ticket.userId !== userId) {
+      // Allow viewing if user owns the ticket OR if ticket has no owner
+      if (ticket.userId && ticket.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -133,7 +133,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ticket not found" });
       }
       
-      if (ticket.userId !== userId) {
+      // Allow validation if user owns the ticket OR if ticket has no owner (for legacy tickets)
+      if (ticket.userId && ticket.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -157,7 +158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ticket not found" });
       }
       
-      if (ticket.userId !== userId) {
+      // Allow token generation if user owns the ticket OR if ticket has no owner
+      if (ticket.userId && ticket.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
       

@@ -112,25 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleMagicLink();
 
     // Check active sessions and sets the user
+    let hasRunSync = false;
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
-        // Don't sync here - it's already handled by auth state change
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
-
-    // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        
-        // Only sync on actual sign in events, not on every auth state change
-        if (event === 'SIGNED_IN' && !window.location.hash.includes('access_token')) {
+        // Sync only once on initial load
+        if (!hasRunSync) {
+          hasRunSync = true;
           try {
-            const response = await fetch('/api/auth/sync-user', {
+            await fetch('/api/auth/sync-user', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -141,22 +131,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
               }),
             });
-            
-            if (!response.ok) {
-              console.error('Failed to sync user');
-            }
           } catch (error) {
             console.error('Failed to sync user:', error);
           }
-          
-          toast({
-            title: "Success",
-            description: "You've been successfully logged in!",
-          });
-          setLocation('/');
         }
       } else {
         setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    // Listen for changes on auth state
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      
+      if (event === 'SIGNED_IN') {
+        toast({
+          title: "Success",
+          description: "You've been successfully logged in!",
+        });
+        setLocation('/');
       }
     });
 
