@@ -55,6 +55,25 @@ export const delegatedValidators = pgTable("delegated_validators", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const systemLogs = pgTable("system_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  level: text("level").notNull(), // error, warning, info
+  message: text("message").notNull(),
+  source: text("source").notNull(), // file/function where error occurred
+  userId: varchar("user_id").references(() => users.id),
+  eventId: varchar("event_id").references(() => events.id),
+  ticketId: varchar("ticket_id").references(() => tickets.id),
+  errorCode: text("error_code"),
+  stackTrace: text("stack_trace"),
+  metadata: text("metadata"), // JSON string for additional context
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  url: text("url"),
+  method: text("method"),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull().default(sql`CURRENT_TIMESTAMP + INTERVAL '90 days'`),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -87,6 +106,12 @@ export const insertDelegatedValidatorSchema = createInsertSchema(delegatedValida
   createdAt: true,
 });
 
+export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({
+  id: true,
+  createdAt: true,
+  expiresAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -97,3 +122,5 @@ export type InsertTicket = z.infer<typeof insertTicketSchema>;
 export type Ticket = typeof tickets.$inferSelect;
 export type InsertDelegatedValidator = z.infer<typeof insertDelegatedValidatorSchema>;
 export type DelegatedValidator = typeof delegatedValidators.$inferSelect;
+export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;
+export type SystemLog = typeof systemLogs.$inferSelect;

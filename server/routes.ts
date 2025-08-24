@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { logError, logWarning, logInfo } from "./logger";
 
 // Middleware to extract userId from Supabase auth header
 function extractUserId(req: any): string | null {
@@ -62,7 +63,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(newUser);
     } catch (error) {
-      console.error("Error syncing user:", error);
+      await logError(error, "POST /api/auth/sync-user", {
+        request: req,
+        metadata: { email: req.body.email }
+      });
       res.status(500).json({ message: "Failed to sync user" });
     }
   });
@@ -77,7 +81,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       objectStorageService.downloadObject(file, res);
     } catch (error) {
-      console.error("Error searching for public object:", error);
+      await logError(error, "GET /public-objects/:filePath", {
+        request: req,
+        metadata: { filePath }
+      });
       return res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -103,7 +110,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       objectStorageService.downloadObject(file, res);
     } catch (error) {
-      console.error("Error checking object access:", error);
+      await logError(error, "GET /objects/:objectPath", {
+        request: req,
+        metadata: { objectPath: req.params.objectPath }
+      });
       if (error instanceof ObjectNotFoundError) {
         return res.sendStatus(404);
       }
@@ -139,6 +149,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const event = await storage.getEvent(ticket.eventId);
       res.json({ ticket, event });
     } catch (error) {
+      await logError(error, "GET /api/tickets/:ticketId", {
+        request: req,
+        metadata: { ticketId: req.params.ticketId }
+      });
       res.status(500).json({ message: "Failed to fetch ticket" });
     }
   });
@@ -165,6 +179,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const session = await storage.createValidationSession(req.params.ticketId);
       res.json(session);
     } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/validate-session", {
+        request: req,
+        metadata: { ticketId: req.params.ticketId }
+      });
       res.status(500).json({ message: "Failed to create validation session" });
     }
   });
@@ -187,8 +205,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ token });
     } catch (error: any) {
       if (error.message === "Validation session expired or not found") {
+        await logWarning("Validation session expired", {
+          path: "GET /api/tickets/:ticketId/validation-token",
+          ticketId: req.params.ticketId
+        });
         return res.status(400).json({ message: error.message });
       }
+      await logError(error, "GET /api/tickets/:ticketId/validation-token", {
+        request: req,
+        metadata: { ticketId: req.params.ticketId }
+      });
       res.status(500).json({ message: "Failed to generate validation token" });
     }
   });
@@ -258,6 +284,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketsAvailable
       });
     } catch (error) {
+      await logError(error, "GET /api/events/:id", {
+        request: req,
+        metadata: { eventId: req.params.id }
+      });
       res.status(500).json({ message: "Failed to fetch event" });
     }
   });
@@ -288,9 +318,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(event);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        await logWarning("Invalid event data", {
+          path: "POST /api/events",
+          errors: error.errors
+        });
         return res.status(400).json({ message: "Invalid event data", errors: error.errors });
       }
-      console.error("Event creation error:", error);
+      await logError(error, "POST /api/events", {
+        request: req,
+        metadata: { eventData: req.body }
+      });
       res.status(500).json({ message: "Failed to create event" });
     }
   });
@@ -443,9 +480,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(ticket);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        await logWarning("Invalid ticket data", {
+          path: "POST /api/events/:eventId/tickets",
+          errors: error.errors
+        });
         return res.status(400).json({ message: "Invalid ticket data", errors: error.errors });
       }
-      console.error("Ticket creation error:", error);
+      await logError(error, "POST /api/events/:eventId/tickets", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
       res.status(500).json({ message: "Failed to create ticket" });
     }
   });
@@ -558,6 +602,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
     } catch (error) {
+      await logError(error, "POST /api/validate", {
+        request: req,
+        metadata: { qrData: req.body.qrData }
+      });
       res.status(500).json({ message: "Failed to validate ticket" });
     }
   });
@@ -568,6 +616,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getEventStats();
       res.json(stats);
     } catch (error) {
+      await logError(error, "GET /api/stats", {
+        request: req
+      });
       res.status(500).json({ message: "Failed to fetch stats" });
     }
   });
@@ -627,6 +678,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json(validator);
     } catch (error) {
+      await logError(error, "POST /api/events/:eventId/validators", {
+        request: req,
+        metadata: { eventId: req.params.eventId, email: req.body.email }
+      });
       res.status(500).json({ message: "Failed to add validator" });
     }
   });
@@ -652,6 +707,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to remove validator" });
+    }
+  });
+
+  // System logs endpoint (for administrators)
+  app.get("/api/system-logs", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      const userEmail = extractUserEmail(req);
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Optional: Add admin check here
+      // For now, any authenticated user can view logs
+      // You might want to restrict this to specific admin users
+      
+      const { limit = 100, offset = 0, severity, search } = req.query;
+      
+      const logs = await storage.getSystemLogs({
+        limit: Number(limit),
+        offset: Number(offset),
+        severity: severity as string,
+        search: search as string
+      });
+      
+      await logInfo("System logs accessed", { 
+        userId, 
+        userEmail,
+        query: req.query 
+      });
+      
+      res.json(logs);
+    } catch (error) {
+      await logError(error, "GET /api/system-logs", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch system logs" });
     }
   });
 

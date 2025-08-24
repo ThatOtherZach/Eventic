@@ -2,11 +2,33 @@
 
 ## Overview
 
-This is a full-stack event ticketing application built with React and Express.js. The system allows users to create and manage events, generate tickets, and validate tickets through QR code scanning. It provides a complete event management workflow with a modern web interface and robust backend API.
+This is a full-stack event ticketing application built with React and Express.js. The system allows users to create and manage events, generate tickets, and validate tickets through QR code scanning. It provides a complete event management workflow with a modern web interface, robust backend API, comprehensive error logging, and Bootstrap-style user notifications.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Features
+
+### Error Logging System (Added August 2025)
+- **Comprehensive System Logging**: All server errors are automatically logged to a `system_logs` table with detailed context including stack traces, user information, and request metadata
+- **90-Day Retention Policy**: Logs are automatically cleaned up after 90 days to manage storage
+- **Error Classification**: System distinguishes between user errors (400-499 status codes) and system faults (500+ status codes, network failures)
+- **Logging Levels**: Three severity levels - `error` for system faults, `warning` for validation issues, and `info` for important operations
+- **API Access**: System logs can be accessed via `/api/system-logs` endpoint for monitoring and debugging
+
+### Bootstrap-Style Toast Notifications (Added August 2025)
+- **Visual Feedback**: Three toast variants matching Bootstrap styling:
+  - Success (green with checkmark ✓): For successful operations
+  - Error (red with X icon ✗): For user errors and validation failures  
+  - System Fault (yellow with alert icon ⚠): For server/system errors with "System Fault Detected:" prefix
+- **Automatic Dismissal**: Toasts auto-dismiss after 4 seconds for success/error, 6 seconds for system faults
+- **Consistent UX**: All user interactions provide immediate visual feedback through toast notifications
+
+### Enhanced Event Management (Added August 2025)
+- **Date/Time Validation**: Events now have "Starts on" and "Ends on" fields with validation ensuring end time comes after start time
+- **Multi-Day Events**: Support for events spanning multiple days with proper date/time handling
+- **Improved Error Messages**: User-friendly error messages with clear guidance on what went wrong
 
 ## System Architecture
 
