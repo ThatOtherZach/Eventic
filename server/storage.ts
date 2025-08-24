@@ -32,7 +32,7 @@ export interface IStorage {
   getTicket(id: string): Promise<Ticket | undefined>;
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
-  validateTicket(id: string): Promise<Ticket | undefined>;
+  validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
   
   // Validation Sessions
   createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }>;
@@ -219,10 +219,14 @@ export class DatabaseStorage implements IStorage {
     return ticket;
   }
 
-  async validateTicket(id: string): Promise<Ticket | undefined> {
+  async validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined> {
     const [ticket] = await db
       .update(tickets)
-      .set({ isValidated: true, validatedAt: new Date() })
+      .set({ 
+        isValidated: true, 
+        validatedAt: new Date(),
+        validationCode: validationCode || null
+      })
       .where(eq(tickets.id, id))
       .returning();
     return ticket || undefined;
@@ -255,12 +259,42 @@ export class DatabaseStorage implements IStorage {
     session.tokens.add(token);
     this.validationTokens.set(token, ticketId);
     
-    // Generate 4-digit code
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    // Get the ticket to find its event
+    const ticket = await this.getTicket(ticketId);
+    if (!ticket) {
+      throw new Error("Ticket not found");
+    }
+    
+    // Generate a unique 4-digit code for this event
+    let code: string;
+    let attempts = 0;
+    const maxAttempts = 100; // Prevent infinite loop
+    
+    do {
+      code = Math.floor(1000 + Math.random() * 9000).toString();
+      attempts++;
+      
+      // Check if this code is already in use for this event
+      const existingTickets = await this.getTicketsByEventId(ticket.eventId);
+      const codeInUse = existingTickets.some(t => t.validationCode === code);
+      
+      // Also check current active codes
+      const activeCodeInUse = this.validationCodes.has(code);
+      
+      if (!codeInUse && !activeCodeInUse) {
+        break; // Found a unique code
+      }
+    } while (attempts < maxAttempts);
+    
+    if (attempts >= maxAttempts) {
+      // Fallback to a longer code if we can't find a unique 4-digit one
+      code = Math.floor(10000 + Math.random() * 90000).toString();
+    }
+    
     const now = Date.now();
     
     // Clean up old codes (older than 15 seconds)
-    for (const [oldCode, timestamp] of session.codes.entries()) {
+    for (const [oldCode, timestamp] of Array.from(session.codes.entries())) {
       if (now - timestamp > 15000) {
         session.codes.delete(oldCode);
         this.validationCodes.delete(oldCode);
@@ -306,8 +340,8 @@ export class DatabaseStorage implements IStorage {
       return { valid: false };
     }
 
-    // Mark ticket as validated
-    await this.validateTicket(ticketId);
+    // Mark ticket as validated with the code used
+    await this.validateTicket(ticketId, token);
     
     // Clean up session
     this.validationSessions.delete(ticketId);

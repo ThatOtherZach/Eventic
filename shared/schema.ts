@@ -45,6 +45,7 @@ export const tickets = pgTable("tickets", {
   qrData: text("qr_data").notNull(),
   isValidated: boolean("is_validated").default(false),
   validatedAt: timestamp("validated_at"),
+  validationCode: text("validation_code"), // The unique 4-digit code used when ticket was validated
   createdAt: timestamp("created_at").defaultNow(),
 });
 
