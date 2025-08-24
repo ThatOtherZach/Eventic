@@ -275,6 +275,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(createData.ticketBackgroundUrl);
       }
       
+      // Validate max tickets limit
+      if (createData.maxTickets && createData.maxTickets > 5000) {
+        return res.status(400).json({ message: "Maximum tickets cannot exceed 5,000" });
+      }
+      
       const validatedData = insertEventSchema.parse({
         ...createData,
         userId, // Now we can use the actual userId since user exists in DB
@@ -322,6 +327,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (newMaxTickets < ticketsSold) {
           return res.status(400).json({ 
             message: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)` 
+          });
+        }
+        if (newMaxTickets > 5000) {
+          return res.status(400).json({ 
+            message: "Maximum tickets cannot exceed 5,000" 
           });
         }
       }

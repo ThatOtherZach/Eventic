@@ -22,6 +22,7 @@ export default function EventDetailPage() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [validatorEmail, setValidatorEmail] = useState("");
   const [isAddingValidator, setIsAddingValidator] = useState(false);
+  const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
 
   const { data: event, isLoading, error } = useQuery<EventWithStats>({
     queryKey: [`/api/events/${id}`],
@@ -238,10 +239,10 @@ export default function EventDetailPage() {
               <div className="card-body">
                 <h5 className="card-title mb-3">
                   <Ticket size={20} className="me-2" />
-                  Your Tickets
+                  Your Tickets ({userTickets.length})
                 </h5>
                 <div className="list-group">
-                  {userTickets.map((ticket) => (
+                  {userTickets.slice(0, ticketsDisplayed).map((ticket) => (
                     <div key={ticket.id} className="list-group-item d-flex justify-content-between align-items-center">
                       <div>
                         <span className="badge bg-primary me-2">{ticket.ticketNumber}</span>
@@ -256,6 +257,31 @@ export default function EventDetailPage() {
                     </div>
                   ))}
                 </div>
+                {userTickets.length > ticketsDisplayed && (
+                  <div className="text-center mt-3">
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setTicketsDisplayed(prev => Math.min(prev + 10, userTickets.length))}
+                      data-testid="button-show-more-tickets"
+                    >
+                      Show {Math.min(10, userTickets.length - ticketsDisplayed)} More
+                    </button>
+                    <div className="text-muted small mt-2">
+                      Showing {ticketsDisplayed} of {userTickets.length} tickets
+                    </div>
+                  </div>
+                )}
+                {userTickets.length > 10 && ticketsDisplayed >= userTickets.length && (
+                  <div className="text-center mt-3">
+                    <button
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => setTicketsDisplayed(10)}
+                      data-testid="button-show-less-tickets"
+                    >
+                      Show Less
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

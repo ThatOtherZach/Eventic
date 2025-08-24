@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Calendar, Ticket, User, LogOut, Eye } from "lucide-react";
@@ -9,6 +10,7 @@ import type { Ticket as TicketType, Event } from "@shared/schema";
 export default function AccountPage() {
   const { user, signOut } = useAuth();
   const [, setLocation] = useLocation();
+  const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   
   const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
     queryKey: ["/api/user/tickets"],
@@ -99,29 +101,56 @@ export default function AccountPage() {
               </div>
             </div>
           ) : (
-            <div className="row g-3">
-              {tickets?.map((ticket) => (
-                <div key={ticket.id} className="col-md-4">
-                  <div 
-                    onClick={() => setLocation(`/tickets/${ticket.id}`)}
-                    style={{ 
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <TicketCard 
-                      ticket={ticket}
-                      event={ticket.event}
-                      showQR={false}
-                    />
-                  </div>
-                  {ticket.isValidated && (
-                    <div className="text-center mt-2">
-                      <span className="badge bg-success">Used</span>
+            <>
+              <div className="row g-3">
+                {tickets?.slice(0, ticketsDisplayed).map((ticket) => (
+                  <div key={ticket.id} className="col-md-4">
+                    <div 
+                      onClick={() => setLocation(`/tickets/${ticket.id}`)}
+                      style={{ 
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <TicketCard 
+                        ticket={ticket}
+                        event={ticket.event}
+                        showQR={false}
+                      />
                     </div>
-                  )}
+                    {ticket.isValidated && (
+                      <div className="text-center mt-2">
+                        <span className="badge bg-success">Used</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {tickets && tickets.length > ticketsDisplayed && (
+                <div className="text-center mt-4">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setTicketsDisplayed(prev => Math.min(prev + 10, tickets.length))}
+                    data-testid="button-show-more-tickets"
+                  >
+                    Show {Math.min(10, tickets.length - ticketsDisplayed)} More
+                  </button>
+                  <div className="text-muted small mt-2">
+                    Showing {ticketsDisplayed} of {tickets.length} tickets
+                  </div>
                 </div>
-              ))}
-            </div>
+              )}
+              {tickets && tickets.length > 10 && ticketsDisplayed >= tickets.length && (
+                <div className="text-center mt-3">
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => setTicketsDisplayed(10)}
+                    data-testid="button-show-less-tickets"
+                  >
+                    Show Less
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

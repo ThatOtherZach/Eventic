@@ -96,14 +96,25 @@ export default function EventEditPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate max tickets against tickets sold
-    if (formData.maxTickets && parseInt(formData.maxTickets) < ticketsSold) {
-      toast({
-        title: "Invalid ticket limit",
-        description: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)`,
-        variant: "destructive",
-      });
-      return;
+    // Validate max tickets against tickets sold and maximum limit
+    if (formData.maxTickets) {
+      const maxTicketValue = parseInt(formData.maxTickets);
+      if (maxTicketValue < ticketsSold) {
+        toast({
+          title: "Invalid ticket limit",
+          description: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)`,
+          variant: "destructive",
+        });
+        return;
+      }
+      if (maxTicketValue > 5000) {
+        toast({
+          title: "Invalid ticket limit",
+          description: "Maximum tickets cannot exceed 5,000",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
     const updateData: any = {
@@ -332,11 +343,19 @@ export default function EventEditPage() {
                 <input
                   type="number"
                   min={ticketsSold || 1}
+                  max="5000"
                   className="form-control"
                   id="maxTickets"
                   value={formData.maxTickets}
-                  onChange={(e) => setFormData({ ...formData, maxTickets: e.target.value })}
-                  placeholder="Leave empty for unlimited"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value && parseInt(value) > 5000) {
+                      setFormData({ ...formData, maxTickets: "5000" });
+                    } else {
+                      setFormData({ ...formData, maxTickets: value });
+                    }
+                  }}
+                  placeholder="Leave empty for unlimited (max 5,000)"
                 />
                 {ticketsSold > 0 && (
                   <small className="text-muted">

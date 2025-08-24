@@ -310,11 +310,19 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                           {...field} 
                           type="number"
                           min="1"
-                          placeholder="Unlimited"
+                          max="5000"
+                          placeholder="Unlimited (max 5,000)"
                           className="form-control"
                           data-testid="input-max-tickets"
                           value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          onChange={(e) => {
+                            const value = e.target.value ? parseInt(e.target.value) : undefined;
+                            if (value && value > 5000) {
+                              field.onChange(5000);
+                            } else {
+                              field.onChange(value);
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
