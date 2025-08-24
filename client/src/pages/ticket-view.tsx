@@ -3,6 +3,7 @@ import { useParams, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
+import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Shield, Clock, CheckCircle, RefreshCw } from "lucide-react";
 import QRCode from "qrcode";
@@ -541,6 +542,22 @@ export default function TicketViewPage(): React.ReactElement {
               )}
             </div>
           </div>
+
+          {/* NFT Minting Section */}
+          {ticket.isValidated && (
+            <div className="card mt-3">
+              <div className="card-body">
+                <h5 className="card-title mb-3">
+                  <Shield size={20} className="me-2" />
+                  NFT Registry
+                </h5>
+                <p className="text-muted mb-3">
+                  Convert your validated ticket into a permanent NFT record. NFTs can be collected and may have value in the future marketplace.
+                </p>
+                <MintNFTButton ticket={ticket} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

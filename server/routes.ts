@@ -939,6 +939,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Registry endpoints
+  app.post("/api/tickets/:ticketId/mint", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+      const { title, description, metadata } = req.body;
+
+      // Get the ticket details
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      // Verify ownership
+      if (ticket.userId !== userId) {
+        return res.status(403).json({ message: "You can only mint your own tickets" });
+      }
+
+      // Check if can mint
+      const canMint = await storage.canMintTicket(ticketId);
+      if (!canMint) {
+        return res.status(400).json({ message: "Ticket cannot be minted yet. Make sure it has been validated and 72 hours have passed." });
+      }
+
+      // Get event details
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Create registry record
+      const registryRecord = await storage.createRegistryRecord({
+        ticketId,
+        eventId: ticket.eventId,
+        ownerId: userId,
+        creatorId: event.userId || userId,
+        title: title || `${event.name} - Ticket #${ticket.ticketNumber}`,
+        description: description || `NFT for ${event.name} at ${event.venue} on ${event.date}`,
+        metadata: JSON.stringify({
+          ...JSON.parse(metadata || "{}"),
+          originalTicket: {
+            ticketNumber: ticket.ticketNumber,
+            qrData: ticket.qrData,
+            validatedAt: ticket.validatedAt,
+            useCount: ticket.useCount
+          }
+        }),
+        ticketNumber: ticket.ticketNumber,
+        eventName: event.name,
+        eventVenue: event.venue,
+        eventDate: event.date,
+        validatedAt: ticket.validatedAt!,
+      });
+
+      // Create mint transaction
+      await storage.createRegistryTransaction({
+        registryId: registryRecord.id,
+        fromUserId: null,
+        toUserId: userId,
+        transactionType: "mint",
+        price: null,
+        royaltyAmount: null,
+        creatorRoyalty: null,
+        platformFee: null,
+      });
+
+      res.json({
+        message: "Ticket successfully minted as NFT",
+        registryRecord
+      });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/mint", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to mint ticket" });
+    }
+  });
+
+  app.get("/api/tickets/:ticketId/mint-status", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+
+      // Get the ticket
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      // Check if already minted
+      const registryRecord = await storage.getRegistryRecordByTicket(ticketId);
+      if (registryRecord) {
+        return res.json({
+          canMint: false,
+          alreadyMinted: true,
+          registryRecord
+        });
+      }
+
+      // Check validation status
+      if (!ticket.isValidated || !ticket.validatedAt) {
+        return res.json({
+          canMint: false,
+          alreadyMinted: false,
+          needsValidation: true
+        });
+      }
+
+      // Calculate time remaining
+      const now = new Date();
+      const validatedTime = new Date(ticket.validatedAt);
+      const seventyTwoHoursMs = 72 * 60 * 60 * 1000;
+      const timeDiff = now.getTime() - validatedTime.getTime();
+      const timeRemaining = Math.max(0, seventyTwoHoursMs - timeDiff);
+
+      res.json({
+        canMint: timeDiff >= seventyTwoHoursMs,
+        alreadyMinted: false,
+        validatedAt: ticket.validatedAt,
+        timeRemaining: timeRemaining,
+        timeRemainingHours: Math.ceil(timeRemaining / (60 * 60 * 1000))
+      });
+    } catch (error) {
+      await logError(error, "GET /api/tickets/:ticketId/mint-status", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to get mint status" });
+    }
+  });
+
+  app.get("/api/user/registry", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const registryRecords = await storage.getRegistryRecordsByUser(userId);
+      res.json(registryRecords);
+    } catch (error) {
+      await logError(error, "GET /api/user/registry", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch registry records" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

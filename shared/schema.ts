@@ -109,6 +109,43 @@ export const archivedTickets = pgTable("archived_tickets", {
   archivedAt: timestamp("archived_at").defaultNow(),
 });
 
+// NFT Registry table for minted tickets
+export const registryRecords = pgTable("registry_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").references(() => tickets.id).unique(), // One registry record per ticket
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  ownerId: varchar("owner_id").references(() => users.id).notNull(), // Current owner
+  creatorId: varchar("creator_id").references(() => users.id).notNull(), // Original event creator
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  metadata: text("metadata").notNull(), // JSON string with additional metadata
+  mintedAt: timestamp("minted_at").defaultNow(),
+  transferCount: integer("transfer_count").default(0),
+  isListed: boolean("is_listed").default(false), // For future marketplace
+  listPrice: decimal("list_price", { precision: 10, scale: 2 }),
+  
+  // Original ticket data
+  ticketNumber: text("ticket_number").notNull(),
+  eventName: text("event_name").notNull(),
+  eventVenue: text("event_venue").notNull(),
+  eventDate: text("event_date").notNull(),
+  validatedAt: timestamp("validated_at").notNull(), // When ticket was first validated
+});
+
+// Registry transactions for tracking NFT transfers and royalties
+export const registryTransactions = pgTable("registry_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  registryId: varchar("registry_id").references(() => registryRecords.id).notNull(),
+  fromUserId: varchar("from_user_id").references(() => users.id),
+  toUserId: varchar("to_user_id").references(() => users.id).notNull(),
+  transactionType: text("transaction_type").notNull(), // "mint", "transfer", "sale"
+  price: decimal("price", { precision: 10, scale: 2 }),
+  royaltyAmount: decimal("royalty_amount", { precision: 10, scale: 2 }), // 2.69% of sale price
+  creatorRoyalty: decimal("creator_royalty", { precision: 10, scale: 2 }), // 75% of royalty (to event creator)
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }), // 25% of royalty
+  transactionDate: timestamp("transaction_date").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -162,6 +199,17 @@ export const insertArchivedTicketSchema = createInsertSchema(archivedTickets).om
   archivedAt: true,
 });
 
+export const insertRegistryRecordSchema = createInsertSchema(registryRecords).omit({
+  id: true,
+  mintedAt: true,
+  transferCount: true,
+});
+
+export const insertRegistryTransactionSchema = createInsertSchema(registryTransactions).omit({
+  id: true,
+  transactionDate: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -178,3 +226,7 @@ export type InsertArchivedEvent = z.infer<typeof insertArchivedEventSchema>;
 export type ArchivedEvent = typeof archivedEvents.$inferSelect;
 export type InsertArchivedTicket = z.infer<typeof insertArchivedTicketSchema>;
 export type ArchivedTicket = typeof archivedTickets.$inferSelect;
+export type InsertRegistryRecord = z.infer<typeof insertRegistryRecordSchema>;
+export type RegistryRecord = typeof registryRecords.$inferSelect;
+export type InsertRegistryTransaction = z.infer<typeof insertRegistryTransactionSchema>;
+export type RegistryTransaction = typeof registryTransactions.$inferSelect;

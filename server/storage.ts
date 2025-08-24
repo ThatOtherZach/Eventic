@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -66,6 +66,14 @@ export interface IStorage {
   getArchivedEventsByUser(userId: string): Promise<ArchivedEvent[]>;
   getArchivedTicketsByUser(userId: string): Promise<ArchivedTicket[]>;
   getEventsToArchive(): Promise<Event[]>;
+  
+  // Registry Management
+  createRegistryRecord(record: InsertRegistryRecord): Promise<RegistryRecord>;
+  getRegistryRecord(id: string): Promise<RegistryRecord | undefined>;
+  getRegistryRecordByTicket(ticketId: string): Promise<RegistryRecord | undefined>;
+  getRegistryRecordsByUser(userId: string): Promise<RegistryRecord[]>;
+  canMintTicket(ticketId: string): Promise<boolean>;
+  createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction>;
 }
 
 interface ValidationSession {
@@ -664,6 +672,57 @@ export class DatabaseStorage implements IStorage {
       const timeDiff = now.getTime() - eventDate.getTime();
       return timeDiff >= sixtyNineDaysMs;
     });
+  }
+
+  // Registry Management
+  async createRegistryRecord(record: InsertRegistryRecord): Promise<RegistryRecord> {
+    const [newRecord] = await db.insert(registryRecords).values(record).returning();
+    return newRecord;
+  }
+
+  async getRegistryRecord(id: string): Promise<RegistryRecord | undefined> {
+    const [record] = await db.select().from(registryRecords).where(eq(registryRecords.id, id));
+    return record || undefined;
+  }
+
+  async getRegistryRecordByTicket(ticketId: string): Promise<RegistryRecord | undefined> {
+    const [record] = await db.select().from(registryRecords).where(eq(registryRecords.ticketId, ticketId));
+    return record || undefined;
+  }
+
+  async getRegistryRecordsByUser(userId: string): Promise<RegistryRecord[]> {
+    return db
+      .select()
+      .from(registryRecords)
+      .where(eq(registryRecords.ownerId, userId))
+      .orderBy(desc(registryRecords.mintedAt));
+  }
+
+  async canMintTicket(ticketId: string): Promise<boolean> {
+    // Check if ticket exists and has been validated
+    const ticket = await this.getTicket(ticketId);
+    if (!ticket || !ticket.isValidated || !ticket.validatedAt) {
+      return false;
+    }
+
+    // Check if already minted
+    const existingRecord = await this.getRegistryRecordByTicket(ticketId);
+    if (existingRecord) {
+      return false;
+    }
+
+    // Check if 72 hours have passed since validation
+    const now = new Date();
+    const validatedTime = new Date(ticket.validatedAt);
+    const seventyTwoHoursMs = 72 * 60 * 60 * 1000;
+    const timeDiff = now.getTime() - validatedTime.getTime();
+    
+    return timeDiff >= seventyTwoHoursMs;
+  }
+
+  async createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction> {
+    const [newTransaction] = await db.insert(registryTransactions).values(transaction).returning();
+    return newTransaction;
   }
 }
 
