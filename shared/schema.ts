@@ -68,6 +68,11 @@ export const insertAuthTokenSchema = createInsertSchema(authTokens).omit({
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
   createdAt: true,
+}).extend({
+  name: z.string().min(1, "Event name is required"),
+  venue: z.string().min(1, "Venue is required"),
+  date: z.string().min(1, "Date is required"),
+  time: z.string().min(1, "Time is required"),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({
