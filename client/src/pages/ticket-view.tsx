@@ -544,7 +544,7 @@ export default function TicketViewPage(): React.ReactElement {
           </div>
 
           {/* NFT Minting Section */}
-          {ticket.isValidated && (
+          {ticket.isValidated && event.allowMinting && (
             <div className="card mt-3">
               <div className="card-body">
                 <h5 className="card-title mb-3">

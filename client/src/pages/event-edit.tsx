@@ -40,6 +40,7 @@ export default function EventEditPage() {
     maxUses: 1,
     goldenTicketEnabled: false,
     goldenTicketNumber: undefined as number | undefined,
+    allowMinting: false,
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -77,6 +78,7 @@ export default function EventEditPage() {
         maxUses: event.maxUses || 1,
         goldenTicketEnabled: event.goldenTicketEnabled || false,
         goldenTicketNumber: event.goldenTicketNumber || undefined,
+        allowMinting: event.allowMinting || false,
       });
       
       // Store tickets sold for validation
@@ -527,6 +529,27 @@ export default function EventEditPage() {
                 </small>
               </div>
             )}
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="allowMinting"
+                  checked={formData.allowMinting}
+                  disabled
+                  title="NFT minting settings cannot be changed after creation"
+                />
+                <label className="form-check-label" htmlFor="allowMinting">
+                  <span className="badge bg-info text-dark me-2">NFT</span>
+                  NFT Minting Allowed
+                </label>
+              </div>
+              <small className="text-muted">
+                NFT minting settings cannot be changed after event creation.
+                {formData.allowMinting && " Attendees can mint their validated tickets as digital collectibles."}
+              </small>
+            </div>
 
             <div className="mb-4">
               <label className="form-label">

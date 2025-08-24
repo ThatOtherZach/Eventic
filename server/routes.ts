@@ -973,6 +973,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
 
+      // Check if event allows minting
+      if (!event.allowMinting) {
+        return res.status(403).json({ message: "NFT minting is not enabled for this event" });
+      }
+
       // Create registry record
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
@@ -1034,6 +1039,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ticket = await storage.getTicket(ticketId);
       if (!ticket) {
         return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      // Get the event to check if minting is allowed
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event || !event.allowMinting) {
+        return res.json({
+          canMint: false,
+          alreadyMinted: false,
+          needsValidation: false,
+          mintingDisabled: true
+        });
       }
 
       // Check if already minted

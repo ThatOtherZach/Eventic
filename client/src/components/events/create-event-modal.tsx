@@ -60,6 +60,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       maxUses: 1,
       goldenTicketEnabled: false,
       goldenTicketNumber: undefined,
+      allowMinting: false,
     },
   });
 
@@ -180,6 +181,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     maxUses: watchedValues.maxUses || 1,
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
     goldenTicketNumber: watchedValues.goldenTicketNumber || null,
+    allowMinting: watchedValues.allowMinting || false,
     createdAt: new Date(),
   };
 
@@ -576,6 +578,33 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 />
               </div>
             )}
+
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="allowMinting"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="allowMinting"
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        data-testid="checkbox-allow-minting"
+                      />
+                      <label className="form-check-label" htmlFor="allowMinting">
+                        <span className="badge bg-info text-dark me-2">NFT</span>
+                        Allow Minting
+                      </label>
+                    </div>
+                    <div className="form-text">Attendees will be allowed to mint a digital collectible of the event ticket. Some details of the ticket can be listed publicly if this is enabled.</div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="mb-3">
               <label className="form-label">
