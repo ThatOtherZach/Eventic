@@ -40,9 +40,9 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
     <div 
       className="ticket-card position-relative w-100"
       style={{
-        aspectRatio: showQR || isValidating ? '7/4' : '12/5',
+        aspectRatio: showQR || isValidating ? '7/4' : '2/1',
         maxWidth: '100%',
-        minHeight: '125px',
+        minHeight: '150px',
         borderRadius: '8px',
         overflow: 'hidden',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
