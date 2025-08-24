@@ -21,6 +21,42 @@ function extractUserId(req: any): string | null {
   }
 }
 
+// Helper function to check if a ticket is within its valid time window
+function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
+  const now = new Date();
+  const startDate = new Date(event.startDate);
+  
+  // Check if event hasn't started yet
+  if (now < startDate) {
+    return {
+      valid: false,
+      message: `Event has not started yet. It begins on ${startDate.toLocaleString()}`
+    };
+  }
+  
+  // If event has an end date, check if we're past it
+  if (event.endDate) {
+    const endDate = new Date(event.endDate);
+    if (now > endDate) {
+      return {
+        valid: false,
+        message: `Event has ended. It ended on ${endDate.toLocaleString()}`
+      };
+    }
+  } else {
+    // No end date - check if we're within 24 hours of start
+    const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+    if (now > twentyFourHoursAfterStart) {
+      return {
+        valid: false,
+        message: `Ticket has expired. It was valid for 24 hours after ${startDate.toLocaleString()}`
+      };
+    }
+  }
+  
+  return { valid: true };
+}
+
 // Helper function to extract user email from the request
 function extractUserEmail(req: any): string | null {
   try {
@@ -188,8 +224,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/tickets/:ticketId/validation-token", async (req, res) => {
+    const userId = extractUserId(req);
     try {
-      const userId = extractUserId(req);
       const ticket = await storage.getTicket(req.params.ticketId);
       
       if (!ticket) {
@@ -205,10 +241,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ token });
     } catch (error: any) {
       if (error.message === "Validation session expired or not found") {
-        await logWarning("Validation session expired", {
-          path: "GET /api/tickets/:ticketId/validation-token",
-          ticketId: req.params.ticketId
-        });
+        await logWarning(
+          "Validation session expired",
+          "GET /api/tickets/:ticketId/validation-token",
+          {
+            userId: userId || undefined,
+            ticketId: req.params.ticketId
+          }
+        );
         return res.status(400).json({ message: error.message });
       }
       await logError(error, "GET /api/tickets/:ticketId/validation-token", {
@@ -293,8 +333,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/events", async (req, res) => {
+    const userId = extractUserId(req);
     try {
-      const userId = extractUserId(req);
       
       // Handle image URL normalization if provided
       let createData = { ...req.body };
@@ -318,10 +358,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(event);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        await logWarning("Invalid event data", {
-          path: "POST /api/events",
-          errors: error.errors
-        });
+        await logWarning(
+          "Invalid event data",
+          "POST /api/events",
+          {
+            userId: userId || undefined,
+            metadata: {
+              errors: error.errors
+            }
+          }
+        );
         return res.status(400).json({ message: "Invalid event data", errors: error.errors });
       }
       await logError(error, "POST /api/events", {
@@ -447,8 +493,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/events/:eventId/tickets", async (req, res) => {
+    const userId = extractUserId(req);
     try {
-      const userId = extractUserId(req);
       const event = await storage.getEvent(req.params.eventId);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
@@ -480,10 +526,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(ticket);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        await logWarning("Invalid ticket data", {
-          path: "POST /api/events/:eventId/tickets",
-          errors: error.errors
-        });
+        await logWarning(
+          "Invalid ticket data",
+          "POST /api/events/:eventId/tickets",
+          {
+            userId: userId || undefined,
+            eventId: req.params.eventId,
+            metadata: {
+              errors: error.errors
+            }
+          }
+        );
         return res.status(400).json({ message: "Invalid ticket data", errors: error.errors });
       }
       await logError(error, "POST /api/events/:eventId/tickets", {
@@ -521,6 +574,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ 
             message: "Event not found", 
             valid: false 
+          });
+        }
+        
+        // Check if ticket is within valid time window
+        const timeCheck = isTicketWithinValidTime(event);
+        if (!timeCheck.valid) {
+          return res.status(400).json({
+            message: timeCheck.message,
+            valid: false,
+            isAuthentic: true,
+            outsideValidTime: true,
+            ticket,
+            event
           });
         }
         
@@ -563,10 +629,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const event = await storage.getEvent(ticket.eventId);
+      if (!event) {
+        return res.status(404).json({ 
+          message: "Event not found", 
+          valid: false 
+        });
+      }
+      
+      // Check if ticket is within valid time window
+      const timeCheck = isTicketWithinValidTime(event);
+      if (!timeCheck.valid) {
+        return res.status(400).json({
+          message: timeCheck.message,
+          valid: false,
+          isAuthentic: true,
+          outsideValidTime: true,
+          ticket,
+          event
+        });
+      }
       
       // Check if user is authorized to validate for this event
       const canValidate = userId && userEmail ? 
-        await storage.canUserValidateForEvent(userId, userEmail, event!.id) : false;
+        await storage.canUserValidateForEvent(userId, userEmail, event.id) : false;
 
       if (ticket.isValidated) {
         return res.json({ 
@@ -733,11 +818,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         search: search as string
       });
       
-      await logInfo("System logs accessed", { 
-        userId, 
-        userEmail,
-        query: req.query 
-      });
+      await logInfo(
+        "System logs accessed",
+        "GET /api/system-logs",
+        { 
+          userId, 
+          metadata: {
+            userEmail: userEmail || undefined,
+            query: req.query 
+          }
+        }
+      );
       
       res.json(logs);
     } catch (error) {

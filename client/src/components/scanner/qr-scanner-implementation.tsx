@@ -14,6 +14,7 @@ interface ValidationResult {
   canValidate?: boolean;
   isAuthentic?: boolean;
   alreadyValidated?: boolean;
+  outsideValidTime?: boolean;
 }
 
 interface ValidationHistory {
@@ -363,6 +364,7 @@ export function QrScannerImplementation() {
             <div className="d-flex align-items-center mb-3">
               <div className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
                 validationResult.canValidate && validationResult.valid ? "bg-success" : 
+                validationResult.outsideValidTime ? "bg-warning" :
                 validationResult.isAuthentic ? "bg-info" : "bg-danger"
               }`} style={{ width: "40px", height: "40px" }}>
                 {validationResult.valid ? (
@@ -374,6 +376,7 @@ export function QrScannerImplementation() {
               <div className="flex-grow-1">
                 <h6 className="fw-semibold mb-1">
                   {validationResult.canValidate && validationResult.valid ? "✅ Ticket Validated" : 
+                   validationResult.outsideValidTime ? "⏰ Outside Valid Time" :
                    validationResult.isAuthentic ? "✔️ Authentic Ticket" :
                    validationResult.alreadyValidated ? "⚠️ Already Validated" : "❌ Invalid Ticket"}
                 </h6>

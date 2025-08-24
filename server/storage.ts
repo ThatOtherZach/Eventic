@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, users, authTokens, events, tickets, delegatedValidators } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, users, authTokens, events, tickets, delegatedValidators, systemLogs } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -52,6 +52,14 @@ export interface IStorage {
     totalTickets: number;
     validatedTickets: number;
   }>;
+  
+  // System Logs
+  getSystemLogs(params: {
+    limit?: number;
+    offset?: number;
+    severity?: string;
+    search?: string;
+  }): Promise<SystemLog[]>;
 }
 
 interface ValidationSession {
@@ -365,6 +373,26 @@ export class DatabaseStorage implements IStorage {
       totalTickets: ticketResult?.count || 0,
       validatedTickets: validatedResult?.count || 0,
     };
+  }
+
+  async getSystemLogs(params: {
+    limit?: number;
+    offset?: number;
+    severity?: string;
+    search?: string;
+  }): Promise<SystemLog[]> {
+    const { limit = 100, offset = 0, severity, search } = params;
+    
+    let query = db.select().from(systemLogs);
+    
+    // Add filtering if needed
+    // For now, return all logs with limit and offset
+    const logs = await query
+      .orderBy(desc(systemLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return logs;
   }
 }
 
