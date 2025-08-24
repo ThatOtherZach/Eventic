@@ -219,6 +219,11 @@ h4 { font-size: 1.125rem; }
   border-left: 4px solid var(--bs-danger) !important;
 }
 
+.border-system {
+  border-left: 4px solid #991b1b !important;
+  background-color: rgba(254, 242, 242, 0.98) !important;
+}
+
 .border-warning {
   border-left: 4px solid var(--bs-warning) !important;
 }

@@ -6,9 +6,12 @@ export function Toaster() {
 
   const bootstrapToasts = toasts.map((toast) => {
     // Map the variant to Bootstrap-style variants
-    let variant: "success" | "error" | "info" | "warning" | "destructive" | "default" | undefined;
+    let variant: "success" | "error" | "info" | "warning" | "destructive" | "default" | "system" | undefined;
     
-    if (toast.variant === "destructive") {
+    // Check if this is a system error based on the description
+    if (toast.description?.toString().includes("System Fault Detected:")) {
+      variant = "system";
+    } else if (toast.variant === "destructive") {
       variant = "error";
     } else if (toast.variant === "success" || toast.variant === "error" || toast.variant === "warning") {
       variant = toast.variant;

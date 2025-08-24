@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { CheckCircle, XCircle, Info, AlertTriangle, X } from "lucide-react";
+import { CheckCircle, XCircle, Info, AlertTriangle, X, AlertOctagon } from "lucide-react";
 
 export interface BootstrapToast {
   id: string;
   title?: string;
   description?: string;
-  variant?: "success" | "error" | "info" | "warning" | "destructive" | "default";
+  variant?: "success" | "error" | "info" | "warning" | "destructive" | "default" | "system";
   duration?: number;
 }
 
@@ -21,6 +21,8 @@ const getIcon = (variant?: string) => {
     case "error":
     case "destructive":
       return <XCircle size={20} className="text-danger" />;
+    case "system":
+      return <AlertOctagon size={20} className="text-danger" />;
     case "warning":
       return <AlertTriangle size={20} className="text-warning" />;
     default:
@@ -35,6 +37,8 @@ const getToastClass = (variant?: string) => {
     case "error":
     case "destructive":
       return "border-danger";
+    case "system":
+      return "border-system";
     case "warning":
       return "border-warning";
     default:
