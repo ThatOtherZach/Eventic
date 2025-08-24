@@ -24,7 +24,7 @@ function Router() {
       <ProtectedRoute path="/events/:id/edit" component={EventEdit} />
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
-      <ProtectedRoute path="/tickets/:ticketId" component={TicketViewPage} />
+      <Route path="/tickets/:ticketId" component={TicketViewPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

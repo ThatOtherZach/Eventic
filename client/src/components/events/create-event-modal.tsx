@@ -122,7 +122,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   const previewEvent: Event = {
     id: "preview",
     name: watchedValues.name || "Event Name",
-    description: watchedValues.description,
+    description: watchedValues.description || null,
     venue: watchedValues.venue || "Venue",
     date: watchedValues.date || "2024-01-01",
     time: watchedValues.time || "19:00",
