@@ -21,6 +21,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -48,6 +55,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       maxTickets: undefined,
       imageUrl: undefined,
       ticketBackgroundUrl: undefined,
+      earlyValidation: "Allow at Anytime",
     },
   });
 
@@ -62,7 +70,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Success",
         description: "Event created successfully",
-        variant: "success",
       });
       form.reset();
       onOpenChange(false);
@@ -71,7 +78,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Error",
         description: error.message || "Failed to create event",
-        variant: "error",
+        variant: "destructive",
       });
     },
   });
@@ -117,7 +124,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Image uploaded",
         description: "Image will be included when you create the event",
-        variant: "success",
       });
     }
   };
@@ -131,7 +137,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Ticket background uploaded",
         description: "Ticket design will be applied when you create the event",
-        variant: "success",
       });
     }
   };
@@ -163,6 +168,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     userId: user?.id || null,
     imageUrl: imageUrl || null,
     ticketBackgroundUrl: ticketBackgroundUrl || null,
+    earlyValidation: watchedValues.earlyValidation || "Allow at Anytime",
     createdAt: new Date(),
   };
 
@@ -400,6 +406,33 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                   )}
                 />
               </div>
+            </div>
+
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="earlyValidation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ticket Validation Timing</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="form-control" data-testid="select-early-validation">
+                          <SelectValue placeholder="Select when validation starts" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Allow at Anytime">Allow at Anytime</SelectItem>
+                        <SelectItem value="Two Hours Before">Two Hours Before</SelectItem>
+                        <SelectItem value="One Hour Before">One Hour Before</SelectItem>
+                        <SelectItem value="At Start Time">At Start Time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="form-text">When ticket validation can begin relative to event start time</div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="mb-3">

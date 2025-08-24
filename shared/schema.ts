@@ -33,6 +33,7 @@ export const events = pgTable("events", {
   userId: varchar("user_id").references(() => users.id),
   imageUrl: text("image_url"),
   ticketBackgroundUrl: text("ticket_background_url"),
+  earlyValidation: text("early_validation").default("Allow at Anytime"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -94,6 +95,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
   venue: z.string().min(1, "Venue is required"),
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
+  earlyValidation: z.enum(["At Start Time", "One Hour Before", "Two Hours Before", "Allow at Anytime"]).optional().default("Allow at Anytime"),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({

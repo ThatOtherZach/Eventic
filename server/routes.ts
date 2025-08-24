@@ -28,12 +28,35 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   const startDateTime = `${event.date}T${event.time}:00`;
   const startDate = new Date(startDateTime);
   
-  // Check if event hasn't started yet
-  if (now < startDate) {
-    return {
-      valid: false,
-      message: `Event has not started yet. It begins on ${startDate.toLocaleString()}`
-    };
+  // Check early validation setting
+  const earlyValidation = event.earlyValidation || "Allow at Anytime";
+  
+  // Check if event hasn't started yet based on early validation setting
+  if (earlyValidation !== "Allow at Anytime") {
+    let validationStartTime = new Date(startDate);
+    
+    switch (earlyValidation) {
+      case "One Hour Before":
+        validationStartTime = new Date(startDate.getTime() - 60 * 60 * 1000);
+        break;
+      case "Two Hours Before":
+        validationStartTime = new Date(startDate.getTime() - 2 * 60 * 60 * 1000);
+        break;
+      // "At Start Time" uses the original start time
+    }
+    
+    if (now < validationStartTime) {
+      const timeDescription = earlyValidation === "At Start Time" 
+        ? `at ${startDate.toLocaleString()}`
+        : earlyValidation === "One Hour Before"
+        ? `starting ${validationStartTime.toLocaleString()} (1 hour before event)`
+        : `starting ${validationStartTime.toLocaleString()} (2 hours before event)`;
+      
+      return {
+        valid: false,
+        message: `Ticket validation begins ${timeDescription}`
+      };
+    }
   }
   
   // If event has an end date and time, check if we're past it

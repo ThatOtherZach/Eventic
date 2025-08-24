@@ -35,6 +35,7 @@ export default function EventEditPage() {
     maxTickets: "",
     imageUrl: "",
     ticketBackgroundUrl: "",
+    earlyValidation: "Allow at Anytime",
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -49,7 +50,7 @@ export default function EventEditPage() {
         toast({
           title: "Access Denied",
           description: "You can only edit your own events",
-          variant: "error",
+          variant: "destructive",
         });
         setLocation(`/events/${id}`);
         return;
@@ -67,6 +68,7 @@ export default function EventEditPage() {
         maxTickets: event.maxTickets?.toString() || "",
         imageUrl: event.imageUrl || "",
         ticketBackgroundUrl: event.ticketBackgroundUrl || "",
+        earlyValidation: event.earlyValidation || "Allow at Anytime",
       });
       
       // Store tickets sold for validation
@@ -83,7 +85,6 @@ export default function EventEditPage() {
       toast({
         title: "Success",
         description: "Event updated successfully",
-        variant: "success",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
@@ -93,7 +94,7 @@ export default function EventEditPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to update event",
-        variant: "error",
+        variant: "destructive",
       });
     },
   });
@@ -108,7 +109,7 @@ export default function EventEditPage() {
         toast({
           title: "Invalid ticket limit",
           description: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)`,
-          variant: "error",
+          variant: "destructive",
         });
         return;
       }
@@ -116,7 +117,7 @@ export default function EventEditPage() {
         toast({
           title: "Invalid ticket limit",
           description: "Maximum tickets cannot exceed 5,000",
-          variant: "error",
+          variant: "destructive",
         });
         return;
       }
@@ -131,7 +132,7 @@ export default function EventEditPage() {
         toast({
           title: "Invalid end date/time",
           description: "End date/time must be after start date/time",
-          variant: "error",
+          variant: "destructive",
         });
         return;
       }
@@ -146,6 +147,7 @@ export default function EventEditPage() {
       endDate: formData.endDate || null,
       endTime: formData.endTime || null,
       ticketPrice: formData.ticketPrice,
+      earlyValidation: formData.earlyValidation,
     };
 
     if (formData.maxTickets) {
@@ -182,7 +184,6 @@ export default function EventEditPage() {
       toast({
         title: "Image uploaded",
         description: "Save the event to apply changes",
-        variant: "success",
       });
     }
   };
@@ -197,7 +198,6 @@ export default function EventEditPage() {
       toast({
         title: "Ticket background uploaded",
         description: "Save the event to apply changes",
-        variant: "success",
       });
     }
   };
@@ -228,6 +228,7 @@ export default function EventEditPage() {
     userId: user?.id || null,
     imageUrl: formData.imageUrl,
     ticketBackgroundUrl: formData.ticketBackgroundUrl,
+    earlyValidation: formData.earlyValidation || "Allow at Anytime",
     createdAt: new Date(),
   };
 
@@ -412,6 +413,26 @@ export default function EventEditPage() {
                   </small>
                 )}
               </div>
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="earlyValidation" className="form-label">
+                Ticket Validation Timing
+              </label>
+              <select
+                className="form-select"
+                id="earlyValidation"
+                value={formData.earlyValidation}
+                onChange={(e) => setFormData({ ...formData, earlyValidation: e.target.value })}
+              >
+                <option value="Allow at Anytime">Allow at Anytime</option>
+                <option value="Two Hours Before">Two Hours Before</option>
+                <option value="One Hour Before">One Hour Before</option>
+                <option value="At Start Time">At Start Time</option>
+              </select>
+              <small className="text-muted">
+                When ticket validation can begin relative to event start time
+              </small>
             </div>
 
             <div className="mb-4">
