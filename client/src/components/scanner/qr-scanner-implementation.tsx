@@ -32,9 +32,13 @@ export function QrScannerImplementation() {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [selectedCamera, setSelectedCamera] = useState<string>('environment');
+  const [availableCameras, setAvailableCameras] = useState<{ id: string; label: string }[]>([]);
+  const [showUploadOption, setShowUploadOption] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addDebugInfo = (message: string) => {
     console.log("QR Scanner:", message);
@@ -124,6 +128,12 @@ export function QrScannerImplementation() {
     try {
       addDebugInfo("Checking camera support...");
       
+      // First check if we're on HTTPS (required for camera on mobile)
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+        addDebugInfo("⚠️ Not on HTTPS - camera may not work");
+      }
+      
+      // Check for camera availability
       const hasSupport = await QrScanner.hasCamera();
       setHasCamera(hasSupport);
       
@@ -132,11 +142,23 @@ export function QrScannerImplementation() {
         addDebugInfo("❌ No camera found");
       } else {
         addDebugInfo("✅ Camera available");
+        
+        // List available cameras for debugging
+        try {
+          const cameras = await QrScanner.listCameras(true);
+          addDebugInfo(`📷 Found ${cameras.length} camera(s)`);
+          cameras.forEach((camera, index) => {
+            addDebugInfo(`  ${index + 1}. ${camera.label || camera.id}`);
+          });
+        } catch (e) {
+          addDebugInfo("Could not list cameras");
+        }
       }
       
       return hasSupport;
     } catch (error: any) {
-      addDebugInfo(`❌ Camera check failed: ${error.message}`);
+      const errorMsg = error?.message || String(error);
+      addDebugInfo(`❌ Camera check failed: ${errorMsg}`);
       setHasCamera(false);
       setCameraError("Camera support check failed");
       return false;
@@ -156,21 +178,40 @@ export function QrScannerImplementation() {
         return;
       }
       
-      // Create QR scanner instance
-      if (!scannerRef.current) {
-        scannerRef.current = new QrScanner(
-          videoRef.current,
-          onScanSuccess,
-          {
-            onDecodeError: onScanError,
-            highlightScanRegion: true,
-            highlightCodeOutline: true,
-            preferredCamera: 'environment', // Use back camera on mobile
-          }
-        );
+      // Destroy existing scanner if any
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.destroy();
+        } catch (e) {
+          // Ignore destroy errors
+        }
+        scannerRef.current = null;
       }
       
-      // Start scanning
+      // Create QR scanner instance with mobile-optimized settings
+      scannerRef.current = new QrScanner(
+        videoRef.current,
+        onScanSuccess,
+        {
+          onDecodeError: onScanError,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          preferredCamera: selectedCamera, // Use selected camera
+          calculateScanRegion: (video) => {
+            // Make scan region larger on mobile for better detection
+            const smallestDimension = Math.min(video.videoWidth, video.videoHeight);
+            const scanRegionSize = Math.round(0.75 * smallestDimension);
+            return {
+              x: Math.round((video.videoWidth - scanRegionSize) / 2),
+              y: Math.round((video.videoHeight - scanRegionSize) / 2),
+              width: scanRegionSize,
+              height: scanRegionSize,
+            };
+          },
+        }
+      );
+      
+      // Start scanning with better error details
       await scannerRef.current.start();
       setIsScanning(true);
       addDebugInfo("✅ Scanner started successfully");
@@ -180,14 +221,23 @@ export function QrScannerImplementation() {
         description: "Point the camera at a QR code to scan",
       });
     } catch (error: any) {
-      addDebugInfo(`❌ Failed to start scanner: ${error.message}`);
+      const errorMsg = error?.message || error?.name || String(error) || "Unknown error";
+      addDebugInfo(`❌ Failed to start scanner: ${errorMsg}`);
       setIsScanning(false);
       
       let errorMessage = "Failed to start scanner";
-      if (error.name === "NotAllowedError") {
-        errorMessage = "Camera permission denied. Please allow camera access.";
-      } else if (error.name === "NotFoundError") {
+      if (error?.name === "NotAllowedError" || errorMsg.includes("NotAllowed")) {
+        errorMessage = "Camera permission denied. Please allow camera access in your browser settings.";
+      } else if (error?.name === "NotFoundError" || errorMsg.includes("NotFound")) {
         errorMessage = "No camera found on this device";
+      } else if (error?.name === "NotReadableError" || errorMsg.includes("NotReadable")) {
+        errorMessage = "Camera is already in use by another app. Please close other camera apps and try again.";
+      } else if (error?.name === "OverconstrainedError" || errorMsg.includes("Overconstrained")) {
+        errorMessage = "Camera settings not supported. Try using the upload option instead.";
+        setShowUploadOption(true);
+      } else {
+        errorMessage = `Camera error: ${errorMsg}. Try the upload option if camera doesn't work.`;
+        setShowUploadOption(true);
       }
       
       setCameraError(errorMessage);
@@ -211,13 +261,8 @@ export function QrScannerImplementation() {
       
       setValidationResult(null);
       setCameraError("");
-      
-      toast({
-        title: "📷 Scanner Stopped",
-        description: "Scanner has been stopped",
-      });
     } catch (error: any) {
-      addDebugInfo(`❌ Error stopping scanner: ${error.message}`);
+      addDebugInfo(`❌ Error stopping scanner: ${error?.message || String(error)}`);
     }
   };
 
@@ -239,9 +284,48 @@ export function QrScannerImplementation() {
     validateTicketMutation.mutate(testToken);
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      addDebugInfo("🖼️ Processing uploaded image...");
+      const result = await QrScanner.scanImage(file, {
+        returnDetailedScanResult: true,
+      });
+      
+      addDebugInfo(`✅ QR code found in image: ${result.data.substring(0, 50)}...`);
+      validateTicketMutation.mutate(result.data);
+    } catch (error) {
+      addDebugInfo("❌ No QR code found in uploaded image");
+      toast({
+        title: "❌ No QR Code Found",
+        description: "Could not find a QR code in the uploaded image. Please try another image.",
+        variant: "destructive",
+      });
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   useEffect(() => {
     addDebugInfo("📱 Component mounted, checking camera...");
-    checkCameraSupport();
+    checkCameraSupport().then(async (hasSupport) => {
+      if (hasSupport) {
+        try {
+          const cameras = await QrScanner.listCameras(true);
+          setAvailableCameras(cameras.map(cam => ({
+            id: cam.id,
+            label: cam.label || `Camera ${cam.id.slice(-4)}`
+          })));
+        } catch (e) {
+          addDebugInfo("Could not enumerate cameras");
+        }
+      }
+    });
     
     // Cleanup on unmount
     return () => {
@@ -260,11 +344,16 @@ export function QrScannerImplementation() {
           {/* Video element for QR scanning */}
           <video
             ref={videoRef}
-            className="w-100 h-100 object-fit-cover"
+            className="w-100 h-100"
             data-testid="video-scanner"
+            playsInline
+            muted
             style={{ 
               display: isScanning ? "block" : "none",
-              minHeight: "400px"
+              minHeight: "400px",
+              maxHeight: "500px",
+              objectFit: "cover",
+              backgroundColor: "#000"
             }}
           />
           
@@ -282,13 +371,82 @@ export function QrScannerImplementation() {
                 <>
                   <Camera className="text-muted mb-3" size={48} />
                   <p className="fw-medium mb-2">Ready to Scan</p>
-                  <p className="small text-muted text-center mb-0">
+                  <p className="small text-muted text-center mb-3">
                     Tap "Start Scanner" to begin scanning QR codes
                   </p>
+                  {cameraError && (
+                    <div className="alert alert-warning small mt-3">
+                      <strong>Tip:</strong> {cameraError}
+                      {showUploadOption && (
+                        <div className="mt-2">
+                          <button
+                            className="btn btn-sm btn-warning"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            Try Upload Option Instead
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Camera Selection and Upload Options */}
+      <div className="card mb-3">
+        <div className="card-body">
+          {availableCameras.length > 1 && (
+            <>
+              <label className="form-label small fw-medium">Select Camera:</label>
+              <select 
+                className="form-select mb-3"
+                value={selectedCamera}
+                onChange={(e) => {
+                  setSelectedCamera(e.target.value);
+                  if (isScanning) {
+                    stopScanner();
+                    setTimeout(() => startScanner(), 100);
+                  }
+                }}
+                disabled={isScanning}
+              >
+                <option value="environment">Back Camera (Default)</option>
+                <option value="user">Front Camera</option>
+                {availableCameras.map((cam) => (
+                  <option key={cam.id} value={cam.id}>
+                    {cam.label}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+          
+          {/* Upload Option */}
+          <div className="border-top pt-3 mt-3">
+            <p className="small fw-medium mb-2">📷 Having trouble with the camera?</p>
+            <p className="small text-muted mb-3">
+              You can also upload a photo of the QR code
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+            <button
+              className="btn btn-outline-primary w-100"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={validateTicketMutation.isPending}
+            >
+              <Camera className="me-2" size={16} />
+              Upload QR Code Image
+            </button>
+          </div>
         </div>
       </div>
 
@@ -339,6 +497,10 @@ export function QrScannerImplementation() {
             <p className="mb-1"><strong>Has Camera:</strong> {hasCamera === null ? "Checking..." : hasCamera ? "✅ Yes" : "❌ No"}</p>
             <p className="mb-1"><strong>Is Scanning:</strong> {isScanning ? "✅ Yes" : "❌ No"}</p>
             <p className="mb-1"><strong>Processing:</strong> {validateTicketMutation.isPending ? "✅ Yes" : "❌ No"}</p>
+            <p className="mb-1"><strong>Browser:</strong> {navigator.userAgent.includes('Mobile') ? '📱 Mobile' : '💻 Desktop'}</p>
+            {availableCameras.length > 0 && (
+              <p className="mb-1"><strong>Cameras Found:</strong> {availableCameras.length}</p>
+            )}
             {cameraError && <p className="mb-2 text-danger"><strong>Error:</strong> {cameraError}</p>}
             
             <div className="mt-2">
