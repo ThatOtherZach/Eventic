@@ -58,7 +58,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newUser = await storage.createUser({
         id: userId,
         email: email || `user_${userId}@placeholder.com`,
-        name: name || "User",
       });
       
       res.json(newUser);
@@ -439,11 +438,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (tokenCheck.valid && tokenCheck.ticketId) {
         const ticket = await storage.getTicket(tokenCheck.ticketId);
-        const event = await storage.getEvent(ticket!.eventId);
+        if (!ticket) {
+          return res.status(404).json({ 
+            message: "Invalid ticket", 
+            valid: false 
+          });
+        }
+        const event = await storage.getEvent(ticket.eventId);
+        if (!event) {
+          return res.status(404).json({ 
+            message: "Event not found", 
+            valid: false 
+          });
+        }
         
         // Check if user is authorized to validate for this event
         const canValidate = userId && userEmail ? 
-          await storage.canUserValidateForEvent(userId, userEmail, event!.id) : false;
+          await storage.canUserValidateForEvent(userId, userEmail, event.id) : false;
         
         if (canValidate) {
           // User is authorized - perform actual validation
