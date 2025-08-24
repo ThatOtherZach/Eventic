@@ -1,33 +1,29 @@
-import { useToast } from "@/hooks/use-toast"
-import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-} from "@/components/ui/toast"
+import { useToast } from "@/hooks/use-toast";
+import { BootstrapToastContainer } from "@/components/ui/bootstrap-toast";
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts, dismiss } = useToast();
 
-  return (
-    <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
-            <ToastClose />
-          </Toast>
-        )
-      })}
-      <ToastViewport />
-    </ToastProvider>
-  )
+  const bootstrapToasts = toasts.map((toast) => {
+    // Map the variant to Bootstrap-style variants
+    let variant: "success" | "error" | "info" | "warning" | "destructive" | "default" | undefined;
+    
+    if (toast.variant === "destructive") {
+      variant = "error";
+    } else if (toast.variant === "success" || toast.variant === "error" || toast.variant === "warning") {
+      variant = toast.variant;
+    } else {
+      variant = "info";
+    }
+
+    return {
+      id: toast.id,
+      title: toast.title?.toString(),
+      description: toast.description?.toString(),
+      variant,
+      duration: 5000,
+    };
+  });
+
+  return <BootstrapToastContainer toasts={bootstrapToasts} onDismiss={dismiss} />;
 }

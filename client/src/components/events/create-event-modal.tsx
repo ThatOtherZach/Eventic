@@ -62,6 +62,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Success",
         description: "Event created successfully",
+        variant: "success",
       });
       form.reset();
       onOpenChange(false);
@@ -70,7 +71,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Error",
         description: error.message || "Failed to create event",
-        variant: "destructive",
+        variant: "error",
       });
     },
   });
@@ -116,6 +117,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Image uploaded",
         description: "Image will be included when you create the event",
+        variant: "success",
       });
     }
   };
@@ -129,6 +131,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       toast({
         title: "Ticket background uploaded",
         description: "Ticket design will be applied when you create the event",
+        variant: "success",
       });
     }
   };

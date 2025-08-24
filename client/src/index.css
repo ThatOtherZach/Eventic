@@ -190,6 +190,56 @@ h4 { font-size: 1.125rem; }
   padding: 1.5rem;
 }
 
+/* Bootstrap Toast Enhancements */
+.toast {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+.toast.show {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.border-success {
+  border-left: 4px solid var(--bs-success) !important;
+}
+
+.border-danger, .border-destructive {
+  border-left: 4px solid var(--bs-danger) !important;
+}
+
+.border-warning {
+  border-left: 4px solid var(--bs-warning) !important;
+}
+
+.border-primary {
+  border-left: 4px solid var(--bs-primary) !important;
+}
+
+.toast-body {
+  padding: 1rem !important;
+}
+
+.btn-close {
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.btn-close:hover {
+  opacity: 1;
+}
+
 /* QR Code container styles */
 .qr-container {
   background-color: #ffffff;

@@ -49,7 +49,7 @@ export default function EventEditPage() {
         toast({
           title: "Access Denied",
           description: "You can only edit your own events",
-          variant: "destructive",
+          variant: "error",
         });
         setLocation(`/events/${id}`);
         return;
@@ -83,6 +83,7 @@ export default function EventEditPage() {
       toast({
         title: "Success",
         description: "Event updated successfully",
+        variant: "success",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
@@ -92,7 +93,7 @@ export default function EventEditPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to update event",
-        variant: "destructive",
+        variant: "error",
       });
     },
   });
@@ -107,7 +108,7 @@ export default function EventEditPage() {
         toast({
           title: "Invalid ticket limit",
           description: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)`,
-          variant: "destructive",
+          variant: "error",
         });
         return;
       }
@@ -115,7 +116,7 @@ export default function EventEditPage() {
         toast({
           title: "Invalid ticket limit",
           description: "Maximum tickets cannot exceed 5,000",
-          variant: "destructive",
+          variant: "error",
         });
         return;
       }
@@ -130,7 +131,7 @@ export default function EventEditPage() {
         toast({
           title: "Invalid end date/time",
           description: "End date/time must be after start date/time",
-          variant: "destructive",
+          variant: "error",
         });
         return;
       }
@@ -181,6 +182,7 @@ export default function EventEditPage() {
       toast({
         title: "Image uploaded",
         description: "Save the event to apply changes",
+        variant: "success",
       });
     }
   };
@@ -195,6 +197,7 @@ export default function EventEditPage() {
       toast({
         title: "Ticket background uploaded",
         description: "Save the event to apply changes",
+        variant: "success",
       });
     }
   };

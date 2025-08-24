@@ -31,13 +31,14 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
       toast({
         title: "Success",
         description: "Ticket created successfully",
+        variant: "success",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to create ticket",
-        variant: "destructive",
+        variant: "error",
       });
     },
   });
@@ -52,7 +53,7 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
       toast({
         title: "Error",
         description: "Failed to generate QR code",
-        variant: "destructive",
+        variant: "error",
       });
     }
   };
