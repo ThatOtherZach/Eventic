@@ -24,6 +24,7 @@ export const events = pgTable("events", {
   name: text("name").notNull(),
   description: text("description"),
   venue: text("venue").notNull(),
+  venueUrl: text("venue_url"),
   date: text("date").notNull(),
   time: text("time").notNull(),
   ticketPrice: decimal("ticket_price", { precision: 10, scale: 2 }).notNull(),

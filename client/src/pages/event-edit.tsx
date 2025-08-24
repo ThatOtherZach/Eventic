@@ -19,6 +19,7 @@ export default function EventEditPage() {
     name: "",
     description: "",
     venue: "",
+    venueUrl: "",
     date: "",
     time: "",
     ticketPrice: "",
@@ -49,6 +50,7 @@ export default function EventEditPage() {
         name: event.name,
         description: event.description || "",
         venue: event.venue,
+        venueUrl: event.venueUrl || "",
         date: event.date,
         time: event.time,
         ticketPrice: event.ticketPrice,
@@ -89,6 +91,7 @@ export default function EventEditPage() {
       name: formData.name,
       description: formData.description || null,
       venue: formData.venue,
+      venueUrl: formData.venueUrl || null,
       date: formData.date,
       time: formData.time,
       ticketPrice: formData.ticketPrice,
@@ -163,6 +166,7 @@ export default function EventEditPage() {
     name: formData.name || "Event Name",
     description: formData.description,
     venue: formData.venue || "Venue",
+    venueUrl: formData.venueUrl || null,
     date: formData.date || "2024-01-01",
     time: formData.time || "19:00",
     ticketPrice: formData.ticketPrice || "0",
@@ -247,6 +251,21 @@ export default function EventEditPage() {
                 onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                 required
               />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="venueUrl" className="form-label">
+                Venue URL (Google Maps)
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="venueUrl"
+                value={formData.venueUrl}
+                onChange={(e) => setFormData({ ...formData, venueUrl: e.target.value })}
+                placeholder="Paste Google Maps URL (optional)"
+              />
+              <small className="text-muted">Add a Google Maps link to show a map on the event page</small>
             </div>
 
             <div className="row">

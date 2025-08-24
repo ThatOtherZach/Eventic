@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
+import { VenueMap } from "@/components/events/venue-map";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -201,6 +202,12 @@ export default function EventDetailPage() {
               <p className="text-muted" style={{ whiteSpace: 'pre-wrap' }}>
                 {event.description}
               </p>
+            </div>
+          )}
+
+          {event.venueUrl && (
+            <div className="mb-4">
+              <VenueMap venueUrl={event.venueUrl} venueName={event.venue} />
             </div>
           )}
 
