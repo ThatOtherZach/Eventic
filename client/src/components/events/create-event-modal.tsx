@@ -76,6 +76,20 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   });
 
   const onSubmit = (data: InsertEvent) => {
+    // Validate end date/time if both are provided
+    if (data.endDate && data.endTime) {
+      const startDateTime = new Date(`${data.date}T${data.time}`);
+      const endDateTime = new Date(`${data.endDate}T${data.endTime}`);
+      
+      if (endDateTime <= startDateTime) {
+        form.setError('endDate', {
+          type: 'manual',
+          message: 'End date/time must be after start date/time'
+        });
+        return;
+      }
+    }
+
     const submitData = {
       ...data,
       imageUrl: imageUrl || undefined,
@@ -240,6 +254,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                             type="date"
                             className="form-control"
                             data-testid="input-event-end-date"
+                            min={form.watch('date')}
                           />
                         </FormControl>
                         <FormMessage />

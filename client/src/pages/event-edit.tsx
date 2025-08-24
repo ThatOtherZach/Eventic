@@ -121,6 +121,21 @@ export default function EventEditPage() {
       }
     }
     
+    // Validate end date/time if both are provided
+    if (formData.endDate && formData.endTime) {
+      const startDateTime = new Date(`${formData.date}T${formData.time}`);
+      const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
+      
+      if (endDateTime <= startDateTime) {
+        toast({
+          title: "Invalid end date/time",
+          description: "End date/time must be after start date/time",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     const updateData: any = {
       name: formData.name,
       description: formData.description || null,
@@ -334,6 +349,7 @@ export default function EventEditPage() {
                     id="endDate"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    min={formData.date}
                   />
                 </div>
 
