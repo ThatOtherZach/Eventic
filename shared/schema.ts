@@ -30,6 +30,7 @@ export const events = pgTable("events", {
   maxTickets: integer("max_tickets"),
   userId: varchar("user_id").references(() => users.id),
   imageUrl: text("image_url"),
+  ticketBackgroundUrl: text("ticket_background_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -2,10 +2,14 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertEventSchema, type InsertEvent } from "@shared/schema";
+import { insertEventSchema, type InsertEvent, type Event, type Ticket } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { TicketCard } from "@/components/tickets/ticket-card";
+import { CreditCard, Image } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -24,7 +28,10 @@ interface CreateEventModalProps {
 
 export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [ticketBackgroundUrl, setTicketBackgroundUrl] = useState<string>("");
 
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
@@ -36,6 +43,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       time: "",
       ticketPrice: "0",
       maxTickets: undefined,
+      imageUrl: undefined,
+      ticketBackgroundUrl: undefined,
     },
   });
 
@@ -64,7 +73,65 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   });
 
   const onSubmit = (data: InsertEvent) => {
-    createEventMutation.mutate(data);
+    const submitData = {
+      ...data,
+      imageUrl: imageUrl || undefined,
+      ticketBackgroundUrl: ticketBackgroundUrl || undefined,
+    };
+    createEventMutation.mutate(submitData);
+  };
+
+  const handleImageUpload = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload", {});
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleImageComplete = (uploadUrl: string) => {
+    setImageUrl(uploadUrl);
+    toast({
+      title: "Image uploaded",
+      description: "Image will be included when you create the event",
+    });
+  };
+
+  const handleTicketBackgroundComplete = (uploadUrl: string) => {
+    setTicketBackgroundUrl(uploadUrl);
+    toast({
+      title: "Ticket background uploaded",
+      description: "Ticket design will be applied when you create the event",
+    });
+  };
+
+  // Create a sample ticket for preview
+  const sampleTicket: Ticket = {
+    id: "sample",
+    eventId: "sample",
+    userId: user?.id || "",
+    ticketNumber: "ABC-001",
+    qrData: "",
+    isValidated: false,
+    validatedAt: null,
+    createdAt: new Date(),
+  };
+
+  const watchedValues = form.watch();
+  const previewEvent: Event = {
+    id: "preview",
+    name: watchedValues.name || "Event Name",
+    description: watchedValues.description,
+    venue: watchedValues.venue || "Venue",
+    date: watchedValues.date || "2024-01-01",
+    time: watchedValues.time || "19:00",
+    ticketPrice: watchedValues.ticketPrice || "0",
+    maxTickets: watchedValues.maxTickets || null,
+    userId: user?.id || null,
+    imageUrl: imageUrl || null,
+    ticketBackgroundUrl: ticketBackgroundUrl || null,
+    createdAt: new Date(),
   };
 
   return (
@@ -237,6 +304,57 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                   )}
                 />
               </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">
+                <Image size={18} className="me-2" />
+                Feature Image
+              </label>
+              <ObjectUploader
+                onGetUploadParameters={handleImageUpload}
+                onComplete={handleImageComplete}
+                buttonClassName="btn btn-outline-primary"
+                currentImageUrl={imageUrl}
+              >
+                <Image size={18} className="me-2" />
+                Choose Image
+              </ObjectUploader>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">
+                <CreditCard size={18} className="me-2" />
+                Ticket Design
+              </label>
+              <p className="text-muted small mb-3">
+                Customize the background image for your event tickets. Tickets are business card sized (3.5" x 2").
+              </p>
+              
+              {/* Ticket Preview */}
+              <div className="mb-3">
+                <h6 className="mb-2">Ticket Preview:</h6>
+                <div className="d-flex justify-content-center p-3 bg-light rounded">
+                  <TicketCard 
+                    ticket={sampleTicket} 
+                    event={previewEvent} 
+                    showQR={false}
+                  />
+                </div>
+              </div>
+
+              <ObjectUploader
+                onGetUploadParameters={handleImageUpload}
+                onComplete={handleTicketBackgroundComplete}
+                buttonClassName="btn btn-outline-primary"
+                currentImageUrl={ticketBackgroundUrl}
+              >
+                <CreditCard size={18} className="me-2" />
+                Choose Ticket Background
+              </ObjectUploader>
+              <small className="text-muted d-block mt-2">
+                The ticket will display event details on the left and a QR code on the right.
+              </small>
             </div>
           </ModalBody>
           

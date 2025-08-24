@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Calendar, Ticket, User, LogOut } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { TicketCard } from "@/components/tickets/ticket-card";
 import type { Ticket as TicketType, Event } from "@shared/schema";
 
 export default function AccountPage() {
@@ -96,29 +97,19 @@ export default function AccountPage() {
               </div>
             </div>
           ) : (
-            <div className="row g-3">
+            <div className="d-flex flex-wrap gap-3">
               {tickets?.map((ticket) => (
-                <div key={ticket.id} className="col-12 col-md-6 col-lg-4">
-                  <div className="card h-100">
-                    <div className="card-body">
-                      <h6 className="card-title fw-semibold">{ticket.event.name}</h6>
-                      <p className="text-muted small mb-2">
-                        <Calendar size={14} className="me-1" />
-                        {ticket.event.date} at {ticket.event.time}
-                      </p>
-                      <p className="text-muted small mb-2">
-                        📍 {ticket.event.venue}
-                      </p>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="badge bg-primary">
-                          {ticket.ticketNumber}
-                        </span>
-                        {ticket.isValidated && (
-                          <span className="badge bg-success">Used</span>
-                        )}
-                      </div>
+                <div key={ticket.id}>
+                  <TicketCard 
+                    ticket={ticket}
+                    event={ticket.event}
+                    showQR={true}
+                  />
+                  {ticket.isValidated && (
+                    <div className="text-center mt-2">
+                      <span className="badge bg-success">Used</span>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>

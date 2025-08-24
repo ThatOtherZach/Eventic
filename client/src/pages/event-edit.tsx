@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Save, Image } from "lucide-react";
+import { ArrowLeft, Save, Image, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import type { Event } from "@shared/schema";
+import { TicketCard } from "@/components/tickets/ticket-card";
+import type { Event, Ticket } from "@shared/schema";
 
 export default function EventEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ export default function EventEditPage() {
     ticketPrice: "",
     maxTickets: "",
     imageUrl: "",
+    ticketBackgroundUrl: "",
   });
 
   const { data: event, isLoading } = useQuery<Event>({
@@ -52,6 +54,7 @@ export default function EventEditPage() {
         ticketPrice: event.ticketPrice,
         maxTickets: event.maxTickets?.toString() || "",
         imageUrl: event.imageUrl || "",
+        ticketBackgroundUrl: event.ticketBackgroundUrl || "",
       });
     }
   }, [event, user, toast, setLocation, id]);
@@ -99,6 +102,10 @@ export default function EventEditPage() {
       updateData.imageUrl = formData.imageUrl;
     }
 
+    if (formData.ticketBackgroundUrl) {
+      updateData.ticketBackgroundUrl = formData.ticketBackgroundUrl;
+    }
+
     updateEventMutation.mutate(updateData);
   };
 
@@ -117,6 +124,41 @@ export default function EventEditPage() {
       title: "Image uploaded",
       description: "Save the event to apply changes",
     });
+  };
+
+  const handleTicketBackgroundComplete = (uploadUrl: string) => {
+    setFormData(prev => ({ ...prev, ticketBackgroundUrl: uploadUrl }));
+    toast({
+      title: "Ticket background uploaded",
+      description: "Save the event to apply changes",
+    });
+  };
+
+  // Create a sample ticket for preview
+  const sampleTicket: Ticket = {
+    id: "sample",
+    eventId: id || "",
+    userId: user?.id || "",
+    ticketNumber: "ABC-001",
+    qrData: "",
+    isValidated: false,
+    validatedAt: null,
+    createdAt: new Date(),
+  };
+
+  const previewEvent: Event = {
+    id: id || "",
+    name: formData.name || "Event Name",
+    description: formData.description,
+    venue: formData.venue || "Venue",
+    date: formData.date || "2024-01-01",
+    time: formData.time || "19:00",
+    ticketPrice: formData.ticketPrice || "0",
+    maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : null,
+    userId: user?.id || null,
+    imageUrl: formData.imageUrl,
+    ticketBackgroundUrl: formData.ticketBackgroundUrl,
+    createdAt: new Date(),
   };
 
   if (isLoading) {
@@ -272,6 +314,41 @@ export default function EventEditPage() {
                 <Image size={18} className="me-2" />
                 Choose Image
               </ObjectUploader>
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label">
+                <CreditCard size={18} className="me-2" />
+                Ticket Design
+              </label>
+              <p className="text-muted small mb-3">
+                Customize the background image for your event tickets. Tickets are business card sized (3.5" x 2").
+              </p>
+              
+              {/* Ticket Preview */}
+              <div className="mb-3">
+                <h6 className="mb-2">Ticket Preview:</h6>
+                <div className="d-flex justify-content-center p-3 bg-light rounded">
+                  <TicketCard 
+                    ticket={sampleTicket} 
+                    event={previewEvent} 
+                    showQR={false}
+                  />
+                </div>
+              </div>
+
+              <ObjectUploader
+                onGetUploadParameters={handleImageUpload}
+                onComplete={handleTicketBackgroundComplete}
+                buttonClassName="btn btn-outline-primary"
+                currentImageUrl={formData.ticketBackgroundUrl}
+              >
+                <CreditCard size={18} className="me-2" />
+                Choose Ticket Background
+              </ObjectUploader>
+              <small className="text-muted d-block mt-2">
+                The ticket will display event details on the left and a QR code on the right.
+              </small>
             </div>
 
             <div className="d-flex gap-2">

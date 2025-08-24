@@ -1,0 +1,131 @@
+import { useEffect, useRef } from "react";
+import QRCode from "qrcode";
+import { Calendar, Clock, MapPin } from "lucide-react";
+import type { Event, Ticket } from "@shared/schema";
+
+interface TicketCardProps {
+  ticket: Ticket;
+  event: Event;
+  showQR?: boolean;
+}
+
+export function TicketCard({ ticket, event, showQR = true }: TicketCardProps) {
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (showQR && qrCanvasRef.current && ticket.qrData) {
+      QRCode.toCanvas(
+        qrCanvasRef.current,
+        ticket.qrData,
+        {
+          width: 120,
+          height: 120,
+          margin: 1,
+          color: {
+            dark: "#000000",
+            light: "#FFFFFF",
+          },
+        },
+        (error: any) => {
+          if (error) console.error("QR Generation error:", error);
+        }
+      );
+    }
+  }, [ticket.qrData, showQR]);
+
+  // Business card dimensions: 3.5" x 2" (aspect ratio 7:4)
+  // For screen display: 350px x 200px
+  return (
+    <div 
+      className="ticket-card position-relative"
+      style={{
+        width: '350px',
+        height: '200px',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        background: event.ticketBackgroundUrl 
+          ? `url(${event.ticketBackgroundUrl}) center/cover` 
+          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      }}
+      data-testid={`ticket-card-${ticket.id}`}
+    >
+      {/* Semi-transparent overlay for text readability */}
+      <div 
+        className="position-absolute w-100 h-100"
+        style={{
+          background: event.ticketBackgroundUrl 
+            ? 'rgba(0, 0, 0, 0.4)' 
+            : 'rgba(0, 0, 0, 0.2)',
+          backdropFilter: 'blur(1px)',
+        }}
+      />
+
+      {/* Ticket Content */}
+      <div className="position-relative h-100 d-flex">
+        {/* Left side - Event Details */}
+        <div className="flex-grow-1 p-3 text-white d-flex flex-column justify-content-between">
+          <div>
+            <h5 className="mb-1 text-truncate fw-bold" style={{ fontSize: '16px' }}>
+              {event.name}
+            </h5>
+            <div className="small opacity-75">
+              <div className="d-flex align-items-center mb-1">
+                <Calendar size={12} className="me-1" />
+                {event.date}
+              </div>
+              <div className="d-flex align-items-center mb-1">
+                <Clock size={12} className="me-1" />
+                {event.time}
+              </div>
+              <div className="d-flex align-items-center">
+                <MapPin size={12} className="me-1" />
+                <span className="text-truncate">{event.venue}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-2">
+            <div className="small opacity-75">Ticket #</div>
+            <div className="fw-bold" style={{ fontSize: '14px' }}>
+              {ticket.ticketNumber}
+            </div>
+          </div>
+        </div>
+
+        {/* Right side - QR Code */}
+        <div 
+          className="d-flex align-items-center justify-content-center"
+          style={{
+            width: '140px',
+            backgroundColor: 'white',
+            borderRadius: '0 8px 8px 0',
+          }}
+        >
+          {showQR ? (
+            <canvas
+              ref={qrCanvasRef}
+              style={{ display: 'block' }}
+            />
+          ) : (
+            <div className="text-center p-3">
+              <div className="mb-2">
+                <div 
+                  className="mx-auto d-flex align-items-center justify-content-center"
+                  style={{ 
+                    width: '60px', 
+                    height: '60px',
+                    backgroundColor: '#f0f0f0',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#667eea' }}>T</span>
+                </div>
+              </div>
+              <small className="text-muted">Event Ticket</small>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
