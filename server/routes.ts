@@ -71,6 +71,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Ticket routes
+  app.get("/api/tickets/:ticketId", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      const ticket = await storage.getTicket(req.params.ticketId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      // Only allow ticket owner to view
+      if (ticket.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const event = await storage.getEvent(ticket.eventId);
+      res.json({ ticket, event });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch ticket" });
+    }
+  });
+
+  // Validation session routes
+  app.post("/api/tickets/:ticketId/validate-session", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      const ticket = await storage.getTicket(req.params.ticketId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      if (ticket.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      if (ticket.isValidated) {
+        return res.status(400).json({ message: "Ticket already validated" });
+      }
+      
+      const session = await storage.createValidationSession(req.params.ticketId);
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create validation session" });
+    }
+  });
+
+  app.get("/api/tickets/:ticketId/validation-token", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      const ticket = await storage.getTicket(req.params.ticketId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      if (ticket.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const token = await storage.createValidationToken(req.params.ticketId);
+      res.json({ token });
+    } catch (error: any) {
+      if (error.message === "Validation session expired or not found") {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to generate validation token" });
+    }
+  });
+
   // User-specific routes
   app.get("/api/user/tickets", async (req, res) => {
     try {
@@ -223,6 +293,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/events/:eventId/user-tickets", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.json([]);
+      }
+      const tickets = await storage.getTicketsByEventAndUser(req.params.eventId, userId);
+      res.json(tickets);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user tickets for event" });
+    }
+  });
+
   app.get("/api/events/:eventId/tickets", async (req, res) => {
     try {
       const tickets = await storage.getTicketsByEventId(req.params.eventId);
@@ -280,6 +363,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "QR data is required" });
       }
 
+      // First check if it's a dynamic validation token
+      const dynamicValidation = await storage.validateDynamicToken(qrData);
+      if (dynamicValidation.valid && dynamicValidation.ticketId) {
+        const ticket = await storage.getTicket(dynamicValidation.ticketId);
+        const event = await storage.getEvent(ticket!.eventId);
+        return res.json({ 
+          message: "Ticket validated successfully", 
+          valid: true,
+          ticket,
+          event 
+        });
+      }
+
+      // Otherwise try to validate as a regular ticket QR code
       const ticket = await storage.getTicketByQrData(qrData);
       if (!ticket) {
         return res.status(404).json({ 

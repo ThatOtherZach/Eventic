@@ -12,6 +12,7 @@ import EventEdit from "@/pages/event-edit";
 import Scanner from "@/pages/scanner";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
+import TicketViewPage from "@/pages/ticket-view";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <ProtectedRoute path="/events/:id/edit" component={EventEdit} />
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
+      <ProtectedRoute path="/tickets/:ticketId" component={TicketViewPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

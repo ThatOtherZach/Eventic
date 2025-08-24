@@ -25,10 +25,16 @@ export interface IStorage {
   getTickets(): Promise<Ticket[]>;
   getTicketsByEventId(eventId: string): Promise<Ticket[]>;
   getTicketsByUserId(userId: string): Promise<Ticket[]>;
+  getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]>;
   getTicket(id: string): Promise<Ticket | undefined>;
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string): Promise<Ticket | undefined>;
+  
+  // Validation Sessions
+  createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }>;
+  createValidationToken(ticketId: string): Promise<string>;
+  validateDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }>;
   
   // Stats
   getEventStats(): Promise<{
@@ -38,17 +44,27 @@ export interface IStorage {
   }>;
 }
 
+interface ValidationSession {
+  ticketId: string;
+  expiresAt: Date;
+  tokens: Set<string>;
+}
+
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private authTokens: Map<string, AuthToken>;
   private events: Map<string, Event>;
   private tickets: Map<string, Ticket>;
+  private validationSessions: Map<string, ValidationSession>;
+  private validationTokens: Map<string, string>; // token -> ticketId
 
   constructor() {
     this.users = new Map();
     this.authTokens = new Map();
     this.events = new Map();
     this.tickets = new Map();
+    this.validationSessions = new Map();
+    this.validationTokens = new Map();
   }
 
   // Users
@@ -137,6 +153,9 @@ export class MemStorage implements IStorage {
       id,
       description: insertEvent.description || null,
       userId: insertEvent.userId || null,
+      maxTickets: insertEvent.maxTickets || null,
+      imageUrl: insertEvent.imageUrl || null,
+      ticketBackgroundUrl: insertEvent.ticketBackgroundUrl || null,
       createdAt: new Date(),
     };
     this.events.set(id, event);
@@ -182,6 +201,12 @@ export class MemStorage implements IStorage {
       .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   }
 
+  async getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]> {
+    return Array.from(this.tickets.values())
+      .filter(ticket => ticket.eventId === eventId && ticket.userId === userId)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }
+
   async getTicket(id: string): Promise<Ticket | undefined> {
     return this.tickets.get(id);
   }
@@ -215,6 +240,69 @@ export class MemStorage implements IStorage {
     };
     this.tickets.set(id, validatedTicket);
     return validatedTicket;
+  }
+
+  // Validation Sessions
+  async createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }> {
+    const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes from now
+    const session: ValidationSession = {
+      ticketId,
+      expiresAt,
+      tokens: new Set(),
+    };
+    this.validationSessions.set(ticketId, session);
+    
+    // Create initial token
+    const token = await this.createValidationToken(ticketId);
+    return { token, expiresAt };
+  }
+
+  async createValidationToken(ticketId: string): Promise<string> {
+    const session = this.validationSessions.get(ticketId);
+    if (!session || session.expiresAt < new Date()) {
+      throw new Error("Validation session expired or not found");
+    }
+
+    // Generate unique token for this rotation
+    const token = `VAL-${randomUUID()}-${Date.now()}`;
+    session.tokens.add(token);
+    this.validationTokens.set(token, ticketId);
+    
+    // Clean up old tokens after a delay (keep them valid for 15 seconds to handle network delays)
+    setTimeout(() => {
+      this.validationTokens.delete(token);
+      session.tokens.delete(token);
+    }, 15000);
+    
+    return token;
+  }
+
+  async validateDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }> {
+    const ticketId = this.validationTokens.get(token);
+    if (!ticketId) {
+      return { valid: false };
+    }
+
+    const session = this.validationSessions.get(ticketId);
+    if (!session || session.expiresAt < new Date()) {
+      return { valid: false };
+    }
+
+    const ticket = this.tickets.get(ticketId);
+    if (!ticket || ticket.isValidated) {
+      return { valid: false };
+    }
+
+    // Mark ticket as validated
+    await this.validateTicket(ticketId);
+    
+    // Clean up session
+    this.validationSessions.delete(ticketId);
+    Array.from(session.tokens).forEach(sessionToken => {
+      this.validationTokens.delete(sessionToken);
+    })
+
+    return { valid: true, ticketId };
   }
 
   async getEventStats(): Promise<{

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, LogOut } from "lucide-react";
+import { Calendar, Ticket, User, LogOut, Eye } from "lucide-react";
+import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import type { Ticket as TicketType, Event } from "@shared/schema";
@@ -105,11 +106,17 @@ export default function AccountPage() {
                     event={ticket.event}
                     showQR={true}
                   />
-                  {ticket.isValidated && (
-                    <div className="text-center mt-2">
+                  <div className="d-flex justify-content-center gap-2 mt-2">
+                    {ticket.isValidated && (
                       <span className="badge bg-success">Used</span>
-                    </div>
-                  )}
+                    )}
+                    <Link href={`/tickets/${ticket.id}`}>
+                      <a className="btn btn-sm btn-outline-primary" data-testid={`button-view-ticket-${ticket.id}`}>
+                        <Eye size={14} className="me-1" />
+                        View Ticket
+                      </a>
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

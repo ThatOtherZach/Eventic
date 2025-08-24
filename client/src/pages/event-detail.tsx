@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
-import type { Event } from "@shared/schema";
+import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
   ticketsSold: number;
@@ -24,6 +24,15 @@ export default function EventDetailPage() {
   const { data: event, isLoading, error } = useQuery<EventWithStats>({
     queryKey: [`/api/events/${id}`],
     enabled: !!id,
+  });
+
+  const { data: userTickets } = useQuery<TicketType[]>({
+    queryKey: [`/api/events/${id}/user-tickets`],
+    enabled: !!id && !!user,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/events/${id}/user-tickets`);
+      return response.json();
+    },
   });
 
   const purchaseTicketMutation = useMutation({
@@ -167,6 +176,34 @@ export default function EventDetailPage() {
               </small>
             </div>
           </div>
+
+          {/* User's tickets for this event */}
+          {userTickets && userTickets.length > 0 && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-3">
+                  <Ticket size={20} className="me-2" />
+                  Your Tickets
+                </h5>
+                <div className="list-group">
+                  {userTickets.map((ticket) => (
+                    <div key={ticket.id} className="list-group-item d-flex justify-content-between align-items-center">
+                      <div>
+                        <span className="badge bg-primary me-2">{ticket.ticketNumber}</span>
+                        {ticket.isValidated && <span className="badge bg-success">Used</span>}
+                      </div>
+                      <Link href={`/tickets/${ticket.id}`}>
+                        <a className="btn btn-sm btn-outline-primary" data-testid={`button-view-ticket-${ticket.id}`}>
+                          <Eye size={14} className="me-1" />
+                          View Ticket
+                        </a>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="col-lg-4">
