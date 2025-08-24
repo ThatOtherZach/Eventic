@@ -319,24 +319,37 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   </div>
 
-                  {/* Validation Code Display */}
+                  {/* Validation Code Display - Prominent for mobile */}
                   <div className="text-center mb-3">
                     <div className="alert alert-success">
-                      <h6 className="mb-2">Validation Active</h6>
-                      <p className="mb-2 small">
-                        Show your ticket to the scanner. The code refreshes every 10 seconds.
-                      </p>
+                      <h6 className="mb-2">✅ Validation Active</h6>
+                      
                       {currentCode && (
-                        <div className="mt-3">
-                          <div className="d-inline-block p-3 bg-white rounded border border-2 border-success">
-                            <p className="text-muted small mb-1">Manual Entry Code:</p>
-                            <h2 className="mb-0 font-monospace fw-bold text-dark">{currentCode}</h2>
+                        <div className="my-3">
+                          <div className="bg-primary text-white rounded-3 p-4 mb-3">
+                            <p className="text-white-50 small mb-2">Tell the validator this code:</p>
+                            <h1 className="display-3 mb-0 font-monospace fw-bold" style={{ letterSpacing: '0.3rem' }}>
+                              {currentCode}
+                            </h1>
+                            <p className="text-white-50 small mt-2 mb-0">
+                              Changes every 10 seconds
+                            </p>
                           </div>
-                          <p className="text-muted small mt-2 mb-0">
-                            If QR scanning fails, provide this 4-digit code
-                          </p>
+                          
+                          <div className="alert alert-info small text-start">
+                            <strong>📱 Instructions:</strong>
+                            <ol className="mb-0 ps-3">
+                              <li>Show this code to the event validator</li>
+                              <li>They will enter it manually if QR scanning doesn't work</li>
+                              <li>The code refreshes automatically every 10 seconds</li>
+                            </ol>
+                          </div>
                         </div>
                       )}
+                      
+                      <p className="small text-muted mb-0">
+                        The QR code on your ticket also updates every 10 seconds
+                      </p>
                     </div>
                   </div>
 

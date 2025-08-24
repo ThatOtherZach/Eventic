@@ -35,7 +35,7 @@ export function QrScannerImplementation() {
   const [selectedCamera, setSelectedCamera] = useState<string>('environment');
   const [availableCameras, setAvailableCameras] = useState<{ id: string; label: string }[]>([]);
   const [manualCode, setManualCode] = useState<string>("");
-  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(true); // Show by default
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
@@ -326,8 +326,15 @@ export function QrScannerImplementation() {
 
   return (
     <div className="animate-fade-in">
-      {/* Camera Container */}
+      {/* Camera Container - Secondary option */}
       <div className="card mb-4 overflow-hidden position-relative">
+        <div className="card-header bg-light">
+          <h6 className="mb-0">
+            <Camera className="me-2" size={18} />
+            QR Code Scanner
+            <small className="text-muted ms-2">(May not work on all mobile browsers)</small>
+          </h6>
+        </div>
         <div className="scanner-container position-relative">
           {/* Video element for QR scanning */}
           <video
@@ -358,25 +365,13 @@ export function QrScannerImplementation() {
               ) : (
                 <>
                   <Camera className="text-muted mb-3" size={48} />
-                  <p className="fw-medium mb-2">Ready to Scan</p>
+                  <p className="fw-medium mb-2">Camera Ready</p>
                   <p className="small text-muted text-center mb-3">
-                    Tap "Start Scanner" to begin scanning QR codes
+                    Tap "Start" to begin scanning QR codes
                   </p>
-                  {cameraError && (
-                    <div className="alert alert-warning small mt-3">
-                      <strong>Tip:</strong> {cameraError}
-                      {showManualEntry && (
-                        <div className="mt-2">
-                          <button
-                            className="btn btn-sm btn-warning"
-                            onClick={() => setShowManualEntry(true)}
-                          >
-                            Use Manual Code Entry
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <div className="alert alert-info small mt-3">
+                    <strong>Having issues?</strong> Use the <strong>Manual Code Entry</strong> above instead - it's more reliable on mobile devices.
+                  </div>
                 </>
               )}
             </div>
@@ -416,56 +411,66 @@ export function QrScannerImplementation() {
         </div>
       )}
       
-      {/* Manual Code Entry */}
-      <div className="card mb-3">
+      {/* Manual Code Entry - Primary option for mobile */}
+      <div className="card mb-3 border-primary">
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h6 className="card-title mb-0">
+            <h6 className="card-title mb-0 text-primary">
               <Keyboard className="me-2" size={18} />
               Manual Code Entry
             </h6>
+            <span className="badge bg-primary">Recommended for Mobile</span>
+          </div>
+          
+          <div className="alert alert-info small mb-3">
+            <strong>📱 Mobile Users:</strong> If the camera shows a black screen, use this manual entry instead. 
+            Ask the ticket holder for their 4-digit code (shown on their ticket screen).
+          </div>
+          
+          <p className="small text-muted mb-3">
+            The ticket holder's screen displays a <strong>4-digit code</strong> that changes every 10 seconds. Enter it here:
+          </p>
+          
+          <div className="input-group input-group-lg mb-2">
+            <input
+              type="text"
+              className="form-control text-center font-monospace fw-bold fs-3"
+              placeholder="0000"
+              value={manualCode}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                setManualCode(value);
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && manualCode.length === 4) {
+                  handleManualCodeSubmit();
+                }
+              }}
+              maxLength={4}
+              pattern="[0-9]{4}"
+              inputMode="numeric"
+              autoComplete="off"
+              autoFocus
+              disabled={validateTicketMutation.isPending}
+              data-testid="input-manual-code"
+              style={{ letterSpacing: '0.5rem' }}
+            />
             <button
-              className="btn btn-sm btn-outline-primary"
-              onClick={() => setShowManualEntry(!showManualEntry)}
+              className="btn btn-primary btn-lg"
+              onClick={handleManualCodeSubmit}
+              disabled={validateTicketMutation.isPending || manualCode.length !== 4}
+              data-testid="button-submit-code"
             >
-              {showManualEntry ? "Hide" : "Show"}
+              {validateTicketMutation.isPending ? (
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              ) : (
+                "Validate"
+              )}
             </button>
           </div>
           
-          {showManualEntry && (
-            <>
-              <p className="small text-muted mb-3">
-                If QR scanning doesn't work, the ticket holder can provide a 4-digit code that refreshes every 10 seconds.
-              </p>
-              <div className="input-group">
-                <input
-                  type="text"
-                  className="form-control text-center font-monospace fw-bold"
-                  placeholder="Enter 4-digit code"
-                  value={manualCode}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                    setManualCode(value);
-                  }}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleManualCodeSubmit();
-                    }
-                  }}
-                  maxLength={4}
-                  disabled={validateTicketMutation.isPending}
-                  data-testid="input-manual-code"
-                />
-                <button
-                  className="btn btn-primary"
-                  onClick={handleManualCodeSubmit}
-                  disabled={validateTicketMutation.isPending || manualCode.length !== 4}
-                  data-testid="button-submit-code"
-                >
-                  Validate
-                </button>
-              </div>
-            </>
+          {manualCode.length > 0 && manualCode.length < 4 && (
+            <small className="text-muted">Enter {4 - manualCode.length} more digit{4 - manualCode.length !== 1 ? 's' : ''}</small>
           )}
         </div>
       </div>
