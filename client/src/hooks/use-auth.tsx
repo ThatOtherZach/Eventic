@@ -51,9 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (data.session) {
           setUser(data.session.user);
           
-          // Sync user to local database
+          // Sync user to local database only once during login
           try {
-            await fetch('/api/auth/sync-user', {
+            const response = await fetch('/api/auth/sync-user', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -64,6 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
               }),
             });
+            
+            if (!response.ok) {
+              console.error('Failed to sync user');
+            }
           } catch (error) {
             console.error('Failed to sync user:', error);
           }
@@ -111,23 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
-        
-        // Sync user to local database
-        try {
-          await fetch('/api/auth/sync-user', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              email: session.user.email,
-              name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
-            }),
-          });
-        } catch (error) {
-          console.error('Failed to sync user:', error);
-        }
+        // Don't sync here - it's already handled by auth state change
       } else {
         setUser(null);
       }
@@ -139,10 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setUser(session.user);
         
-        // Sync user to local database on auth state change
-        if (event === 'SIGNED_IN') {
+        // Only sync on actual sign in events, not on every auth state change
+        if (event === 'SIGNED_IN' && !window.location.hash.includes('access_token')) {
           try {
-            await fetch('/api/auth/sync-user', {
+            const response = await fetch('/api/auth/sync-user', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -153,6 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
               }),
             });
+            
+            if (!response.ok) {
+              console.error('Failed to sync user');
+            }
           } catch (error) {
             console.error('Failed to sync user:', error);
           }
