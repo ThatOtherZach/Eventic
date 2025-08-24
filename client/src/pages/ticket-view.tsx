@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Shield, Clock, CheckCircle } from "lucide-react";
+import { ArrowLeft, Shield, Clock, CheckCircle, RefreshCw } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -299,13 +299,139 @@ export default function TicketViewPage(): React.ReactElement {
                 Ticket Validation
               </h5>
 
-              {ticket.isValidated ? (
+              {ticket.isValidated && event.reentryType === 'No Reentry (Single Use)' ? (
                 <div className="text-center py-4">
                   <CheckCircle size={48} className="text-success mb-3" />
-                  <h6 className="text-success">Ticket Already Validated</h6>
+                  <h6 className="text-success">Ticket Already Used</h6>
                   <p className="text-muted">
                     This ticket was validated on {new Date(ticket.validatedAt!).toLocaleString()}
                   </p>
+                  <p className="text-muted small">
+                    This is a single-use ticket and cannot be re-validated.
+                  </p>
+                </div>
+              ) : ticket.isValidated && event.reentryType === 'Pass (Multiple Use)' && (ticket.useCount || 0) >= (event.maxUses || 1) ? (
+                <div className="text-center py-4">
+                  <CheckCircle size={48} className="text-warning mb-3" />
+                  <h6 className="text-warning">Ticket Uses Exhausted</h6>
+                  <p className="text-muted">
+                    This ticket has been used {ticket.useCount || 0} of {event.maxUses} times.
+                  </p>
+                  <p className="text-muted small">
+                    Last validated on {new Date(ticket.validatedAt!).toLocaleString()}
+                  </p>
+                </div>
+              ) : ticket.isValidated && (event.reentryType === 'Pass (Multiple Use)' || event.reentryType === 'No Limit') ? (
+                <div>
+                  <div className="alert alert-info mb-3">
+                    <h6 className="mb-2">
+                      <RefreshCw size={18} className="me-2" />
+                      Re-entry Ticket
+                    </h6>
+                    <p className="mb-2 small">
+                      {event.reentryType === 'No Limit' 
+                        ? `This ticket allows unlimited re-entry. Used ${ticket.useCount || 0} times.`
+                        : `This ticket has been used ${ticket.useCount || 0} of ${event.maxUses} times.`
+                      }
+                    </p>
+                    <p className="mb-0 small">
+                      Last validated on {new Date(ticket.validatedAt!).toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  {/* Allow re-validation if within allowed uses */}
+                  {isValidating ? (
+                    <div>
+                      {/* Timer Display */}
+                      <div className="alert alert-info mb-3">
+                        <div className="d-flex align-items-center">
+                          <Clock size={20} className="me-2" />
+                          <span>Time remaining: <strong>{formatTime(timeRemaining)}</strong></span>
+                        </div>
+                      </div>
+
+                      {/* Validation Code Display - Prominent for mobile */}
+                      <div className="text-center mb-3">
+                        <div className="alert alert-success">
+                          <h6 className="mb-2">✅ Re-validation Active</h6>
+                          
+                          {currentCode && (
+                            <div className="my-3">
+                              <div className="bg-primary text-white rounded-3 p-4 mb-3">
+                                <p className="text-white-50 small mb-2">Tell the validator this code:</p>
+                                <h1 className="display-3 mb-0 font-monospace fw-bold" style={{ letterSpacing: '0.3rem' }}>
+                                  {currentCode}
+                                </h1>
+                                <p className="text-white-50 small mt-2 mb-0">
+                                  Changes every 10 seconds
+                                </p>
+                              </div>
+                              
+                              <div className="alert alert-info small text-start">
+                                <strong>📱 Instructions:</strong>
+                                <ol className="mb-0 ps-3">
+                                  <li>Show this code to the event validator</li>
+                                  <li>They will enter it manually if QR scanning doesn't work</li>
+                                  <li>The code refreshes automatically every 10 seconds</li>
+                                </ol>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Stop Button */}
+                      <button
+                        className="btn btn-secondary w-100"
+                        onClick={stopValidation}
+                        data-testid="button-stop-validation"
+                      >
+                        Stop Re-validation
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      {!timeValidation.valid ? (
+                        <div className="alert alert-warning mb-3">
+                          <div className="d-flex align-items-center">
+                            <Clock size={20} className="me-2" />
+                            <div>
+                              <h6 className="mb-1">Re-validation Unavailable</h6>
+                              <p className="mb-0 small">{timeValidation.message}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-muted mb-3">
+                          Click the button below to generate a new validation code for re-entry.
+                          The code will be valid for 3 minutes.
+                        </p>
+                      )}
+                      <button
+                        className="btn btn-primary w-100"
+                        onClick={() => startValidationMutation.mutate()}
+                        disabled={startValidationMutation.isPending || !timeValidation.valid}
+                        data-testid="button-revalidate-ticket"
+                      >
+                        {startValidationMutation.isPending ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Starting...
+                          </>
+                        ) : !timeValidation.valid ? (
+                          <>
+                            <Clock size={18} className="me-2" />
+                            Re-validation Expired
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw size={18} className="me-2" />
+                            Re-validate for Entry
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : isValidating ? (
                 <div>

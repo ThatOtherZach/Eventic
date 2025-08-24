@@ -150,6 +150,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     qrData: "",
     isValidated: false,
     validatedAt: null,
+    validationCode: null,
+    useCount: 0,
     createdAt: new Date(),
   };
 
@@ -169,6 +171,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     imageUrl: imageUrl || null,
     ticketBackgroundUrl: ticketBackgroundUrl || null,
     earlyValidation: watchedValues.earlyValidation || "Allow at Anytime",
+    reentryType: watchedValues.reentryType || "No Reentry (Single Use)",
+    maxUses: watchedValues.maxUses || 1,
     createdAt: new Date(),
   };
 
@@ -434,6 +438,70 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 )}
               />
             </div>
+
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="reentryType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Re-entry Policy</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || "No Reentry (Single Use)"}>
+                      <FormControl>
+                        <SelectTrigger className="form-control" data-testid="select-reentry-type">
+                          <SelectValue placeholder="Select re-entry policy" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="No Reentry (Single Use)">No Re-entry (Single Use)</SelectItem>
+                        <SelectItem value="Pass (Multiple Use)">Pass (Multiple Use)</SelectItem>
+                        <SelectItem value="No Limit">No Limit</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="form-text">How many times a ticket can be used for entry</div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {form.watch('reentryType') === 'Pass (Multiple Use)' && (
+              <div className="mb-3">
+                <FormField
+                  control={form.control}
+                  name="maxUses"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Uses</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number"
+                          min="2"
+                          max="24"
+                          placeholder="Number of uses (2-24)"
+                          className="form-control"
+                          data-testid="input-max-uses"
+                          value={field.value || 2}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 2;
+                            if (value < 2) {
+                              field.onChange(2);
+                            } else if (value > 24) {
+                              field.onChange(24);
+                            } else {
+                              field.onChange(value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <div className="form-text">How many times the ticket can be used (minimum 2, maximum 24)</div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             <div className="mb-3">
               <label className="form-label">

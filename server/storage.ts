@@ -220,12 +220,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined> {
+    // Get current ticket state
+    const currentTicket = await this.getTicket(id);
+    if (!currentTicket) return undefined;
+    
+    // Get event to check reentry settings
+    const event = await this.getEvent(currentTicket.eventId);
+    if (!event) return undefined;
+    
+    // Determine suffix based on reentry type
+    let codeSuffix = '';
+    if (event.reentryType === 'No Reentry (Single Use)') {
+      codeSuffix = 'S';
+    } else if (event.reentryType === 'Pass (Multiple Use)') {
+      codeSuffix = 'P';
+    } else if (event.reentryType === 'No Limit') {
+      codeSuffix = 'U';
+    }
+    
+    // Append suffix to validation code for backend uniqueness
+    const fullValidationCode = validationCode ? validationCode + codeSuffix : null;
+    
+    // Update ticket with incremented use count
     const [ticket] = await db
       .update(tickets)
       .set({ 
         isValidated: true, 
         validatedAt: new Date(),
-        validationCode: validationCode || null
+        validationCode: fullValidationCode,
+        useCount: (currentTicket.useCount || 0) + 1
       })
       .where(eq(tickets.id, id))
       .returning();
@@ -274,9 +297,14 @@ export class DatabaseStorage implements IStorage {
       code = Math.floor(1000 + Math.random() * 9000).toString();
       attempts++;
       
-      // Check if this code is already in use for this event
+      // Check if this code is already in use for this event (including with suffixes)
       const existingTickets = await this.getTicketsByEventId(ticket.eventId);
-      const codeInUse = existingTickets.some(t => t.validationCode === code);
+      const codeInUse = existingTickets.some(t => {
+        if (!t.validationCode) return false;
+        // Check if the base code (without suffix) matches
+        const baseCode = t.validationCode.replace(/[SPU]$/, '');
+        return baseCode === code;
+      });
       
       // Also check current active codes
       const activeCodeInUse = this.validationCodes.has(code);
@@ -336,9 +364,24 @@ export class DatabaseStorage implements IStorage {
     }
 
     const ticket = await this.getTicket(ticketId);
-    if (!ticket || ticket.isValidated) {
+    if (!ticket) {
       return { valid: false };
     }
+    
+    // Get event to check reentry settings
+    const event = await this.getEvent(ticket.eventId);
+    if (!event) {
+      return { valid: false };
+    }
+    
+    // Check if ticket can be validated based on reentry settings
+    const useCount = ticket.useCount || 0;
+    if (event.reentryType === 'No Reentry (Single Use)' && useCount >= 1) {
+      return { valid: false }; // Already used once
+    } else if (event.reentryType === 'Pass (Multiple Use)' && useCount >= (event.maxUses || 1)) {
+      return { valid: false }; // Reached max uses
+    }
+    // No Limit tickets can always be re-validated
 
     // Mark ticket as validated with the code used
     await this.validateTicket(ticketId, token);

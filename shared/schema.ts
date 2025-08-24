@@ -34,6 +34,8 @@ export const events = pgTable("events", {
   imageUrl: text("image_url"),
   ticketBackgroundUrl: text("ticket_background_url"),
   earlyValidation: text("early_validation").default("Allow at Anytime"),
+  reentryType: text("reentry_type").default("No Reentry (Single Use)"),
+  maxUses: integer("max_uses").default(1),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -46,6 +48,7 @@ export const tickets = pgTable("tickets", {
   isValidated: boolean("is_validated").default(false),
   validatedAt: timestamp("validated_at"),
   validationCode: text("validation_code"), // The unique 4-digit code used when ticket was validated
+  useCount: integer("use_count").default(0), // Number of times this ticket has been used
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -97,6 +100,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
   earlyValidation: z.enum(["At Start Time", "One Hour Before", "Two Hours Before", "Allow at Anytime"]).optional().default("Allow at Anytime"),
+  reentryType: z.enum(["No Reentry (Single Use)", "Pass (Multiple Use)", "No Limit"]).optional().default("No Reentry (Single Use)"),
+  maxUses: z.number().min(1).max(24).optional().default(1),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({
