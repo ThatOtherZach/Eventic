@@ -308,6 +308,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle image URL normalization if provided
       let updateData = { ...req.body };
+      
+      // Remove name field to prevent it from being updated
+      delete updateData.name;
+      
       if (updateData.imageUrl && updateData.imageUrl.startsWith("https://storage.googleapis.com/")) {
         updateData.imageUrl = objectStorageService.normalizeObjectEntityPath(updateData.imageUrl);
       }

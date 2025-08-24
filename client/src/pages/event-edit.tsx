@@ -218,9 +218,10 @@ export default function EventEditPage() {
                 className="form-control"
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
+                disabled
+                title="Event name cannot be changed after creation"
               />
+              <small className="text-muted">Event name cannot be changed after creation</small>
             </div>
 
             <div className="mb-3">
