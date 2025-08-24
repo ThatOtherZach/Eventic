@@ -21,7 +21,6 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         ticket.qrData,
         {
           width: 180,
-          height: 180,
           margin: 1,
           color: {
             dark: "#000000",
@@ -94,48 +93,33 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           </div>
         </div>
 
-        {/* Right side - QR Code */}
-        <div 
-          className="d-flex align-items-center justify-content-center"
-          style={{
-            width: '210px',
-            backgroundColor: 'white',
-            borderRadius: '0 8px 8px 0',
-          }}
-        >
-          {isValidating && dynamicQrUrl ? (
-            <div className="text-center">
-              <img 
-                src={dynamicQrUrl} 
-                alt="Validation QR Code" 
-                style={{ width: '180px', height: '180px' }}
-              />
-              <div className="small text-muted mt-1" style={{ fontSize: '10px' }}>Validation Code</div>
-            </div>
-          ) : showQR ? (
-            <canvas
-              ref={qrCanvasRef}
-              style={{ display: 'block' }}
-            />
-          ) : (
-            <div className="text-center p-3">
-              <div className="mb-2">
-                <div 
-                  className="mx-auto d-flex align-items-center justify-content-center"
-                  style={{ 
-                    width: '60px', 
-                    height: '60px',
-                    backgroundColor: '#f0f0f0',
-                    borderRadius: '8px'
-                  }}
-                >
-                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#667eea' }}>T</span>
-                </div>
+        {/* Right side - QR Code (only show when QR is enabled or validating) */}
+        {(showQR || isValidating) && (
+          <div 
+            className="d-flex align-items-center justify-content-center"
+            style={{
+              width: '210px',
+              backgroundColor: 'white',
+              borderRadius: '0 8px 8px 0',
+            }}
+          >
+            {isValidating && dynamicQrUrl ? (
+              <div className="text-center">
+                <img 
+                  src={dynamicQrUrl} 
+                  alt="Validation QR Code" 
+                  style={{ width: '180px', height: '180px' }}
+                />
+                <div className="small text-muted mt-1" style={{ fontSize: '10px' }}>Validation Code</div>
               </div>
-              <small className="text-muted">Event Ticket</small>
-            </div>
-          )}
-        </div>
+            ) : (
+              <canvas
+                ref={qrCanvasRef}
+                style={{ display: 'block' }}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
