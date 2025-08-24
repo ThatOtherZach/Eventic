@@ -338,7 +338,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 Ticket Design
               </label>
               <p className="text-muted small mb-3">
-                Customize the background image for your event tickets. Tickets are business card sized (3.5" x 2").
+                Customize the background image for your event tickets. Tickets are business card sized (3.5" x 2"); event details will be on the left and a QR code for validation will be on the right.
               </p>
               
               {/* Ticket Preview */}
@@ -361,9 +361,6 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 <CreditCard size={18} className="me-2" />
                 Upload Background Image
               </ObjectUploader>
-              <small className="text-muted d-block mt-2">
-                The ticket will display event details on the left and a QR code on the right.
-              </small>
             </div>
           </ModalBody>
           
