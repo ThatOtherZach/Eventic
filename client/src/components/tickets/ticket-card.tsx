@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import type { Event, Ticket } from "@shared/schema";
+import { SpecialEffects, SpecialEffectBadge } from "./special-effects";
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -108,6 +109,12 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           </div>
         </>
       )}
+
+      {/* Special Event Effects Badge */}
+      <SpecialEffectBadge event={event} />
+      
+      {/* Special Effects Animation */}
+      <SpecialEffects event={event} />
 
       {/* Ticket Content */}
       <div className="position-relative h-100 d-flex">
