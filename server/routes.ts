@@ -260,8 +260,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/events", async (req, res) => {
     try {
       const userId = extractUserId(req);
+      
+      // Handle image URL normalization if provided
+      let createData = { ...req.body };
+      if (createData.imageUrl && createData.imageUrl.startsWith("https://storage.googleapis.com/")) {
+        createData.imageUrl = objectStorageService.normalizeObjectEntityPath(createData.imageUrl);
+      }
+      if (createData.ticketBackgroundUrl && createData.ticketBackgroundUrl.startsWith("https://storage.googleapis.com/")) {
+        createData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(createData.ticketBackgroundUrl);
+      }
+      
       const validatedData = insertEventSchema.parse({
-        ...req.body,
+        ...createData,
         userId, // Now we can use the actual userId since user exists in DB
       });
       const event = await storage.createEvent(validatedData);
@@ -295,6 +305,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let updateData = { ...req.body };
       if (updateData.imageUrl && updateData.imageUrl.startsWith("https://storage.googleapis.com/")) {
         updateData.imageUrl = objectStorageService.normalizeObjectEntityPath(updateData.imageUrl);
+      }
+      if (updateData.ticketBackgroundUrl && updateData.ticketBackgroundUrl.startsWith("https://storage.googleapis.com/")) {
+        updateData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(updateData.ticketBackgroundUrl);
       }
       
       const validatedData = insertEventSchema.partial().parse(updateData);

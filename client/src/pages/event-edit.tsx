@@ -118,20 +118,32 @@ export default function EventEditPage() {
     };
   };
 
-  const handleImageComplete = (uploadUrl: string) => {
-    setFormData(prev => ({ ...prev, imageUrl: uploadUrl }));
-    toast({
-      title: "Image uploaded",
-      description: "Save the event to apply changes",
-    });
+  const handleImageComplete = async (result: any) => {
+    // Extract the uploaded URL from the result
+    const uploadedUrl = result.successful?.[0]?.uploadURL;
+    if (uploadedUrl) {
+      // The URL needs to be normalized to /objects/ path format
+      // We'll send it to the server which will normalize it
+      setFormData(prev => ({ ...prev, imageUrl: uploadedUrl }));
+      toast({
+        title: "Image uploaded",
+        description: "Save the event to apply changes",
+      });
+    }
   };
 
-  const handleTicketBackgroundComplete = (uploadUrl: string) => {
-    setFormData(prev => ({ ...prev, ticketBackgroundUrl: uploadUrl }));
-    toast({
-      title: "Ticket background uploaded",
-      description: "Save the event to apply changes",
-    });
+  const handleTicketBackgroundComplete = async (result: any) => {
+    // Extract the uploaded URL from the result
+    const uploadedUrl = result.successful?.[0]?.uploadURL;
+    if (uploadedUrl) {
+      // The URL needs to be normalized to /objects/ path format
+      // We'll send it to the server which will normalize it
+      setFormData(prev => ({ ...prev, ticketBackgroundUrl: uploadedUrl }));
+      toast({
+        title: "Ticket background uploaded",
+        description: "Save the event to apply changes",
+      });
+    }
   };
 
   // Create a sample ticket for preview
@@ -307,7 +319,7 @@ export default function EventEditPage() {
               </label>
               <ObjectUploader
                 onGetUploadParameters={handleImageUpload}
-                onComplete={handleImageComplete}
+                onComplete={(result) => handleImageComplete(result)}
                 buttonClassName="btn btn-outline-primary"
                 currentImageUrl={formData.imageUrl}
               >
@@ -339,7 +351,7 @@ export default function EventEditPage() {
 
               <ObjectUploader
                 onGetUploadParameters={handleImageUpload}
-                onComplete={handleTicketBackgroundComplete}
+                onComplete={(result) => handleTicketBackgroundComplete(result)}
                 buttonClassName="btn btn-outline-primary"
                 currentImageUrl={formData.ticketBackgroundUrl}
               >

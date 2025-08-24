@@ -90,20 +90,30 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     };
   };
 
-  const handleImageComplete = (uploadUrl: string) => {
-    setImageUrl(uploadUrl);
-    toast({
-      title: "Image uploaded",
-      description: "Image will be included when you create the event",
-    });
+  const handleImageComplete = (result: any) => {
+    // Extract the uploaded URL from the result
+    const uploadedUrl = result.successful?.[0]?.uploadURL;
+    if (uploadedUrl) {
+      // Store the raw URL - it will be normalized by the server
+      setImageUrl(uploadedUrl);
+      toast({
+        title: "Image uploaded",
+        description: "Image will be included when you create the event",
+      });
+    }
   };
 
-  const handleTicketBackgroundComplete = (uploadUrl: string) => {
-    setTicketBackgroundUrl(uploadUrl);
-    toast({
-      title: "Ticket background uploaded",
-      description: "Ticket design will be applied when you create the event",
-    });
+  const handleTicketBackgroundComplete = (result: any) => {
+    // Extract the uploaded URL from the result
+    const uploadedUrl = result.successful?.[0]?.uploadURL;
+    if (uploadedUrl) {
+      // Store the raw URL - it will be normalized by the server
+      setTicketBackgroundUrl(uploadedUrl);
+      toast({
+        title: "Ticket background uploaded",
+        description: "Ticket design will be applied when you create the event",
+      });
+    }
   };
 
   // Create a sample ticket for preview
@@ -313,7 +323,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               </label>
               <ObjectUploader
                 onGetUploadParameters={handleImageUpload}
-                onComplete={handleImageComplete}
+                onComplete={(result) => handleImageComplete(result)}
                 buttonClassName="btn btn-outline-primary"
                 currentImageUrl={imageUrl}
               >
@@ -345,7 +355,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
 
               <ObjectUploader
                 onGetUploadParameters={handleImageUpload}
-                onComplete={handleTicketBackgroundComplete}
+                onComplete={(result) => handleTicketBackgroundComplete(result)}
                 buttonClassName="btn btn-outline-primary"
                 currentImageUrl={ticketBackgroundUrl}
               >
