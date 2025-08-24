@@ -870,6 +870,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Archive endpoints
+  app.get("/api/user/past-events", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const archivedEvents = await storage.getArchivedEventsByUser(userId);
+      res.json(archivedEvents);
+    } catch (error) {
+      await logError(error, "GET /api/user/past-events", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch past events" });
+    }
+  });
+
+  app.get("/api/user/past-tickets", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const archivedTickets = await storage.getArchivedTicketsByUser(userId);
+      res.json(archivedTickets);
+    } catch (error) {
+      await logError(error, "GET /api/user/past-tickets", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch past tickets" });
+    }
+  });
+
+  // Manual archive trigger (for testing or admin use)
+  app.post("/api/archive/check", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get events that need archiving
+      const eventsToArchive = await storage.getEventsToArchive();
+      
+      // Archive each event
+      const results = [];
+      for (const event of eventsToArchive) {
+        const success = await storage.archiveEvent(event.id);
+        results.push({
+          eventId: event.id,
+          eventName: event.name,
+          archived: success
+        });
+      }
+
+      res.json({
+        message: `Archived ${results.filter(r => r.archived).length} of ${results.length} events`,
+        results
+      });
+    } catch (error) {
+      await logError(error, "POST /api/archive/check", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to archive events" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

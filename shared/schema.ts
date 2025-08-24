@@ -82,6 +82,33 @@ export const systemLogs = pgTable("system_logs", {
   expiresAt: timestamp("expires_at").notNull().default(sql`CURRENT_TIMESTAMP + INTERVAL '90 days'`),
 });
 
+// Archived events table for event owners
+export const archivedEvents = pgTable("archived_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  originalEventId: text("original_event_id").notNull(),
+  csvData: text("csv_data").notNull(), // CSV format: name,venue,date,time,endDate,endTime,ticketPrice,totalTicketsSold,totalRevenue
+  eventName: text("event_name").notNull(), // For quick searching
+  eventDate: text("event_date").notNull(), // For sorting
+  totalTicketsSold: integer("total_tickets_sold").default(0),
+  totalRevenue: decimal("total_revenue", { precision: 10, scale: 2 }).default("0"),
+  archivedAt: timestamp("archived_at").defaultNow(),
+});
+
+// Archived tickets table for ticket holders
+export const archivedTickets = pgTable("archived_tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  originalTicketId: text("original_ticket_id").notNull(),
+  originalEventId: text("original_event_id").notNull(),
+  csvData: text("csv_data").notNull(), // CSV format: ticketNumber,eventName,venue,date,time,price,wasValidated,validatedAt
+  eventName: text("event_name").notNull(), // For quick searching
+  eventDate: text("event_date").notNull(), // For sorting
+  ticketNumber: text("ticket_number").notNull(),
+  wasValidated: boolean("was_validated").default(false),
+  archivedAt: timestamp("archived_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -125,6 +152,16 @@ export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({
   expiresAt: true,
 });
 
+export const insertArchivedEventSchema = createInsertSchema(archivedEvents).omit({
+  id: true,
+  archivedAt: true,
+});
+
+export const insertArchivedTicketSchema = createInsertSchema(archivedTickets).omit({
+  id: true,
+  archivedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -137,3 +174,7 @@ export type InsertDelegatedValidator = z.infer<typeof insertDelegatedValidatorSc
 export type DelegatedValidator = typeof delegatedValidators.$inferSelect;
 export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;
 export type SystemLog = typeof systemLogs.$inferSelect;
+export type InsertArchivedEvent = z.infer<typeof insertArchivedEventSchema>;
+export type ArchivedEvent = typeof archivedEvents.$inferSelect;
+export type InsertArchivedTicket = z.infer<typeof insertArchivedTicketSchema>;
+export type ArchivedTicket = typeof archivedTickets.$inferSelect;

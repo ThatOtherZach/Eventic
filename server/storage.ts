@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, users, authTokens, events, tickets, delegatedValidators, systemLogs } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -60,6 +60,12 @@ export interface IStorage {
     severity?: string;
     search?: string;
   }): Promise<SystemLog[]>;
+  
+  // Archive Management
+  archiveEvent(eventId: string): Promise<boolean>;
+  getArchivedEventsByUser(userId: string): Promise<ArchivedEvent[]>;
+  getArchivedTicketsByUser(userId: string): Promise<ArchivedTicket[]>;
+  getEventsToArchive(): Promise<Event[]>;
 }
 
 interface ValidationSession {
@@ -542,6 +548,122 @@ export class DatabaseStorage implements IStorage {
       .offset(offset);
     
     return logs;
+  }
+
+  // Archive Management
+  async archiveEvent(eventId: string): Promise<boolean> {
+    try {
+      // Get the event details
+      const event = await this.getEvent(eventId);
+      if (!event || !event.userId) return false;
+
+      // Get all tickets for this event
+      const eventTickets = await this.getTicketsByEventId(eventId);
+      
+      // Calculate total tickets sold and revenue
+      const totalTicketsSold = eventTickets.length;
+      const totalRevenue = totalTicketsSold * parseFloat(event.ticketPrice.toString());
+
+      // Create CSV data for the event owner
+      const eventCsvData = [
+        event.name,
+        event.venue,
+        event.date,
+        event.time,
+        event.endDate || '',
+        event.endTime || '',
+        event.ticketPrice,
+        totalTicketsSold,
+        totalRevenue
+      ].join(',');
+
+      // Archive the event for the owner
+      await db.insert(archivedEvents).values({
+        userId: event.userId,
+        originalEventId: eventId,
+        csvData: eventCsvData,
+        eventName: event.name,
+        eventDate: event.date,
+        totalTicketsSold,
+        totalRevenue: totalRevenue.toFixed(2),
+      });
+
+      // Archive tickets for each ticket holder
+      for (const ticket of eventTickets) {
+        if (ticket.userId) {
+          const ticketCsvData = [
+            ticket.ticketNumber,
+            event.name,
+            event.venue,
+            event.date,
+            event.time,
+            event.ticketPrice,
+            ticket.isValidated,
+            ticket.validatedAt || ''
+          ].join(',');
+
+          await db.insert(archivedTickets).values({
+            userId: ticket.userId,
+            originalTicketId: ticket.id,
+            originalEventId: eventId,
+            csvData: ticketCsvData,
+            eventName: event.name,
+            eventDate: event.date,
+            ticketNumber: ticket.ticketNumber,
+            wasValidated: ticket.isValidated || false,
+          });
+        }
+      }
+
+      // Delete the tickets
+      await db.delete(tickets).where(eq(tickets.eventId, eventId));
+      
+      // Delete delegated validators
+      await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
+      
+      // Delete the event
+      await db.delete(events).where(eq(events.id, eventId));
+
+      return true;
+    } catch (error) {
+      console.error('Error archiving event:', error);
+      return false;
+    }
+  }
+
+  async getArchivedEventsByUser(userId: string): Promise<ArchivedEvent[]> {
+    return db
+      .select()
+      .from(archivedEvents)
+      .where(eq(archivedEvents.userId, userId))
+      .orderBy(desc(archivedEvents.archivedAt));
+  }
+
+  async getArchivedTicketsByUser(userId: string): Promise<ArchivedTicket[]> {
+    return db
+      .select()
+      .from(archivedTickets)
+      .where(eq(archivedTickets.userId, userId))
+      .orderBy(desc(archivedTickets.archivedAt));
+  }
+
+  async getEventsToArchive(): Promise<Event[]> {
+    // Get all events
+    const allEvents = await db.select().from(events);
+    
+    // Filter events that should be archived (69 days after end date or start date)
+    const now = new Date();
+    const sixtyNineDaysMs = 69 * 24 * 60 * 60 * 1000;
+    
+    return allEvents.filter(event => {
+      // Use end date if available, otherwise use start date
+      const eventDateStr = event.endDate || event.date;
+      const eventDate = new Date(eventDateStr);
+      
+      // Check if 69 days have passed
+      const timeDiff = now.getTime() - eventDate.getTime();
+      return timeDiff >= sixtyNineDaysMs;
+    });
   }
 }
 

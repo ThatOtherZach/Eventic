@@ -5,6 +5,7 @@ import { Calendar, Ticket, User, LogOut, Eye } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
+import { PastEvents } from "@/components/archive/past-events";
 import type { Ticket as TicketType, Event } from "@shared/schema";
 
 export default function AccountPage() {
@@ -44,14 +45,17 @@ export default function AccountPage() {
         <div className="col">
           <div className="d-flex justify-content-between align-items-center">
             <h1 className="h3 fw-bold mb-0">My Account</h1>
-            <button 
-              className="btn btn-outline-secondary"
-              onClick={handleSignOut}
-              data-testid="button-sign-out"
-            >
-              <LogOut size={18} className="me-2" />
-              Sign Out
-            </button>
+            <div className="d-flex gap-2">
+              <PastEvents />
+              <button 
+                className="btn btn-outline-secondary"
+                onClick={handleSignOut}
+                data-testid="button-sign-out"
+              >
+                <LogOut size={18} className="me-2" />
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </div>
