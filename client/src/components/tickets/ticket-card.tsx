@@ -36,13 +36,13 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   }, [ticket.qrData, showQR]);
 
   // Business card dimensions: 3.5" x 2" (aspect ratio 7:4)
-  // For screen display: 350px x 200px
+  // For screen display: maintain aspect ratio but allow width to be responsive
   return (
     <div 
-      className="ticket-card position-relative"
+      className="ticket-card position-relative w-100"
       style={{
-        width: '350px',
-        height: '200px',
+        aspectRatio: '7/4',
+        maxWidth: '600px',
         borderRadius: '8px',
         overflow: 'hidden',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',

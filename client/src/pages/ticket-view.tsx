@@ -215,7 +215,7 @@ export default function TicketViewPage(): React.ReactElement {
       <div className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6">
           {/* Ticket Display */}
-          <div className="d-flex justify-content-center mb-4">
+          <div className="mb-4">
             <TicketCard 
               ticket={ticket} 
               event={event} 
