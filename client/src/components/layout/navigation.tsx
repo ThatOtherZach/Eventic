@@ -20,7 +20,7 @@ export function Navigation() {
       <div className="container-fluid px-3 px-md-4">
         <Link href="/events" className="navbar-brand d-flex align-items-center">
           <Ticket className="text-primary me-2" size={28} />
-          <span className="fw-bold">EventTicket Pro</span>
+          <span className="fw-bold">Eventic</span>
         </Link>
         
         <button 

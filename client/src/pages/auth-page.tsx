@@ -54,7 +54,7 @@ export default function AuthPage() {
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
                 <Ticket className="text-primary" size={32} />
               </div>
-              <h2 className="h3 fw-bold">Welcome to EventTicket Pro</h2>
+              <h2 className="h3 fw-bold">Welcome to Eventic</h2>
               <p className="text-muted">
                 Enter your email to sign in
               </p>
