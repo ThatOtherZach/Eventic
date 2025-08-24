@@ -101,7 +101,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           </div>
           <div className="mt-2">
             <div className="small opacity-75">Ticket #</div>
-            <div className="fw-bold" style={{ fontSize: '14px' }}>
+            <div className="fst-italic" style={{ fontSize: '14px' }}>
               {ticket.ticketNumber}
             </div>
           </div>
