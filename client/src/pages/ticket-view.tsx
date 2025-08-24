@@ -287,9 +287,7 @@ export default function TicketViewPage(): React.ReactElement {
             <TicketCard 
               ticket={ticket} 
               event={event} 
-              showQR={true}
-              dynamicQrUrl={qrDataUrl}
-              isValidating={isValidating}
+              showQR={false}
             />
           </div>
 
