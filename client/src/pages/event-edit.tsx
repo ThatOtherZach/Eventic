@@ -29,6 +29,8 @@ export default function EventEditPage() {
     venue: "",
     date: "",
     time: "",
+    endDate: "",
+    endTime: "",
     ticketPrice: "",
     maxTickets: "",
     imageUrl: "",
@@ -59,6 +61,8 @@ export default function EventEditPage() {
         venue: event.venue,
         date: event.date,
         time: event.time,
+        endDate: event.endDate || "",
+        endTime: event.endTime || "",
         ticketPrice: event.ticketPrice,
         maxTickets: event.maxTickets?.toString() || "",
         imageUrl: event.imageUrl || "",
@@ -123,6 +127,8 @@ export default function EventEditPage() {
       venue: formData.venue,
       date: formData.date,
       time: formData.time,
+      endDate: formData.endDate || null,
+      endTime: formData.endTime || null,
       ticketPrice: formData.ticketPrice,
     };
 
@@ -197,6 +203,8 @@ export default function EventEditPage() {
     venue: formData.venue || "Venue",
     date: formData.date || "2024-01-01",
     time: formData.time || "19:00",
+    endDate: formData.endDate || null,
+    endTime: formData.endTime || null,
     ticketPrice: formData.ticketPrice || "0",
     maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : null,
     userId: user?.id || null,
@@ -289,33 +297,55 @@ export default function EventEditPage() {
               />
             </div>
 
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label htmlFor="date" className="form-label">
-                  Date *
-                </label>
-                <input
-                  type="date"
-                  className="form-control"
-                  id="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  required
-                />
-              </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Starts on *</label>
+              <div className="row">
+                <div className="col-md-6 mb-2">
+                  <input
+                    type="date"
+                    className="form-control"
+                    id="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
+                  />
+                </div>
 
-              <div className="col-md-6 mb-3">
-                <label htmlFor="time" className="form-label">
-                  Time *
-                </label>
-                <input
-                  type="time"
-                  className="form-control"
-                  id="time"
-                  value={formData.time}
-                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  required
-                />
+                <div className="col-md-6 mb-2">
+                  <input
+                    type="time"
+                    className="form-control"
+                    id="time"
+                    value={formData.time}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label fw-bold">Ends on <span className="text-muted">(optional)</span></label>
+              <div className="row">
+                <div className="col-md-6 mb-2">
+                  <input
+                    type="date"
+                    className="form-control"
+                    id="endDate"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </div>
+
+                <div className="col-md-6 mb-2">
+                  <input
+                    type="time"
+                    className="form-control"
+                    id="endTime"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
 

@@ -184,11 +184,23 @@ export default function EventDetailPage() {
           <div className="d-flex flex-wrap gap-3 mb-4">
             <div className="d-flex align-items-center text-muted">
               <Calendar size={18} className="me-2" />
-              {format(eventDate, "MMMM d, yyyy")}
+              {event.endDate ? (
+                <>
+                  {format(eventDate, "MMMM d, yyyy")} - {format(new Date(event.endDate), "MMMM d, yyyy")}
+                </>
+              ) : (
+                format(eventDate, "MMMM d, yyyy")
+              )}
             </div>
             <div className="d-flex align-items-center text-muted">
               <Clock size={18} className="me-2" />
-              {event.time}
+              {event.endTime ? (
+                <>
+                  {event.time} - {event.endTime}
+                </>
+              ) : (
+                event.time
+              )}
             </div>
             <div className="d-flex align-items-center text-muted">
               <MapPin size={18} className="me-2" />

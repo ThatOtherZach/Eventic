@@ -42,6 +42,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       venue: "",
       date: "",
       time: "",
+      endDate: "",
+      endTime: "",
       ticketPrice: "0",
       maxTickets: undefined,
       imageUrl: undefined,
@@ -137,6 +139,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     venue: watchedValues.venue || "Venue",
     date: watchedValues.date || "2024-01-01",
     time: watchedValues.time || "19:00",
+    endDate: watchedValues.endDate || null,
+    endTime: watchedValues.endTime || null,
     ticketPrice: watchedValues.ticketPrice || "0",
     maxTickets: watchedValues.maxTickets || null,
     userId: user?.id || null,
@@ -175,47 +179,95 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               />
             </div>
 
-            <div className="row mb-3">
-              <div className="col-6">
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date <span className="text-danger">*</span></FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="date"
-                          className="form-control"
-                          data-testid="input-event-date"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <div className="mb-3">
+              <label className="form-label fw-bold mb-2">Starts on <span className="text-danger">*</span></label>
+              <div className="row">
+                <div className="col-6">
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="date"
+                            className="form-control"
+                            data-testid="input-event-date"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="col-6">
+                  <FormField
+                    control={form.control}
+                    name="time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="time"
+                            className="form-control"
+                            data-testid="input-event-time"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-              
-              <div className="col-6">
-                <FormField
-                  control={form.control}
-                  name="time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Time <span className="text-danger">*</span></FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="time"
-                          className="form-control"
-                          data-testid="input-event-time"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label fw-bold mb-2">Ends on <span className="text-muted">(optional)</span></label>
+              <div className="row">
+                <div className="col-6">
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            {...field}
+                            value={field.value || ""} 
+                            type="date"
+                            className="form-control"
+                            data-testid="input-event-end-date"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="col-6">
+                  <FormField
+                    control={form.control}
+                    name="endTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            {...field}
+                            value={field.value || ""} 
+                            type="time"
+                            className="form-control"
+                            data-testid="input-event-end-time"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
 

@@ -26,6 +26,8 @@ export const events = pgTable("events", {
   venue: text("venue").notNull(),
   date: text("date").notNull(),
   time: text("time").notNull(),
+  endDate: text("end_date"),
+  endTime: text("end_time"),
   ticketPrice: decimal("ticket_price", { precision: 10, scale: 2 }).notNull(),
   maxTickets: integer("max_tickets"),
   userId: varchar("user_id").references(() => users.id),
