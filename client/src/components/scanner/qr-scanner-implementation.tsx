@@ -36,6 +36,7 @@ export function QrScannerImplementation() {
   const [availableCameras, setAvailableCameras] = useState<{ id: string; label: string }[]>([]);
   const [manualCode, setManualCode] = useState<string>("");
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
@@ -300,6 +301,17 @@ export function QrScannerImplementation() {
   };
 
   useEffect(() => {
+    // Detect mobile device
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobile = /mobile|android|iphone|ipad|phone/i.test(userAgent);
+    setIsMobile(mobile);
+    
+    // Auto-show manual entry on mobile
+    if (mobile) {
+      setShowManualEntry(true);
+      addDebugInfo("📱 Mobile device detected - showing manual entry");
+    }
+    
     addDebugInfo("📱 Component mounted, checking camera...");
     checkCameraSupport().then(async (hasSupport) => {
       if (hasSupport) {
@@ -360,12 +372,16 @@ export function QrScannerImplementation() {
                   <Camera className="text-muted mb-3" size={48} />
                   <p className="fw-medium mb-2">Ready to Scan</p>
                   <p className="small text-muted text-center mb-3">
-                    Tap "Start Scanner" to begin scanning QR codes
+                    {isMobile ? (
+                      "Camera may not work on mobile. Use manual code entry above."
+                    ) : (
+                      "Tap 'Start Scanner' to begin scanning QR codes"
+                    )}
                   </p>
                   {cameraError && (
                     <div className="alert alert-warning small mt-3">
                       <strong>Tip:</strong> {cameraError}
-                      {showManualEntry && (
+                      {!showManualEntry && (
                         <div className="mt-2">
                           <button
                             className="btn btn-sm btn-warning"
@@ -417,25 +433,35 @@ export function QrScannerImplementation() {
       )}
       
       {/* Manual Code Entry */}
-      <div className="card mb-3">
+      <div className={`card mb-3 ${isMobile ? 'border-primary border-2' : ''}`}>
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h6 className="card-title mb-0">
               <Keyboard className="me-2" size={18} />
               Manual Code Entry
+              {isMobile && <span className="badge bg-primary ms-2">Recommended</span>}
             </h6>
-            <button
-              className="btn btn-sm btn-outline-primary"
-              onClick={() => setShowManualEntry(!showManualEntry)}
-            >
-              {showManualEntry ? "Hide" : "Show"}
-            </button>
+            {!isMobile && (
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowManualEntry(!showManualEntry)}
+              >
+                {showManualEntry ? "Hide" : "Show"}
+              </button>
+            )}
           </div>
           
           {showManualEntry && (
             <>
               <p className="small text-muted mb-3">
-                If QR scanning doesn't work, the ticket holder can provide a 4-digit code that refreshes every 10 seconds.
+                {isMobile ? (
+                  <>
+                    <strong className="text-primary">Mobile users:</strong> Camera may not work properly on mobile browsers. 
+                    Ask the ticket holder for their 4-digit validation code shown on their screen.
+                  </>
+                ) : (
+                  "If QR scanning doesn't work, the ticket holder can provide a 4-digit code that refreshes every 10 seconds."
+                )}
               </p>
               <div className="input-group">
                 <input
