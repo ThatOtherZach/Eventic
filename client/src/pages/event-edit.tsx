@@ -36,6 +36,8 @@ export default function EventEditPage() {
     imageUrl: "",
     ticketBackgroundUrl: "",
     earlyValidation: "Allow at Anytime",
+    reentryType: "No Reentry (Single Use)",
+    maxUses: 1,
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -69,6 +71,8 @@ export default function EventEditPage() {
         imageUrl: event.imageUrl || "",
         ticketBackgroundUrl: event.ticketBackgroundUrl || "",
         earlyValidation: event.earlyValidation || "Allow at Anytime",
+        reentryType: event.reentryType || "No Reentry (Single Use)",
+        maxUses: event.maxUses || 1,
       });
       
       // Store tickets sold for validation
@@ -210,6 +214,8 @@ export default function EventEditPage() {
     qrData: "",
     isValidated: false,
     validatedAt: null,
+    validationCode: null,
+    useCount: 0,
     createdAt: new Date(),
   };
 
@@ -228,6 +234,8 @@ export default function EventEditPage() {
     imageUrl: formData.imageUrl,
     ticketBackgroundUrl: formData.ticketBackgroundUrl,
     earlyValidation: formData.earlyValidation || "Allow at Anytime",
+    reentryType: formData.reentryType || "No Reentry (Single Use)",
+    maxUses: formData.maxUses || 1,
     createdAt: new Date(),
   };
 
@@ -434,6 +442,45 @@ export default function EventEditPage() {
                 Validation timing cannot be changed after event creation
               </small>
             </div>
+
+            <div className="mb-3">
+              <label htmlFor="reentryType" className="form-label">
+                Re-entry Policy
+              </label>
+              <select
+                className="form-select"
+                id="reentryType"
+                value={formData.reentryType}
+                disabled
+                title="Re-entry policy cannot be changed after creation"
+              >
+                <option value="No Reentry (Single Use)">No Re-entry (Single Use)</option>
+                <option value="Pass (Multiple Use)">Pass (Multiple Use)</option>
+                <option value="No Limit">No Limit</option>
+              </select>
+              <small className="text-muted">
+                Re-entry policy cannot be changed after event creation
+              </small>
+            </div>
+
+            {formData.reentryType === 'Pass (Multiple Use)' && (
+              <div className="mb-3">
+                <label htmlFor="maxUses" className="form-label">
+                  Number of Uses
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  id="maxUses"
+                  value={formData.maxUses}
+                  disabled
+                  title="Number of uses cannot be changed after creation"
+                />
+                <small className="text-muted">
+                  Number of uses cannot be changed after event creation
+                </small>
+              </div>
+            )}
 
             <div className="mb-4">
               <label className="form-label">
