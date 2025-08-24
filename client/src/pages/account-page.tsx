@@ -104,7 +104,7 @@ export default function AccountPage() {
                   <TicketCard 
                     ticket={ticket}
                     event={ticket.event}
-                    showQR={true}
+                    showQR={false}
                   />
                   <div className="d-flex justify-content-center gap-2 mt-2">
                     {ticket.isValidated && (
