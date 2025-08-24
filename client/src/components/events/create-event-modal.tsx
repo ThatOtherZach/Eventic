@@ -10,6 +10,8 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/moda
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { CreditCard, Image } from "lucide-react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import {
   Form,
   FormControl,
@@ -19,7 +21,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 
 interface CreateEventModalProps {
   open: boolean;
@@ -247,13 +248,20 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        {...field} 
+                      <ReactQuill 
+                        theme="snow"
                         value={field.value || ""}
-                        rows={3}
+                        onChange={field.onChange}
                         placeholder="Enter event description"
-                        className="form-control"
-                        data-testid="textarea-event-description"
+                        modules={{
+                          toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link'],
+                            ['clean']
+                          ]
+                        }}
                       />
                     </FormControl>
                     <FormMessage />

@@ -198,9 +198,10 @@ export default function EventDetailPage() {
           {event.description && (
             <div className="mb-4">
               <h5>About This Event</h5>
-              <p className="text-muted" style={{ whiteSpace: 'pre-wrap' }}>
-                {event.description}
-              </p>
+              <div 
+                className="text-muted"
+                dangerouslySetInnerHTML={{ __html: event.description }}
+              />
             </div>
           )}
 

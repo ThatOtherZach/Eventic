@@ -390,6 +390,28 @@ video {
   text-decoration: none !important;
 }
 
+/* Quill Editor Custom Styles */
+.ql-container {
+  font-family: inherit;
+  font-size: inherit;
+  border-radius: 0 0 0.375rem 0.375rem;
+  min-height: 150px;
+}
+
+.ql-toolbar {
+  border-radius: 0.375rem 0.375rem 0 0;
+  background-color: #f8f9fa;
+}
+
+.ql-editor {
+  min-height: 150px;
+}
+
+.ql-editor.ql-blank::before {
+  font-style: normal;
+  color: #6c757d;
+}
+
 /* Print styles */
 @media print {
   .qr-container {

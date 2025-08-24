@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import type { Event, Ticket } from "@shared/schema";
 
 export default function EventEditPage() {
@@ -225,13 +227,20 @@ export default function EventEditPage() {
               <label htmlFor="description" className="form-label">
                 Description
               </label>
-              <textarea
-                className="form-control"
-                id="description"
-                rows={4}
+              <ReactQuill 
+                theme="snow"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, description: value })}
                 placeholder="Tell people about your event..."
+                modules={{
+                  toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                  ]
+                }}
               />
             </div>
 
