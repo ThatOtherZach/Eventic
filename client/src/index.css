@@ -449,6 +449,139 @@ video {
   animation: firework-spark 1s ease-out forwards;
 }
 
+/* Rainbow Glow Animation for Pride */
+@keyframes rainbowGlow {
+  0%, 100% {
+    box-shadow: 
+      inset 0 0 20px rgba(255, 0, 0, 0.3),
+      inset 0 0 40px rgba(255, 127, 0, 0.2),
+      inset 0 0 60px rgba(255, 255, 0, 0.1);
+  }
+  25% {
+    box-shadow: 
+      inset 0 0 20px rgba(255, 255, 0, 0.3),
+      inset 0 0 40px rgba(0, 255, 0, 0.2),
+      inset 0 0 60px rgba(0, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 
+      inset 0 0 20px rgba(0, 255, 255, 0.3),
+      inset 0 0 40px rgba(0, 0, 255, 0.2),
+      inset 0 0 60px rgba(139, 0, 255, 0.1);
+  }
+  75% {
+    box-shadow: 
+      inset 0 0 20px rgba(139, 0, 255, 0.3),
+      inset 0 0 40px rgba(255, 0, 255, 0.2),
+      inset 0 0 60px rgba(255, 0, 0, 0.1);
+  }
+}
+
+/* Falling Hearts Animation for Valentine's */
+@keyframes heartfall {
+  0% {
+    transform: translateY(-100vh) translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) translateX(30px) rotate(360deg);
+    opacity: 0.3;
+  }
+}
+
+.falling-heart {
+  position: fixed;
+  color: #ff1493;
+  font-size: 1.2em;
+  user-select: none;
+  z-index: 1000;
+  pointer-events: none;
+  animation: heartfall linear infinite;
+  filter: drop-shadow(0 0 3px rgba(255, 20, 147, 0.5));
+}
+
+/* Spooky Ghost Animation for Halloween */
+@keyframes ghost-float {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(-3deg);
+    opacity: 0.7;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) rotate(3deg);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-10px) translateX(-10px) rotate(-3deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translateY(-30px) translateX(5px) rotate(3deg);
+    opacity: 0.6;
+  }
+}
+
+.spooky-ghost {
+  position: fixed;
+  font-size: 2em;
+  user-select: none;
+  z-index: 1000;
+  pointer-events: none;
+  animation: ghost-float 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.spooky-fog {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: linear-gradient(to top, rgba(128, 128, 128, 0.3), transparent);
+  z-index: 999;
+  pointer-events: none;
+  animation: fog-drift 20s ease-in-out infinite;
+}
+
+@keyframes fog-drift {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(20px);
+  }
+}
+
+/* Monthly Color Glow Animations */
+@keyframes monthlyGlow {
+  0%, 100% {
+    opacity: 0.4;
+    box-shadow: inset 0 0 20px var(--month-color-1), inset 0 0 40px var(--month-color-2);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: inset 0 0 40px var(--month-color-1), inset 0 0 80px var(--month-color-2);
+  }
+}
+
+/* Nice Day (69th day) Black Glow */
+@keyframes niceGlow {
+  0%, 100% {
+    box-shadow: 
+      inset 0 0 20px rgba(0, 0, 0, 0.3),
+      inset 0 0 40px rgba(0, 0, 0, 0.2),
+      0 0 20px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 
+      inset 0 0 30px rgba(0, 0, 0, 0.4),
+      inset 0 0 60px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(0, 0, 0, 0.6);
+  }
+}
+
 /* Scanner button states */
 .btn:disabled {
   opacity: 0.6;
