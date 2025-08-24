@@ -13,8 +13,8 @@ export function Toaster() {
       variant = "system";
     } else if (toast.variant === "destructive") {
       variant = "error";
-    } else if (toast.variant === "success" || toast.variant === "error" || toast.variant === "warning") {
-      variant = toast.variant;
+    } else if (toast.variant && (toast.variant === "success" || toast.variant === "error" || toast.variant === "warning")) {
+      variant = toast.variant as "success" | "error" | "warning";
     } else {
       variant = "info";
     }
@@ -24,7 +24,7 @@ export function Toaster() {
       title: toast.title?.toString(),
       description: toast.description?.toString(),
       variant,
-      duration: 5000,
+      duration: 15000, // 15 seconds
     };
   });
 

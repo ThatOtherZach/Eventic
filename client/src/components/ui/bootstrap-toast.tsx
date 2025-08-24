@@ -74,7 +74,7 @@ const ToastItem: React.FC<{ toast: BootstrapToast; onDismiss: (id: string) => vo
     const timer = setTimeout(() => {
       setShow(false);
       setTimeout(() => onDismiss(toast.id), 300); // Wait for animation
-    }, toast.duration || 5000);
+    }, toast.duration || 15000);
 
     return () => clearTimeout(timer);
   }, [toast.id, toast.duration, onDismiss]);

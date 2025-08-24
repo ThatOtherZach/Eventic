@@ -6,7 +6,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 5500
+const TOAST_REMOVE_DELAY = 15500 // 15 seconds + animation time
 
 type ToasterToast = ToastProps & {
   id: string
@@ -129,6 +129,7 @@ export const reducer = (state: State, action: Action): State => {
 const listeners: Array<(state: State) => void> = []
 
 let memoryState: State = { toasts: [] }
+const recentToasts = new Map<string, number>() // Track recent toasts to prevent duplicates
 
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
@@ -140,6 +141,29 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  // Create a unique key for deduplication based on title and description
+  const toastKey = `${props.title || ''}-${props.description || ''}`
+  const now = Date.now()
+  
+  // Check if this toast was recently shown (within 1 second)
+  const lastShown = recentToasts.get(toastKey)
+  if (lastShown && now - lastShown < 1000) {
+    // Skip duplicate toast
+    return {
+      id: '',
+      dismiss: () => {},
+      update: () => {},
+    }
+  }
+  
+  // Track this toast
+  recentToasts.set(toastKey, now)
+  
+  // Clean up old entries after 2 seconds
+  setTimeout(() => {
+    recentToasts.delete(toastKey)
+  }, 2000)
+  
   const id = genId()
 
   const update = (props: ToasterToast) =>
