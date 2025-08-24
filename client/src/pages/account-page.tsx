@@ -100,7 +100,7 @@ export default function AccountPage() {
           ) : (
             <div className="row g-3">
               {tickets?.map((ticket) => (
-                <div key={ticket.id} className="col-md-3">
+                <div key={ticket.id} className="col-md-4">
                   <TicketCard 
                     ticket={ticket}
                     event={ticket.event}
