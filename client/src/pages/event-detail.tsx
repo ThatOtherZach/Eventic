@@ -268,7 +268,7 @@ export default function EventDetailPage() {
               <div className="mb-3">
                 <div className="d-flex justify-content-between mb-2">
                   <span>Price:</span>
-                  <strong>${parseFloat(event.ticketPrice).toFixed(2)}</strong>
+                  <strong>{parseFloat(event.ticketPrice) === 0 ? 'Free Entry' : `$${parseFloat(event.ticketPrice).toFixed(2)}`}</strong>
                 </div>
                 {event.maxTickets && (
                   <>

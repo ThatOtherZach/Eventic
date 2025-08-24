@@ -97,8 +97,8 @@ export function EventList({ onGenerateTickets }: EventListProps) {
               <div className="col-12 col-md-6">
                 <div className="d-flex justify-content-md-end align-items-center mt-3 mt-md-0">
                   <div className="text-md-end me-3">
-                    <p className="mb-0 fw-semibold">${event.ticketPrice}</p>
-                    <p className="text-muted small mb-0">per ticket</p>
+                    <p className="mb-0 fw-semibold">{parseFloat(event.ticketPrice) === 0 ? 'Free Entry' : `$${event.ticketPrice}`}</p>
+                    {parseFloat(event.ticketPrice) !== 0 && <p className="text-muted small mb-0">per ticket</p>}
                   </div>
                   <div className="btn-group" role="group">
                     <Link 
