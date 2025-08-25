@@ -104,10 +104,6 @@ export default function EventDetailPage() {
       return apiRequest("POST", `/api/events/${id}/tickets`, {});
     },
     onSuccess: () => {
-      toast({
-        title: "Success!",
-        description: "Your ticket has been purchased. Check your account page to view it.",
-      });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
       setIsPurchasing(false);
     },
