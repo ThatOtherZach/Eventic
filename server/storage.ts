@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, notInArray, sql, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -98,6 +98,42 @@ export interface IStorage {
   getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined>;
   updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences>;
   expireOldNotifications(): Promise<void>;
+  
+  // Login Rate Limiting
+  recordLoginAttempt(attempt: InsertLoginAttempt): Promise<LoginAttempt>;
+  getRecentLoginAttempts(email: string, minutes: number): Promise<LoginAttempt[]>;
+  getFailedLoginAttemptsFromIp(ipAddress: string, minutes: number): Promise<LoginAttempt[]>;
+  
+  // IP Blocking
+  blockIp(ip: InsertBlockedIp): Promise<BlockedIp>;
+  isIpBlocked(ipAddress: string): Promise<boolean>;
+  unblockExpiredIps(): Promise<void>;
+  getBlockedIp(ipAddress: string): Promise<BlockedIp | undefined>;
+  
+  // Auth Monitoring
+  recordAuthEvent(event: InsertAuthMonitoring): Promise<AuthMonitoring>;
+  getAuthMetrics(hours: number): Promise<{
+    totalLogins: number;
+    failedLogins: number;
+    rateLimitHits: number;
+    uniqueUsers: number;
+  }>;
+  
+  // Auth Events
+  recordAuthEventNew(event: InsertAuthEvent): Promise<AuthEvent>;
+  getAuthEvents(userId?: string, limit?: number): Promise<AuthEvent[]>;
+  
+  // Sessions
+  createSession(session: InsertSession): Promise<Session>;
+  getSession(id: string): Promise<Session | undefined>;
+  updateSessionActivity(id: string): Promise<Session | undefined>;
+  cleanupExpiredSessions(): Promise<void>;
+  
+  // Auth Queue
+  addToAuthQueue(item: InsertAuthQueue): Promise<AuthQueue>;
+  getQueuePosition(email: string): Promise<number | null>;
+  processAuthQueue(): Promise<AuthQueue[]>;
+  updateQueueStatus(id: string, status: string, processedAt?: Date): Promise<AuthQueue | undefined>;
 }
 
 interface ValidationSession {
@@ -1143,6 +1179,258 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(notifications)
       .where(lt(notifications.expiresAt, new Date()));
+  }
+
+  // Login Rate Limiting
+  async recordLoginAttempt(attempt: InsertLoginAttempt): Promise<LoginAttempt> {
+    const [loginAttempt] = await db
+      .insert(loginAttempts)
+      .values(attempt)
+      .returning();
+    return loginAttempt;
+  }
+
+  async getRecentLoginAttempts(email: string, minutes: number): Promise<LoginAttempt[]> {
+    const cutoffTime = new Date(Date.now() - minutes * 60 * 1000);
+    return await db
+      .select()
+      .from(loginAttempts)
+      .where(and(
+        eq(loginAttempts.email, email),
+        gt(loginAttempts.attemptedAt, cutoffTime)
+      ));
+  }
+
+  async getFailedLoginAttemptsFromIp(ipAddress: string, minutes: number): Promise<LoginAttempt[]> {
+    const cutoffTime = new Date(Date.now() - minutes * 60 * 1000);
+    return await db
+      .select()
+      .from(loginAttempts)
+      .where(and(
+        eq(loginAttempts.ipAddress, ipAddress),
+        eq(loginAttempts.success, false),
+        gt(loginAttempts.attemptedAt, cutoffTime)
+      ));
+  }
+
+  // IP Blocking
+  async blockIp(ip: InsertBlockedIp): Promise<BlockedIp> {
+    const [blocked] = await db
+      .insert(blockedIps)
+      .values(ip)
+      .returning();
+    return blocked;
+  }
+
+  async isIpBlocked(ipAddress: string): Promise<boolean> {
+    const [blocked] = await db
+      .select()
+      .from(blockedIps)
+      .where(and(
+        eq(blockedIps.ipAddress, ipAddress),
+        gt(blockedIps.unblockAt, new Date())
+      ));
+    return !!blocked;
+  }
+
+  async unblockExpiredIps(): Promise<void> {
+    await db
+      .delete(blockedIps)
+      .where(lt(blockedIps.unblockAt, new Date()));
+  }
+
+  async getBlockedIp(ipAddress: string): Promise<BlockedIp | undefined> {
+    const [blocked] = await db
+      .select()
+      .from(blockedIps)
+      .where(and(
+        eq(blockedIps.ipAddress, ipAddress),
+        gt(blockedIps.unblockAt, new Date())
+      ));
+    return blocked || undefined;
+  }
+
+  // Auth Monitoring
+  async recordAuthEvent(event: InsertAuthMonitoring): Promise<AuthMonitoring> {
+    const [authEvent] = await db
+      .insert(authMonitoring)
+      .values(event)
+      .returning();
+    return authEvent;
+  }
+
+  async getAuthMetrics(hours: number): Promise<{
+    totalLogins: number;
+    failedLogins: number;
+    rateLimitHits: number;
+    uniqueUsers: number;
+  }> {
+    const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    
+    const results = await db
+      .select({
+        type: authMonitoring.type,
+        count: count()
+      })
+      .from(authMonitoring)
+      .where(gt(authMonitoring.createdAt, cutoffTime))
+      .groupBy(authMonitoring.type);
+    
+    const uniqueUsersResult = await db
+      .selectDistinct({ userId: authMonitoring.userId })
+      .from(authMonitoring)
+      .where(and(
+        gt(authMonitoring.createdAt, cutoffTime),
+        isNotNull(authMonitoring.userId)
+      ));
+    
+    const metrics = {
+      totalLogins: 0,
+      failedLogins: 0,
+      rateLimitHits: 0,
+      uniqueUsers: uniqueUsersResult.length
+    };
+    
+    for (const row of results) {
+      switch (row.type) {
+        case 'login_success':
+          metrics.totalLogins = row.count;
+          break;
+        case 'login_failure':
+          metrics.failedLogins = row.count;
+          break;
+        case 'rate_limit_hit':
+          metrics.rateLimitHits = row.count;
+          break;
+      }
+    }
+    
+    return metrics;
+  }
+
+  // Auth Queue
+  async addToAuthQueue(item: InsertAuthQueue): Promise<AuthQueue> {
+    // Get the next queue position
+    const [maxPosition] = await db
+      .select({ maxPos: sql`MAX(queue_position)` })
+      .from(authQueue)
+      .where(eq(authQueue.status, 'waiting'));
+    
+    const nextPosition = (maxPosition?.maxPos as number || 0) + 1;
+    
+    const [queueItem] = await db
+      .insert(authQueue)
+      .values({ ...item, queuePosition: nextPosition })
+      .returning();
+    return queueItem;
+  }
+
+  async getQueuePosition(email: string): Promise<number | null> {
+    const [item] = await db
+      .select()
+      .from(authQueue)
+      .where(and(
+        eq(authQueue.email, email),
+        eq(authQueue.status, 'waiting')
+      ))
+      .orderBy(desc(authQueue.createdAt));
+    
+    if (!item) return null;
+    
+    // Count how many are ahead in queue
+    const [ahead] = await db
+      .select({ count: count() })
+      .from(authQueue)
+      .where(and(
+        eq(authQueue.status, 'waiting'),
+        lt(authQueue.queuePosition, item.queuePosition)
+      ));
+    
+    return ahead.count;
+  }
+
+  async processAuthQueue(): Promise<AuthQueue[]> {
+    // Get next 5 items to process
+    const items = await db
+      .select()
+      .from(authQueue)
+      .where(eq(authQueue.status, 'waiting'))
+      .orderBy(authQueue.queuePosition)
+      .limit(5);
+    
+    // Mark them as processing
+    for (const item of items) {
+      await db
+        .update(authQueue)
+        .set({ status: 'processing' })
+        .where(eq(authQueue.id, item.id));
+    }
+    
+    return items;
+  }
+
+  async updateQueueStatus(id: string, status: string, processedAt?: Date): Promise<AuthQueue | undefined> {
+    const [updated] = await db
+      .update(authQueue)
+      .set({ status, processedAt })
+      .where(eq(authQueue.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Auth Events
+  async recordAuthEventNew(event: InsertAuthEvent): Promise<AuthEvent> {
+    const [authEvent] = await db
+      .insert(authEvents)
+      .values(event)
+      .returning();
+    return authEvent;
+  }
+
+  async getAuthEvents(userId?: string, limit: number = 100): Promise<AuthEvent[]> {
+    let query = db.select().from(authEvents);
+    
+    if (userId) {
+      query = query.where(eq(authEvents.userId, userId)) as any;
+    }
+    
+    const events = await query
+      .orderBy(desc(authEvents.createdAt))
+      .limit(limit);
+    
+    return events;
+  }
+
+  // Sessions
+  async createSession(session: InsertSession): Promise<Session> {
+    const [newSession] = await db
+      .insert(sessions)
+      .values(session)
+      .returning();
+    return newSession;
+  }
+
+  async getSession(id: string): Promise<Session | undefined> {
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, id));
+    return session || undefined;
+  }
+
+  async updateSessionActivity(id: string): Promise<Session | undefined> {
+    const [updated] = await db
+      .update(sessions)
+      .set({ lastActiveAt: new Date() })
+      .where(eq(sessions.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async cleanupExpiredSessions(): Promise<void> {
+    await db
+      .delete(sessions)
+      .where(lt(sessions.expiresAt, new Date()));
   }
 }
 

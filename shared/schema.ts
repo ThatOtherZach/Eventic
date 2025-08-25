@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, decimal, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -18,6 +18,65 @@ export const authTokens = pgTable("auth_tokens", {
   expiresAt: timestamp("expires_at").notNull(),
   used: boolean("used").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const loginAttempts = pgTable("login_attempts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  ipAddress: text("ip_address").notNull(),
+  success: boolean("success").default(false),
+  attemptedAt: timestamp("attempted_at").defaultNow(),
+});
+
+export const blockedIps = pgTable("blocked_ips", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ipAddress: text("ip_address").notNull().unique(),
+  reason: text("reason"),
+  blockedAt: timestamp("blocked_at").defaultNow(),
+  unblockAt: timestamp("unblock_at").notNull(),
+});
+
+export const authMonitoring = pgTable("auth_monitoring", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // login_success, login_failure, token_refresh, rate_limit_hit
+  userId: varchar("user_id").references(() => users.id),
+  email: text("email"),
+  ipAddress: text("ip_address"),
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const authQueue = pgTable("auth_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  queuePosition: integer("queue_position").notNull(),
+  status: text("status").default("waiting"), // waiting, processing, completed, failed
+  createdAt: timestamp("created_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+});
+
+// Auth Events table for tracking authentication events
+export const authEvents = pgTable("auth_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: varchar("type", { length: 50 }).notNull(), // login_attempt, login_success, login_failure, logout, token_refresh
+  email: varchar("email", { length: 255 }),
+  userId: varchar("user_id", { length: 100 }),
+  ipAddress: varchar("ip_address", { length: 50 }),
+  userAgent: text("user_agent"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Sessions table for managing user sessions
+export const sessions = pgTable("sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  rememberMe: boolean("remember_me").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  refreshToken: varchar("refresh_token", { length: 255 }),
 });
 
 export const events = pgTable("events", {
@@ -278,6 +337,38 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
   updatedAt: true,
 });
 
+export const insertLoginAttemptSchema = createInsertSchema(loginAttempts).omit({
+  id: true,
+  attemptedAt: true,
+});
+
+export const insertBlockedIpSchema = createInsertSchema(blockedIps).omit({
+  id: true,
+  blockedAt: true,
+});
+
+export const insertAuthMonitoringSchema = createInsertSchema(authMonitoring).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAuthQueueSchema = createInsertSchema(authQueue).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+});
+
+export const insertAuthEventsSchema = createInsertSchema(authEvents).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertSessionsSchema = createInsertSchema(sessions).omit({
+  id: true,
+  createdAt: true,
+  lastActiveAt: true
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -304,3 +395,15 @@ export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+export type InsertLoginAttempt = z.infer<typeof insertLoginAttemptSchema>;
+export type LoginAttempt = typeof loginAttempts.$inferSelect;
+export type InsertBlockedIp = z.infer<typeof insertBlockedIpSchema>;
+export type BlockedIp = typeof blockedIps.$inferSelect;
+export type InsertAuthMonitoring = z.infer<typeof insertAuthMonitoringSchema>;
+export type AuthMonitoring = typeof authMonitoring.$inferSelect;
+export type InsertAuthQueue = z.infer<typeof insertAuthQueueSchema>;
+export type AuthQueue = typeof authQueue.$inferSelect;
+export type InsertAuthEvent = z.infer<typeof insertAuthEventsSchema>;
+export type AuthEvent = typeof authEvents.$inferSelect;
+export type InsertSession = z.infer<typeof insertSessionsSchema>;
+export type Session = typeof sessions.$inferSelect;

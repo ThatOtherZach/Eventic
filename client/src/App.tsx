@@ -15,6 +15,7 @@ import AccountPage from "@/pages/account-page";
 import NotificationsPage from "@/pages/notifications-page";
 import TicketViewPage from "@/pages/ticket-view";
 import SpecialEffectsPage from "@/pages/special-effects";
+import MonitoringPage from "@/pages/monitoring";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
+      <ProtectedRoute path="/monitoring" component={MonitoringPage} />
       <Route path="/tickets/:ticketId" component={TicketViewPage} />
       <Route path="/special-effects" component={SpecialEffectsPage} />
       <Route path="/auth" component={AuthPage} />

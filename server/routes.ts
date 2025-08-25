@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema, insertNotificationSchema, insertNotificationPreferencesSchema } from "@shared/schema";
@@ -17,13 +17,6 @@ const purchaseRateLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
-  keyGenerator: (req: AuthenticatedRequest, res) => {
-    // Use combination of IP and userId for rate limiting
-    const userId = req.user?.id || 'anonymous';
-    // Use the default IP extraction with req.ip
-    return `${req.ip}:${userId}`;
-  },
-  skip: (req, res) => false,
   handler: async (req, res) => {
     await logWarning(
       'Rate limit exceeded for ticket purchase',
@@ -53,13 +46,6 @@ const eventCreationRateLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
-  keyGenerator: (req: AuthenticatedRequest, res) => {
-    // Use combination of IP and userId for rate limiting
-    const userId = req.user?.id || 'anonymous';
-    // Use the default IP extraction with req.ip
-    return `${req.ip}:${userId}`;
-  },
-  skip: (req, res) => false,
   handler: async (req, res) => {
     await logWarning(
       'Rate limit exceeded for event creation',
@@ -160,25 +146,147 @@ const validationRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
-  skipFailedRequests: false,
-  keyGenerator: (req: AuthenticatedRequest, res) => {
-    // Use combination of IP and userId for rate limiting
-    const userId = req.user?.id || 'anonymous';
-    // Use the default IP extraction with req.ip
-    return `${req.ip}:${userId}`;
-  },
-  skip: (req, res) => false
+  skipFailedRequests: false
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
+  // Set trust proxy for accurate IP detection
+  app.set('trust proxy', 1);
+  
   // Apply general rate limiting to all routes
   app.use(generalRateLimiter);
   
   // Apply authentication middleware to extract user from JWT on all routes
   app.use(extractAuthUser);
 
+  // New login endpoint with rate limiting
+  app.post("/api/auth/login", async (req: AuthenticatedRequest, res) => {
+    const { checkLoginRateLimit } = await import('./authLimiter');
+    
+    // Apply rate limiting check
+    await new Promise((resolve) => {
+      checkLoginRateLimit(req, res, resolve as NextFunction);
+    });
+    
+    // If rate limited, response was already sent
+    if (res.headersSent) return;
+    
+    const { email, rememberMe } = req.body;
+    const ipAddress = req.ip || 'unknown';
+    
+    try {
+      // Check if Supabase is available (you could add a health check here)
+      const isSupabaseAvailable = true; // For now, assume it's available
+      
+      if (!isSupabaseAvailable) {
+        // Add to queue (queuePosition is calculated in addToAuthQueue)
+        const queueItem = await storage.addToAuthQueue({
+          email,
+          queuePosition: 0, // Will be calculated in storage method
+          status: 'waiting'
+        });
+        
+        const position = await storage.getQueuePosition(email);
+        
+        return res.status(503).json({
+          message: 'Authentication service is currently busy. You have been added to the queue.',
+          queuePosition: position,
+          queueId: queueItem.id
+        });
+      }
+      
+      // Record login attempt
+      await storage.recordLoginAttempt({
+        email,
+        ipAddress,
+        success: false // Will update if successful
+      });
+      
+      // Record auth event
+      await storage.recordAuthEventNew({
+        type: 'login_attempt',
+        email,
+        ipAddress,
+        metadata: { rememberMe } as any
+      });
+      
+      // In production, you would trigger Supabase magic link here
+      // For now, return success to continue with existing flow
+      res.json({
+        message: 'Magic link sent to your email',
+        sessionDuration: rememberMe ? 30 : 15, // days
+        requiresCaptcha: false
+      });
+      
+    } catch (error) {
+      await storage.recordAuthEventNew({
+        type: 'login_failure',
+        email,
+        ipAddress,
+        metadata: { error: (error as Error).message } as any
+      });
+      
+      await logError(error, "POST /api/auth/login", {
+        request: req,
+        metadata: { email }
+      });
+      
+      res.status(500).json({ message: 'Login failed' });
+    }
+  });
+  
+  // Monitoring endpoints
+  app.get("/api/monitoring/auth-metrics", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const hours = parseInt(req.query.hours as string) || 24;
+      const metrics = await storage.getAuthMetrics(hours);
+      res.json(metrics);
+    } catch (error) {
+      await logError(error, "GET /api/monitoring/auth-metrics", { request: req });
+      res.status(500).json({ message: 'Failed to fetch auth metrics' });
+    }
+  });
+  
+  app.get("/api/monitoring/system-metrics", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const stats = await storage.getEventStats();
+      
+      // Get active users count (users who logged in within last 24 hours)
+      const activeUsers = await storage.getAuthMetrics(24);
+      
+      // Get current queue length
+      const queueLength = await storage.getQueuePosition('_count_only_') || 0;
+      
+      res.json({
+        totalEvents: stats.totalEvents,
+        totalTickets: stats.totalTickets,
+        validatedTickets: stats.validatedTickets,
+        activeUsers: activeUsers.uniqueUsers,
+        queueLength
+      });
+    } catch (error) {
+      await logError(error, "GET /api/monitoring/system-metrics", { request: req });
+      res.status(500).json({ message: 'Failed to fetch system metrics' });
+    }
+  });
+  
+  // Get queue position
+  app.get("/api/auth/queue/:email", async (req: AuthenticatedRequest, res) => {
+    try {
+      const position = await storage.getQueuePosition(req.params.email);
+      
+      if (position === null) {
+        return res.status(404).json({ message: 'Not in queue' });
+      }
+      
+      res.json({ position });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get queue position' });
+    }
+  });
+  
   // Sync/create user in local database when they login via Supabase
   app.post("/api/auth/sync-user", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
