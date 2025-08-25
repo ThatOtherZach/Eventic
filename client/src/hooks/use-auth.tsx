@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -12,6 +12,9 @@ type AuthContextType = {
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
+
+// Global variable to prevent multiple initializations during HMR
+let hasGloballyInitialized = false;
 
 // Helper to get the correct redirect URL
 function getRedirectUrl() {
@@ -32,120 +35,127 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    // Check for magic link authentication in URL
-    const handleMagicLink = async () => {
-      // Check if we have auth tokens in the URL (from magic link)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      
-      if (accessToken && refreshToken) {
-        // We have tokens from a magic link, set the session
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
+    if (hasInitialized.current || hasGloballyInitialized) return;
+    hasInitialized.current = true;
+    hasGloballyInitialized = true;
+    
+    let mounted = true;
+
+    const initialize = async () => {
+      try {
+        // Check for magic link authentication in URL first
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
         
-        if (data.session) {
-          setUser(data.session.user);
+        if (accessToken && refreshToken) {
+          // We have tokens from a magic link, set the session
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
           
-          // Sync user to local database only once during login
-          try {
-            const response = await fetch('/api/auth/sync-user', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`,
-              },
-              body: JSON.stringify({
-                email: data.session.user.email,
-                name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
-              }),
-            });
+          if (data.session && mounted) {
+            setUser(data.session.user);
             
-            if (!response.ok) {
-              console.error('Failed to sync user');
+            // Sync user to local database only once during login
+            try {
+              await fetch('/api/auth/sync-user', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                  email: data.session.user.email,
+                  name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
+                }),
+              });
+            } catch (error) {
+              console.error('Failed to sync user:', error);
             }
-          } catch (error) {
-            console.error('Failed to sync user:', error);
+            
+            addNotification({
+              type: "success",
+              title: "Success",
+              description: "You've been successfully logged in!",
+            }, data.session.user.id);
+            
+            // Clean up the URL
+            window.location.hash = '';
+            setLocation('/');
+          } else if (error) {
+            console.error('Failed to set session:', error);
           }
-          
+        } else {
+          // Check for existing session
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user && mounted) {
+            setUser(session.user);
+            
+            // Only sync on very first load, not on every render
+            try {
+              await fetch('/api/auth/sync-user', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                  email: session.user.email,
+                  name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+                }),
+              });
+            } catch (error) {
+              console.error('Failed to sync user:', error);
+            }
+          }
+        }
+        
+        // Handle error messages in URL (like expired links)
+        const errorCode = hashParams.get('error_code');
+        const errorDescription = hashParams.get('error_description');
+        
+        if (errorCode === 'otp_expired') {
           addNotification({
-            type: "success",
-            title: "Success",
-            description: "You've been successfully logged in!",
-          }, data.session.user.id);
+            type: "error",
+            title: "Link Expired",
+            description: "This login link has expired. Please request a new one.",
+          });
           // Clean up the URL
           window.location.hash = '';
-          setLocation('/');
-        } else if (error) {
-          console.error('Failed to set session:', error);
+          setLocation('/auth');
+        } else if (errorCode) {
+          addNotification({
+            type: "error",
+            title: "Authentication Error",
+            description: errorDescription || "There was an error with authentication.",
+          });
+          // Clean up the URL
+          window.location.hash = '';
         }
-      }
-      
-      // Handle error messages in URL (like expired links)
-      const errorCode = hashParams.get('error_code');
-      const errorDescription = hashParams.get('error_description');
-      
-      if (errorCode === 'otp_expired') {
-        addNotification({
-          type: "error",
-          title: "Link Expired",
-          description: "This login link has expired. Please request a new one.",
-        });
-        // Clean up the URL
-        window.location.hash = '';
-        setLocation('/auth');
-      } else if (errorCode) {
-        addNotification({
-          type: "error",
-          title: "Authentication Error",
-          description: errorDescription || "There was an error with authentication.",
-        });
-        // Clean up the URL
-        window.location.hash = '';
+        
+        if (mounted) {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    // Handle magic link on load
-    handleMagicLink();
-
-    // Check active sessions and sets the user
-    let hasRunSync = false;
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        // Sync only once on initial load
-        if (!hasRunSync) {
-          hasRunSync = true;
-          try {
-            await fetch('/api/auth/sync-user', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-              },
-              body: JSON.stringify({
-                email: session.user.email,
-                name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
-              }),
-            });
-          } catch (error) {
-            console.error('Failed to sync user:', error);
-          }
-        }
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
-
-    // Listen for changes on auth state
+    // Listen for auth state changes (but don't sync user on every change)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      
       setUser(session?.user ?? null);
       
+      // Only show notification for successful sign-ins, don't sync again
       if (event === 'SIGNED_IN' && session?.user) {
         addNotification({
           type: "success",
@@ -156,8 +166,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [addNotification, setLocation]);
+    initialize();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // Only run once on mount
 
   const signUp = async (email: string) => {
     try {
