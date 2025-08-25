@@ -74,9 +74,25 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
     }
   };
 
+  const getDurationHours = (duration: string) => {
+    switch (duration) {
+      case "1hour": return 1;
+      case "6hours": return 6;
+      case "12hours": return 12;
+      case "24hours": return 24;
+      default: return 1;
+    }
+  };
+
   const getPrice = () => {
     if (!boostInfo) return "0.00";
-    return useBoostType === "bump" ? boostInfo.bumpPrice : boostInfo.price;
+    
+    const hours = getDurationHours(selectedDuration);
+    const standardRate = parseFloat(boostInfo.standardHourlyRate || "0.02");
+    const bumpRate = parseFloat(boostInfo.bumpHourlyRate || "0.04");
+    
+    const price = useBoostType === "bump" ? bumpRate * hours : standardRate * hours;
+    return price.toFixed(2);
   };
 
   if (!open) return null;
@@ -154,7 +170,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                             <div className="flex-grow-1">
                               <div className="d-flex justify-content-between align-items-center">
                                 <span className="fw-medium">Standard Boost</span>
-                                <span className="text-primary fw-bold">${boostInfo.price}</span>
+                                <span className="text-primary fw-bold">${boostInfo.standardHourlyRate}/hour</span>
                               </div>
                               <small className="text-muted">
                                 {boostInfo.allSlotsTaken 
@@ -187,7 +203,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                                   <TrendingUp size={16} className="me-1" />
                                   Bump to Top
                                 </span>
-                                <span className="text-warning fw-bold">${boostInfo.bumpPrice}</span>
+                                <span className="text-warning fw-bold">${boostInfo.bumpHourlyRate}/hour</span>
                               </div>
                               <small className="text-muted">
                                 Jump to position #1 - 2x price for priority placement
@@ -241,7 +257,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                 <div className="alert alert-info d-flex align-items-start">
                   <AlertTriangle size={20} className="me-2 mt-1 flex-shrink-0" />
                   <div>
-                    <strong>Pricing:</strong> Starts at $0.02 and grows exponentially to $69.69 maximum. Bump option doubles the current maximum price. Payment processing is not yet implemented - this will activate the boost immediately.
+                    <strong>Pricing:</strong> Standard boost costs $0.02 per hour, Bump costs $0.04 per hour (2x rate). Price is calculated based on selected duration. Payment processing is not yet implemented - this will activate the boost immediately.
                   </div>
                 </div>
               </>

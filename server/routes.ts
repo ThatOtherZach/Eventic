@@ -1324,16 +1324,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const canBoost = await storage.canBoostEvent(id);
       const featuredCount = await storage.getFeaturedEventCount();
       const nextPosition = await storage.getNextAvailablePosition();
-      const price = storage.getBoostPrice(featuredCount);
-      const bumpPrice = price * 2;
+      
+      // Duration-based pricing: $0.02 per hour for standard, $0.04 per hour for bump
+      const standardHourlyRate = 0.02;
+      const bumpHourlyRate = 0.04;
 
       res.json({
         canBoost,
         currentFeaturedCount: featuredCount,
         maxSlots: 100,
         nextPosition,
-        price: price.toFixed(2),
-        bumpPrice: bumpPrice.toFixed(2),
+        standardHourlyRate: standardHourlyRate.toFixed(2),
+        bumpHourlyRate: bumpHourlyRate.toFixed(2),
         allSlotsTaken: nextPosition === null
       });
     } catch (error) {
@@ -1373,14 +1375,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const featuredCount = await storage.getFeaturedEventCount();
       let position = await storage.getNextAvailablePosition();
-      let price = storage.getBoostPrice(featuredCount);
+      
+      // Calculate duration-based pricing
+      const standardHourlyRate = 0.02;
+      const bumpHourlyRate = 0.04;
+      
+      const durationHours = {
+        "1hour": 1,
+        "6hours": 6,
+        "12hours": 12,
+        "24hours": 24
+      }[duration as "1hour" | "6hours" | "12hours" | "24hours"];
+
+      let price = standardHourlyRate * durationHours;
 
       // Handle bump-in scenario
       if (isBump) {
         if (position !== null) {
           return res.status(400).json({ message: "Bump not needed, slots available" });
         }
-        price = price * 2;
+        price = bumpHourlyRate * durationHours;
         position = 1; // Bump to position 1
         
         // Shift all existing positions down by 1
