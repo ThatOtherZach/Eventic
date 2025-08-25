@@ -244,6 +244,7 @@ export default function EventEditPage() {
     name: formData.name || "Event Name",
     description: formData.description,
     venue: formData.venue || "Venue",
+    country: null,
     date: formData.date || "2024-01-01",
     time: formData.time || "19:00",
     endDate: formData.endDate || null,
@@ -258,6 +259,7 @@ export default function EventEditPage() {
     maxUses: formData.maxUses || 1,
     goldenTicketEnabled: formData.goldenTicketEnabled || false,
     goldenTicketNumber: formData.goldenTicketNumber || null,
+    allowMinting: formData.allowMinting || false,
     createdAt: new Date(),
   };
 

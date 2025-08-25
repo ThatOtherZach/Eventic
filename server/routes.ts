@@ -1404,6 +1404,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "All featured slots are taken" });
       }
 
+      // Apply discounts for longer durations
+      if (duration === "12hours") {
+        price = price * 0.9; // 10% discount
+      } else if (duration === "24hours") {
+        price = price * 0.8; // 20% discount
+      }
+
       // Calculate end time based on duration
       const now = new Date();
       const durationMs = {

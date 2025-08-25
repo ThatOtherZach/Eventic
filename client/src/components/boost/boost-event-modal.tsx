@@ -15,8 +15,10 @@ interface BoostInfo {
   currentFeaturedCount: number;
   maxSlots: number;
   nextPosition: number | null;
-  price: string;
-  bumpPrice: string;
+  price?: string;
+  bumpPrice?: string;
+  standardHourlyRate: string;
+  bumpHourlyRate: string;
   allSlotsTaken: boolean;
 }
 
@@ -91,7 +93,15 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
     const standardRate = parseFloat(boostInfo.standardHourlyRate || "0.02");
     const bumpRate = parseFloat(boostInfo.bumpHourlyRate || "0.04");
     
-    const price = useBoostType === "bump" ? bumpRate * hours : standardRate * hours;
+    let price = useBoostType === "bump" ? bumpRate * hours : standardRate * hours;
+    
+    // Apply discounts for longer durations
+    if (selectedDuration === "12hours") {
+      price = price * 0.9; // 10% discount
+    } else if (selectedDuration === "24hours") {
+      price = price * 0.8; // 20% discount
+    }
+    
     return price.toFixed(2);
   };
 
@@ -257,7 +267,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                 <div className="alert alert-info d-flex align-items-start">
                   <AlertTriangle size={20} className="me-2 mt-1 flex-shrink-0" />
                   <div>
-                    <strong>Pricing:</strong> Standard boost costs $0.02 per hour, Bump costs $0.04 per hour (2x rate). Price is calculated based on selected duration. Payment processing is not yet implemented - this will activate the boost immediately.
+                    <strong>Pricing:</strong> Standard boost costs $0.02 per hour, Bump costs $0.04 per hour (2x rate). 12-hour bookings get 10% discount, 24-hour bookings get 20% discount. Payment processing is not yet implemented - this will activate the boost immediately.
                   </div>
                 </div>
               </>
