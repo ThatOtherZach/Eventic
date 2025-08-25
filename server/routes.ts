@@ -103,15 +103,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Rate limiter for ticket purchases
   const purchaseAttempts = new Map<string, number[]>();
-  const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
+  const PURCHASE_RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
   const MAX_PURCHASES_PER_WINDOW = 3; // Max 3 purchases per minute per user
 
-  function checkRateLimit(userId: string): boolean {
+  // Rate limiter for event creation
+  const eventCreationAttempts = new Map<string, number[]>();
+  const EVENT_RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes in milliseconds
+  const MAX_EVENTS_PER_WINDOW = 2; // Max 2 events per 5 minutes per user
+
+  function checkPurchaseRateLimit(userId: string): boolean {
     const now = Date.now();
     const userAttempts = purchaseAttempts.get(userId) || [];
     
     // Remove attempts older than the window
-    const recentAttempts = userAttempts.filter(time => now - time < RATE_LIMIT_WINDOW);
+    const recentAttempts = userAttempts.filter(time => now - time < PURCHASE_RATE_LIMIT_WINDOW);
     
     // Check if user has exceeded the limit
     if (recentAttempts.length >= MAX_PURCHASES_PER_WINDOW) {
@@ -125,15 +130,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return true; // Under rate limit
   }
 
+  function checkEventCreationRateLimit(userId: string): boolean {
+    const now = Date.now();
+    const userAttempts = eventCreationAttempts.get(userId) || [];
+    
+    // Remove attempts older than the window
+    const recentAttempts = userAttempts.filter(time => now - time < EVENT_RATE_LIMIT_WINDOW);
+    
+    // Check if user has exceeded the limit
+    if (recentAttempts.length >= MAX_EVENTS_PER_WINDOW) {
+      return false; // Rate limit exceeded
+    }
+    
+    // Add current attempt and update the map
+    recentAttempts.push(now);
+    eventCreationAttempts.set(userId, recentAttempts);
+    
+    return true; // Under rate limit
+  }
+
   // Cleanup old rate limit entries every 5 minutes to prevent memory leaks
   setInterval(() => {
     const now = Date.now();
+    
+    // Clean up purchase attempts
     for (const [userId, attempts] of Array.from(purchaseAttempts.entries())) {
-      const recentAttempts = attempts.filter((time: number) => now - time < RATE_LIMIT_WINDOW);
+      const recentAttempts = attempts.filter((time: number) => now - time < PURCHASE_RATE_LIMIT_WINDOW);
       if (recentAttempts.length === 0) {
         purchaseAttempts.delete(userId);
       } else {
         purchaseAttempts.set(userId, recentAttempts);
+      }
+    }
+    
+    // Clean up event creation attempts
+    for (const [userId, attempts] of Array.from(eventCreationAttempts.entries())) {
+      const recentAttempts = attempts.filter((time: number) => now - time < EVENT_RATE_LIMIT_WINDOW);
+      if (recentAttempts.length === 0) {
+        eventCreationAttempts.delete(userId);
+      } else {
+        eventCreationAttempts.set(userId, recentAttempts);
       }
     }
   }, 5 * 60 * 1000);
@@ -435,6 +471,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events", async (req, res) => {
     const userId = extractUserId(req);
+    
+    // Check rate limit for event creation
+    if (userId && !checkEventCreationRateLimit(userId)) {
+      await logWarning(
+        "Rate limit exceeded for event creation",
+        "POST /api/events",
+        {
+          userId,
+          metadata: { 
+            rateLimitWindow: EVENT_RATE_LIMIT_WINDOW,
+            maxEvents: MAX_EVENTS_PER_WINDOW
+          }
+        }
+      );
+      return res.status(429).json({ 
+        message: "Too many event creation attempts. Please wait before creating another event.",
+        retryAfter: Math.ceil(EVENT_RATE_LIMIT_WINDOW / 1000) // seconds
+      });
+    }
+    
     try {
       
       // Handle image URL normalization if provided
@@ -602,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = extractUserId(req);
     
     // Check rate limit for authenticated users
-    if (userId && !checkRateLimit(userId)) {
+    if (userId && !checkPurchaseRateLimit(userId)) {
       await logWarning(
         "Rate limit exceeded for ticket purchase",
         "POST /api/events/:eventId/tickets",
@@ -610,14 +666,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId,
           eventId: req.params.eventId,
           metadata: { 
-            rateLimitWindow: RATE_LIMIT_WINDOW,
+            rateLimitWindow: PURCHASE_RATE_LIMIT_WINDOW,
             maxPurchases: MAX_PURCHASES_PER_WINDOW
           }
         }
       );
       return res.status(429).json({ 
         message: "Too many purchase attempts. Please wait a moment before trying again.",
-        retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000) // seconds
+        retryAfter: Math.ceil(PURCHASE_RATE_LIMIT_WINDOW / 1000) // seconds
       });
     }
     
