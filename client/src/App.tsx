@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { Navigation } from "@/components/layout/navigation";
+import { SkipNavigation } from "@/components/layout/skip-navigation";
+import { ErrorBoundary } from "@/components/error-boundary";
 import Events from "@/pages/events";
 import EventDetail from "@/pages/event-detail";
 import EventEdit from "@/pages/event-edit";
@@ -39,23 +41,26 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <div className="min-vh-100 bg-light">
-            <Navigation />
-            <main className="container-fluid px-3 px-md-4 py-4">
-              <div className="row justify-content-center">
-                <div className="col-12 col-xl-10">
-                  <Router />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <div className="min-vh-100 bg-light">
+              <SkipNavigation />
+              <Navigation />
+              <main id="main-content" className="container-fluid px-3 px-md-4 py-4" role="main">
+                <div className="row justify-content-center">
+                  <div className="col-12 col-xl-10">
+                    <Router />
+                  </div>
                 </div>
-              </div>
-            </main>
-          </div>
-          <Toaster />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+              </main>
+            </div>
+            <Toaster />
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

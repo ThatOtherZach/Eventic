@@ -9,8 +9,8 @@ export function Navigation() {
   const { user, signOut } = useAuth();
 
   const navItems = [
-    { path: "/events", label: "Events", icon: Calendar },
-    { path: "/scanner", label: "Validate", icon: Check },
+    { path: "/events", label: "Events", icon: Calendar, ariaLabel: "View all events" },
+    { path: "/scanner", label: "Validate", icon: Check, ariaLabel: "Validate tickets" },
   ];
 
   const handleSignOut = async () => {
@@ -18,7 +18,7 @@ export function Navigation() {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm" role="navigation" aria-label="Main navigation">
       <div className="container-fluid px-3 px-md-4">
         <Link href="/events" className="navbar-brand d-flex align-items-center">
           <Ticket className="text-primary me-2" size={28} />
@@ -51,9 +51,11 @@ export function Navigation() {
                       isActive ? "active" : ""
                     }`}
                     data-testid={`link-nav-${item.label.toLowerCase()}`}
+                    aria-label={item.ariaLabel || item.label}
+                    aria-current={isActive ? "page" : undefined}
                   >
-                    <Icon className="me-1" size={18} />
-                    {item.label}
+                    <Icon className="me-1" size={18} aria-hidden="true" />
+                    <span>{item.label}</span>
                   </Link>
                 </li>
               );
@@ -69,9 +71,11 @@ export function Navigation() {
                       location === "/account" ? "active" : ""
                     }`}
                     data-testid="link-nav-account"
+                    aria-label="Account settings"
+                    aria-current={location === "/account" ? "page" : undefined}
                   >
-                    <User className="me-1" size={18} />
-                    Account
+                    <User className="me-1" size={18} aria-hidden="true" />
+                    <span>Account</span>
                   </Link>
                 </li>
                 <li className="nav-item">

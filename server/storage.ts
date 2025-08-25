@@ -156,11 +156,57 @@ export class DatabaseStorage implements IStorage {
   private validationSessions: Map<string, ValidationSession>;
   private validationTokens: Map<string, string>; // token -> ticketId
   private validationCodes: Map<string, string>; // code -> ticketId
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.validationSessions = new Map();
     this.validationTokens = new Map();
     this.validationCodes = new Map();
+    
+    // Start cleanup interval for expired sessions (every 30 seconds)
+    this.startSessionCleanup();
+  }
+  
+  private startSessionCleanup() {
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupExpiredValidationSessions();
+    }, 30000); // Run every 30 seconds
+  }
+  
+  private cleanupExpiredValidationSessions() {
+    const now = new Date();
+    let cleanedCount = 0;
+    
+    for (const [ticketId, session] of this.validationSessions.entries()) {
+      if (session.expiresAt < now) {
+        // Clean up tokens
+        Array.from(session.tokens).forEach(token => {
+          this.validationTokens.delete(token);
+        });
+        
+        // Clean up codes
+        Array.from(session.codes.keys()).forEach(code => {
+          this.validationCodes.delete(code);
+        });
+        
+        // Delete the session
+        this.validationSessions.delete(ticketId);
+        cleanedCount++;
+      }
+    }
+    
+    if (cleanedCount > 0) {
+      console.log(`Cleaned up ${cleanedCount} expired validation sessions`);
+    }
+  }
+  
+  // Call this when shutting down the server
+  public cleanup() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    this.cleanupExpiredValidationSessions(); // Final cleanup
   }
 
   // Users
