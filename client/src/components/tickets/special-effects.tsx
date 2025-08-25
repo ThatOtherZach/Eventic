@@ -121,8 +121,8 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
           // Halloween: 1 in 88 chance  
           return random < (1/88) ? effect.type : null;
         case 'snowflakes':
-          // Christmas: 1 in 35 chance
-          return random < (1/35) ? effect.type : null;
+          // Christmas: 1 in 25 chance
+          return random < (1/25) ? effect.type : null;
         case 'fireworks':
           // New Year's Eve: 1 in 365 chance of effect being applied
           return random < (1/365) ? effect.type : null;
