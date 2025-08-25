@@ -440,7 +440,7 @@ export default function EventDetailPage() {
                   <div className="mt-4">
                     <ValidatedTicketsList 
                       eventId={id!} 
-                      isEventOwner={true} 
+                      isEventOwner={isOwner} 
                     />
                   </div>
                 </div>
