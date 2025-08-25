@@ -392,18 +392,27 @@ export class DatabaseStorage implements IStorage {
     
     // Check for golden ticket on first validation
     let isGoldenTicket = currentTicket.isGoldenTicket || false;
-    if (!currentTicket.isValidated && event.goldenTicketEnabled && event.goldenTicketNumber !== null) {
-      // Generate random number using current timestamp as seed
-      const timestamp = Date.now();
-      // Simple seeded random using timestamp
-      const seed = timestamp % 10000;
-      const random = (seed * 9301 + 49297) % 233280;
-      const randomNumber = Math.floor((random / 233280) * 5001); // 0-5000
+    if (!currentTicket.isValidated && event.goldenTicketEnabled && event.goldenTicketCount !== null) {
+      // Count how many golden tickets have already been awarded for this event
+      const goldenTicketCount = await db
+        .select({ count: sql`count(*)` })
+        .from(tickets)
+        .where(and(eq(tickets.eventId, event.id), eq(tickets.isGoldenTicket, true)))
+        .then(rows => Number(rows[0]?.count || 0));
       
-      // Check if it matches the golden ticket number
-      if (randomNumber === event.goldenTicketNumber) {
-        isGoldenTicket = true;
-        console.log(`🎫 GOLDEN TICKET WINNER! Ticket ${id} won with number ${randomNumber}`);
+      // If we haven't reached the limit, check if this ticket wins
+      if (goldenTicketCount < event.goldenTicketCount) {
+        // Generate random number with 10% base chance
+        const timestamp = Date.now();
+        const seed = timestamp % 10000;
+        const random = (seed * 9301 + 49297) % 233280;
+        const randomNumber = Math.floor((random / 233280) * 100); // 0-99
+        
+        // 10% chance to win a golden ticket
+        if (randomNumber < 10) {
+          isGoldenTicket = true;
+          console.log(`🎫 GOLDEN TICKET WINNER! Ticket ${id} is golden ticket #${goldenTicketCount + 1} of ${event.goldenTicketCount}`);
+        }
       }
     }
     

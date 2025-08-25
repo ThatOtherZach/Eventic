@@ -68,7 +68,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       reentryType: "No Reentry (Single Use)",
       maxUses: 1,
       goldenTicketEnabled: false,
-      goldenTicketNumber: undefined,
+      goldenTicketCount: undefined,
       allowMinting: false,
       isPrivate: false,
     },
@@ -219,7 +219,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     reentryType: watchedValues.reentryType || "No Reentry (Single Use)",
     maxUses: watchedValues.maxUses || 1,
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
-    goldenTicketNumber: watchedValues.goldenTicketNumber || null,
+    goldenTicketCount: watchedValues.goldenTicketCount || null,
     allowMinting: watchedValues.allowMinting || false,
     isPrivate: watchedValues.isPrivate || false,
     createdAt: new Date(),
@@ -586,17 +586,17 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               <div className="mb-3">
                 <FormField
                   control={form.control}
-                  name="goldenTicketNumber"
+                  name="goldenTicketCount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Golden Ticket Number (0-5000)</FormLabel>
+                      <FormLabel>Golden Ticket Count (1-100)</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="number"
-                          min="0"
-                          max="5000"
-                          placeholder="Enter golden ticket number"
+                          min="1"
+                          max="100"
+                          placeholder="Enter number of golden tickets"
                           className="form-control"
                           data-testid="input-golden-number"
                           value={field.value || ''}
@@ -604,17 +604,17 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                             const value = parseInt(e.target.value);
                             if (isNaN(value)) {
                               field.onChange(undefined);
-                            } else if (value < 0) {
-                              field.onChange(0);
-                            } else if (value > 5000) {
-                              field.onChange(5000);
+                            } else if (value < 1) {
+                              field.onChange(1);
+                            } else if (value > 100) {
+                              field.onChange(100);
                             } else {
                               field.onChange(value);
                             }
                           }}
                         />
                       </FormControl>
-                      <div className="form-text">Random number generated on validation will be compared to this</div>
+                      <div className="form-text">Maximum number of golden tickets that can be won for this event</div>
                       <FormMessage />
                     </FormItem>
                   )}
