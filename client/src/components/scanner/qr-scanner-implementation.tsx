@@ -335,58 +335,6 @@ export function QrScannerImplementation() {
 
   return (
     <div className="animate-fade-in">
-      {/* Camera Container - Secondary option */}
-      <div className="card mb-4 overflow-hidden position-relative">
-        <div className="card-header bg-light">
-          <h6 className="mb-0">
-            <Camera className="me-2" size={18} />
-            QR Code Scanner
-            <small className="text-muted ms-2">(May not work on all mobile browsers)</small>
-          </h6>
-        </div>
-        <div className="scanner-container position-relative">
-          {/* Video element for QR scanning */}
-          <video
-            ref={videoRef}
-            className="w-100 h-100"
-            data-testid="video-scanner"
-            playsInline
-            muted
-            style={{ 
-              display: isScanning ? "block" : "none",
-              minHeight: "400px",
-              maxHeight: "500px",
-              objectFit: "cover",
-              backgroundColor: "#000"
-            }}
-          />
-          
-          {!isScanning && (
-            <div className="scanner-placeholder d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "400px" }} data-testid="camera-placeholder">
-              {hasCamera === false ? (
-                <>
-                  <AlertCircle className="text-danger mb-3" size={48} />
-                  <p className="fw-medium text-danger mb-2">No Camera Available</p>
-                  <p className="small text-muted text-center mb-0">
-                    {cameraError || "This device doesn't have a camera or camera access is not available"}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <Camera className="text-muted mb-3" size={48} />
-                  <p className="fw-medium mb-2">Camera Ready</p>
-                  <p className="small text-muted text-center mb-3">
-                    Tap "Start" to begin scanning QR codes
-                  </p>
-                  <div className="alert alert-info small mt-3">
-                    <strong>Having issues?</strong> Use the <strong>Manual Code Entry</strong> above instead - it's more reliable on mobile devices.
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Camera Selection and Manual Entry */}
       {availableCameras.length > 1 && (
@@ -484,74 +432,7 @@ export function QrScannerImplementation() {
         </div>
       </div>
 
-      {/* Scanner Controls */}
-      <div className="row mb-4">
-        <div className="col-4 pe-1">
-          <button
-            onClick={startScanner}
-            disabled={isScanning || hasCamera === false || validateTicketMutation.isPending}
-            className="btn btn-primary w-100"
-            data-testid="button-start-scanner"
-          >
-            <Play className="me-1" size={16} />
-            Start
-          </button>
-        </div>
-        <div className="col-4 px-1">
-          <button
-            onClick={stopScanner}
-            disabled={!isScanning}
-            className="btn btn-outline-secondary w-100"
-            data-testid="button-stop-scanner"
-          >
-            <Square className="me-1" size={16} />
-            Stop
-          </button>
-        </div>
-        <div className="col-4 ps-1">
-          <button
-            onClick={testScan}
-            disabled={validateTicketMutation.isPending}
-            className="btn btn-outline-info w-100"
-            data-testid="button-test-scan"
-          >
-            Test
-          </button>
-        </div>
-      </div>
 
-      {/* Debug Info */}
-      <div className="card mb-4">
-        <div className="card-header bg-light d-flex justify-content-between align-items-center">
-          <h6 className="card-title mb-0">Debug Info</h6>
-          <button onClick={clearDebugInfo} className="btn btn-sm btn-outline-secondary">Clear</button>
-        </div>
-        <div className="card-body">
-          <div className="small">
-            <p className="mb-1"><strong>Has Camera:</strong> {hasCamera === null ? "Checking..." : hasCamera ? "✅ Yes" : "❌ No"}</p>
-            <p className="mb-1"><strong>Is Scanning:</strong> {isScanning ? "✅ Yes" : "❌ No"}</p>
-            <p className="mb-1"><strong>Processing:</strong> {validateTicketMutation.isPending ? "✅ Yes" : "❌ No"}</p>
-            <p className="mb-1"><strong>Browser:</strong> {navigator.userAgent.includes('Mobile') ? '📱 Mobile' : '💻 Desktop'}</p>
-            {availableCameras.length > 0 && (
-              <p className="mb-1"><strong>Cameras Found:</strong> {availableCameras.length}</p>
-            )}
-            {cameraError && <p className="mb-2 text-danger"><strong>Error:</strong> {cameraError}</p>}
-            
-            <div className="mt-2">
-              <strong>Debug Log:</strong>
-              <div className="bg-dark text-light p-2 rounded mt-1" style={{ fontSize: "0.75rem", maxHeight: "150px", overflowY: "auto" }}>
-                {debugInfo.length === 0 ? (
-                  <div className="text-muted">No debug info yet...</div>
-                ) : (
-                  debugInfo.map((info, index) => (
-                    <div key={index} className="mb-1">{info}</div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Validation Result */}
       {validationResult && (
