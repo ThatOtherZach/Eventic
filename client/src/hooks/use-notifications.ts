@@ -1,17 +1,32 @@
-import { useAuth } from "@/hooks/use-auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { InsertNotification } from "@shared/schema";
 
 export function useNotifications() {
-  const { user } = useAuth();
+  const addNotification = async (notification: Omit<InsertNotification, "userId">, userId?: string) => {
+    // If userId is provided, use it directly (for auth context)
+    // Otherwise try to get it from current auth state
+    let targetUserId = userId;
+    
+    if (!targetUserId) {
+      // Try to get user from current session without importing useAuth to avoid circular dependency
+      try {
+        const response = await fetch('/api/auth/current-user');
+        if (response.ok) {
+          const { user } = await response.json();
+          targetUserId = user?.id;
+        }
+      } catch (error) {
+        console.error("Failed to get current user for notification:", error);
+        return;
+      }
+    }
 
-  const addNotification = async (notification: Omit<InsertNotification, "userId">) => {
-    if (!user) return;
+    if (!targetUserId) return;
 
     try {
       await apiRequest("POST", "/api/notifications", {
         ...notification,
-        userId: user.id,
+        userId: targetUserId,
       });
       
       // Invalidate notifications query to show new notification

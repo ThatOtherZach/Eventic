@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { useLocation } from "wouter";
 
 type AuthContextType = {
@@ -28,7 +28,7 @@ function getRedirectUrl() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
@@ -72,10 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('Failed to sync user:', error);
           }
           
-          toast({
+          addNotification({
+            type: "success",
             title: "Success",
             description: "You've been successfully logged in!",
-          });
+          }, data.session.user.id);
           // Clean up the URL
           window.location.hash = '';
           setLocation('/');
@@ -89,19 +90,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const errorDescription = hashParams.get('error_description');
       
       if (errorCode === 'otp_expired') {
-        toast({
+        addNotification({
+          type: "error",
           title: "Link Expired",
           description: "This login link has expired. Please request a new one.",
-          variant: "destructive",
         });
         // Clean up the URL
         window.location.hash = '';
         setLocation('/auth');
       } else if (errorCode) {
-        toast({
+        addNotification({
+          type: "error",
           title: "Authentication Error",
           description: errorDescription || "There was an error with authentication.",
-          variant: "destructive",
         });
         // Clean up the URL
         window.location.hash = '';
@@ -145,17 +146,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       
-      if (event === 'SIGNED_IN') {
-        toast({
+      if (event === 'SIGNED_IN' && session?.user) {
+        addNotification({
+          type: "success",
           title: "Success",
           description: "You've been successfully logged in!",
-        });
+        }, session.user.id);
         setLocation('/');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [toast, setLocation]);
+  }, [addNotification, setLocation]);
 
   const signUp = async (email: string) => {
     try {
@@ -172,15 +174,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) throw error;
       
-      toast({
+      addNotification({
+        type: "success",
         title: "Email sent!",
         description: "Check your inbox for the login link.",
       });
     } catch (error: any) {
-      toast({
+      addNotification({
+        type: "error",
         title: "Error",
         description: error.message || "Failed to send login email",
-        variant: "destructive",
       });
       throw error;
     }
@@ -191,15 +194,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      toast({
+      addNotification({
+        type: "info",
         title: "Signed out",
         description: "You've been successfully signed out.",
       });
     } catch (error: any) {
-      toast({
+      addNotification({
+        type: "error",
         title: "Error",
         description: error.message || "Failed to sign out",
-        variant: "destructive",
       });
       throw error;
     }
