@@ -184,15 +184,15 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     let cleanedCount = 0;
     
-    for (const [ticketId, session] of this.validationSessions.entries()) {
+    for (const [ticketId, session] of Array.from(this.validationSessions.entries())) {
       if (session.expiresAt < now) {
         // Clean up tokens
-        Array.from(session.tokens).forEach(token => {
+        session.tokens.forEach((token: string) => {
           this.validationTokens.delete(token);
         });
         
         // Clean up codes
-        Array.from(session.codes.keys()).forEach(code => {
+        session.codes.forEach((_timestamp: number, code: string) => {
           this.validationCodes.delete(code);
         });
         

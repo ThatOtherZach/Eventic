@@ -686,8 +686,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(updateData.ticketBackgroundUrl);
       }
       
-      // Validate the update data
-      const validatedData = insertEventSchema.partial().parse(updateData);
+      // Validate the update data - create a new partial schema from the base event schema
+      const baseEventSchema = z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        venue: z.string().optional(),
+        country: z.string().optional(),
+        date: z.string().optional(),
+        time: z.string().optional(),
+        endDate: z.string().optional(),
+        endTime: z.string().optional(),
+        ticketPrice: z.string().optional(),
+        maxTickets: z.number().optional(),
+        userId: z.string().optional(),
+        imageUrl: z.string().optional(),
+        ticketBackgroundUrl: z.string().optional(),
+        earlyValidation: z.enum(["At Start Time", "One Hour Before", "Two Hours Before", "Allow at Anytime"]).optional(),
+        reentryType: z.enum(["No Reentry (Single Use)", "Pass (Multiple Use)", "No Limit"]).optional(),
+        maxUses: z.number().optional(),
+        goldenTicketEnabled: z.boolean().optional(),
+        goldenTicketCount: z.number().optional(),
+        specialEffectsEnabled: z.boolean().optional(),
+        allowMinting: z.boolean().optional(),
+        isPrivate: z.boolean().optional(),
+        isEnabled: z.boolean().optional(),
+        ticketPurchasesEnabled: z.boolean().optional(),
+        oneTicketPerUser: z.boolean().optional(),
+        surgePricing: z.boolean().optional(),
+      });
+      const validatedData = baseEventSchema.parse(updateData);
       const updatedEvent = await storage.updateEvent(req.params.id, validatedData);
       
       // Send notifications to all ticket holders
@@ -747,10 +774,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Tickets routes
-  app.get("/api/tickets", validateQuery(paginationSchema), async (req, res) => {
+  app.get("/api/tickets", async (req, res) => {
     try {
-      const page = req.query.page as number || 1;
-      const limit = req.query.limit as number || 20;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
       
       if (req.query.page) {
         const result = await storage.getTicketsPaginated({ page, limit });
@@ -777,10 +804,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:eventId/tickets", validateQuery(paginationSchema), async (req, res) => {
+  app.get("/api/events/:eventId/tickets", async (req, res) => {
     try {
-      const page = req.query.page as number || 1;
-      const limit = req.query.limit as number || 20;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
       
       if (req.query.page) {
         const result = await storage.getTicketsByEventIdPaginated(req.params.eventId, { page, limit });

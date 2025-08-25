@@ -120,6 +120,12 @@ export const tickets = pgTable("tickets", {
   validationCode: text("validation_code"), // The unique 4-digit code used when ticket was validated
   useCount: integer("use_count").default(0), // Number of times this ticket has been used
   isGoldenTicket: boolean("is_golden_ticket").default(false), // Whether this ticket won the golden ticket contest
+  recipientName: text("recipient_name"),
+  recipientEmail: text("recipient_email"),
+  seatNumber: text("seat_number"),
+  ticketType: text("ticket_type"),
+  transferable: boolean("transferable").default(false),
+  status: text("status").default("pending"), // pending, sent, failed
   purchaserEmail: text("purchaser_email"), // Email of the person who purchased this ticket
   purchaserIp: text("purchaser_ip"), // IP address of the person who purchased this ticket
   createdAt: timestamp("created_at").defaultNow(),
