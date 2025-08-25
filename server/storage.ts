@@ -36,6 +36,7 @@ export interface IStorage {
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
   refundTicket(ticketId: string, userId: string): Promise<boolean>;
+  checkUserHasTicketForEvent(eventId: string, userId: string, email: string, ip: string): Promise<boolean>;
   getUniqueTicketHolders(eventId: string): Promise<string[]>;
   
   // Paginated ticket queries
@@ -509,6 +510,63 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error refunding ticket:", error);
+      return false;
+    }
+  }
+
+  async checkUserHasTicketForEvent(eventId: string, userId: string, email: string, ip: string): Promise<boolean> {
+    try {
+      // Check by user ID if available
+      if (userId) {
+        const ticketsByUserId = await db
+          .select()
+          .from(tickets)
+          .where(and(
+            eq(tickets.eventId, eventId),
+            eq(tickets.userId, userId)
+          ))
+          .limit(1);
+        
+        if (ticketsByUserId.length > 0) {
+          return true;
+        }
+      }
+      
+      // Check by email if available
+      if (email) {
+        const ticketsByEmail = await db
+          .select()
+          .from(tickets)
+          .where(and(
+            eq(tickets.eventId, eventId),
+            eq(tickets.purchaserEmail, email)
+          ))
+          .limit(1);
+        
+        if (ticketsByEmail.length > 0) {
+          return true;
+        }
+      }
+      
+      // Check by IP address
+      if (ip && ip !== 'unknown') {
+        const ticketsByIp = await db
+          .select()
+          .from(tickets)
+          .where(and(
+            eq(tickets.eventId, eventId),
+            eq(tickets.purchaserIp, ip)
+          ))
+          .limit(1);
+        
+        if (ticketsByIp.length > 0) {
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error checking user ticket for event:", error);
       return false;
     }
   }

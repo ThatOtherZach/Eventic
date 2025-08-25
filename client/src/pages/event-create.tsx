@@ -68,6 +68,7 @@ export function EventCreatePage() {
       specialEffectsEnabled: false,
       allowMinting: false,
       isPrivate: false,
+      oneTicketPerUser: false,
     },
   });
 
@@ -527,6 +528,33 @@ export function EventCreatePage() {
                         />
                       </div>
                     )}
+
+                    <div className="col-12">
+                      <FormField
+                        control={form.control}
+                        name="oneTicketPerUser"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="form-check">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="oneTicketPerUser"
+                                checked={field.value}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                                data-testid="checkbox-one-ticket-per-user"
+                              />
+                              <label className="form-check-label" htmlFor="oneTicketPerUser">
+                                <span className="badge bg-info text-white me-2">👤</span>
+                                Limit to One Ticket Per User
+                              </label>
+                            </div>
+                            <div className="form-text">Prevent scalping by restricting users to purchasing only one ticket (tracks by email and IP)</div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <div className="col-12">
                       <FormField

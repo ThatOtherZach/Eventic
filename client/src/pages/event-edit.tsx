@@ -45,6 +45,7 @@ export default function EventEditPage() {
     specialEffectsEnabled: false,
     allowMinting: false,
     isPrivate: false,
+    oneTicketPerUser: false,
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -85,6 +86,7 @@ export default function EventEditPage() {
         specialEffectsEnabled: event.specialEffectsEnabled || false,
         allowMinting: event.allowMinting || false,
         isPrivate: event.isPrivate || false,
+        oneTicketPerUser: event.oneTicketPerUser || false,
       });
       
       // Store tickets sold for validation
@@ -553,6 +555,27 @@ export default function EventEditPage() {
                 </small>
               </div>
             )}
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="oneTicketPerUser"
+                  checked={formData.oneTicketPerUser}
+                  disabled
+                  title="Ticket purchase limit cannot be changed after creation"
+                />
+                <label className="form-check-label" htmlFor="oneTicketPerUser">
+                  <span className="badge bg-info text-white me-2">👤</span>
+                  One Ticket Per User Limit
+                </label>
+              </div>
+              <small className="text-muted">
+                Ticket purchase limit cannot be changed after event creation. 
+                {formData.oneTicketPerUser && " Users are limited to purchasing one ticket (tracked by email and IP)."}
+              </small>
+            </div>
 
             <div className="mb-3">
               <div className="form-check">

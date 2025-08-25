@@ -104,6 +104,7 @@ export const events = pgTable("events", {
   isPrivate: boolean("is_private").default(false), // Private events are excluded from searches and boosts
   isEnabled: boolean("is_enabled").default(true), // Whether event is publicly visible
   ticketPurchasesEnabled: boolean("ticket_purchases_enabled").default(true), // Whether new tickets can be purchased
+  oneTicketPerUser: boolean("one_ticket_per_user").default(false), // Restrict users to one ticket per event
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -118,6 +119,8 @@ export const tickets = pgTable("tickets", {
   validationCode: text("validation_code"), // The unique 4-digit code used when ticket was validated
   useCount: integer("use_count").default(0), // Number of times this ticket has been used
   isGoldenTicket: boolean("is_golden_ticket").default(false), // Whether this ticket won the golden ticket contest
+  purchaserEmail: text("purchaser_email"), // Email of the person who purchased this ticket
+  purchaserIp: text("purchaser_ip"), // IP address of the person who purchased this ticket
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -321,6 +324,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
     .nullable(),
   allowMinting: z.boolean().optional().default(false),
   isPrivate: z.boolean().optional().default(false),
+  oneTicketPerUser: z.boolean().optional().default(false),
 }).superRefine((data, ctx) => {
   // Validate that end date/time is after start date/time
   if (data.endDate && data.endTime) {

@@ -792,11 +792,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events/:eventId/tickets", purchaseRateLimiter, validateBody(insertTicketSchema.partial()), async (req: AuthenticatedRequest, res) => {
     const userId = req.user?.id;
+    const userEmail = req.user?.email;
+    const userIp = req.ip || req.connection.remoteAddress || 'unknown';
     
     try {
       const event = await storage.getEvent(req.params.eventId);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Check if event has one ticket per user limit
+      if (event.oneTicketPerUser) {
+        // Check if user has already purchased a ticket for this event
+        const hasTicket = await storage.checkUserHasTicketForEvent(
+          req.params.eventId,
+          userId || '',
+          userEmail || '',
+          userIp
+        );
+        
+        if (hasTicket) {
+          return res.status(400).json({ 
+            message: "You have already purchased a ticket for this event. This event is limited to one ticket per person." 
+          });
+        }
       }
 
       // Generate QR data for the ticket
@@ -813,6 +832,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId, // Now we can use the actual userId since user exists in DB
         ticketNumber: tempTicketNumber, // Will be replaced by transaction
         qrData,
+        purchaserEmail: userEmail, // Track email for anti-scalping
+        purchaserIp: userIp, // Track IP for anti-scalping
       };
 
       // Use transactional ticket creation to prevent race conditions
