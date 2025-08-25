@@ -101,6 +101,43 @@ function extractUserEmail(req: any): string | null {
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
+  // Rate limiter for ticket purchases
+  const purchaseAttempts = new Map<string, number[]>();
+  const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
+  const MAX_PURCHASES_PER_WINDOW = 3; // Max 3 purchases per minute per user
+
+  function checkRateLimit(userId: string): boolean {
+    const now = Date.now();
+    const userAttempts = purchaseAttempts.get(userId) || [];
+    
+    // Remove attempts older than the window
+    const recentAttempts = userAttempts.filter(time => now - time < RATE_LIMIT_WINDOW);
+    
+    // Check if user has exceeded the limit
+    if (recentAttempts.length >= MAX_PURCHASES_PER_WINDOW) {
+      return false; // Rate limit exceeded
+    }
+    
+    // Add current attempt and update the map
+    recentAttempts.push(now);
+    purchaseAttempts.set(userId, recentAttempts);
+    
+    return true; // Under rate limit
+  }
+
+  // Cleanup old rate limit entries every 5 minutes to prevent memory leaks
+  setInterval(() => {
+    const now = Date.now();
+    for (const [userId, attempts] of Array.from(purchaseAttempts.entries())) {
+      const recentAttempts = attempts.filter((time: number) => now - time < RATE_LIMIT_WINDOW);
+      if (recentAttempts.length === 0) {
+        purchaseAttempts.delete(userId);
+      } else {
+        purchaseAttempts.set(userId, recentAttempts);
+      }
+    }
+  }, 5 * 60 * 1000);
+
   // Sync/create user in local database when they login via Supabase
   app.post("/api/auth/sync-user", async (req, res) => {
     try {
@@ -563,6 +600,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events/:eventId/tickets", async (req, res) => {
     const userId = extractUserId(req);
+    
+    // Check rate limit for authenticated users
+    if (userId && !checkRateLimit(userId)) {
+      await logWarning(
+        "Rate limit exceeded for ticket purchase",
+        "POST /api/events/:eventId/tickets",
+        {
+          userId,
+          eventId: req.params.eventId,
+          metadata: { 
+            rateLimitWindow: RATE_LIMIT_WINDOW,
+            maxPurchases: MAX_PURCHASES_PER_WINDOW
+          }
+        }
+      );
+      return res.status(429).json({ 
+        message: "Too many purchase attempts. Please wait a moment before trying again.",
+        retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000) // seconds
+      });
+    }
+    
     try {
       const event = await storage.getEvent(req.params.eventId);
       if (!event) {
