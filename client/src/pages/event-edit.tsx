@@ -41,7 +41,7 @@ export default function EventEditPage() {
     reentryType: "No Reentry (Single Use)",
     maxUses: 1,
     goldenTicketEnabled: false,
-    goldenTicketNumber: undefined as number | undefined,
+    goldenTicketCount: undefined as number | undefined,
     allowMinting: false,
     isPrivate: false,
   });
@@ -80,7 +80,7 @@ export default function EventEditPage() {
         reentryType: event.reentryType || "No Reentry (Single Use)",
         maxUses: event.maxUses || 1,
         goldenTicketEnabled: event.goldenTicketEnabled || false,
-        goldenTicketNumber: event.goldenTicketNumber || undefined,
+        goldenTicketCount: event.goldenTicketCount || undefined,
         allowMinting: event.allowMinting || false,
         isPrivate: event.isPrivate || false,
       });
@@ -260,7 +260,7 @@ export default function EventEditPage() {
     reentryType: formData.reentryType || "No Reentry (Single Use)",
     maxUses: formData.maxUses || 1,
     goldenTicketEnabled: formData.goldenTicketEnabled || false,
-    goldenTicketNumber: formData.goldenTicketNumber || null,
+    goldenTicketCount: formData.goldenTicketCount || null,
     allowMinting: formData.allowMinting || false,
     isPrivate: formData.isPrivate || false,
     createdAt: new Date(),
@@ -531,19 +531,22 @@ export default function EventEditPage() {
 
             {formData.goldenTicketEnabled && (
               <div className="mb-3">
-                <label htmlFor="goldenTicketNumber" className="form-label">
-                  Golden Ticket Number
+                <label htmlFor="goldenTicketCount" className="form-label">
+                  Number of Golden Tickets
                 </label>
                 <input
                   type="number"
                   className="form-control"
-                  id="goldenTicketNumber"
-                  value={formData.goldenTicketNumber || ''}
+                  id="goldenTicketCount"
+                  value={formData.goldenTicketCount || ''}
                   disabled
-                  title="Golden ticket number cannot be changed after creation"
+                  title="Golden ticket count cannot be changed after creation"
                 />
                 <small className="text-muted">
-                  The winning number cannot be changed after event creation
+                  Number of golden tickets cannot be changed after event creation
+                  {formData.maxTickets && (
+                    <span> (limit: {Math.floor(parseInt(formData.maxTickets) / 2)} - half of total tickets)</span>
+                  )}
                 </small>
               </div>
             )}

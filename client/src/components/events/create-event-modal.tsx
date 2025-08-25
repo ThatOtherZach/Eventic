@@ -454,6 +454,15 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                             } else {
                               field.onChange(value);
                             }
+                            
+                            // Update golden ticket count if it exceeds new limit
+                            const currentGoldenCount = form.getValues('goldenTicketCount');
+                            if (value && currentGoldenCount) {
+                              const maxGoldenTickets = Math.floor(value / 2);
+                              if (currentGoldenCount > maxGoldenTickets) {
+                                form.setValue('goldenTicketCount', maxGoldenTickets);
+                              }
+                            }
                           }}
                         />
                       </FormControl>
@@ -602,19 +611,27 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                           value={field.value || ''}
                           onChange={(e) => {
                             const value = parseInt(e.target.value);
+                            const maxTickets = form.getValues('maxTickets');
+                            const maxGoldenTickets = maxTickets ? Math.floor(maxTickets / 2) : 100;
+                            
                             if (isNaN(value)) {
                               field.onChange(undefined);
                             } else if (value < 1) {
                               field.onChange(1);
-                            } else if (value > 100) {
-                              field.onChange(100);
+                            } else if (value > maxGoldenTickets) {
+                              field.onChange(maxGoldenTickets);
                             } else {
                               field.onChange(value);
                             }
                           }}
                         />
                       </FormControl>
-                      <div className="form-text">Maximum number of golden tickets that can be won for this event</div>
+                      <div className="form-text">
+                        Maximum number of golden tickets that can be won for this event
+                        {form.watch('maxTickets') && (
+                          <span className="text-muted"> (limit: {Math.floor((form.watch('maxTickets') || 0) / 2)} - half of total tickets)</span>
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
