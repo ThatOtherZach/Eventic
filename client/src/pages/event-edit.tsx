@@ -42,6 +42,7 @@ export default function EventEditPage() {
     maxUses: 1,
     goldenTicketEnabled: false,
     goldenTicketCount: undefined as number | undefined,
+    specialEffectsEnabled: false,
     allowMinting: false,
     isPrivate: false,
   });
@@ -81,6 +82,7 @@ export default function EventEditPage() {
         maxUses: event.maxUses || 1,
         goldenTicketEnabled: event.goldenTicketEnabled || false,
         goldenTicketCount: event.goldenTicketCount || undefined,
+        specialEffectsEnabled: event.specialEffectsEnabled || false,
         allowMinting: event.allowMinting || false,
         isPrivate: event.isPrivate || false,
       });
@@ -261,6 +263,7 @@ export default function EventEditPage() {
     maxUses: formData.maxUses || 1,
     goldenTicketEnabled: formData.goldenTicketEnabled || false,
     goldenTicketCount: formData.goldenTicketCount || null,
+    specialEffectsEnabled: formData.specialEffectsEnabled || false,
     allowMinting: formData.allowMinting || false,
     isPrivate: formData.isPrivate || false,
     createdAt: new Date(),
@@ -550,6 +553,27 @@ export default function EventEditPage() {
                 </small>
               </div>
             )}
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="specialEffectsEnabled"
+                  checked={formData.specialEffectsEnabled}
+                  disabled
+                  title="Special effects settings cannot be changed after creation"
+                />
+                <label className="form-check-label" htmlFor="specialEffectsEnabled">
+                  <span className="badge bg-primary me-2">✨</span>
+                  Special Effects Enabled
+                </label>
+              </div>
+              <small className="text-muted">
+                Special effects settings cannot be changed after event creation.
+                {formData.specialEffectsEnabled && " Validated tickets may display special visual effects on holidays and themed events."}
+              </small>
+            </div>
 
             <div className="mb-3">
               <div className="form-check">

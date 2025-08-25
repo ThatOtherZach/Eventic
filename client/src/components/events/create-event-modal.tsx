@@ -69,6 +69,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       maxUses: 1,
       goldenTicketEnabled: false,
       goldenTicketCount: undefined,
+      specialEffectsEnabled: false,
       allowMinting: false,
       isPrivate: false,
     },
@@ -220,6 +221,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     maxUses: watchedValues.maxUses || 1,
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
     goldenTicketCount: watchedValues.goldenTicketCount || null,
+    specialEffectsEnabled: watchedValues.specialEffectsEnabled || false,
     allowMinting: watchedValues.allowMinting || false,
     isPrivate: watchedValues.isPrivate || false,
     createdAt: new Date(),
@@ -638,6 +640,33 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 />
               </div>
             )}
+
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="specialEffectsEnabled"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="specialEffectsEnabled"
+                        checked={field.value || false}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        data-testid="checkbox-special-effects"
+                      />
+                      <label className="form-check-label" htmlFor="specialEffectsEnabled">
+                        <span className="badge bg-primary me-2">✨</span>
+                        Enable Special Effects
+                      </label>
+                    </div>
+                    <div className="form-text">Validated tickets may display special visual effects on holidays and themed events</div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="mb-3">
               <FormField

@@ -99,6 +99,7 @@ export const events = pgTable("events", {
   maxUses: integer("max_uses").default(1),
   goldenTicketEnabled: boolean("golden_ticket_enabled").default(false),
   goldenTicketCount: integer("golden_ticket_count"),
+  specialEffectsEnabled: boolean("special_effects_enabled").default(false), // Enable special visual effects on validated tickets
   allowMinting: boolean("allow_minting").default(false), // Allow attendees to mint tickets as NFTs
   isPrivate: boolean("is_private").default(false), // Private events are excluded from searches and boosts
   createdAt: timestamp("created_at").defaultNow(),

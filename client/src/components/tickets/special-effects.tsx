@@ -97,6 +97,11 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
 ];
 
 export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean }): EffectType | null {
+  // Only apply effects if the event has special effects enabled
+  if (!event.specialEffectsEnabled) {
+    return null;
+  }
+  
   // Only apply effects to validated tickets
   if (!ticket?.isValidated) {
     return null;
