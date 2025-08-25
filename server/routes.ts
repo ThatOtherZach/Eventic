@@ -864,6 +864,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/events/:eventId/validated-tickets", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user owns the event
+      const event = await storage.getEvent(req.params.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "Only event owners can view validated tickets" });
+      }
+      
+      const validatedTickets = await storage.getValidatedTicketsForEvent(req.params.eventId);
+      res.json(validatedTickets);
+    } catch (error) {
+      await logError(error, "GET /api/events/:eventId/validated-tickets", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
+      res.status(500).json({ message: "Failed to fetch validated tickets" });
+    }
+  });
+
   // System logs endpoint (for administrators)
   app.get("/api/system-logs", async (req, res) => {
     try {

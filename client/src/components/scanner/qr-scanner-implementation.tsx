@@ -31,6 +31,7 @@ export function QrScannerImplementation() {
   const [cameraError, setCameraError] = useState<string>("");
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [selectedCamera, setSelectedCamera] = useState<string>('environment');
   const [availableCameras, setAvailableCameras] = useState<{ id: string; label: string }[]>([]);
@@ -59,7 +60,7 @@ export function QrScannerImplementation() {
         timestamp: new Date().toLocaleTimeString(),
         valid: result.valid && result.canValidate,
       };
-      setRecentValidations(prev => [validation, ...prev.slice(0, 9)]);
+      setRecentValidations(prev => [validation, ...prev.slice(0, 99)]);
       
       if (result.valid && result.canValidate) {
         // Check if this is a golden ticket winner!
@@ -475,29 +476,67 @@ export function QrScannerImplementation() {
         <div className="card-body p-0" style={{ maxHeight: "300px", overflowY: "auto" }}>
           {recentValidations.length === 0 ? (
             <div className="p-4 text-center text-muted">
-              <p className="small mb-0">No validations yet - scan a QR code to validate tickets</p>
+              <p className="small mb-0">No validations yet :)</p>
             </div>
           ) : (
-            <ul className="list-group list-group-flush">
-              {recentValidations.map((validation, index) => (
-                <li key={index} className="list-group-item py-2">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="d-flex align-items-center">
-                      {validation.valid ? (
-                        <CheckCircle className="text-success me-2" size={16} />
-                      ) : (
-                        <XCircle className="text-danger me-2" size={16} />
-                      )}
-                      <div>
-                        <p className="mb-0 small fw-medium">{validation.eventName}</p>
-                        <p className="mb-0 small text-muted">{validation.ticketNumber}</p>
+            <>
+              <ul className="list-group list-group-flush">
+                {recentValidations.slice(currentPage * 25, (currentPage + 1) * 25).map((validation, index) => (
+                  <li key={currentPage * 25 + index} className="list-group-item py-2">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div className="d-flex align-items-center">
+                        {validation.valid ? (
+                          <CheckCircle className="text-success me-2" size={16} />
+                        ) : (
+                          <XCircle className="text-danger me-2" size={16} />
+                        )}
+                        <div>
+                          <p className="mb-0 small fw-medium">{validation.eventName}</p>
+                          <p className="mb-0 small text-muted">{validation.ticketNumber}</p>
+                        </div>
                       </div>
+                      <small className="text-muted">{validation.timestamp}</small>
                     </div>
-                    <small className="text-muted">{validation.timestamp}</small>
+                  </li>
+                ))}
+              </ul>
+              
+              {/* Pagination Controls */}
+              {recentValidations.length > 25 && (
+                <div className="p-3 border-top bg-light">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <small className="text-muted">
+                      Showing {currentPage * 25 + 1} - {Math.min((currentPage + 1) * 25, recentValidations.length)} of {recentValidations.length}
+                    </small>
+                    <div className="btn-group" role="group">
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        disabled={currentPage === 0}
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                      >
+                        Previous
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        disabled={(currentPage + 1) * 25 >= recentValidations.length}
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
-                </li>
-              ))}
-            </ul>
+                  
+                  {recentValidations.length >= 100 && (
+                    <div className="alert alert-info mt-2 mb-0">
+                      <small>
+                        <strong>Note:</strong> For complete validation history, visit the event page. 
+                        Event owners can see all validated tickets there.
+                      </small>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

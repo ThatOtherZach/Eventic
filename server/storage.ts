@@ -329,6 +329,30 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(tickets.createdAt));
   }
 
+  async getValidatedTicketsForEvent(eventId: string): Promise<any[]> {
+    const validatedTickets = await db
+      .select({
+        ticketId: tickets.id,
+        ticketNumber: tickets.ticketNumber,
+        validatedAt: tickets.validatedAt,
+        useCount: tickets.useCount,
+        isGoldenTicket: tickets.isGoldenTicket,
+        userEmail: users.email,
+        eventReentryType: events.reentryType,
+      })
+      .from(tickets)
+      .innerJoin(users, eq(tickets.userId, users.id))
+      .innerJoin(events, eq(tickets.eventId, events.id))
+      .where(and(eq(tickets.eventId, eventId), eq(tickets.isValidated, true)))
+      .orderBy(desc(tickets.validatedAt));
+    
+    return validatedTickets.map(ticket => ({
+      ...ticket,
+      ticketType: ticket.eventReentryType === "No Reentry (Single Use)" ? "Single Use" :
+                 ticket.eventReentryType === "Pass (Multiple Use)" ? "Pass" : "Unlimited"
+    }));
+  }
+
   async getTicket(id: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
     return ticket || undefined;

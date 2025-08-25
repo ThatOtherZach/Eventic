@@ -8,6 +8,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
 import { BoostEventModal } from "@/components/boost/boost-event-modal";
+import { ValidatedTicketsList } from "@/components/validated-tickets-list";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -433,6 +434,14 @@ export default function EventDetailPage() {
                         No delegated validators added yet
                       </div>
                     )}
+                  </div>
+                  
+                  {/* Validated Tickets Section */}
+                  <div className="mt-4">
+                    <ValidatedTicketsList 
+                      eventId={id!} 
+                      isEventOwner={true} 
+                    />
                   </div>
                 </div>
               )}

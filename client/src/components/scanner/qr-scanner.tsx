@@ -50,7 +50,7 @@ export function QrScanner() {
         timestamp: new Date().toLocaleTimeString(),
         valid: result.valid,
       };
-      setRecentValidations(prev => [validation, ...prev.slice(0, 9)]);
+      setRecentValidations(prev => [validation, ...prev.slice(0, 99)]);
       
       if (result.valid) {
         toast({
