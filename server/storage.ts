@@ -779,8 +779,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   getBoostPrice(count: number): number {
-    // Base price starts at $5, increases by $0.50 per existing featured event
-    return 5 + (count * 0.5);
+    // Exponential pricing from $0.02 to $69.69 over 100 slots
+    // Formula: 0.02 * (1.0876)^count
+    const basePrice = 0.02;
+    const growthRate = 1.0876; // Calculated to reach $69.69 at slot 99
+    const price = basePrice * Math.pow(growthRate, count);
+    
+    // Cap at $69.69 maximum
+    return Math.min(price, 69.69);
   }
 
   async getFeaturedEventCount(): Promise<number> {

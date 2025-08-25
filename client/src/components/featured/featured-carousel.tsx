@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Star, Clock, MapPin } from "lucide-react";
 import type { FeaturedEvent, Event } from "@shared/schema";
@@ -18,30 +18,57 @@ interface FeaturedEventsResponse {
 
 export function FeaturedCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
 
   const { data: featuredEvents = [], isLoading } = useQuery<FeaturedEventsResponse[]>({
     queryKey: ["/api/featured-events"],
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes to update carousel
+    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes to update carousel
   });
 
-  // Auto-rotate slides every 5 minutes
+  // Preload images for current and next slides only (RAM optimization)
+  const preloadImage = useCallback((imageUrl: string) => {
+    if (!imageUrl || preloadedImages.has(imageUrl)) return;
+    
+    const img = new Image();
+    img.onload = () => {
+      setPreloadedImages(prev => new Set(Array.from(prev).concat(imageUrl)));
+    };
+    img.src = imageUrl;
+  }, [preloadedImages]);
+
+  // Preload current and next slide images
+  useEffect(() => {
+    if (featuredEvents.length === 0) return;
+    
+    const currentEvent = featuredEvents[currentSlide];
+    const nextEvent = featuredEvents[(currentSlide + 1) % featuredEvents.length];
+    
+    if (currentEvent?.event.imageUrl) {
+      preloadImage(currentEvent.event.imageUrl);
+    }
+    if (nextEvent?.event.imageUrl && nextEvent !== currentEvent) {
+      preloadImage(nextEvent.event.imageUrl);
+    }
+  }, [currentSlide, featuredEvents, preloadImage]);
+
+  // Auto-rotate slides every 30 seconds
   useEffect(() => {
     if (featuredEvents.length === 0) return;
     
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % featuredEvents.length);
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 30 * 1000); // 30 seconds
 
     return () => clearInterval(interval);
   }, [featuredEvents.length]);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % featuredEvents.length);
-  };
+  }, [featuredEvents.length]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev - 1 + featuredEvents.length) % featuredEvents.length);
-  };
+  }, [featuredEvents.length]);
 
   if (isLoading) {
     return (
@@ -83,15 +110,17 @@ export function FeaturedCarousel() {
           style={{ height: "300px" }}
           data-testid="featured-carousel"
         >
-          {/* Event Image Background */}
+          {/* Event Image Background - Lazy Loading */}
           <div 
             className="card-img-top position-absolute w-100 h-100"
             style={{
-              backgroundImage: currentEvent.event.imageUrl 
+              backgroundImage: (currentEvent.event.imageUrl && preloadedImages.has(currentEvent.event.imageUrl))
                 ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${currentEvent.event.imageUrl})`
                 : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              willChange: 'background-image', // Optimize for transitions
+              transition: 'background-image 0.3s ease-in-out', // Smooth transitions
             }}
           />
           

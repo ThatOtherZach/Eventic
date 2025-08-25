@@ -241,7 +241,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                 <div className="alert alert-info d-flex align-items-start">
                   <AlertTriangle size={20} className="me-2 mt-1 flex-shrink-0" />
                   <div>
-                    <strong>Note:</strong> This feature currently shows the UI and pricing logic, but payment processing is not yet implemented. Your event will appear in the featured section for the selected duration.
+                    <strong>Pricing:</strong> Starts at $0.02 and grows exponentially to $69.69 maximum. Bump option doubles the current maximum price. Payment processing is not yet implemented - this will activate the boost immediately.
                   </div>
                 </div>
               </>
