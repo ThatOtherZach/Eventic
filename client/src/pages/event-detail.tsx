@@ -394,9 +394,46 @@ export default function EventDetailPage() {
                     <div className="d-flex align-items-center">
                       <span className="badge bg-warning text-dark me-2">📈</span>
                       <small className="text-muted">
-                        Surge pricing is active - prices increase as tickets are sold
+                        Surge pricing active - prices increase based on demand and time to event
                       </small>
                     </div>
+                    {event.currentPrice !== parseFloat(event.ticketPrice) && (
+                      <div className="mt-1">
+                        <small className="text-muted">
+                          Price increased due to: 
+                          {(() => {
+                            const basePrice = parseFloat(event.ticketPrice);
+                            const increase = event.currentPrice - basePrice;
+                            const increasePercent = Math.round((increase / basePrice) * 100);
+                            
+                            // Calculate time to event
+                            const eventDateTime = new Date(`${event.date}T${event.time}:00`);
+                            const now = new Date();
+                            const daysUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+                            
+                            const factors = [];
+                            
+                            // Check if demand contributes
+                            if (event.maxTickets && event.ticketsSold > 0) {
+                              const demandPercent = Math.round((event.ticketsSold / event.maxTickets) * 100);
+                              if (demandPercent > 10) factors.push(`${demandPercent}% sold`);
+                            }
+                            
+                            // Check if urgency contributes
+                            if (daysUntilEvent <= 14) {
+                              if (daysUntilEvent <= 1) factors.push("event within 24 hours");
+                              else if (daysUntilEvent <= 3) factors.push("event within 3 days");
+                              else if (daysUntilEvent <= 7) factors.push("event within 1 week");
+                              else factors.push("event within 2 weeks");
+                            }
+                            
+                            return factors.length > 0 
+                              ? ` ${factors.join(", ")} (+${increasePercent}%)`
+                              : ` high demand (+${increasePercent}%)`;
+                          })()}
+                        </small>
+                      </div>
+                    )}
                   </div>
                 )}
                 

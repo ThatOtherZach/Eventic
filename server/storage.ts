@@ -595,10 +595,37 @@ export class DatabaseStorage implements IStorage {
       
       const ticketsSold = ticketCount?.count || 0;
       
-      // Surge pricing formula: base price + (tickets sold * 0.10 * base price)
-      // Every 10 tickets sold increases price by 10% of base price
-      const surgePriceIncrease = Math.floor(ticketsSold / 10) * 0.10 * basePrice;
-      const currentPrice = basePrice + surgePriceIncrease;
+      // Calculate demand factor (0 to 1) based on tickets sold vs available
+      let demandFactor = 0;
+      if (event.maxTickets && event.maxTickets > 0) {
+        demandFactor = ticketsSold / event.maxTickets;
+        // Cap at 0.9 to prevent infinite pricing when sold out
+        demandFactor = Math.min(demandFactor, 0.9);
+      } else {
+        // If no max tickets, use a softer scaling based on absolute sold count
+        demandFactor = Math.min(ticketsSold / 100, 0.5); // Cap at 50% increase from demand alone
+      }
+      
+      // Calculate urgency factor based on time to event
+      const eventDateTime = new Date(`${event.date}T${event.time}:00`);
+      const now = new Date();
+      const daysUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      
+      let urgencyFactor = 0;
+      if (daysUntilEvent <= 1) {
+        urgencyFactor = 0.5; // 50% increase in last 24 hours
+      } else if (daysUntilEvent <= 3) {
+        urgencyFactor = 0.3; // 30% increase in last 3 days
+      } else if (daysUntilEvent <= 7) {
+        urgencyFactor = 0.2; // 20% increase in last week
+      } else if (daysUntilEvent <= 14) {
+        urgencyFactor = 0.1; // 10% increase in last 2 weeks
+      }
+      
+      // Combine factors: base price + (demand factor * base price) + (urgency factor * base price)
+      const demandIncrease = demandFactor * basePrice;
+      const urgencyIncrease = urgencyFactor * basePrice;
+      const currentPrice = basePrice + demandIncrease + urgencyIncrease;
       
       // Round to 2 decimal places
       return Math.round(currentPrice * 100) / 100;
