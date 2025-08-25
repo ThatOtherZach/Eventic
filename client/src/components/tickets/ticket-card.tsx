@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import { Calendar, Clock, MapPin } from "lucide-react";
+import { Link } from "wouter";
 import type { Event, Ticket } from "@shared/schema";
-import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay } from "./special-effects";
+import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect } from "./special-effects";
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -14,6 +15,9 @@ interface TicketCardProps {
 
 export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValidating = false }: TicketCardProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Check if this ticket has any special effects
+  const hasSpecialEffects = ticket.isGoldenTicket || detectSpecialEffect(event, { isValidated: !!ticket.isValidated }) !== null;
 
   useEffect(() => {
     if (showQR && qrCanvasRef.current && ticket.qrData) {
@@ -111,13 +115,13 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
       )}
 
       {/* Special Event Effects Badge */}
-      <SpecialEffectBadge event={event} ticket={ticket} />
+      <SpecialEffectBadge event={event} ticket={{ isValidated: !!ticket.isValidated }} />
       
       {/* Special Effects Overlay (for glows and text) */}
-      <SpecialEffectOverlay event={event} ticket={ticket} />
+      <SpecialEffectOverlay event={event} ticket={{ isValidated: !!ticket.isValidated }} />
       
       {/* Special Effects Animation (for particles) */}
-      <SpecialEffects event={event} ticket={ticket} />
+      <SpecialEffects event={event} ticket={{ isValidated: !!ticket.isValidated }} />
 
       {/* Ticket Content */}
       <div className="position-relative h-100 d-flex">
@@ -178,6 +182,25 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           </div>
         )}
       </div>
+
+      {/* Special Effects Explanation Link */}
+      {hasSpecialEffects && (
+        <div className="text-center mt-2">
+          <Link href="/special-effects">
+            <span 
+              className="text-muted small"
+              style={{ 
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+              data-testid="link-special-effects"
+            >
+              Why does it look like that?
+            </span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

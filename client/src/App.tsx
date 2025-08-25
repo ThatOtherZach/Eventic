@@ -14,6 +14,7 @@ import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
 import NotificationsPage from "@/pages/notifications-page";
 import TicketViewPage from "@/pages/ticket-view";
+import SpecialEffectsPage from "@/pages/special-effects";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
       <ProtectedRoute path="/account" component={AccountPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <Route path="/tickets/:ticketId" component={TicketViewPage} />
+      <Route path="/special-effects" component={SpecialEffectsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
