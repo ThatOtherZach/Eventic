@@ -100,15 +100,12 @@ export function FeaturedCarousel() {
       <h3 className="h4 fw-semibold text-dark mb-3">
         <Star className="me-2 text-warning" size={20} />
         Featured Events
-        <span className="badge bg-warning text-dark ms-2 fs-6">
-          {currentSlide + 1} of {featuredEvents.length}
-        </span>
       </h3>
       
       <div className="position-relative">
         <div 
           className="card border-0 shadow-sm overflow-hidden"
-          style={{ height: "300px" }}
+          style={{ height: "345px" }}
           data-testid="featured-carousel"
         >
           {/* Event Image Background - Lazy Loading */}
@@ -162,15 +159,18 @@ export function FeaturedCarousel() {
               </div>
             </div>
             
-            <p className="card-text text-white-50 mb-3" style={{ fontSize: "0.9rem" }}>
-              {currentEvent.event.description ? 
-                (currentEvent.event.description.length > 120 
-                  ? currentEvent.event.description.substring(0, 120) + "..."
-                  : currentEvent.event.description
-                )
-                : "Join us for this exciting event!"
-              }
-            </p>
+            <div 
+              className="card-text text-white-50 mb-3" 
+              style={{ fontSize: "0.9rem" }}
+              dangerouslySetInnerHTML={{
+                __html: currentEvent.event.description ? 
+                  (currentEvent.event.description.length > 120 
+                    ? currentEvent.event.description.substring(0, 120) + "..."
+                    : currentEvent.event.description
+                  )
+                  : "Join us for this exciting event!"
+              }}
+            />
             
             <div className="d-flex justify-content-between align-items-center">
               <div>
