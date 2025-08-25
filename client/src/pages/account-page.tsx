@@ -5,6 +5,7 @@ import { Calendar, Ticket, User, LogOut, Eye, Sparkles, Edit, Save, X } from "lu
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
 import type { Ticket as TicketType, Event, RegistryRecord } from "@shared/schema";
@@ -16,6 +17,7 @@ export default function AccountPage() {
   const [isEditingCity, setIsEditingCity] = useState(false);
   const [locationsValue, setLocationsValue] = useState((user as any)?.locations || "");
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
   
   const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
     queryKey: ["/api/user/tickets"],
@@ -62,10 +64,10 @@ export default function AccountPage() {
       setIsEditingCity(false);
     },
     onError: (error) => {
-      toast({
+      addNotification({
+        type: "error",
         title: "Error",
         description: "Failed to update locations",
-        variant: "destructive",
       });
     },
   });

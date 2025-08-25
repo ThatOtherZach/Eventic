@@ -66,10 +66,10 @@ export default function EventDetailPage() {
       setIsAddingValidator(false);
     },
     onError: (error: any) => {
-      toast({
+      addNotification({
+        type: "error",
         title: "Error",
         description: error.message || "Failed to add validator",
-        variant: "destructive",
       });
       setIsAddingValidator(false);
     },
@@ -87,10 +87,10 @@ export default function EventDetailPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/validators`] });
     },
     onError: (error: any) => {
-      toast({
+      addNotification({
+        type: "error",
         title: "Error",
         description: error.message || "Failed to remove validator",
-        variant: "destructive",
       });
     },
   });
@@ -108,11 +108,22 @@ export default function EventDetailPage() {
       setIsPurchasing(false);
     },
     onError: (error: any) => {
-      toast({
-        title: "Purchase Failed",
-        description: error.message || "Failed to purchase ticket",
-        variant: "destructive",
-      });
+      // Check if it's a rate limit error (429)
+      const isRateLimit = error.message?.includes("429:");
+      
+      if (isRateLimit) {
+        addNotification({
+          type: "warning",
+          title: "Purchase Limit Reached",
+          description: "You've reached the maximum number of purchase attempts. Please wait a moment before trying again.",
+        });
+      } else {
+        addNotification({
+          type: "error",
+          title: "Purchase Failed",
+          description: error.message || "Failed to purchase ticket",
+        });
+      }
       setIsPurchasing(false);
     },
   });

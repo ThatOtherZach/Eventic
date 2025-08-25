@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, Sparkles, CheckCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import type { Ticket, RegistryRecord } from "@shared/schema";
 
@@ -28,6 +29,7 @@ export function MintNFTButton({ ticket }: MintNFTButtonProps) {
   const [additionalMetadata, setAdditionalMetadata] = useState("");
   const [timeLeft, setTimeLeft] = useState<string>("");
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
 
   const { data: mintStatus, isLoading, refetch } = useQuery<MintStatus>({
     queryKey: [`/api/tickets/${ticket.id}/mint-status`],
@@ -97,10 +99,10 @@ export function MintNFTButton({ ticket }: MintNFTButtonProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/user/registry"] });
     },
     onError: (error: any) => {
-      toast({
+      addNotification({
+        type: "error",
         title: "Minting Failed",
         description: error.message || "Failed to mint NFT",
-        variant: "destructive",
       });
     },
   });

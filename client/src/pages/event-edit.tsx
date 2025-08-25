@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Save, Image, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
@@ -20,6 +21,7 @@ export default function EventEditPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
   const [ticketsSold, setTicketsSold] = useState(0);
 
@@ -101,11 +103,22 @@ export default function EventEditPage() {
       setLocation(`/events/${id}`);
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update event",
-        variant: "destructive",
-      });
+      // Check if it's a rate limit error (429)
+      const isRateLimit = error.message?.includes("429:");
+      
+      if (isRateLimit) {
+        addNotification({
+          type: "warning",
+          title: "Event Creation Limit Reached",
+          description: "You've reached the maximum number of event creation attempts. Please wait before creating another event.",
+        });
+      } else {
+        addNotification({
+          type: "error",
+          title: "Error",
+          description: error.message || "Failed to update event",
+        });
+      }
     },
   });
 

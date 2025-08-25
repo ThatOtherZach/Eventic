@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { Camera, CheckCircle, XCircle, AlertCircle, RotateCcw, Play, Square } from "lucide-react";
 import type { Event, Ticket } from "@shared/schema";
 
@@ -21,6 +22,7 @@ interface ValidationHistory {
 
 export function QrScanner() {
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const [isScanning, setIsScanning] = useState(false);
   const [hasCamera, setHasCamera] = useState<boolean | null>(null);
   const [cameraError, setCameraError] = useState<string>("");
@@ -71,10 +73,10 @@ export function QrScanner() {
         message: error.message || "Failed to validate ticket",
       };
       setValidationResult(result);
-      toast({
+      addNotification({
+        type: "error",
         title: "❌ Validation Error",
         description: result.message,
-        variant: "destructive",
       });
     },
   });

@@ -4,6 +4,7 @@ import { Camera, CheckCircle, XCircle, Play, Square, AlertCircle, RotateCcw, Key
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { Ticket, Event } from "@shared/schema";
 
 interface ValidationResult {
@@ -26,6 +27,7 @@ interface ValidationHistory {
 
 export function QrScannerImplementation() {
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const [isScanning, setIsScanning] = useState(false);
   const [hasCamera, setHasCamera] = useState<boolean | null>(null);
   const [cameraError, setCameraError] = useState<string>("");
@@ -105,10 +107,10 @@ export function QrScannerImplementation() {
         message: error.message || "Failed to validate ticket",
       };
       setValidationResult(result);
-      toast({
+      addNotification({
+        type: "error",
         title: "❌ Validation Error",
         description: result.message,
-        variant: "destructive",
       });
     },
   });
