@@ -16,7 +16,7 @@ export function useNotifications() {
           targetUserId = user?.id;
         }
       } catch (error) {
-        console.error("Failed to get current user for notification:", error);
+        // Silently fail if user is not authenticated - this is expected behavior
         return;
       }
     }
