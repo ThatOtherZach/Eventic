@@ -90,11 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             }
             
-            addNotification({
-              type: "success",
-              title: "Success",
-              description: "You've been successfully logged in!",
-            }, data.session.user.id);
             
             // Clean up the URL
             window.location.hash = '';
@@ -170,13 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setUser(session?.user ?? null);
       
-      // Only show notification for successful sign-ins, don't sync again
+      // Redirect on successful sign-ins, no notification spam
       if (event === 'SIGNED_IN' && session?.user) {
-        addNotification({
-          type: "success",
-          title: "Success",
-          description: "You've been successfully logged in!",
-        }, session.user.id);
         setLocation('/');
       }
     });
