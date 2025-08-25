@@ -70,11 +70,11 @@ export default function Events() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <StatsCards />
-
       {/* Featured Events Carousel */}
       <FeaturedCarousel />
+
+      {/* Stats Cards */}
+      <StatsCards />
 
       {/* Events List */}
       <EventList onGenerateTickets={handleGenerateTickets} />

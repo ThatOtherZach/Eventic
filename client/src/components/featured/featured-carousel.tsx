@@ -99,7 +99,7 @@ export function FeaturedCarousel() {
     <div className="mb-5">
       <h3 className="h4 fw-semibold text-dark mb-3">
         <Star className="me-2 text-warning" size={20} />
-        Featured Events
+        Featured
       </h3>
       
       <div className="position-relative">
@@ -159,35 +159,22 @@ export function FeaturedCarousel() {
               </div>
             </div>
             
-            <div 
-              className="card-text text-white-50 mb-3" 
-              style={{ fontSize: "0.9rem" }}
-              dangerouslySetInnerHTML={{
-                __html: currentEvent.event.description ? 
-                  (currentEvent.event.description.length > 120 
-                    ? currentEvent.event.description.substring(0, 120) + "..."
-                    : currentEvent.event.description
-                  )
-                  : "Join us for this exciting event!"
-              }}
-            />
+            <div className="mb-3">
+              <br />
+              <span className="h5 text-white fw-bold">
+                ${currentEvent.event.ticketPrice || '0'}
+              </span>
+            </div>
             
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <span className="h5 text-white fw-bold mb-0">
-                  ${currentEvent.event.ticketPrice}
-                </span>
-                <small className="text-white-50 ms-2">per ticket</small>
-              </div>
+            <div className="d-flex justify-content-end">
               <button 
                 className="btn btn-light"
                 onClick={() => {
-                  // TODO: Navigate to event details or ticket purchase
                   window.location.href = `/events/${currentEvent.event.id}`;
                 }}
                 data-testid="button-view-featured-event"
               >
-                View Event
+                View
               </button>
             </div>
           </div>
