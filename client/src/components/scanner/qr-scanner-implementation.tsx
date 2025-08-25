@@ -336,7 +336,7 @@ export function QrScannerImplementation() {
           </div>
           
           <div className="alert alert-info small mb-3">
-            <strong>📱</strong> Ask the ticket holder for their 4-digit code shown on their ticket screen.
+            Ask the ticket holder for the <strong>4-digit code</strong> shown on their ticket screen.
           </div>
           
           <p className="small text-muted mb-3">
