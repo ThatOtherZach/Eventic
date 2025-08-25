@@ -114,6 +114,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already exists
       const existingUser = await storage.getUserById(userId);
       if (existingUser) {
+        // Auto-populate locations if not set by user
+        if (!existingUser.locations) {
+          const countries = await storage.getUserEventCountries(userId);
+          if (countries.length > 0) {
+            const autoLocations = countries.join(', ');
+            await storage.updateUserProfile(userId, { locations: autoLocations });
+            existingUser.locations = autoLocations;
+          }
+        }
         return res.json(existingUser);
       }
 
@@ -141,18 +150,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const { city } = req.body;
+      const { locations } = req.body;
       
-      const updatedUser = await storage.updateUserProfile(userId, { city });
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
+      // Only update if locations value is provided
+      if (locations !== undefined) {
+        const updatedUser = await storage.updateUserProfile(userId, { locations });
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        res.json(updatedUser);
+      } else {
+        res.status(400).json({ message: "No locations value provided" });
       }
-      
-      res.json(updatedUser);
     } catch (error) {
       await logError(error, "PATCH /api/user/profile", {
         request: req,
-        metadata: { city: req.body.city }
+        metadata: { locations: req.body.locations }
       });
       res.status(500).json({ message: "Failed to update profile" });
     }

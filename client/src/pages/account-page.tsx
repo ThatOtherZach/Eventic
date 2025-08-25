@@ -14,7 +14,7 @@ export default function AccountPage() {
   const [, setLocation] = useLocation();
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [isEditingCity, setIsEditingCity] = useState(false);
-  const [cityValue, setCityValue] = useState((user as any)?.city || "");
+  const [locationsValue, setLocationsValue] = useState((user as any)?.locations || "");
   const { toast } = useToast();
   
   const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
@@ -44,10 +44,10 @@ export default function AccountPage() {
     enabled: !!user,
   });
 
-  const updateCityMutation = useMutation({
-    mutationFn: async (city: string) => {
+  const updateLocationsMutation = useMutation({
+    mutationFn: async (locations: string) => {
       const response = await apiRequest("PATCH", "/api/user/profile", {
-        body: JSON.stringify({ city }),
+        body: JSON.stringify({ locations }),
         headers: { "Content-Type": "application/json" },
       });
       return response.json();
@@ -55,7 +55,7 @@ export default function AccountPage() {
     onSuccess: (updatedUser) => {
       toast({
         title: "Success",
-        description: "City updated successfully",
+        description: "Locations updated successfully",
         variant: "default",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
@@ -64,18 +64,18 @@ export default function AccountPage() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update city",
+        description: "Failed to update locations",
         variant: "destructive",
       });
     },
   });
 
-  const handleSaveCity = () => {
-    updateCityMutation.mutate(cityValue);
+  const handleSaveLocations = () => {
+    updateLocationsMutation.mutate(locationsValue);
   };
 
   const handleCancelEdit = () => {
-    setCityValue((user as any)?.city || "");
+    setLocationsValue((user as any)?.locations || "");
     setIsEditingCity(false);
   };
 
@@ -126,20 +126,20 @@ export default function AccountPage() {
                         <div className="d-flex align-items-center gap-2">
                           <input
                             type="text"
-                            value={cityValue}
-                            onChange={(e) => setCityValue(e.target.value)}
-                            placeholder="Enter your city"
+                            value={locationsValue}
+                            onChange={(e) => setLocationsValue(e.target.value)}
+                            placeholder="Enter your preferred locations or search terms"
                             className="form-control form-control-sm"
-                            style={{ width: "200px" }}
-                            data-testid="input-city"
+                            style={{ width: "300px" }}
+                            data-testid="input-locations"
                           />
                           <button
-                            onClick={handleSaveCity}
-                            disabled={updateCityMutation.isPending}
+                            onClick={handleSaveLocations}
+                            disabled={updateLocationsMutation.isPending}
                             className="btn btn-sm btn-primary"
-                            data-testid="button-save-city"
+                            data-testid="button-save-locations"
                           >
-                            {updateCityMutation.isPending ? (
+                            {updateLocationsMutation.isPending ? (
                               <span className="spinner-border spinner-border-sm" />
                             ) : (
                               <Save size={14} />
@@ -148,7 +148,7 @@ export default function AccountPage() {
                           <button
                             onClick={handleCancelEdit}
                             className="btn btn-sm btn-outline-secondary"
-                            data-testid="button-cancel-city"
+                            data-testid="button-cancel-locations"
                           >
                             <X size={14} />
                           </button>
@@ -156,12 +156,12 @@ export default function AccountPage() {
                       ) : (
                         <div className="d-flex align-items-center">
                           <span className="text-muted small me-2">
-                            City: {(user as any).city || "Not set"}
+                            Locations: {(user as any).locations || "Auto-detected from your events"}
                           </span>
                           <button
                             onClick={() => setIsEditingCity(true)}
                             className="btn btn-sm btn-outline-primary"
-                            data-testid="button-edit-city"
+                            data-testid="button-edit-locations"
                           >
                             <Edit size={14} />
                           </button>

@@ -6,7 +6,7 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
-  city: text("city"),
+  locations: text("locations"), // Changed from city to locations for multiple location tracking
   createdAt: timestamp("created_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
 });
@@ -24,7 +24,8 @@ export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
-  venue: text("venue").notNull(),
+  venue: text("venue").notNull(), // Now expects full address
+  country: text("country"), // Extracted country from venue address
   date: text("date").notNull(),
   time: text("time").notNull(),
   endDate: text("end_date"),

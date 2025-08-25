@@ -10,7 +10,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLoginTime(id: string): Promise<User | undefined>;
-  updateUserProfile(id: string, updates: { city?: string }): Promise<User | undefined>;
+  updateUserProfile(id: string, updates: { locations?: string }): Promise<User | undefined>;
+  getUserEventCountries(userId: string): Promise<string[]>;
   
   // Auth Tokens
   createAuthToken(token: InsertAuthToken): Promise<AuthToken>;
@@ -138,13 +139,92 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async updateUserProfile(id: string, updates: { city?: string }): Promise<User | undefined> {
+  async updateUserProfile(id: string, updates: { locations?: string }): Promise<User | undefined> {
     const [user] = await db
       .update(users)
       .set(updates)
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  async getUserEventCountries(userId: string): Promise<string[]> {
+    // Get all events user has tickets for, ordered by event date (most recent first)
+    const userTickets = await db
+      .select({
+        eventId: tickets.eventId,
+        eventDate: events.date,
+        country: events.country,
+        venue: events.venue
+      })
+      .from(tickets)
+      .innerJoin(events, eq(tickets.eventId, events.id))
+      .where(eq(tickets.userId, userId))
+      .orderBy(desc(events.date))
+      .limit(10); // Get last 10 events
+
+    const countries: string[] = [];
+    
+    for (const ticket of userTickets) {
+      let country = ticket.country;
+      
+      // If country not set, try to extract from venue address
+      if (!country && ticket.venue) {
+        country = this.extractCountryFromAddress(ticket.venue);
+        
+        // Update the event with the extracted country
+        if (country) {
+          await db
+            .update(events)
+            .set({ country })
+            .where(eq(events.id, ticket.eventId));
+        }
+      }
+      
+      if (country && !countries.includes(country)) {
+        countries.push(country);
+      }
+      
+      // Return top 3 countries
+      if (countries.length >= 3) break;
+    }
+    
+    return countries;
+  }
+
+  private extractCountryFromAddress(address: string): string | null {
+    // Simple country extraction logic - in production you'd use a proper geocoding service
+    const countryPatterns = [
+      // Common patterns for addresses
+      { pattern: /,\s*(United States|USA|US)$/i, country: 'United States' },
+      { pattern: /,\s*(United Kingdom|UK|England|Scotland|Wales)$/i, country: 'United Kingdom' },
+      { pattern: /,\s*(Canada|CA)$/i, country: 'Canada' },
+      { pattern: /,\s*(Australia|AU)$/i, country: 'Australia' },
+      { pattern: /,\s*(Germany|Deutschland|DE)$/i, country: 'Germany' },
+      { pattern: /,\s*(France|FR)$/i, country: 'France' },
+      { pattern: /,\s*(Italy|IT)$/i, country: 'Italy' },
+      { pattern: /,\s*(Spain|ES)$/i, country: 'Spain' },
+      { pattern: /,\s*(Japan|JP)$/i, country: 'Japan' },
+      { pattern: /,\s*(Brazil|BR)$/i, country: 'Brazil' },
+      { pattern: /,\s*(India|IN)$/i, country: 'India' },
+      { pattern: /,\s*(China|CN)$/i, country: 'China' },
+      { pattern: /,\s*(Netherlands|NL)$/i, country: 'Netherlands' },
+      { pattern: /,\s*(Belgium|BE)$/i, country: 'Belgium' },
+      { pattern: /,\s*(Switzerland|CH)$/i, country: 'Switzerland' },
+      { pattern: /,\s*(Austria|AT)$/i, country: 'Austria' },
+      { pattern: /,\s*(Sweden|SE)$/i, country: 'Sweden' },
+      { pattern: /,\s*(Norway|NO)$/i, country: 'Norway' },
+      { pattern: /,\s*(Denmark|DK)$/i, country: 'Denmark' },
+      { pattern: /,\s*(Finland|FI)$/i, country: 'Finland' },
+    ];
+
+    for (const { pattern, country } of countryPatterns) {
+      if (pattern.test(address)) {
+        return country;
+      }
+    }
+
+    return null;
   }
 
   // Auth Tokens

@@ -62,15 +62,34 @@ export function EventList({ onGenerateTickets }: EventListProps) {
     );
     
     // Filter out featured events
-    const nonFeaturedEvents = events.filter(event => !featuredEventIds.has(event.id));
+    let candidateEvents = events.filter(event => !featuredEventIds.has(event.id));
     
-    if (nonFeaturedEvents.length === 0) {
+    // Smart location filtering based on user's locations
+    if ((user as any)?.locations && candidateEvents.length > 1) {
+      const userLocations = (user as any).locations.toLowerCase();
+      const locationPreferredEvents = candidateEvents.filter(event => {
+        const eventVenue = (event.venue || '').toLowerCase();
+        const eventCountry = ((event as any).country || '').toLowerCase();
+        return userLocations.includes(eventCountry) || 
+               userLocations.includes(eventVenue) ||
+               userLocations.split(',').some((loc: string) => 
+                 eventVenue.includes(loc.trim()) || eventCountry.includes(loc.trim())
+               );
+      });
+      
+      // If we found location-matched events, prefer them
+      if (locationPreferredEvents.length > 0) {
+        candidateEvents = locationPreferredEvents;
+      }
+    }
+    
+    if (candidateEvents.length === 0) {
       // If all events are featured, just pick from all events
       const randomEvent = events[Math.floor(Math.random() * events.length)];
       setLocation(`/events/${randomEvent.id}`);
     } else {
-      // Pick a random non-featured event
-      const randomEvent = nonFeaturedEvents[Math.floor(Math.random() * nonFeaturedEvents.length)];
+      // Pick a random event from candidates
+      const randomEvent = candidateEvents[Math.floor(Math.random() * candidateEvents.length)];
       setLocation(`/events/${randomEvent.id}`);
     }
   };
@@ -155,7 +174,14 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     </div>
                   )}
                   <div>
-                    <h6 className="mb-1 fw-semibold">{event.name}</h6>
+                    <div className="d-flex align-items-center">
+                      <h6 className="mb-1 fw-semibold me-2">{event.name}</h6>
+                      {(event as any).country && (
+                        <span className="badge bg-info text-white" style={{ fontSize: "0.7em" }}>
+                          {(event as any).country}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-muted small mb-0">
                       {event.date} • {event.time}
                     </p>
