@@ -1,6 +1,6 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, gt, lt, notInArray, sql } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, notInArray, sql, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -35,6 +35,7 @@ export interface IStorage {
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
+  getUniqueTicketHolders(eventId: string): Promise<string[]>;
   
   // Validation Sessions
   createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }>;
@@ -327,6 +328,15 @@ export class DatabaseStorage implements IStorage {
       .from(tickets)
       .where(and(eq(tickets.eventId, eventId), eq(tickets.userId, userId)))
       .orderBy(desc(tickets.createdAt));
+  }
+
+  async getUniqueTicketHolders(eventId: string): Promise<string[]> {
+    const results = await db
+      .selectDistinct({ userId: tickets.userId })
+      .from(tickets)
+      .where(and(eq(tickets.eventId, eventId), isNotNull(tickets.userId)));
+    
+    return results.map(result => result.userId).filter(Boolean) as string[];
   }
 
   async getValidatedTicketsForEvent(eventId: string): Promise<any[]> {

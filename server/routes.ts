@@ -592,6 +592,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const validatedData = insertEventSchema.partial().parse(updateData);
       const updatedEvent = await storage.updateEvent(req.params.id, validatedData);
+      
+      // Send notifications to all ticket holders
+      if (updatedEvent) {
+        try {
+          const ticketHolders = await storage.getUniqueTicketHolders(req.params.id);
+          
+          // Create notifications for each ticket holder
+          const notifications = ticketHolders.map(async (ticketHolderId) => {
+            if (ticketHolderId !== userId) { // Don't notify the event owner
+              await storage.createNotification({
+                userId: ticketHolderId,
+                type: "event",
+                title: "Event Updated", 
+                description: `The event "${updatedEvent.name}" has been updated by the organizer. View at /events/${updatedEvent.id}`
+              });
+            }
+          });
+          
+          await Promise.all(notifications);
+        } catch (notificationError) {
+          // Log the error but don't fail the event update
+          console.error('Failed to send notifications:', notificationError);
+        }
+      }
+      
       res.json(updatedEvent);
     } catch (error) {
       if (error instanceof z.ZodError) {

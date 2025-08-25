@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Bell, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Bell, Settings, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -68,6 +69,17 @@ export default function NotificationsPage() {
 
   const handlePreferenceChange = (key: keyof NotificationPreferences, value: boolean) => {
     updatePreferencesMutation.mutate({ [key]: value });
+  };
+
+  // Helper function to extract event info from notification description
+  const getEventInfo = (notification: Notification) => {
+    if (notification.type === "event" && notification.description.includes("/events/")) {
+      const match = notification.description.match(/\/events\/([a-zA-Z0-9-]+)/);
+      if (match) {
+        return { eventId: match[1] };
+      }
+    }
+    return null;
   };
 
   return (
@@ -174,7 +186,26 @@ export default function NotificationsPage() {
                             <span className="badge bg-primary ms-1">New</span>
                           )}
                         </div>
-                        <p className="mb-1 text-muted">{notification.description}</p>
+                        <p className="mb-1 text-muted">
+                          {notification.description.replace(/View at \/events\/[a-zA-Z0-9-]+/, '')}
+                        </p>
+                        {(() => {
+                          const eventInfo = getEventInfo(notification);
+                          if (eventInfo) {
+                            return (
+                              <Link href={`/events/${eventInfo.eventId}`}>
+                                <span 
+                                  className="btn btn-link btn-sm p-0 text-decoration-none"
+                                  data-testid={`link-view-event-${notification.id}`}
+                                >
+                                  <ExternalLink size={14} className="me-1" />
+                                  View Event
+                                </span>
+                              </Link>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                       <div className="text-end" style={{ minWidth: '120px' }}>
                         <small className="text-muted d-block">
