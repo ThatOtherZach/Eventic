@@ -96,13 +96,40 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   }
 ];
 
-export function detectSpecialEffect(event: Event): EffectType | null {
+export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean }): EffectType | null {
+  // Only apply effects to validated tickets
+  if (!ticket?.isValidated) {
+    return null;
+  }
+  
   // Sort by priority (highest first) and find the first matching effect
   const sortedEffects = [...SPECIAL_EFFECTS].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   
   for (const effect of sortedEffects) {
     if (effect.condition(event)) {
-      return effect.type;
+      // Apply realistic odds based on effect type
+      const random = Math.random();
+      
+      switch (effect.type) {
+        case 'nice':
+          // 1 in 5000 chance for special days (like golden ticket odds)
+          return random < (1/5000) ? effect.type : null;
+        case 'hearts':
+        case 'spooky':
+        case 'snowflakes':
+        case 'fireworks':
+          // 1 in 365 chance for holiday effects
+          return random < (1/365) ? effect.type : null;
+        case 'monthly':
+          // 1 in 30 chance for monthly color effects
+          return random < (1/30) ? effect.type : null;
+        case 'pride':
+        case 'confetti':
+          // These remain based on event name/content, 1 in 100 chance
+          return random < (1/100) ? effect.type : null;
+        default:
+          return effect.type;
+      }
     }
   }
   return null;
@@ -110,11 +137,12 @@ export function detectSpecialEffect(event: Event): EffectType | null {
 
 interface SpecialEffectsProps {
   event: Event;
+  ticket?: { isValidated: boolean };
   containerRef?: React.RefObject<HTMLElement>;
 }
 
-export function SpecialEffects({ event, containerRef }: SpecialEffectsProps) {
-  const effectType = detectSpecialEffect(event);
+export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsProps) {
+  const effectType = detectSpecialEffect(event, ticket);
   const particlesRef = useRef<HTMLDivElement[]>([]);
   
   useEffect(() => {
@@ -269,8 +297,8 @@ export function SpecialEffects({ event, containerRef }: SpecialEffectsProps) {
 }
 
 // Overlay component for glow effects
-export function SpecialEffectOverlay({ event }: { event: Event }) {
-  const effectType = detectSpecialEffect(event);
+export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?: { isValidated: boolean } }) {
+  const effectType = detectSpecialEffect(event, ticket);
   
   if (!effectType) return null;
   
@@ -339,48 +367,8 @@ export function SpecialEffectOverlay({ event }: { event: Event }) {
   return null;
 }
 
-// Badge component to show the special effect type
-export function SpecialEffectBadge({ event }: { event: Event }) {
-  const effectType = detectSpecialEffect(event);
-  
-  if (!effectType) return null;
-  
-  const badges: { [key in EffectType]?: { icon: string; label: string; color: string } } = {
-    snowflakes: { icon: '❄️', label: 'Christmas Special', color: 'rgba(135, 206, 235, 0.9)' },
-    confetti: { icon: '🎉', label: 'Party Time', color: 'rgba(255, 105, 180, 0.9)' },
-    fireworks: { icon: '🎆', label: "New Year's Eve", color: 'rgba(138, 43, 226, 0.9)' },
-    hearts: { icon: '❤️', label: "Valentine's Day", color: 'rgba(255, 20, 147, 0.9)' },
-    spooky: { icon: '👻', label: 'Halloween', color: 'rgba(64, 0, 128, 0.9)' },
-    pride: { icon: '🏳️‍🌈', label: 'Pride', color: 'linear-gradient(90deg, red, orange, yellow, green, blue, purple)' },
-    nice: { icon: '😏', label: 'Nice Day', color: 'rgba(0, 0, 0, 0.8)' },
-    monthly: { 
-      icon: '🎨', 
-      label: MONTHLY_COLORS[new Date(event.date).getMonth()].name, 
-      color: MONTHLY_COLORS[new Date(event.date).getMonth()].color1 + 'DD'
-    }
-  };
-  
-  const badge = badges[effectType];
-  
-  if (!badge) return null;
-  
-  return (
-    <div 
-      className="position-absolute"
-      style={{
-        top: '10px',
-        left: '10px',
-        zIndex: 10,
-        padding: '4px 8px',
-        borderRadius: '4px',
-        background: badge.color,
-        color: effectType === 'nice' ? '#fff' : effectType === 'pride' ? '#fff' : '#fff',
-        fontSize: '12px',
-        fontWeight: 'bold',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-      }}
-    >
-      {badge.icon} {badge.label}
-    </div>
-  );
+// Badge component to show the special effect type (now hidden per user request)
+export function SpecialEffectBadge({ event, ticket }: { event: Event; ticket?: { isValidated: boolean } }) {
+  // Don't show color badges anymore per user request
+  return null;
 }

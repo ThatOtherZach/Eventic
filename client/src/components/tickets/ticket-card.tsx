@@ -83,8 +83,8 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           <div 
             className="position-absolute w-100 h-100 pointer-events-none"
             style={{
-              background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.2) 70%)',
-              boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.3), inset 0 0 60px rgba(255, 215, 0, 0.1)',
+              background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 70%)',
+              boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.225), inset 0 0 60px rgba(255, 215, 0, 0.075)',
               animation: 'goldenGlow 3s ease-in-out infinite',
               zIndex: 2,
             }}
@@ -98,7 +98,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
               zIndex: 10,
               padding: '4px 8px',
               borderRadius: '4px',
-              backgroundColor: 'rgba(255, 215, 0, 0.9)',
+              backgroundColor: 'rgba(255, 215, 0, 0.675)',
               color: '#000',
               fontSize: '12px',
               fontWeight: 'bold',
@@ -111,13 +111,13 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
       )}
 
       {/* Special Event Effects Badge */}
-      <SpecialEffectBadge event={event} />
+      <SpecialEffectBadge event={event} ticket={ticket} />
       
       {/* Special Effects Overlay (for glows and text) */}
-      <SpecialEffectOverlay event={event} />
+      <SpecialEffectOverlay event={event} ticket={ticket} />
       
       {/* Special Effects Animation (for particles) */}
-      <SpecialEffects event={event} />
+      <SpecialEffects event={event} ticket={ticket} />
 
       {/* Ticket Content */}
       <div className="position-relative h-100 d-flex">
