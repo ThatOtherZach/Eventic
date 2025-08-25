@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Ticket, User, LogOut, LogIn, Bell } from "lucide-react";
+import { Calendar, QrCode, Ticket, User, LogOut, LogIn, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import type { Notification } from "@shared/schema";
@@ -10,6 +10,7 @@ export function Navigation() {
 
   const navItems = [
     { path: "/events", label: "Events", icon: Calendar },
+    { path: "/scanner", label: "Scanner", icon: QrCode },
   ];
 
   const handleSignOut = async () => {

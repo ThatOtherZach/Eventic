@@ -117,6 +117,7 @@ export default function NotificationsPage() {
                     { key: 'authNotifications', label: 'Authentication Notifications', description: 'Login and sign-up messages' },
                     { key: 'eventNotifications', label: 'Event Notifications', description: 'Event creation and updates' },
                     { key: 'ticketNotifications', label: 'Ticket Notifications', description: 'Ticket purchases and updates' },
+                    { key: 'cameraNotifications', label: 'Camera Notifications', description: 'Scanner camera status updates' },
                   ].map(({ key, label, description }) => (
                     <div key={key} className="col-md-6 mb-3">
                       <div className="form-check">
