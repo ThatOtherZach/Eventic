@@ -141,6 +141,16 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  // Debug logging for signin-related toasts
+  if (props.title?.toString().toLowerCase().includes("sign") || 
+      props.description?.toString().toLowerCase().includes("sign")) {
+    console.log("🚨 SIGNIN TOAST TRIGGERED:", {
+      title: props.title,
+      description: props.description,
+      stack: new Error().stack
+    });
+  }
+
   // Create a unique key for deduplication based on title and description
   // Normalize the description to handle slight variations
   const normalizedDesc = (props.description || '').toString().toLowerCase().trim().replace(/[^a-z0-9]/g, '')
