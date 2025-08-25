@@ -16,6 +16,15 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 // Global variable to prevent multiple initializations during HMR
 let hasGloballyInitialized = false;
 
+// Check if we've already synced (persists across HMR)
+function hasEverSynced() {
+  return localStorage.getItem('auth-synced') === 'true';
+}
+
+function markAsSynced() {
+  localStorage.setItem('auth-synced', 'true');
+}
+
 // Helper to get the correct redirect URL
 function getRedirectUrl() {
   // Check if we're running on Replit
@@ -61,21 +70,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (data.session && mounted) {
             setUser(data.session.user);
             
-            // Sync user to local database only once during login
-            try {
-              await fetch('/api/auth/sync-user', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                  email: data.session.user.email,
-                  name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
-                }),
-              });
-            } catch (error) {
-              console.error('Failed to sync user:', error);
+            // Sync user to local database only once ever
+            if (!hasEverSynced()) {
+              markAsSynced();
+              try {
+                await fetch('/api/auth/sync-user', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                  },
+                  body: JSON.stringify({
+                    email: data.session.user.email,
+                    name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
+                  }),
+                });
+              } catch (error) {
+                console.error('Failed to sync user:', error);
+              }
             }
             
             addNotification({
@@ -96,21 +108,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (session?.user && mounted) {
             setUser(session.user);
             
-            // Only sync on very first load, not on every render
-            try {
-              await fetch('/api/auth/sync-user', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                  email: session.user.email,
-                  name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
-                }),
-              });
-            } catch (error) {
-              console.error('Failed to sync user:', error);
+            // Only sync once ever, not on every session check
+            if (!hasEverSynced()) {
+              markAsSynced();
+              try {
+                await fetch('/api/auth/sync-user', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                  },
+                  body: JSON.stringify({
+                    email: session.user.email,
+                    name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+                  }),
+                });
+              } catch (error) {
+                console.error('Failed to sync user:', error);
+              }
             }
           }
         }
