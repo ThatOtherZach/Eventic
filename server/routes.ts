@@ -1305,6 +1305,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/featured-grid", async (req, res) => {
+    try {
+      // Clean up expired featured events first
+      await storage.cleanupExpiredFeaturedEvents();
+      
+      // Get paid boost events (featured events)
+      const featuredEvents = await storage.getFeaturedEventsWithDetails();
+      
+      // Get all regular events for random selection
+      const allEvents = await storage.getEvents();
+      
+      // Target: 6 events total, with 3/4 (4-5) being paid boosts if available
+      const targetTotal = 6;
+      const targetPaidBoosts = Math.min(Math.ceil(targetTotal * 0.75), featuredEvents.length);
+      const targetRandomEvents = targetTotal - targetPaidBoosts;
+      
+      let gridEvents = [];
+      
+      // Add paid boost events first (up to 4-5 events)
+      if (featuredEvents.length > 0) {
+        gridEvents.push(...featuredEvents.slice(0, targetPaidBoosts));
+      }
+      
+      // Fill remaining slots with random events (exclude already featured events)
+      if (gridEvents.length < targetTotal) {
+        const featuredEventIds = new Set(gridEvents.map(fe => fe.event.id));
+        const availableEvents = allEvents.filter(event => !featuredEventIds.has(event.id));
+        
+        // Shuffle and take needed amount
+        const shuffled = availableEvents.sort(() => Math.random() - 0.5);
+        const needed = targetTotal - gridEvents.length;
+        
+        const randomEvents = shuffled.slice(0, needed).map(event => ({
+          id: `random-${event.id}`,
+          event,
+          isPaid: false,
+          isBumped: false,
+          duration: '',
+          startTime: new Date(),
+          endTime: new Date(),
+          position: 0
+        }));
+        
+        gridEvents.push(...randomEvents);
+      }
+      
+      // Final shuffle to mix paid and random events
+      gridEvents = gridEvents.sort(() => Math.random() - 0.5);
+      
+      res.json(gridEvents);
+    } catch (error) {
+      await logError(error, "GET /api/featured-grid", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch featured grid" });
+    }
+  });
+
   app.get("/api/events/:id/boost-info", async (req, res) => {
     try {
       const { id } = req.params;

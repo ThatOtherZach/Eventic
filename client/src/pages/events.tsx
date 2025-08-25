@@ -6,6 +6,7 @@ import { EventList } from "@/components/events/event-list";
 import { CreateEventModal } from "@/components/events/create-event-modal";
 import { TicketPreviewModal } from "@/components/tickets/ticket-preview-modal";
 import { FeaturedCarousel } from "@/components/featured/featured-carousel";
+import { FeaturedGrid } from "@/components/featured/featured-grid";
 import { Plus, LogIn } from "lucide-react";
 import type { Event } from "@shared/schema";
 
@@ -72,6 +73,9 @@ export default function Events() {
 
       {/* Featured Events Carousel */}
       <FeaturedCarousel />
+
+      {/* Featured Events Grid */}
+      <FeaturedGrid />
 
       {/* Stats Cards */}
       <StatsCards />
