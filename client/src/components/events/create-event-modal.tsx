@@ -471,7 +471,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Ticket Validation Timing</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || "Allow at Anytime"}>
                       <FormControl>
                         <SelectTrigger className="form-control" data-testid="select-early-validation">
                           <SelectValue placeholder="Select when validation starts" />
@@ -498,7 +498,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Re-entry Policy</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || "No Reentry (Single Use)"}>
+                    <Select onValueChange={field.onChange} value={field.value || "No Reentry (Single Use)"}>
                       <FormControl>
                         <SelectTrigger className="form-control" data-testid="select-reentry-type">
                           <SelectValue placeholder="Select re-entry policy" />
