@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Event } from "@shared/schema";
 
@@ -24,6 +24,7 @@ interface PaginatedEventsResponse {
 export function EventList({ onGenerateTickets }: EventListProps) {
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+  const [, setLocation] = useLocation();
   
   // Get first 50 events for initial page
   const { data: initialEvents, isLoading: isLoadingInitial } = useQuery<Event[]>({
@@ -36,6 +37,11 @@ export function EventList({ onGenerateTickets }: EventListProps) {
     enabled: currentPage > 1, // Only fetch paginated data for pages after the first
   });
 
+  // Get featured events to filter them out for lucky button
+  const { data: featuredEvents } = useQuery<any[]>({
+    queryKey: ["/api/featured-events"],
+  });
+
   // Use initial events for page 1, paginated events for other pages
   const events = currentPage === 1 ? initialEvents?.slice(0, 50) : paginatedData?.events;
   const isLoading = currentPage === 1 ? isLoadingInitial : isLoadingPaginated;
@@ -46,6 +52,28 @@ export function EventList({ onGenerateTickets }: EventListProps) {
   const totalPages = Math.ceil(totalEvents / (currentPage === 1 ? 50 : 25));
   const hasNext = currentPage < totalPages;
   const hasPrev = currentPage > 1;
+
+  const handleFeelinLucky = () => {
+    if (!events || events.length === 0) return;
+    
+    // Get IDs of featured events to exclude them
+    const featuredEventIds = new Set(
+      (featuredEvents || []).map((fe: any) => fe.eventId || fe.event?.id).filter(Boolean)
+    );
+    
+    // Filter out featured events
+    const nonFeaturedEvents = events.filter(event => !featuredEventIds.has(event.id));
+    
+    if (nonFeaturedEvents.length === 0) {
+      // If all events are featured, just pick from all events
+      const randomEvent = events[Math.floor(Math.random() * events.length)];
+      setLocation(`/events/${randomEvent.id}`);
+    } else {
+      // Pick a random non-featured event
+      const randomEvent = nonFeaturedEvents[Math.floor(Math.random() * nonFeaturedEvents.length)];
+      setLocation(`/events/${randomEvent.id}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -93,7 +121,16 @@ export function EventList({ onGenerateTickets }: EventListProps) {
   return (
     <div className="card">
       <div className="card-header bg-white">
-        <h5 className="card-title mb-0 fw-medium">Available Events</h5>
+        <div className="d-flex justify-content-between align-items-center">
+          <h5 className="card-title mb-0 fw-medium">Available Events</h5>
+          <button 
+            className="btn btn-outline-primary btn-sm"
+            onClick={handleFeelinLucky}
+            data-testid="button-feelin-lucky"
+          >
+            I'm feelin' lucky
+          </button>
+        </div>
       </div>
       <div className="card-body p-0">
         {events.map((event, index) => (
