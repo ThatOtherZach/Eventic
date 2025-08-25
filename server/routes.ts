@@ -587,10 +587,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ticketsSold = tickets.length;
       const ticketsAvailable = event.maxTickets ? event.maxTickets - ticketsSold : null;
       
+      // Get current price (handles surge pricing)
+      const currentPrice = await storage.getCurrentPrice(req.params.id);
+      
       res.json({
         ...event,
         ticketsSold,
-        ticketsAvailable
+        ticketsAvailable,
+        currentPrice
       });
     } catch (error) {
       await logError(error, "GET /api/events/:id", {

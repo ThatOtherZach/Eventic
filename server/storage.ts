@@ -37,6 +37,7 @@ export interface IStorage {
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
   refundTicket(ticketId: string, userId: string): Promise<boolean>;
   checkUserHasTicketForEvent(eventId: string, userId: string, email: string, ip: string): Promise<boolean>;
+  getCurrentPrice(eventId: string): Promise<number>;
   getUniqueTicketHolders(eventId: string): Promise<string[]>;
   
   // Paginated ticket queries
@@ -568,6 +569,42 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error checking user ticket for event:", error);
       return false;
+    }
+  }
+
+  async getCurrentPrice(eventId: string): Promise<number> {
+    try {
+      // Get the event to check if surge pricing is enabled
+      const event = await this.getEvent(eventId);
+      if (!event) {
+        throw new Error('Event not found');
+      }
+
+      const basePrice = parseFloat(event.ticketPrice.toString());
+      
+      // If surge pricing is not enabled, return the base price
+      if (!event.surgePricing) {
+        return basePrice;
+      }
+
+      // Get the number of tickets sold
+      const [ticketCount] = await db
+        .select({ count: count() })
+        .from(tickets)
+        .where(eq(tickets.eventId, eventId));
+      
+      const ticketsSold = ticketCount?.count || 0;
+      
+      // Surge pricing formula: base price + (tickets sold * 0.10 * base price)
+      // Every 10 tickets sold increases price by 10% of base price
+      const surgePriceIncrease = Math.floor(ticketsSold / 10) * 0.10 * basePrice;
+      const currentPrice = basePrice + surgePriceIncrease;
+      
+      // Round to 2 decimal places
+      return Math.round(currentPrice * 100) / 100;
+    } catch (error) {
+      console.error("Error calculating current price:", error);
+      throw error;
     }
   }
 

@@ -46,6 +46,7 @@ export default function EventEditPage() {
     allowMinting: false,
     isPrivate: false,
     oneTicketPerUser: false,
+    surgePricing: false,
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -87,6 +88,7 @@ export default function EventEditPage() {
         allowMinting: event.allowMinting || false,
         isPrivate: event.isPrivate || false,
         oneTicketPerUser: event.oneTicketPerUser || false,
+        surgePricing: event.surgePricing || false,
       });
       
       // Store tickets sold for validation
@@ -243,6 +245,14 @@ export default function EventEditPage() {
     useCount: 0,
     isGoldenTicket: false,
     createdAt: new Date(),
+    recipientName: "Sample User",
+    recipientEmail: user?.email || "user@example.com",
+    seatNumber: null,
+    ticketType: null,
+    transferable: false,
+    status: "pending",
+    purchaserEmail: null,
+    purchaserIp: null,
   };
 
   const previewEvent: Event = {
@@ -268,6 +278,10 @@ export default function EventEditPage() {
     specialEffectsEnabled: formData.specialEffectsEnabled || false,
     allowMinting: formData.allowMinting || false,
     isPrivate: formData.isPrivate || false,
+    isEnabled: true,
+    ticketPurchasesEnabled: true,
+    oneTicketPerUser: formData.oneTicketPerUser || false,
+    surgePricing: formData.surgePricing || false,
     createdAt: new Date(),
   };
 
@@ -574,6 +588,28 @@ export default function EventEditPage() {
               <small className="text-muted">
                 Ticket purchase limit cannot be changed after event creation. 
                 {formData.oneTicketPerUser && " Users are limited to purchasing one ticket (tracked by email and IP)."}
+              </small>
+            </div>
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="surgePricing"
+                  checked={formData.surgePricing}
+                  onChange={() => {}}
+                  disabled
+                  title="Surge pricing setting cannot be changed after creation"
+                />
+                <label className="form-check-label" htmlFor="surgePricing">
+                  <span className="badge bg-warning text-dark me-2">📈</span>
+                  Surge Pricing
+                </label>
+              </div>
+              <small className="text-muted">
+                Surge pricing setting cannot be changed after event creation. 
+                {formData.surgePricing && " Ticket prices increase dynamically as more tickets are sold."}
               </small>
             </div>
 

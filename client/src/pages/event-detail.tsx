@@ -15,6 +15,7 @@ import type { Event, Ticket as TicketType } from "@shared/schema";
 interface EventWithStats extends Event {
   ticketsSold: number;
   ticketsAvailable: number | null;
+  currentPrice: number;
 }
 
 export default function EventDetailPage() {
@@ -212,7 +213,7 @@ export default function EventDetailPage() {
   }
 
   const eventDate = event.date ? new Date(event.date) : null;
-  const isSoldOut = event.maxTickets && event.ticketsSold >= event.maxTickets;
+  const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
 
   return (
@@ -376,8 +377,29 @@ export default function EventDetailPage() {
               <div className="mb-3">
                 <div className="d-flex justify-content-between mb-2">
                   <span>Price:</span>
-                  <strong>{parseFloat(event.ticketPrice) === 0 ? 'Free Entry' : `$${parseFloat(event.ticketPrice).toFixed(2)}`}</strong>
+                  {event.ticketsAvailable === 0 ? (
+                    <span className="badge bg-danger text-white">Sold Out</span>
+                  ) : (
+                    <strong>
+                      {event.currentPrice === 0 ? 'Free Entry' : `$${event.currentPrice.toFixed(2)}`}
+                      {event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
+                        <small className="text-muted ms-2">(was ${parseFloat(event.ticketPrice).toFixed(2)})</small>
+                      )}
+                    </strong>
+                  )}
                 </div>
+                
+                {event.surgePricing && (
+                  <div className="mb-2">
+                    <div className="d-flex align-items-center">
+                      <span className="badge bg-warning text-dark me-2">📈</span>
+                      <small className="text-muted">
+                        Surge pricing is active - prices increase as tickets are sold
+                      </small>
+                    </div>
+                  </div>
+                )}
+                
                 {event.maxTickets && (
                   <>
                     <div className="d-flex justify-content-between mb-2">

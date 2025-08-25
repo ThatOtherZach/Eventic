@@ -105,6 +105,7 @@ export const events = pgTable("events", {
   isEnabled: boolean("is_enabled").default(true), // Whether event is publicly visible
   ticketPurchasesEnabled: boolean("ticket_purchases_enabled").default(true), // Whether new tickets can be purchased
   oneTicketPerUser: boolean("one_ticket_per_user").default(false), // Restrict users to one ticket per event
+  surgePricing: boolean("surge_pricing").default(false), // Enable dynamic pricing based on ticket sales
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -325,6 +326,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
   allowMinting: z.boolean().optional().default(false),
   isPrivate: z.boolean().optional().default(false),
   oneTicketPerUser: z.boolean().optional().default(false),
+  surgePricing: z.boolean().optional().default(false),
 }).superRefine((data, ctx) => {
   // Validate that end date/time is after start date/time
   if (data.endDate && data.endTime) {
@@ -365,6 +367,15 @@ export const insertEventSchema = createInsertSchema(events).omit({
       code: z.ZodIssueCode.custom,
       message: "Golden ticket count cannot exceed max tickets",
       path: ["goldenTicketCount"],
+    });
+  }
+  
+  // Validate minimum price for surge pricing
+  if (data.surgePricing && (!data.ticketPrice || parseFloat(data.ticketPrice.toString()) < 1.00)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Base price must be at least $1.00 when surge pricing is enabled",
+      path: ["ticketPrice"],
     });
   }
 });

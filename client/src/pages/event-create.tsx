@@ -15,6 +15,7 @@ import "react-quill/dist/quill.snow.css";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -69,6 +70,7 @@ export function EventCreatePage() {
       allowMinting: false,
       isPrivate: false,
       oneTicketPerUser: false,
+      surgePricing: false,
     },
   });
 
@@ -196,6 +198,14 @@ export function EventCreatePage() {
     useCount: 0,
     isGoldenTicket: false,
     createdAt: new Date(),
+    recipientName: "Sample User",
+    recipientEmail: user?.email || "user@example.com",
+    seatNumber: null,
+    ticketType: null,
+    transferable: false,
+    status: "pending",
+    purchaserEmail: null,
+    purchaserIp: null,
   };
 
   const watchedValues = form.watch();
@@ -222,6 +232,10 @@ export function EventCreatePage() {
     specialEffectsEnabled: watchedValues.specialEffectsEnabled || false,
     allowMinting: watchedValues.allowMinting || false,
     isPrivate: watchedValues.isPrivate || false,
+    isEnabled: true,
+    ticketPurchasesEnabled: true,
+    oneTicketPerUser: watchedValues.oneTicketPerUser || false,
+    surgePricing: watchedValues.surgePricing || false,
     createdAt: new Date(),
   };
 
@@ -391,6 +405,35 @@ export function EventCreatePage() {
                             <FormControl>
                               <Input {...field} type="number" step="0.01" min="0" placeholder="0.00" className="form-control" data-testid="input-price" />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="col-12 mb-3">
+                      <FormField
+                        control={form.control}
+                        name="surgePricing"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="form-check-input mt-1"
+                                data-testid="checkbox-surge-pricing"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel className="form-check-label">
+                                Enable Surge Pricing
+                              </FormLabel>
+                              <FormDescription className="text-muted">
+                                Ticket prices will increase as more tickets are sold. Base price must be at least $1.00.
+                              </FormDescription>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
