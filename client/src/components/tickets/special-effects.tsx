@@ -118,7 +118,8 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
         case 'spooky':
         case 'snowflakes':
         case 'fireworks':
-          // 1 in 365 chance for holiday effects
+          // For holidays: only check odds if it's actually that specific day
+          // If it matches the day, then 1 in 365 chance of effect being applied
           return random < (1/365) ? effect.type : null;
         case 'monthly':
           // 1 in 30 chance for monthly color effects
