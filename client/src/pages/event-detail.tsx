@@ -157,7 +157,7 @@ export default function EventDetailPage() {
     );
   }
 
-  const eventDate = new Date(event.date);
+  const eventDate = event.date ? new Date(event.date) : null;
   const isSoldOut = event.maxTickets && event.ticketsSold >= event.maxTickets;
   const isOwner = user && event.userId === user.id;
 
@@ -188,10 +188,10 @@ export default function EventDetailPage() {
               <Calendar size={18} className="me-2" />
               {event.endDate ? (
                 <>
-                  {format(eventDate, "MMMM d, yyyy")} - {format(new Date(event.endDate), "MMMM d, yyyy")}
+                  {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date} - {event.endDate && event.endDate !== '' ? format(new Date(event.endDate), "MMMM d, yyyy") : 'No end date'}
                 </>
               ) : (
-                format(eventDate, "MMMM d, yyyy")
+                eventDate ? format(eventDate, "MMMM d, yyyy") : event.date
               )}
             </div>
             <div className="d-flex align-items-center text-muted">
