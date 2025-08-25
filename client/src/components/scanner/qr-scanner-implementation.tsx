@@ -339,10 +339,6 @@ export function QrScannerImplementation() {
             Ask the ticket holder for the <strong>4-digit code</strong> shown on their ticket screen.
           </div>
           
-          <p className="small text-muted mb-3">
-            The ticket holder's screen displays a <strong>4-digit code</strong> that changes every 10 seconds. Enter it here:
-          </p>
-          
           <div className="input-group input-group-lg mb-2">
             <input
               type="text"
@@ -380,6 +376,10 @@ export function QrScannerImplementation() {
               )}
             </button>
           </div>
+          
+          <p className="small text-muted mb-3">
+            Enter here and click "Validate".
+          </p>
           
           {manualCode.length > 0 && manualCode.length < 4 && (
             <small className="text-muted">Enter {4 - manualCode.length} more digit{4 - manualCode.length !== 1 ? 's' : ''}</small>
