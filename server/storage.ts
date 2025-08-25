@@ -410,18 +410,33 @@ export class DatabaseStorage implements IStorage {
         .where(and(eq(tickets.eventId, event.id), eq(tickets.isGoldenTicket, true)))
         .then(rows => Number(rows[0]?.count || 0));
       
-      // If we haven't reached the limit, check if this ticket wins
-      if (goldenTicketCount < event.goldenTicketCount) {
-        // Generate random number with 10% base chance
+      // Count how many unvalidated tickets remain for this event
+      const unvalidatedCount = await db
+        .select({ count: sql`count(*)` })
+        .from(tickets)
+        .where(and(eq(tickets.eventId, event.id), eq(tickets.isValidated, false)))
+        .then(rows => Number(rows[0]?.count || 0));
+      
+      // Calculate remaining golden tickets to award
+      const remainingGoldenTickets = event.goldenTicketCount - goldenTicketCount;
+      
+      // If we haven't reached the limit and there are tickets left to validate
+      if (remainingGoldenTickets > 0 && unvalidatedCount > 0) {
+        // Calculate probability: remaining golden tickets / remaining unvalidated tickets
+        // This ensures fair distribution throughout the validation process
+        const probability = remainingGoldenTickets / unvalidatedCount;
+        
+        // Generate random number between 0 and 1
         const timestamp = Date.now();
         const seed = timestamp % 10000;
         const random = (seed * 9301 + 49297) % 233280;
-        const randomNumber = Math.floor((random / 233280) * 100); // 0-99
+        const randomValue = random / 233280; // 0 to 1
         
-        // 10% chance to win a golden ticket
-        if (randomNumber < 10) {
+        // Check if this ticket wins based on calculated probability
+        if (randomValue < probability) {
           isGoldenTicket = true;
           console.log(`🎫 GOLDEN TICKET WINNER! Ticket ${id} is golden ticket #${goldenTicketCount + 1} of ${event.goldenTicketCount}`);
+          console.log(`   Probability was ${(probability * 100).toFixed(2)}% (${remainingGoldenTickets} golden remaining / ${unvalidatedCount} unvalidated tickets)`);
         }
       }
     }
