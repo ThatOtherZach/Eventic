@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
-import { Camera, CheckCircle, XCircle, AlertCircle, RotateCcw, Play, Square } from "lucide-react";
+import { Camera, CheckCircle, XCircle, AlertCircle, RotateCcw, Play, Square, Eye } from "lucide-react";
 import type { Event, Ticket } from "@shared/schema";
 
 interface ValidationResult {
@@ -11,6 +11,10 @@ interface ValidationResult {
   message: string;
   ticket?: Ticket;
   event?: Event;
+  canValidate?: boolean;
+  isAuthentic?: boolean;
+  alreadyValidated?: boolean;
+  outsideValidTime?: boolean;
 }
 
 interface ValidationHistory {
@@ -46,23 +50,37 @@ export function QrScanner() {
     onSuccess: (result: ValidationResult) => {
       setValidationResult(result);
       
+      // Check if ticket is authentic but user can't validate
+      const isAuthenticButUnauthorized = result.isAuthentic && !result.canValidate;
+      const isSuccessfullyValidated = !!(result.valid && result.canValidate);
+      
       const validation: ValidationHistory = {
         eventName: result.event?.name || "Unknown Event",
         ticketNumber: result.ticket?.ticketNumber || "Unknown",
         timestamp: new Date().toLocaleTimeString(),
-        valid: result.valid,
+        valid: isSuccessfullyValidated,
       };
       setRecentValidations(prev => [validation, ...prev.slice(0, 99)]);
       
-      if (result.valid) {
+      if (isSuccessfullyValidated) {
         toast({
-          title: "✅ Valid Ticket",
-          description: `Ticket for ${result.event?.name} validated successfully`,
+          title: "✅ Ticket Validated",
+          description: `Ticket for ${result.event?.name} has been marked as validated`,
+        });
+      } else if (isAuthenticButUnauthorized) {
+        toast({
+          title: "🔒 Valid Ticket (View Only)",
+          description: "This ticket is authentic but you don't have permission to validate it",
+        });
+      } else if (result.alreadyValidated) {
+        toast({
+          title: "ℹ️ Already Validated",
+          description: "This ticket has already been validated",
         });
       } else {
         toast({
           title: "❌ Invalid Ticket",
-          description: result.message,
+          description: result.message || "This ticket is not valid",
           variant: "destructive",
         });
       }
@@ -410,25 +428,34 @@ export function QrScanner() {
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">
               <div className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
-                validationResult.valid ? "bg-success" : "bg-danger"
+                validationResult.valid && validationResult.canValidate ? "bg-success" : 
+                validationResult.isAuthentic ? "bg-warning" : "bg-danger"
               }`} style={{ width: "40px", height: "40px" }}>
-                {validationResult.valid ? (
+                {validationResult.valid && validationResult.canValidate ? (
                   <CheckCircle className="text-white" size={20} />
+                ) : validationResult.isAuthentic ? (
+                  <Eye className="text-white" size={20} />
                 ) : (
                   <XCircle className="text-white" size={20} />
                 )}
               </div>
               <div className="flex-grow-1">
                 <h6 className="fw-semibold mb-1">
-                  {validationResult.valid ? "✅ Valid Ticket" : "❌ Invalid Ticket"}
+                  {validationResult.valid && validationResult.canValidate ? "✅ Ticket Validated" : 
+                   validationResult.isAuthentic && !validationResult.canValidate ? "🔒 Valid Ticket (View Only)" :
+                   validationResult.alreadyValidated ? "ℹ️ Already Validated" :
+                   "❌ Invalid Ticket"}
                 </h6>
                 <p className="text-muted small mb-0">
-                  {validationResult.valid ? "Ticket successfully validated" : validationResult.message}
+                  {validationResult.valid && validationResult.canValidate ? "Ticket has been marked as validated" : 
+                   validationResult.isAuthentic && !validationResult.canValidate ? "This ticket is authentic but you don't have permission to validate it" :
+                   validationResult.alreadyValidated ? "This ticket has already been validated" :
+                   validationResult.message || "This ticket is not valid"}
                 </p>
               </div>
             </div>
 
-            {validationResult.valid && validationResult.event && validationResult.ticket && (
+            {((validationResult.valid && validationResult.canValidate) || validationResult.isAuthentic) && validationResult.event && validationResult.ticket && (
               <div className="bg-light rounded p-3 mb-3">
                 <div className="row">
                   <div className="col-6 mb-2">
@@ -447,6 +474,18 @@ export function QrScanner() {
                     <span className="text-muted small">Date & Time:</span>
                     <p className="fw-medium mb-0 small">{validationResult.event.date} {validationResult.event.time}</p>
                   </div>
+                  {validationResult.ticket.isValidated && (
+                    <div className="col-12">
+                      <span className="text-muted small">Status:</span>
+                      <p className="fw-medium mb-0 small text-success">Already Validated ✓</p>
+                    </div>
+                  )}
+                  {validationResult.isAuthentic && !validationResult.canValidate && (
+                    <div className="col-12">
+                      <span className="text-muted small">Note:</span>
+                      <p className="fw-medium mb-0 small text-warning">View-only mode - You cannot validate tickets for this event</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
