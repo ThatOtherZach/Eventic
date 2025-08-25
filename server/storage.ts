@@ -37,6 +37,14 @@ export interface IStorage {
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
   getUniqueTicketHolders(eventId: string): Promise<string[]>;
   
+  // Paginated ticket queries
+  getTicketsPaginated(params: { page: number; limit: number }): Promise<{ tickets: Ticket[]; total: number; hasMore: boolean }>;
+  getTicketsByEventIdPaginated(eventId: string, params: { page: number; limit: number }): Promise<{ tickets: Ticket[]; total: number; hasMore: boolean }>;
+  getTicketsByUserIdPaginated(userId: string, params: { page: number; limit: number }): Promise<{ tickets: Ticket[]; total: number; hasMore: boolean }>;
+  
+  // Transaction support for race condition prevention
+  createTicketWithTransaction(ticket: InsertTicket): Promise<Ticket>;
+  
   // Validation Sessions
   createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }>;
   createValidationToken(ticketId: string): Promise<{ token: string; code: string }>;
@@ -339,31 +347,38 @@ export class DatabaseStorage implements IStorage {
 
   // Tickets
   async getTickets(): Promise<Ticket[]> {
-    return db.select().from(tickets).orderBy(desc(tickets.createdAt));
+    // Limit to 100 tickets by default for performance
+    return db.select().from(tickets).orderBy(desc(tickets.createdAt)).limit(100);
   }
 
   async getTicketsByEventId(eventId: string): Promise<Ticket[]> {
+    // Limit to 100 tickets by default for performance
     return db
       .select()
       .from(tickets)
       .where(eq(tickets.eventId, eventId))
-      .orderBy(desc(tickets.createdAt));
+      .orderBy(desc(tickets.createdAt))
+      .limit(100);
   }
 
   async getTicketsByUserId(userId: string): Promise<Ticket[]> {
+    // Limit to 100 tickets by default for performance
     return db
       .select()
       .from(tickets)
       .where(eq(tickets.userId, userId))
-      .orderBy(desc(tickets.createdAt));
+      .orderBy(desc(tickets.createdAt))
+      .limit(100);
   }
 
   async getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]> {
+    // Limit to 100 tickets by default for performance
     return db
       .select()
       .from(tickets)
       .where(and(eq(tickets.eventId, eventId), eq(tickets.userId, userId)))
-      .orderBy(desc(tickets.createdAt));
+      .orderBy(desc(tickets.createdAt))
+      .limit(100);
   }
 
   async getUniqueTicketHolders(eventId: string): Promise<string[]> {
@@ -1431,6 +1446,161 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(sessions)
       .where(lt(sessions.expiresAt, new Date()));
+  }
+
+  // Paginated ticket queries
+  async getTicketsPaginated(params: { page: number; limit: number }): Promise<{ tickets: Ticket[]; total: number; hasMore: boolean }> {
+    const { page = 1, limit = 20 } = params;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [countResult] = await db
+      .select({ count: count() })
+      .from(tickets);
+    
+    const total = countResult?.count || 0;
+    
+    // Get paginated tickets with only necessary fields
+    const ticketList = await db
+      .select({
+        id: tickets.id,
+        eventId: tickets.eventId,
+        userId: tickets.userId,
+        ticketNumber: tickets.ticketNumber,
+        isValidated: tickets.isValidated,
+        validatedAt: tickets.validatedAt,
+        isGoldenTicket: tickets.isGoldenTicket,
+        createdAt: tickets.createdAt
+      })
+      .from(tickets)
+      .orderBy(desc(tickets.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      tickets: ticketList as Ticket[],
+      total,
+      hasMore: offset + ticketList.length < total
+    };
+  }
+
+  async getTicketsByEventIdPaginated(eventId: string, params: { page: number; limit: number }): Promise<{ tickets: Ticket[]; total: number; hasMore: boolean }> {
+    const { page = 1, limit = 20 } = params;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [countResult] = await db
+      .select({ count: count() })
+      .from(tickets)
+      .where(eq(tickets.eventId, eventId));
+    
+    const total = countResult?.count || 0;
+    
+    // Get paginated tickets
+    const ticketList = await db
+      .select({
+        id: tickets.id,
+        eventId: tickets.eventId,
+        userId: tickets.userId,
+        ticketNumber: tickets.ticketNumber,
+        isValidated: tickets.isValidated,
+        validatedAt: tickets.validatedAt,
+        isGoldenTicket: tickets.isGoldenTicket,
+        createdAt: tickets.createdAt
+      })
+      .from(tickets)
+      .where(eq(tickets.eventId, eventId))
+      .orderBy(desc(tickets.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      tickets: ticketList as Ticket[],
+      total,
+      hasMore: offset + ticketList.length < total
+    };
+  }
+
+  async getTicketsByUserIdPaginated(userId: string, params: { page: number; limit: number }): Promise<{ tickets: Ticket[]; total: number; hasMore: boolean }> {
+    const { page = 1, limit = 20 } = params;
+    const offset = (page - 1) * limit;
+    
+    // Get total count
+    const [countResult] = await db
+      .select({ count: count() })
+      .from(tickets)
+      .where(eq(tickets.userId, userId));
+    
+    const total = countResult?.count || 0;
+    
+    // Get paginated tickets with joined event data for user view
+    const ticketList = await db
+      .select({
+        id: tickets.id,
+        eventId: tickets.eventId,
+        userId: tickets.userId,
+        ticketNumber: tickets.ticketNumber,
+        qrData: tickets.qrData,
+        isValidated: tickets.isValidated,
+        validatedAt: tickets.validatedAt,
+        isGoldenTicket: tickets.isGoldenTicket,
+        createdAt: tickets.createdAt
+      })
+      .from(tickets)
+      .where(eq(tickets.userId, userId))
+      .orderBy(desc(tickets.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return {
+      tickets: ticketList as Ticket[],
+      total,
+      hasMore: offset + ticketList.length < total
+    };
+  }
+
+  // Transaction support for race condition prevention
+  async createTicketWithTransaction(ticket: InsertTicket): Promise<Ticket> {
+    return await db.transaction(async (tx) => {
+      // Get the event to check availability
+      const [event] = await tx
+        .select()
+        .from(events)
+        .where(eq(events.id, ticket.eventId))
+        .for('update'); // Lock the event row
+      
+      if (!event) {
+        throw new Error('Event not found');
+      }
+      
+      // Count existing tickets
+      const [ticketCount] = await tx
+        .select({ count: count() })
+        .from(tickets)
+        .where(eq(tickets.eventId, ticket.eventId));
+      
+      const currentCount = ticketCount?.count || 0;
+      
+      // Check if tickets are still available
+      if (event.maxTickets && currentCount >= event.maxTickets) {
+        throw new Error('No tickets available');
+      }
+      
+      // Generate unique ticket number atomically
+      const ticketNumber = `${event.id.slice(0, 8)}-${(currentCount + 1).toString().padStart(6, '0')}`;
+      
+      // Create the ticket
+      const [newTicket] = await tx
+        .insert(tickets)
+        .values({
+          ...ticket,
+          ticketNumber,
+          qrData: ticket.qrData || ticketNumber
+        })
+        .returning();
+      
+      return newTicket;
+    });
   }
 }
 

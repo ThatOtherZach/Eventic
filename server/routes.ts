@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { logError, logWarning, logInfo } from "./logger";
 import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
+import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 
 // Rate limiter configuration for ticket purchases
@@ -517,16 +518,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      const tickets = await storage.getTicketsByUserId(userId);
-      // Fetch event data for each ticket
-      const ticketsWithEvents = await Promise.all(
-        tickets.map(async (ticket) => {
-          const event = await storage.getEvent(ticket.eventId);
-          return { ...ticket, event };
-        })
-      );
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 items per page
       
-      res.json(ticketsWithEvents);
+      // Use paginated query if page is specified
+      if (req.query.page) {
+        const result = await storage.getTicketsByUserIdPaginated(userId, { page, limit });
+        // Fetch event data for each ticket
+        const ticketsWithEvents = await Promise.all(
+          result.tickets.map(async (ticket) => {
+            const event = await storage.getEvent(ticket.eventId);
+            return { ...ticket, event };
+          })
+        );
+        res.json({ ...result, tickets: ticketsWithEvents });
+      } else {
+        // Legacy non-paginated response
+        const tickets = await storage.getTicketsByUserId(userId);
+        // Fetch event data for each ticket
+        const ticketsWithEvents = await Promise.all(
+          tickets.map(async (ticket) => {
+            const event = await storage.getEvent(ticket.eventId);
+            return { ...ticket, event };
+          })
+        );
+        res.json(ticketsWithEvents);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user tickets" });
     }
@@ -584,11 +601,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events", eventCreationRateLimiter, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/events", eventCreationRateLimiter, validateBody(insertEventSchema), async (req: AuthenticatedRequest, res) => {
     const userId = req.user?.id;
     
     try {
-      
       // Handle image URL normalization if provided
       let createData = { ...req.body };
       if (createData.imageUrl && createData.imageUrl.startsWith("https://storage.googleapis.com/")) {
@@ -598,31 +614,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(createData.ticketBackgroundUrl);
       }
       
-      // Validate max tickets limit
-      if (createData.maxTickets && createData.maxTickets > 5000) {
-        return res.status(400).json({ message: "Maximum tickets cannot exceed 5,000" });
-      }
-      
-      const validatedData = insertEventSchema.parse({
+      // Body is already validated by middleware
+      const event = await storage.createEvent({
         ...createData,
         userId, // Now we can use the actual userId since user exists in DB
       });
-      const event = await storage.createEvent(validatedData);
       res.status(201).json(event);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        await logWarning(
-          "Invalid event data",
-          "POST /api/events",
-          {
-            userId: userId || undefined,
-            metadata: {
-              errors: error.errors
-            }
-          }
-        );
-        return res.status(400).json({ message: "Invalid event data", errors: error.errors });
-      }
       await logError(error, "POST /api/events", {
         request: req,
         metadata: { eventData: req.body }
@@ -684,6 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(updateData.ticketBackgroundUrl);
       }
       
+      // Validate the update data
       const validatedData = insertEventSchema.partial().parse(updateData);
       const updatedEvent = await storage.updateEvent(req.params.id, validatedData);
       
@@ -744,10 +743,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Tickets routes
-  app.get("/api/tickets", async (req, res) => {
+  app.get("/api/tickets", validateQuery(paginationSchema), async (req, res) => {
     try {
-      const tickets = await storage.getTickets();
-      res.json(tickets);
+      const page = req.query.page as number || 1;
+      const limit = req.query.limit as number || 20;
+      
+      if (req.query.page) {
+        const result = await storage.getTicketsPaginated({ page, limit });
+        res.json(result);
+      } else {
+        const tickets = await storage.getTickets();
+        res.json(tickets);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch tickets" });
     }
@@ -766,16 +773,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:eventId/tickets", async (req, res) => {
+  app.get("/api/events/:eventId/tickets", validateQuery(paginationSchema), async (req, res) => {
     try {
-      const tickets = await storage.getTicketsByEventId(req.params.eventId);
-      res.json(tickets);
+      const page = req.query.page as number || 1;
+      const limit = req.query.limit as number || 20;
+      
+      if (req.query.page) {
+        const result = await storage.getTicketsByEventIdPaginated(req.params.eventId, { page, limit });
+        res.json(result);
+      } else {
+        const tickets = await storage.getTicketsByEventId(req.params.eventId);
+        res.json(tickets);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch event tickets" });
     }
   });
 
-  app.post("/api/events/:eventId/tickets", purchaseRateLimiter, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/events/:eventId/tickets", purchaseRateLimiter, validateBody(insertTicketSchema.partial()), async (req: AuthenticatedRequest, res) => {
     const userId = req.user?.id;
     
     try {
@@ -784,45 +799,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
 
-      // Check if event is sold out
-      const existingTickets = await storage.getTicketsByEventId(req.params.eventId);
-      if (event.maxTickets && existingTickets.length >= event.maxTickets) {
-        return res.status(400).json({ message: "Event is sold out" });
-      }
-
-      const ticketNumber = `${event.name.substring(0, 3).toUpperCase()}-${existingTickets.length + 1}`;
-      
+      // Generate QR data for the ticket
+      const tempTicketNumber = `${event.id.slice(0, 8)}-PENDING`;
       const qrData = JSON.stringify({
         eventId: req.params.eventId,
-        ticketNumber,
+        ticketNumber: tempTicketNumber,
         timestamp: Date.now(),
       });
 
       const ticketData = {
+        ...req.body, // Include validated body data
         eventId: req.params.eventId,
         userId, // Now we can use the actual userId since user exists in DB
-        ticketNumber,
+        ticketNumber: tempTicketNumber, // Will be replaced by transaction
         qrData,
       };
 
-      const validatedData = insertTicketSchema.parse(ticketData);
-      const ticket = await storage.createTicket(validatedData);
+      // Use transactional ticket creation to prevent race conditions
+      const ticket = await storage.createTicketWithTransaction(ticketData);
       res.status(201).json(ticket);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        await logWarning(
-          "Invalid ticket data",
-          "POST /api/events/:eventId/tickets",
-          {
-            userId: userId || undefined,
-            eventId: req.params.eventId,
-            metadata: {
-              errors: error.errors
-            }
-          }
-        );
-        return res.status(400).json({ message: "Invalid ticket data", errors: error.errors });
-      }
       await logError(error, "POST /api/events/:eventId/tickets", {
         request: req,
         metadata: { eventId: req.params.eventId }

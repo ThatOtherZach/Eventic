@@ -264,22 +264,131 @@ export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
   createdAt: true,
 }).extend({
-  name: z.string().min(1, "Event name is required"),
-  venue: z.string().min(1, "Venue is required"),
-  date: z.string().min(1, "Date is required"),
-  time: z.string().min(1, "Time is required"),
+  name: z.string()
+    .min(1, "Event name is required")
+    .max(100, "Event name must be less than 100 characters")
+    .regex(/^[a-zA-Z0-9\s\-_&.,!'"()]+$/, "Event name contains invalid characters"),
+  description: z.string()
+    .max(1000, "Description must be less than 1000 characters")
+    .optional()
+    .transform(val => val?.trim()),
+  venue: z.string()
+    .min(1, "Venue is required")
+    .max(200, "Venue must be less than 200 characters")
+    .regex(/^[a-zA-Z0-9\s\-_&.,!'"()#/@]+$/, "Venue contains invalid characters"),
+  date: z.string()
+    .min(1, "Date is required")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  time: z.string()
+    .min(1, "Time is required")
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Time must be in HH:MM format (24-hour)"),
+  endDate: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format")
+    .optional()
+    .nullable(),
+  endTime: z.string()
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "End time must be in HH:MM format (24-hour)")
+    .optional()
+    .nullable(),
+  ticketPrice: z.string()
+    .regex(/^\d+(\.\d{0,2})?$/, "Price must be a valid number with up to 2 decimal places")
+    .transform(val => val)
+    .refine(val => parseFloat(val) >= 0, "Price must be non-negative")
+    .refine(val => parseFloat(val) <= 99999.99, "Price must be less than $100,000"),
+  maxTickets: z.number()
+    .int("Max tickets must be a whole number")
+    .min(1, "Must allow at least 1 ticket")
+    .max(100000, "Max tickets cannot exceed 100,000")
+    .optional()
+    .nullable(),
   earlyValidation: z.enum(["At Start Time", "One Hour Before", "Two Hours Before", "Allow at Anytime"]).optional().default("Allow at Anytime"),
   reentryType: z.enum(["No Reentry (Single Use)", "Pass (Multiple Use)", "No Limit"]).optional().default("No Reentry (Single Use)"),
-  maxUses: z.number().min(1).max(24).optional().default(1),
+  maxUses: z.number()
+    .int("Max uses must be a whole number")
+    .min(1, "Max uses must be at least 1")
+    .max(24, "Max uses cannot exceed 24")
+    .optional()
+    .default(1),
   goldenTicketEnabled: z.boolean().optional().default(false),
-  goldenTicketCount: z.number().min(1).max(100).optional(),
+  goldenTicketCount: z.number()
+    .int("Golden ticket count must be a whole number")
+    .min(1, "Must have at least 1 golden ticket if enabled")
+    .max(100, "Golden tickets cannot exceed 100")
+    .optional()
+    .nullable(),
   allowMinting: z.boolean().optional().default(false),
   isPrivate: z.boolean().optional().default(false),
+}).superRefine((data, ctx) => {
+  // Validate that end date/time is after start date/time
+  if (data.endDate && data.endTime) {
+    const start = new Date(`${data.date} ${data.time}`);
+    const end = new Date(`${data.endDate} ${data.endTime}`);
+    
+    if (end <= start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End date/time must be after start date/time",
+        path: ["endDate"],
+      });
+    }
+    
+    // Check that event duration is reasonable (max 30 days)
+    const daysDiff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysDiff > 30) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Event duration cannot exceed 30 days",
+        path: ["endDate"],
+      });
+    }
+  }
+  
+  // Validate golden ticket settings
+  if (data.goldenTicketEnabled && !data.goldenTicketCount) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Golden ticket count is required when golden tickets are enabled",
+      path: ["goldenTicketCount"],
+    });
+  }
+  
+  // Validate that golden tickets don't exceed max tickets
+  if (data.maxTickets && data.goldenTicketCount && data.goldenTicketCount > data.maxTickets) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Golden ticket count cannot exceed max tickets",
+      path: ["goldenTicketCount"],
+    });
+  }
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({
   id: true,
   createdAt: true,
+}).extend({
+  eventId: z.string()
+    .uuid("Invalid event ID format")
+    .min(1, "Event ID is required"),
+  userId: z.string()
+    .uuid("Invalid user ID format")
+    .min(1, "User ID is required"),
+  recipientName: z.string()
+    .min(1, "Recipient name is required")
+    .max(100, "Recipient name must be less than 100 characters")
+    .regex(/^[a-zA-Z0-9\s\-'.]+$/, "Recipient name contains invalid characters"),
+  recipientEmail: z.string()
+    .email("Invalid email format")
+    .max(200, "Email must be less than 200 characters"),
+  seatNumber: z.string()
+    .max(20, "Seat number must be less than 20 characters")
+    .optional()
+    .nullable(),
+  ticketType: z.string()
+    .max(50, "Ticket type must be less than 50 characters")
+    .optional()
+    .nullable(),
+  transferable: z.boolean().optional().default(false),
+  status: z.enum(["pending", "sent", "failed"]).optional().default("pending"),
 });
 
 export const insertDelegatedValidatorSchema = createInsertSchema(delegatedValidators).omit({
