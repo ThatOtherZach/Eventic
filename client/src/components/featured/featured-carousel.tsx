@@ -14,6 +14,7 @@ interface FeaturedEventsResponse {
   position: number;
   createdAt: string;
   event: Event;
+  isPaid: boolean;
 }
 
 export function FeaturedCarousel() {
@@ -127,16 +128,21 @@ export function FeaturedCarousel() {
           {/* Content Overlay */}
           <div className="card-img-overlay d-flex flex-column justify-content-end text-white p-4">
             <div className="mb-2">
-              {currentEvent.isBumped && (
-                <span className="badge bg-warning text-dark me-2">
-                  <Star size={12} className="me-1" />
-                  Bumped
+              <span className={`badge me-2 ${currentEvent.isPaid ? 'bg-warning text-dark' : 'bg-primary'}`}>
+                <Star size={12} className="me-1" />
+                {currentEvent.isPaid ? 'Featured' : 'Popular'}
+              </span>
+              {currentEvent.isPaid && currentEvent.isBumped && (
+                <span className="badge bg-danger me-2">
+                  ⚡ Bumped
                 </span>
               )}
-              <span className="badge bg-success">
-                <Clock size={12} className="me-1" />
-                {currentEvent.duration.replace('hour', 'h')}
-              </span>
+              {currentEvent.isPaid && (
+                <span className="badge bg-success">
+                  <Clock size={12} className="me-1" />
+                  {currentEvent.duration.replace('hour', 'h')}
+                </span>
+              )}
             </div>
             
             <h4 className="card-title text-white fw-bold mb-2">

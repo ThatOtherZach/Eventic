@@ -1,6 +1,6 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, gt, lt } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, notInArray, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -747,9 +747,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(featuredEvents.position);
   }
 
-  async getFeaturedEventsWithDetails(): Promise<(FeaturedEvent & { event: Event })[]> {
+  async getFeaturedEventsWithDetails(): Promise<(FeaturedEvent & { event: Event } & { isPaid: boolean })[]> {
     const now = new Date();
-    const results = await db
+    
+    // Get paid featured events
+    const paidResults = await db
       .select({
         id: featuredEvents.id,
         eventId: featuredEvents.eventId,
@@ -767,10 +769,68 @@ export class DatabaseStorage implements IStorage {
       .where(gt(featuredEvents.endTime, now))
       .orderBy(featuredEvents.position);
     
-    return results.map(row => ({
+    const paidEvents = paidResults.map(row => ({
       ...row,
-      event: row.event
+      event: row.event,
+      isPaid: true
     }));
+
+    // If we have enough paid events, return them
+    if (paidEvents.length >= 100) {
+      return paidEvents.slice(0, 100);
+    }
+
+    // Get random events to fill remaining slots (excluding already featured ones)
+    const featuredEventIds = paidEvents.map(fe => fe.eventId);
+    const randomEventsNeeded = 100 - paidEvents.length;
+    
+    const randomEvents = await db
+      .select()
+      .from(events)
+      .where(
+        featuredEventIds.length > 0 
+          ? notInArray(events.id, featuredEventIds)
+          : undefined
+      )
+      .orderBy(sql`RANDOM()`)
+      .limit(randomEventsNeeded);
+
+    // Convert random events to featured event format
+    const randomFeaturedEvents = randomEvents.map((event, index) => ({
+      id: `random-${event.id}`,
+      eventId: event.id,
+      duration: "24h" as const,
+      startTime: now,
+      endTime: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+      pricePaid: 0,
+      isBumped: false,
+      position: paidEvents.length + index + 1,
+      createdAt: now,
+      event: event,
+      isPaid: false
+    }));
+
+    // Combine and create alternating pattern: newest paid first, then alternate
+    const allEvents = [...paidEvents, ...randomFeaturedEvents];
+    
+    // Sort paid events by newest first (position 1 is newest/most expensive)
+    const sortedPaidEvents = paidEvents.sort((a, b) => a.position - b.position);
+    const randomEventsList = randomFeaturedEvents;
+    
+    // Create alternating pattern: paid, random, paid, random...
+    const alternatingEvents: (typeof allEvents)[0][] = [];
+    const maxEvents = Math.max(sortedPaidEvents.length, randomEventsList.length);
+    
+    for (let i = 0; i < maxEvents; i++) {
+      if (i < sortedPaidEvents.length) {
+        alternatingEvents.push(sortedPaidEvents[i]);
+      }
+      if (i < randomEventsList.length) {
+        alternatingEvents.push(randomEventsList[i]);
+      }
+    }
+
+    return alternatingEvents;
   }
 
   async createFeaturedEvent(featuredEvent: InsertFeaturedEvent): Promise<FeaturedEvent> {
