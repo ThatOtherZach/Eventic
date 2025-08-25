@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { StatsCards } from "@/components/events/stats-cards";
 import { EventList } from "@/components/events/event-list";
-import { CreateEventModal } from "@/components/events/create-event-modal";
 import { TicketPreviewModal } from "@/components/tickets/ticket-preview-modal";
 import { FeaturedCarousel } from "@/components/featured/featured-carousel";
 import { FeaturedGrid } from "@/components/featured/featured-grid";
@@ -13,7 +12,6 @@ import type { Event } from "@shared/schema";
 export default function Events() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -33,7 +31,7 @@ export default function Events() {
       setShowAuthPrompt(true);
       return;
     }
-    setIsCreateModalOpen(true);
+    setLocation("/events/create");
   };
 
   const handleSignIn = () => {
@@ -132,10 +130,6 @@ export default function Events() {
       )}
 
       {/* Modals */}
-      <CreateEventModal 
-        open={isCreateModalOpen} 
-        onOpenChange={setIsCreateModalOpen} 
-      />
       
       {selectedEvent && user && (
         <TicketPreviewModal
