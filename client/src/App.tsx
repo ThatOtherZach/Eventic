@@ -12,6 +12,7 @@ import EventEdit from "@/pages/event-edit";
 import Scanner from "@/pages/scanner";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
+import NotificationsPage from "@/pages/notifications-page";
 import TicketViewPage from "@/pages/ticket-view";
 import NotFound from "@/pages/not-found";
 
@@ -20,10 +21,11 @@ function Router() {
     <Switch>
       <Route path="/" component={Events} />
       <Route path="/events" component={Events} />
-      <Route path="/events/:id" component={EventDetail} />
+      <Route path="/events/:id">{(params) => <EventDetail />}</Route>
       <ProtectedRoute path="/events/:id/edit" component={EventEdit} />
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
+      <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <Route path="/tickets/:ticketId" component={TicketViewPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

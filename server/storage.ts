@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, notInArray, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -88,6 +88,15 @@ export interface IStorage {
   cleanupExpiredFeaturedEvents(): Promise<void>;
   getEventsPaginated(page: number, limit: number): Promise<Event[]>;
   getTotalEventsCount(): Promise<number>;
+  
+  // Notifications
+  getNotifications(userId: string): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: string): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
+  getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined>;
+  updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences>;
+  expireOldNotifications(): Promise<void>;
 }
 
 interface ValidationSession {
@@ -993,6 +1002,81 @@ export class DatabaseStorage implements IStorage {
   async getTotalEventsCount(): Promise<number> {
     const [result] = await db.select({ count: count() }).from(events);
     return result?.count || 0;
+  }
+
+  // Notifications
+  async getNotifications(userId: string): Promise<Notification[]> {
+    const notificationList = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(100);
+    return notificationList;
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db.insert(notifications).values(notification).returning();
+    return newNotification;
+  }
+
+  async markNotificationAsRead(id: string): Promise<Notification | undefined> {
+    const [notification] = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    return notification || undefined;
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+  }
+
+  async getNotificationPreferences(userId: string): Promise<NotificationPreferences | undefined> {
+    const [prefs] = await db
+      .select()
+      .from(notificationPreferences)
+      .where(eq(notificationPreferences.userId, userId));
+    
+    if (!prefs) {
+      // Create default preferences if none exist
+      const [newPrefs] = await db
+        .insert(notificationPreferences)
+        .values({ userId })
+        .returning();
+      return newPrefs;
+    }
+    
+    return prefs;
+  }
+
+  async updateNotificationPreferences(userId: string, preferences: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences> {
+    const [updatedPrefs] = await db
+      .update(notificationPreferences)
+      .set({ ...preferences, updatedAt: new Date() })
+      .where(eq(notificationPreferences.userId, userId))
+      .returning();
+    
+    if (!updatedPrefs) {
+      // Create if doesn't exist
+      const [newPrefs] = await db
+        .insert(notificationPreferences)
+        .values({ userId, ...preferences })
+        .returning();
+      return newPrefs;
+    }
+    
+    return updatedPrefs;
+  }
+
+  async expireOldNotifications(): Promise<void> {
+    await db
+      .delete(notifications)
+      .where(lt(notifications.expiresAt, new Date()));
   }
 }
 

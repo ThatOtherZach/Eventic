@@ -162,6 +162,32 @@ export const registryTransactions = pgTable("registry_transactions", {
   transactionDate: timestamp("transaction_date").defaultNow(),
 });
 
+// Notifications table for the notifications center
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // "system", "validation", "auth", "event", "ticket", "camera"
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull().default(sql`CURRENT_TIMESTAMP + INTERVAL '69 days'`),
+});
+
+// User notification preferences
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  systemNotifications: boolean("system_notifications").default(true),
+  validationNotifications: boolean("validation_notifications").default(true),
+  authNotifications: boolean("auth_notifications").default(true),
+  eventNotifications: boolean("event_notifications").default(true),
+  ticketNotifications: boolean("ticket_notifications").default(true),
+  cameraNotifications: boolean("camera_notifications").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -238,6 +264,18 @@ export const insertFeaturedEventSchema = createInsertSchema(featuredEvents).omit
   position: z.number().min(1).max(100),
 });
 
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  expiresAt: true,
+});
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -260,3 +298,7 @@ export type InsertRegistryTransaction = z.infer<typeof insertRegistryTransaction
 export type RegistryTransaction = typeof registryTransactions.$inferSelect;
 export type InsertFeaturedEvent = z.infer<typeof insertFeaturedEventSchema>;
 export type FeaturedEvent = typeof featuredEvents.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
