@@ -5,21 +5,90 @@ import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema, inser
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { logError, logWarning, logInfo } from "./logger";
+import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
+import rateLimit from "express-rate-limit";
 
-// Middleware to extract userId from Supabase auth header
-function extractUserId(req: any): string | null {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return null;
-  
-  try {
-    // Parse Supabase JWT to get user ID
-    const token = authHeader.replace('Bearer ', '');
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.sub || null;
-  } catch (error) {
-    return null;
+// Rate limiter configuration for ticket purchases
+const purchaseRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 3, // Max 3 purchases per minute
+  message: 'Too many purchase attempts. Please wait a moment before trying again.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+  keyGenerator: (req: AuthenticatedRequest, res) => {
+    // Use combination of IP and userId for rate limiting
+    const userId = req.user?.id || 'anonymous';
+    // Use the default IP extraction with req.ip
+    return `${req.ip}:${userId}`;
+  },
+  skip: (req, res) => false,
+  handler: async (req, res) => {
+    await logWarning(
+      'Rate limit exceeded for ticket purchase',
+      req.path,
+      {
+        userId: extractUserId(req as AuthenticatedRequest) || undefined,
+        metadata: { 
+          rateLimitWindow: 60000,
+          maxPurchases: 3,
+          ip: req.ip
+        }
+      }
+    );
+    res.status(429).json({
+      message: 'Too many purchase attempts. Please wait a moment before trying again.',
+      retryAfter: 60
+    });
   }
-}
+});
+
+// Rate limiter for event creation  
+const eventCreationRateLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 2, // Max 2 events per 5 minutes
+  message: 'Too many events created. Please wait before creating another event.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+  keyGenerator: (req: AuthenticatedRequest, res) => {
+    // Use combination of IP and userId for rate limiting
+    const userId = req.user?.id || 'anonymous';
+    // Use the default IP extraction with req.ip
+    return `${req.ip}:${userId}`;
+  },
+  skip: (req, res) => false,
+  handler: async (req, res) => {
+    await logWarning(
+      'Rate limit exceeded for event creation',
+      req.path,
+      {
+        userId: extractUserId(req as AuthenticatedRequest) || undefined,
+        metadata: {
+          rateLimitWindow: 300000,
+          maxEvents: 2,
+          ip: req.ip
+        }
+      }
+    );
+    res.status(429).json({
+      message: 'Too many events created. Please wait before creating another event.',
+      retryAfter: 300
+    });
+  }
+});
+
+// General API rate limiter
+const generalRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Use default keyGenerator which handles IPv6 properly
+});
 
 // Helper function to check if a ticket is within its valid time window
 function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
@@ -83,101 +152,37 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   return { valid: true };
 }
 
-// Helper function to extract user email from the request
-function extractUserEmail(req: any): string | null {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return null;
-    
-    // Parse Supabase JWT to get email
-    const token = authHeader.replace('Bearer ', '');
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.email || null;
-  } catch (error) {
-    return null;
-  }
-}
+// Validation rate limiter
+const validationRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute  
+  max: 20, // Max 20 validation attempts per minute
+  message: 'Too many validation attempts. Please wait a moment before trying again.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+  keyGenerator: (req: AuthenticatedRequest, res) => {
+    // Use combination of IP and userId for rate limiting
+    const userId = req.user?.id || 'anonymous';
+    // Use the default IP extraction with req.ip
+    return `${req.ip}:${userId}`;
+  },
+  skip: (req, res) => false
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
-  // Rate limiter for ticket purchases
-  const purchaseAttempts = new Map<string, number[]>();
-  const PURCHASE_RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
-  const MAX_PURCHASES_PER_WINDOW = 3; // Max 3 purchases per minute per user
-
-  // Rate limiter for event creation
-  const eventCreationAttempts = new Map<string, number[]>();
-  const EVENT_RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes in milliseconds
-  const MAX_EVENTS_PER_WINDOW = 2; // Max 2 events per 5 minutes per user
-
-  function checkPurchaseRateLimit(userId: string): boolean {
-    const now = Date.now();
-    const userAttempts = purchaseAttempts.get(userId) || [];
-    
-    // Remove attempts older than the window
-    const recentAttempts = userAttempts.filter(time => now - time < PURCHASE_RATE_LIMIT_WINDOW);
-    
-    // Check if user has exceeded the limit
-    if (recentAttempts.length >= MAX_PURCHASES_PER_WINDOW) {
-      return false; // Rate limit exceeded
-    }
-    
-    // Add current attempt and update the map
-    recentAttempts.push(now);
-    purchaseAttempts.set(userId, recentAttempts);
-    
-    return true; // Under rate limit
-  }
-
-  function checkEventCreationRateLimit(userId: string): boolean {
-    const now = Date.now();
-    const userAttempts = eventCreationAttempts.get(userId) || [];
-    
-    // Remove attempts older than the window
-    const recentAttempts = userAttempts.filter(time => now - time < EVENT_RATE_LIMIT_WINDOW);
-    
-    // Check if user has exceeded the limit
-    if (recentAttempts.length >= MAX_EVENTS_PER_WINDOW) {
-      return false; // Rate limit exceeded
-    }
-    
-    // Add current attempt and update the map
-    recentAttempts.push(now);
-    eventCreationAttempts.set(userId, recentAttempts);
-    
-    return true; // Under rate limit
-  }
-
-  // Cleanup old rate limit entries every 5 minutes to prevent memory leaks
-  setInterval(() => {
-    const now = Date.now();
-    
-    // Clean up purchase attempts
-    for (const [userId, attempts] of Array.from(purchaseAttempts.entries())) {
-      const recentAttempts = attempts.filter((time: number) => now - time < PURCHASE_RATE_LIMIT_WINDOW);
-      if (recentAttempts.length === 0) {
-        purchaseAttempts.delete(userId);
-      } else {
-        purchaseAttempts.set(userId, recentAttempts);
-      }
-    }
-    
-    // Clean up event creation attempts
-    for (const [userId, attempts] of Array.from(eventCreationAttempts.entries())) {
-      const recentAttempts = attempts.filter((time: number) => now - time < EVENT_RATE_LIMIT_WINDOW);
-      if (recentAttempts.length === 0) {
-        eventCreationAttempts.delete(userId);
-      } else {
-        eventCreationAttempts.set(userId, recentAttempts);
-      }
-    }
-  }, 5 * 60 * 1000);
+  // Apply general rate limiting to all routes
+  app.use(generalRateLimiter);
+  
+  // Apply authentication middleware to extract user from JWT on all routes
+  app.use(extractAuthUser);
 
   // Sync/create user in local database when they login via Supabase
-  app.post("/api/auth/sync-user", async (req, res) => {
+  app.post("/api/auth/sync-user", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -216,9 +221,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user profile
-  app.patch("/api/user/profile", async (req, res) => {
+  app.patch("/api/user/profile", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -305,9 +310,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ticket routes
-  app.get("/api/tickets/:ticketId", async (req, res) => {
+  app.get("/api/tickets/:ticketId", async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id || null;
       const ticket = await storage.getTicket(req.params.ticketId);
       
       if (!ticket) {
@@ -331,9 +336,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Validation session routes
-  app.post("/api/tickets/:ticketId/validate-session", async (req, res) => {
+  app.post("/api/tickets/:ticketId/validate-session", async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id || null;
       const ticket = await storage.getTicket(req.params.ticketId);
       
       if (!ticket) {
@@ -360,8 +365,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tickets/:ticketId/validation-token", async (req, res) => {
-    const userId = extractUserId(req);
+  app.get("/api/tickets/:ticketId/validation-token", async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id || null;
     try {
       const ticket = await storage.getTicket(req.params.ticketId);
       
@@ -397,9 +402,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User-specific routes
-  app.get("/api/user/tickets", async (req, res) => {
+  app.get("/api/user/tickets", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -419,9 +424,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/events", async (req, res) => {
+  app.get("/api/user/events", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -471,27 +476,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events", async (req, res) => {
-    const userId = extractUserId(req);
-    
-    // Check rate limit for event creation
-    if (userId && !checkEventCreationRateLimit(userId)) {
-      await logWarning(
-        "Rate limit exceeded for event creation",
-        "POST /api/events",
-        {
-          userId,
-          metadata: { 
-            rateLimitWindow: EVENT_RATE_LIMIT_WINDOW,
-            maxEvents: MAX_EVENTS_PER_WINDOW
-          }
-        }
-      );
-      return res.status(429).json({ 
-        message: "Too many event creation attempts. Please wait before creating another event.",
-        retryAfter: Math.ceil(EVENT_RATE_LIMIT_WINDOW / 1000) // seconds
-      });
-    }
+  app.post("/api/events", eventCreationRateLimiter, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     
     try {
       
@@ -537,9 +523,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/events/:id", async (req, res) => {
+  app.put("/api/events/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -626,9 +612,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/events/:id", async (req, res) => {
+  app.delete("/api/events/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -659,9 +645,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:eventId/user-tickets", async (req, res) => {
+  app.get("/api/events/:eventId/user-tickets", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.json([]);
       }
@@ -681,28 +667,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:eventId/tickets", async (req, res) => {
-    const userId = extractUserId(req);
-    
-    // Check rate limit for authenticated users
-    if (userId && !checkPurchaseRateLimit(userId)) {
-      await logWarning(
-        "Rate limit exceeded for ticket purchase",
-        "POST /api/events/:eventId/tickets",
-        {
-          userId,
-          eventId: req.params.eventId,
-          metadata: { 
-            rateLimitWindow: PURCHASE_RATE_LIMIT_WINDOW,
-            maxPurchases: MAX_PURCHASES_PER_WINDOW
-          }
-        }
-      );
-      return res.status(429).json({ 
-        message: "Too many purchase attempts. Please wait a moment before trying again.",
-        retryAfter: Math.ceil(PURCHASE_RATE_LIMIT_WINDOW / 1000) // seconds
-      });
-    }
+  app.post("/api/events/:eventId/tickets", purchaseRateLimiter, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     
     try {
       const event = await storage.getEvent(req.params.eventId);
@@ -758,15 +724,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Validation routes
-  app.post("/api/validate", async (req, res) => {
+  app.post("/api/validate", validationRateLimiter, async (req: AuthenticatedRequest, res) => {
     try {
       const { qrData } = req.body;
       if (!qrData) {
         return res.status(400).json({ message: "QR data is required" });
       }
 
-      const userId = extractUserId(req);
-      const userEmail = extractUserEmail(req);
+      const userId = req.user?.id || null;
+      const userEmail = req.user?.email || null;
 
       // First check if it's a dynamic validation token
       const tokenCheck = await storage.checkDynamicToken(qrData);
@@ -919,9 +885,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delegated Validators routes
-  app.get("/api/events/:eventId/validators", async (req, res) => {
+  app.get("/api/events/:eventId/validators", async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id || null;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -943,9 +909,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:eventId/validators", async (req, res) => {
+  app.post("/api/events/:eventId/validators", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -981,9 +947,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/events/:eventId/validators/:validatorId", async (req, res) => {
+  app.delete("/api/events/:eventId/validators/:validatorId", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1005,9 +971,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:eventId/validated-tickets", async (req, res) => {
+  app.get("/api/events/:eventId/validated-tickets", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1033,9 +999,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // System logs endpoint (for administrators)
-  app.get("/api/system-logs", async (req, res) => {
+  app.get("/api/system-logs", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       const userEmail = extractUserEmail(req);
       
       if (!userId) {
@@ -1077,9 +1043,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Archive endpoints
-  app.get("/api/user/past-events", async (req, res) => {
+  app.get("/api/user/past-events", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1094,9 +1060,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/past-tickets", async (req, res) => {
+  app.get("/api/user/past-tickets", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1112,9 +1078,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Manual archive trigger (for testing or admin use)
-  app.post("/api/archive/check", async (req, res) => {
+  app.post("/api/archive/check", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1146,9 +1112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Registry endpoints
-  app.post("/api/tickets/:ticketId/mint", async (req, res) => {
+  app.post("/api/tickets/:ticketId/mint", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1237,9 +1203,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tickets/:ticketId/mint-status", async (req, res) => {
+  app.get("/api/tickets/:ticketId/mint-status", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1304,9 +1270,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/registry", async (req, res) => {
+  app.get("/api/user/registry", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1395,10 +1361,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/events/:id/boost-info", async (req, res) => {
+  app.get("/api/events/:id/boost-info", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const { id } = req.params;
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -1441,11 +1407,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/events/:id/boost", async (req, res) => {
+  app.post("/api/events/:id/boost", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const { id } = req.params;
       const { duration, isBump = false } = req.body;
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -1580,9 +1546,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Notifications endpoints
-  app.get("/api/notifications", async (req, res) => {
+  app.get("/api/notifications", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1597,9 +1563,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notifications", async (req, res) => {
+  app.post("/api/notifications", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1626,9 +1592,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/notifications/:id/read", async (req, res) => {
+  app.patch("/api/notifications/:id/read", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1648,9 +1614,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/notifications/mark-all-read", async (req, res) => {
+  app.patch("/api/notifications/mark-all-read", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1665,9 +1631,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/notification-preferences", async (req, res) => {
+  app.get("/api/notification-preferences", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
@@ -1682,9 +1648,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/notification-preferences", async (req, res) => {
+  app.patch("/api/notification-preferences", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = extractUserId(req);
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
