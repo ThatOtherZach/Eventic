@@ -422,9 +422,10 @@ export class DatabaseStorage implements IStorage {
       
       // If we haven't reached the limit and there are tickets left to validate
       if (remainingGoldenTickets > 0 && unvalidatedCount > 0) {
-        // Calculate probability: remaining golden tickets / remaining unvalidated tickets
-        // This ensures fair distribution throughout the validation process
-        const probability = remainingGoldenTickets / unvalidatedCount;
+        // Calculate probability: (remaining golden tickets / remaining unvalidated tickets) / 2
+        // Dividing by 2 makes golden tickets rarer and more special
+        const baseProbability = remainingGoldenTickets / unvalidatedCount;
+        const probability = baseProbability / 2;
         
         // Generate random number between 0 and 1
         const timestamp = Date.now();
@@ -436,7 +437,8 @@ export class DatabaseStorage implements IStorage {
         if (randomValue < probability) {
           isGoldenTicket = true;
           console.log(`🎫 GOLDEN TICKET WINNER! Ticket ${id} is golden ticket #${goldenTicketCount + 1} of ${event.goldenTicketCount}`);
-          console.log(`   Probability was ${(probability * 100).toFixed(2)}% (${remainingGoldenTickets} golden remaining / ${unvalidatedCount} unvalidated tickets)`);
+          console.log(`   Probability was ${(probability * 100).toFixed(2)}% (base: ${(baseProbability * 100).toFixed(2)}% halved for rarity)`);
+          console.log(`   ${remainingGoldenTickets} golden remaining / ${unvalidatedCount} unvalidated tickets`);
         }
       }
     }
