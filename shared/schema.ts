@@ -41,6 +41,7 @@ export const events = pgTable("events", {
   goldenTicketEnabled: boolean("golden_ticket_enabled").default(false),
   goldenTicketNumber: integer("golden_ticket_number"),
   allowMinting: boolean("allow_minting").default(false), // Allow attendees to mint tickets as NFTs
+  isPrivate: boolean("is_private").default(false), // Private events are excluded from searches and boosts
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -214,6 +215,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
   goldenTicketEnabled: z.boolean().optional().default(false),
   goldenTicketNumber: z.number().min(0).max(5000).optional(),
   allowMinting: z.boolean().optional().default(false),
+  isPrivate: z.boolean().optional().default(false),
 });
 
 export const insertTicketSchema = createInsertSchema(tickets).omit({

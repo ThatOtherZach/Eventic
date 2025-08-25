@@ -437,7 +437,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/events", async (req, res) => {
     try {
       const events = await storage.getEvents();
-      res.json(events);
+      // Filter out private events from general listing
+      const publicEvents = events.filter(event => !event.isPrivate);
+      res.json(publicEvents);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch events" });
     }
@@ -1157,6 +1159,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "NFT minting is not enabled for this event" });
       }
 
+      // Private events cannot be minted as NFTs
+      if (event.isPrivate) {
+        return res.status(403).json({ message: "Private events are not eligible for NFT minting" });
+      }
+
       // Create registry record
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
@@ -1313,8 +1320,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get paid boost events (featured events)
       const featuredEvents = await storage.getFeaturedEventsWithDetails();
       
-      // Get all regular events for random selection
-      const allEvents = await storage.getEvents();
+      // Get all regular events for random selection (exclude private events)
+      const allEvents = (await storage.getEvents()).filter(event => !event.isPrivate);
       
       // Target: 6 events total, with 3/4 (4-5) being paid boosts if available
       const targetTotal = 6;
@@ -1331,7 +1338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fill remaining slots with random events (exclude already featured events)
       if (gridEvents.length < targetTotal) {
         const featuredEventIds = new Set(gridEvents.map(fe => fe.event.id));
-        const availableEvents = allEvents.filter(event => !featuredEventIds.has(event.id));
+        const availableEvents = allEvents.filter(event => !featuredEventIds.has(event.id) && !event.isPrivate);
         
         // Shuffle and take needed amount
         const shuffled = availableEvents.sort(() => Math.random() - 0.5);
@@ -1376,6 +1383,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const event = await storage.getEvent(id);
       if (!event || event.userId !== userId) {
         return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Private events cannot be boosted
+      if (event.isPrivate) {
+        return res.status(400).json({ message: "Private events cannot be featured or boosted" });
       }
 
       // Check if event can be boosted
@@ -1423,6 +1435,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const event = await storage.getEvent(id);
       if (!event || event.userId !== userId) {
         return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Private events cannot be boosted
+      if (event.isPrivate) {
+        return res.status(400).json({ message: "Private events cannot be featured or boosted" });
       }
 
       // Check if event can be boosted

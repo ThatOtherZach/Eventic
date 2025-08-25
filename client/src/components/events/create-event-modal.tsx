@@ -70,6 +70,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       goldenTicketEnabled: false,
       goldenTicketNumber: undefined,
       allowMinting: false,
+      isPrivate: false,
     },
   });
 
@@ -204,6 +205,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     name: watchedValues.name || "Event Name",
     description: watchedValues.description || null,
     venue: watchedValues.venue || "Venue",
+    country: null,
     date: watchedValues.date || "2024-01-01",
     time: watchedValues.time || "19:00",
     endDate: watchedValues.endDate || null,
@@ -219,6 +221,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
     goldenTicketNumber: watchedValues.goldenTicketNumber || null,
     allowMinting: watchedValues.allowMinting || false,
+    isPrivate: watchedValues.isPrivate || false,
     createdAt: new Date(),
   };
 
@@ -640,6 +643,33 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                       </label>
                     </div>
                     <div className="form-text">Attendees will be allowed to mint a digital collectible of the event ticket. Some details of the ticket can be listed publicly if this is enabled.</div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="mb-3">
+              <FormField
+                control={form.control}
+                name="isPrivate"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="isPrivate"
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        data-testid="checkbox-is-private"
+                      />
+                      <label className="form-check-label" htmlFor="isPrivate">
+                        <span className="badge bg-secondary me-2">Private</span>
+                        Private Event
+                      </label>
+                    </div>
+                    <div className="form-text">Private events are excluded from search results and cannot be featured or boosted. Only accessible by direct link. This setting cannot be changed after creation.</div>
                     <FormMessage />
                   </FormItem>
                 )}

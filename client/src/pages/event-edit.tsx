@@ -43,6 +43,7 @@ export default function EventEditPage() {
     goldenTicketEnabled: false,
     goldenTicketNumber: undefined as number | undefined,
     allowMinting: false,
+    isPrivate: false,
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -81,6 +82,7 @@ export default function EventEditPage() {
         goldenTicketEnabled: event.goldenTicketEnabled || false,
         goldenTicketNumber: event.goldenTicketNumber || undefined,
         allowMinting: event.allowMinting || false,
+        isPrivate: event.isPrivate || false,
       });
       
       // Store tickets sold for validation
@@ -260,6 +262,7 @@ export default function EventEditPage() {
     goldenTicketEnabled: formData.goldenTicketEnabled || false,
     goldenTicketNumber: formData.goldenTicketNumber || null,
     allowMinting: formData.allowMinting || false,
+    isPrivate: formData.isPrivate || false,
     createdAt: new Date(),
   };
 
@@ -563,6 +566,27 @@ export default function EventEditPage() {
               <small className="text-muted">
                 NFT minting settings cannot be changed after event creation.
                 {formData.allowMinting && " Attendees can mint their validated tickets as digital collectibles."}
+              </small>
+            </div>
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="isPrivate"
+                  checked={formData.isPrivate}
+                  disabled
+                  title="Private event settings cannot be changed after creation"
+                />
+                <label className="form-check-label" htmlFor="isPrivate">
+                  <span className="badge bg-secondary me-2">Private</span>
+                  Private Event
+                </label>
+              </div>
+              <small className="text-muted">
+                Private event settings cannot be changed after event creation.
+                {formData.isPrivate && " This event is excluded from search results and cannot be featured or boosted. Only accessible by direct link."}
               </small>
             </div>
 

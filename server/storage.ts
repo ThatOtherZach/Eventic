@@ -846,6 +846,12 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
 
+    // Get event to check if minting is allowed and if it's private
+    const event = await this.getEvent(ticket.eventId);
+    if (!event || !event.allowMinting || event.isPrivate) {
+      return false;
+    }
+
     // Check if 72 hours have passed since validation
     const now = new Date();
     const validatedTime = new Date(ticket.validatedAt);
