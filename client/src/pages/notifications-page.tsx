@@ -120,14 +120,14 @@ export default function NotificationsPage() {
                     { key: 'cameraNotifications', label: 'Camera Notifications', description: 'Scanner camera status updates' },
                   ].map(({ key, label, description }) => (
                     <div key={key} className="col-md-6 mb-3">
-                      <div className="form-check form-switch">
+                      <div className="form-check">
                         <input
                           className="form-check-input"
                           type="checkbox"
                           id={key}
-                          checked={preferences[key as keyof NotificationPreferences] as boolean}
+                          checked={preferences[key as keyof NotificationPreferences] as boolean ?? true}
                           onChange={(e) => handlePreferenceChange(key as keyof NotificationPreferences, e.target.checked)}
-                          data-testid={`toggle-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`}
+                          data-testid={`checkbox-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`}
                         />
                         <label className="form-check-label" htmlFor={key}>
                           <strong>{label}</strong>

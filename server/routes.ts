@@ -1427,7 +1427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const validation = insertNotificationPreferencesSchema.safeParse(req.body);
+      const validation = insertNotificationPreferencesSchema.omit({ userId: true }).safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ 
           message: "Invalid preferences data", 
