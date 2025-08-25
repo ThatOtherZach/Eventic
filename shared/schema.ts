@@ -102,6 +102,8 @@ export const events = pgTable("events", {
   specialEffectsEnabled: boolean("special_effects_enabled").default(false), // Enable special visual effects on validated tickets
   allowMinting: boolean("allow_minting").default(false), // Allow attendees to mint tickets as NFTs
   isPrivate: boolean("is_private").default(false), // Private events are excluded from searches and boosts
+  isEnabled: boolean("is_enabled").default(true), // Whether event is publicly visible
+  ticketPurchasesEnabled: boolean("ticket_purchases_enabled").default(true), // Whether new tickets can be purchased
   createdAt: timestamp("created_at").defaultNow(),
 });
 

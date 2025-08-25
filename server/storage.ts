@@ -98,6 +98,10 @@ export interface IStorage {
   getEventsPaginated(page: number, limit: number): Promise<Event[]>;
   getTotalEventsCount(): Promise<number>;
   
+  // Admin Operations
+  getAllEventsForAdmin(): Promise<Event[]>;
+  updateEventVisibility(eventId: string, field: "isEnabled" | "ticketPurchasesEnabled", value: boolean): Promise<Event | undefined>;
+  
   // Notifications
   getNotifications(userId: string): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
@@ -1165,6 +1169,33 @@ export class DatabaseStorage implements IStorage {
   async getTotalEventsCount(): Promise<number> {
     const [result] = await db.select({ count: count() }).from(events);
     return result?.count || 0;
+  }
+
+  // Admin Operations
+  async getAllEventsForAdmin(): Promise<Event[]> {
+    const eventsList = await db
+      .select({
+        event: events,
+        ticketsSold: count(tickets.id)
+      })
+      .from(events)
+      .leftJoin(tickets, eq(tickets.eventId, events.id))
+      .groupBy(events.id)
+      .orderBy(desc(events.createdAt));
+    
+    return eventsList.map(({ event, ticketsSold }) => ({
+      ...event,
+      ticketsSold
+    }));
+  }
+
+  async updateEventVisibility(eventId: string, field: "isEnabled" | "ticketPurchasesEnabled", value: boolean): Promise<Event | undefined> {
+    const [updatedEvent] = await db
+      .update(events)
+      .set({ [field]: value })
+      .where(eq(events.id, eventId))
+      .returning();
+    return updatedEvent;
   }
 
   // Notifications

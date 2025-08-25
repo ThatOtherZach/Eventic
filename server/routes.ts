@@ -988,6 +988,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes (protected - only for @saymservices.com emails)
+  app.get("/api/admin/events", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const events = await storage.getAllEventsForAdmin();
+      res.json(events);
+    } catch (error) {
+      await logError(error, "GET /api/admin/events", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch events" });
+    }
+  });
+
+  app.put("/api/admin/events/:eventId/toggle", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { eventId } = req.params;
+      const { field, value } = req.body;
+
+      if (!field || !["isEnabled", "ticketPurchasesEnabled"].includes(field)) {
+        return res.status(400).json({ message: "Invalid field" });
+      }
+
+      const updatedEvent = await storage.updateEventVisibility(eventId, field, value);
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      res.json(updatedEvent);
+    } catch (error) {
+      await logError(error, "PUT /api/admin/events/:eventId/toggle", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to update event" });
+    }
+  });
+
+  // Special effects odds configuration
+  const specialEffectsOdds = {
+    valentines: 14,
+    halloween: 88,
+    christmas: 25,
+    nice: 69
+  };
+
+  app.get("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      res.json(specialEffectsOdds);
+    } catch (error) {
+      await logError(error, "GET /api/admin/special-effects-odds", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch odds" });
+    }
+  });
+
+  app.put("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { valentines, halloween, christmas, nice } = req.body;
+      
+      // Validate odds are reasonable numbers
+      if (valentines < 1 || valentines > 1000 ||
+          halloween < 1 || halloween > 1000 ||
+          christmas < 1 || christmas > 1000 ||
+          nice < 1 || nice > 1000) {
+        return res.status(400).json({ message: "Odds must be between 1 and 1000" });
+      }
+
+      // Update the odds
+      specialEffectsOdds.valentines = valentines;
+      specialEffectsOdds.halloween = halloween;
+      specialEffectsOdds.christmas = christmas;
+      specialEffectsOdds.nice = nice;
+
+      res.json(specialEffectsOdds);
+    } catch (error) {
+      await logError(error, "PUT /api/admin/special-effects-odds", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to update odds" });
+    }
+  });
+
   // Delegated Validators routes
   app.get("/api/events/:eventId/validators", async (req: AuthenticatedRequest, res) => {
     try {

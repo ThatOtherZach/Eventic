@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Check, Ticket, User, LogOut, LogIn, Bell } from "lucide-react";
+import { Calendar, Check, Ticket, User, LogOut, LogIn, Bell, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import type { Notification } from "@shared/schema";
@@ -64,6 +64,22 @@ export function Navigation() {
             {user ? (
               <>
                 <NotificationBell user={user} location={location} />
+                {user.email?.endsWith("@saymservices.com") && (
+                  <li className="nav-item">
+                    <Link
+                      href="/admin"
+                      className={`nav-link d-flex align-items-center ${
+                        location === "/admin" ? "active" : ""
+                      }`}
+                      data-testid="link-nav-admin"
+                      aria-label="Admin settings"
+                      aria-current={location === "/admin" ? "page" : undefined}
+                    >
+                      <Settings className="me-1" size={18} aria-hidden="true" />
+                      <span>Admin</span>
+                    </Link>
+                  </li>
+                )}
                 <li className="nav-item">
                   <Link
                     href="/account"

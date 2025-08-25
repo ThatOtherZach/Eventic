@@ -18,6 +18,7 @@ import NotificationsPage from "@/pages/notifications-page";
 import TicketViewPage from "@/pages/ticket-view";
 import SpecialEffectsPage from "@/pages/special-effects";
 import MonitoringPage from "@/pages/monitoring";
+import AdminSettings from "@/pages/admin-settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -32,6 +33,7 @@ function Router() {
       <ProtectedRoute path="/account" component={AccountPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/monitoring" component={MonitoringPage} />
+      <ProtectedRoute path="/admin" component={AdminSettings} />
       <Route path="/tickets/:ticketId" component={TicketViewPage} />
       <Route path="/special-effects" component={SpecialEffectsPage} />
       <Route path="/auth" component={AuthPage} />
