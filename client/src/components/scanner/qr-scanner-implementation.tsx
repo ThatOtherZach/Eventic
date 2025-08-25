@@ -333,7 +333,6 @@ export function QrScannerImplementation() {
               <Keyboard className="me-2" size={18} />
               Ticket Code Validation
             </h6>
-            <span className="badge bg-primary">Recommended for Mobile</span>
           </div>
           
           <div className="alert alert-info small mb-3">
