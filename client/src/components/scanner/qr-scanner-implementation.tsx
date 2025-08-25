@@ -309,20 +309,8 @@ export function QrScannerImplementation() {
   };
 
   useEffect(() => {
-    addDebugInfo("📱 Component mounted, checking camera...");
-    checkCameraSupport().then(async (hasSupport) => {
-      if (hasSupport) {
-        try {
-          const cameras = await QrScanner.listCameras(true);
-          setAvailableCameras(cameras.map(cam => ({
-            id: cam.id,
-            label: cam.label || `Camera ${cam.id.slice(-4)}`
-          })));
-        } catch (e) {
-          addDebugInfo("Could not enumerate cameras");
-        }
-      }
-    });
+    // Camera functionality disabled - only manual entry available
+    setHasCamera(false);
     
     // Cleanup on unmount
     return () => {
@@ -336,37 +324,6 @@ export function QrScannerImplementation() {
   return (
     <div className="animate-fade-in">
 
-      {/* Camera Selection and Manual Entry */}
-      {availableCameras.length > 1 && (
-        <div className="card mb-3">
-          <div className="card-body">
-            <label className="form-label small fw-medium">Select Camera:</label>
-            <select 
-              className="form-select"
-              value={selectedCamera}
-              onChange={(e) => {
-                setSelectedCamera(e.target.value);
-                if (isScanning) {
-                  stopScanner();
-                  setTimeout(() => startScanner(), 100);
-                }
-              }}
-              disabled={isScanning}
-            >
-              <option value="environment">Back Camera (Default)</option>
-              <option value="user">Front Camera</option>
-              {availableCameras.map((cam) => (
-                <option key={cam.id} value={cam.id}>
-                  {cam.label}
-                </option>
-              ))}
-            </select>
-            <small className="text-muted d-block mt-1">
-              If the scanner shows a black screen, try switching cameras
-            </small>
-          </div>
-        </div>
-      )}
       
       {/* Manual Code Entry - Primary option for mobile */}
       <div className="card mb-3 border-primary">
@@ -380,8 +337,7 @@ export function QrScannerImplementation() {
           </div>
           
           <div className="alert alert-info small mb-3">
-            <strong>📱 Mobile Users:</strong> If the camera shows a black screen, use this manual entry instead. 
-            Ask the ticket holder for their 4-digit code (shown on their ticket screen).
+            <strong>📱 Simple & Reliable:</strong> Ask the ticket holder for their 4-digit code shown on their ticket screen.
           </div>
           
           <p className="small text-muted mb-3">
