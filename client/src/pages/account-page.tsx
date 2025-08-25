@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, LogOut, Eye, Sparkles } from "lucide-react";
+import { Calendar, Ticket, User, LogOut, Eye, Sparkles, Edit, Save, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
 import type { Ticket as TicketType, Event, RegistryRecord } from "@shared/schema";
@@ -12,6 +13,9 @@ export default function AccountPage() {
   const { user, signOut } = useAuth();
   const [, setLocation] = useLocation();
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
+  const [isEditingCity, setIsEditingCity] = useState(false);
+  const [cityValue, setCityValue] = useState((user as any)?.city || "");
+  const { toast } = useToast();
   
   const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
     queryKey: ["/api/user/tickets"],
@@ -39,6 +43,41 @@ export default function AccountPage() {
     },
     enabled: !!user,
   });
+
+  const updateCityMutation = useMutation({
+    mutationFn: async (city: string) => {
+      const response = await apiRequest("PATCH", "/api/user/profile", {
+        body: JSON.stringify({ city }),
+        headers: { "Content-Type": "application/json" },
+      });
+      return response.json();
+    },
+    onSuccess: (updatedUser) => {
+      toast({
+        title: "Success",
+        description: "City updated successfully",
+        variant: "default",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      setIsEditingCity(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update city",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSaveCity = () => {
+    updateCityMutation.mutate(cityValue);
+  };
+
+  const handleCancelEdit = () => {
+    setCityValue((user as any)?.city || "");
+    setIsEditingCity(false);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,13 +113,62 @@ export default function AccountPage() {
         <div className="col-12">
           <div className="card">
             <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                  <User className="text-primary" size={24} />
-                </div>
-                <div>
-                  <h5 className="card-title mb-1">Account Details</h5>
-                  <p className="text-muted mb-0">{user.email}</p>
+              <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                    <User className="text-primary" size={24} />
+                  </div>
+                  <div>
+                    <h5 className="card-title mb-1">Account Details</h5>
+                    <p className="text-muted mb-0">{user.email}</p>
+                    <div className="d-flex align-items-center mt-2">
+                      {isEditingCity ? (
+                        <div className="d-flex align-items-center gap-2">
+                          <input
+                            type="text"
+                            value={cityValue}
+                            onChange={(e) => setCityValue(e.target.value)}
+                            placeholder="Enter your city"
+                            className="form-control form-control-sm"
+                            style={{ width: "200px" }}
+                            data-testid="input-city"
+                          />
+                          <button
+                            onClick={handleSaveCity}
+                            disabled={updateCityMutation.isPending}
+                            className="btn btn-sm btn-primary"
+                            data-testid="button-save-city"
+                          >
+                            {updateCityMutation.isPending ? (
+                              <span className="spinner-border spinner-border-sm" />
+                            ) : (
+                              <Save size={14} />
+                            )}
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="btn btn-sm btn-outline-secondary"
+                            data-testid="button-cancel-city"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="d-flex align-items-center">
+                          <span className="text-muted small me-2">
+                            City: {(user as any).city || "Not set"}
+                          </span>
+                          <button
+                            onClick={() => setIsEditingCity(true)}
+                            className="btn btn-sm btn-outline-primary"
+                            data-testid="button-edit-city"
+                          >
+                            <Edit size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -216,7 +304,7 @@ export default function AccountPage() {
                               <strong>Validated:</strong> {record.validatedAt ? new Date(record.validatedAt).toLocaleDateString() : 'N/A'}
                             </div>
                             <div className="col-6">
-                              <strong>Minted:</strong> {new Date(record.mintedAt).toLocaleDateString()}
+                              <strong>Minted:</strong> {record.mintedAt ? new Date(record.mintedAt).toLocaleDateString() : 'N/A'}
                             </div>
                           </div>
                         </div>

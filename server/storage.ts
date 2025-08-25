@@ -10,6 +10,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLoginTime(id: string): Promise<User | undefined>;
+  updateUserProfile(id: string, updates: { city?: string }): Promise<User | undefined>;
   
   // Auth Tokens
   createAuthToken(token: InsertAuthToken): Promise<AuthToken>;
@@ -132,6 +133,15 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserProfile(id: string, updates: { city?: string }): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
@@ -802,7 +812,7 @@ export class DatabaseStorage implements IStorage {
       duration: "24h" as const,
       startTime: now,
       endTime: new Date(now.getTime() + 24 * 60 * 60 * 1000),
-      pricePaid: 0,
+      pricePaid: "0",
       isBumped: false,
       position: paidEvents.length + index + 1,
       createdAt: now,

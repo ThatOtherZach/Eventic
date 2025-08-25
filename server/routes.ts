@@ -133,6 +133,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile
+  app.patch("/api/user/profile", async (req, res) => {
+    try {
+      const userId = extractUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { city } = req.body;
+      
+      const updatedUser = await storage.updateUserProfile(userId, { city });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      await logError(error, "PATCH /api/user/profile", {
+        request: req,
+        metadata: { city: req.body.city }
+      });
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   // Object Storage routes
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
