@@ -112,14 +112,19 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
       
       switch (effect.type) {
         case 'nice':
-          // 1 in 5000 chance for special days (like golden ticket odds)
-          return random < (1/5000) ? effect.type : null;
+          // 1 in 69 chance for the 69th day of the year
+          return random < (1/69) ? effect.type : null;
         case 'hearts':
+          // Valentine's Day: 1 in 14 chance
+          return random < (1/14) ? effect.type : null;
         case 'spooky':
+          // Halloween: 1 in 88 chance  
+          return random < (1/88) ? effect.type : null;
         case 'snowflakes':
+          // Christmas: 1 in 35 chance
+          return random < (1/35) ? effect.type : null;
         case 'fireworks':
-          // For holidays: only check odds if it's actually that specific day
-          // If it matches the day, then 1 in 365 chance of effect being applied
+          // New Year's Eve: 1 in 365 chance of effect being applied
           return random < (1/365) ? effect.type : null;
         case 'monthly':
           // 1 in 30 chance for monthly color effects
