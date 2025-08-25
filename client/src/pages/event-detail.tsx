@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -95,6 +95,29 @@ export default function EventDetailPage() {
     },
   });
 
+  const refundTicketMutation = useMutation({
+    mutationFn: async (ticketId: string) => {
+      const response = await apiRequest("POST", `/api/tickets/${ticketId}/refund`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Refund Successful",
+        description: "Your ticket has been refunded successfully.",
+      });
+      // Refresh tickets and event data
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/user-tickets`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Refund Failed",
+        description: error.message || "Unable to refund ticket",
+        variant: "destructive",
+      });
+    },
+  });
+
   const purchaseTicketMutation = useMutation({
     mutationFn: async () => {
       if (!user) {
@@ -127,6 +150,26 @@ export default function EventDetailPage() {
       setIsPurchasing(false);
     },
   });
+
+  const canRefundTicket = (ticket: TicketType) => {
+    if (!event) return false;
+    
+    // Check if ticket has been validated
+    if (ticket.isValidated) return false;
+    
+    // Check if event start is at least 1 hour in the future
+    const eventStartTime = new Date(`${event.date}T${event.time}:00`);
+    const now = new Date();
+    const hoursUntilEvent = (eventStartTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    return hoursUntilEvent >= 1;
+  };
+
+  const handleRefund = async (ticketId: string) => {
+    if (confirm("Are you sure you want to refund this ticket? This action cannot be undone.")) {
+      refundTicketMutation.mutate(ticketId);
+    }
+  };
 
   const handlePurchase = () => {
     if (!user) {
@@ -273,12 +316,25 @@ export default function EventDetailPage() {
                         <span className="badge bg-primary me-2">{ticket.ticketNumber}</span>
                         {ticket.isValidated && <span className="badge bg-success">Used</span>}
                       </div>
-                      <Link href={`/tickets/${ticket.id}`}>
-                        <a className="btn btn-sm btn-outline-primary" data-testid={`button-view-ticket-${ticket.id}`}>
-                          <Eye size={14} className="me-1" />
-                          View Ticket
-                        </a>
-                      </Link>
+                      <div className="d-flex gap-2">
+                        <Link href={`/tickets/${ticket.id}`}>
+                          <a className="btn btn-sm btn-outline-primary" data-testid={`button-view-ticket-${ticket.id}`}>
+                            <Eye size={14} className="me-1" />
+                            View
+                          </a>
+                        </Link>
+                        {canRefundTicket(ticket) && (
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleRefund(ticket.id)}
+                            disabled={refundTicketMutation.isPending}
+                            data-testid={`button-refund-ticket-${ticket.id}`}
+                          >
+                            <RotateCcw size={14} className="me-1" />
+                            Refund
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

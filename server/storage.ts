@@ -35,6 +35,7 @@ export interface IStorage {
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
+  refundTicket(ticketId: string, userId: string): Promise<boolean>;
   getUniqueTicketHolders(eventId: string): Promise<string[]>;
   
   // Paginated ticket queries
@@ -477,6 +478,39 @@ export class DatabaseStorage implements IStorage {
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
     const [ticket] = await db.insert(tickets).values(insertTicket).returning();
     return ticket;
+  }
+
+  async refundTicket(ticketId: string, userId: string): Promise<boolean> {
+    try {
+      // Get the ticket
+      const ticket = await this.getTicket(ticketId);
+      if (!ticket) return false;
+      
+      // Verify ownership
+      if (ticket.userId !== userId) return false;
+      
+      // Check if ticket has been validated
+      if (ticket.isValidated) return false;
+      
+      // Get the event to check timing
+      const event = await this.getEvent(ticket.eventId);
+      if (!event) return false;
+      
+      // Check if event start is at least 1 hour in the future
+      const eventStartTime = new Date(`${event.date}T${event.time}:00`);
+      const now = new Date();
+      const hoursUntilEvent = (eventStartTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursUntilEvent < 1) return false;
+      
+      // Delete the ticket from the database
+      await db.delete(tickets).where(eq(tickets.id, ticketId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error refunding ticket:", error);
+      return false;
+    }
   }
 
   async validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined> {

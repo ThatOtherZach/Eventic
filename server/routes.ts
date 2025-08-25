@@ -827,6 +827,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Refund ticket endpoint
+  app.post("/api/tickets/:ticketId/refund", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+      
+      // Get the ticket to verify it exists and belongs to the user
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      if (ticket.userId !== userId) {
+        return res.status(403).json({ message: "You can only refund your own tickets" });
+      }
+
+      // Check if ticket has been validated
+      if (ticket.isValidated) {
+        return res.status(400).json({ message: "Cannot refund a validated ticket" });
+      }
+
+      // Get the event to check timing
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      // Check if event start is at least 1 hour in the future
+      const eventStartTime = new Date(`${event.date}T${event.time}:00`);
+      const now = new Date();
+      const hoursUntilEvent = (eventStartTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursUntilEvent < 1) {
+        return res.status(400).json({ 
+          message: "Refunds are only available until 1 hour before the event starts" 
+        });
+      }
+
+      // Process the refund
+      const refunded = await storage.refundTicket(ticketId, userId);
+      
+      if (!refunded) {
+        return res.status(500).json({ message: "Failed to process refund" });
+      }
+
+      // Log the refund
+      await logInfo(
+        "Ticket refunded",
+        "POST /api/tickets/:ticketId/refund",
+        {
+          userId,
+          ticketId,
+          eventId: ticket.eventId,
+          metadata: {
+            ticketNumber: ticket.ticketNumber,
+            eventName: event.name,
+            refundTime: new Date().toISOString()
+          }
+        }
+      );
+
+      res.json({ 
+        message: "Ticket refunded successfully",
+        refunded: true
+      });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/refund", {
+        request: req,
+        metadata: { ticketId: req.params.ticketId }
+      });
+      res.status(500).json({ message: "Failed to process refund" });
+    }
+  });
+
   // Validation routes
   app.post("/api/validate", validationRateLimiter, async (req: AuthenticatedRequest, res) => {
     try {
