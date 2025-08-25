@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/use-notifications";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
@@ -20,6 +21,7 @@ export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [validatorEmail, setValidatorEmail] = useState("");
@@ -121,7 +123,8 @@ export default function EventDetailPage() {
 
   const handlePurchase = () => {
     if (!user) {
-      toast({
+      addNotification({
+        type: "warning",
         title: "Sign In Required",
         description: "Please sign in to purchase tickets",
       });
