@@ -392,6 +392,38 @@ export default function EventDetailPage() {
             </div>
           </div>
 
+          {/* Event Creator Reputation */}
+          {organizerReputation && (
+            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-sm">Event Creator Reputation</span>
+                {organizerReputation.percentage === null ? (
+                  <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
+                    New
+                  </span>
+                ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
+                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs rounded-full">
+                    Novice
+                  </span>
+                ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
+                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded-full">
+                    Bestie
+                  </span>
+                ) : (
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                    {organizerReputation.percentage}% • {(() => {
+                      const total = organizerReputation.thumbsUp + organizerReputation.thumbsDown;
+                      if (total >= 1000000) return `+1M`;
+                      if (total >= 1000) return `${Math.floor(total / 1000)}k`;
+                      return total.toString();
+                    })()} votes
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {event.description && (
             <div className="mb-4">
               <h5>About This Event</h5>
