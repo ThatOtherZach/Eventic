@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Features
 
+### Raffle System (Added January 2025)
+- **Event Owner Raffle**: Event owners can run raffles to randomly select winners from ticket holders
+- **Winner Selection**: Random selection from all eligible tickets (status = "sent")
+- **Reroll Capability**: Owners can reroll to select a different winner if needed
+- **Winner Notification**: Winners receive notification in their notification center
+- **Ticket Display**: Winning tickets show "🎉 Raffle Winner! 🎉" badge with "Please see the event organizer" message
+- **Database**: Added `isRaffleWinner` and `raffleWonAt` fields to tickets table
+- **API Endpoints**: `/api/events/:id/raffle/eligible`, `/api/events/:id/raffle/draw`
+- **UI Integration**: Raffle button in event owner controls with modal for drawing winners
+
 ### Event Reputation System (Added January 2025)
 - **Event Ratings**: Attendees can rate events with thumbs up/down on the event start date
 - **One Vote Per Ticket**: Each ticket holder gets one vote, cannot be changed after submission

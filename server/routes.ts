@@ -2076,7 +2076,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if event rating period is still valid (within 24 hours after start)
-      const eventStart = new Date(event.startsOn);
+      const eventStartDateTime = `${event.date}T${event.time}:00`;
+      const eventStart = new Date(eventStartDateTime);
       const now = new Date();
       const hoursSinceStart = (now.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
       
@@ -2141,7 +2142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if within rating period (24 hours after event start)
-      const eventStart = new Date(event.startsOn);
+      const eventStartDateTime = `${event.date}T${event.time}:00`;
+      const eventStart = new Date(eventStartDateTime);
       const now = new Date();
       const hoursSinceStart = (now.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
       const canRate = hoursSinceStart <= 24;
@@ -2160,6 +2162,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
         request: req
       });
       res.status(500).json({ message: "Failed to check rating status" });
+    }
+  });
+  
+  // Raffle Management
+  app.get("/api/events/:eventId/raffle/eligible", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { eventId } = req.params;
+      
+      // Check if user owns the event
+      const event = await storage.getEvent(eventId);
+      if (!event || event.userId !== userId) {
+        return res.status(403).json({ message: "Only event owners can manage raffles" });
+      }
+      
+      // Get all eligible tickets for raffle
+      const tickets = await storage.getEligibleRaffleTickets(eventId);
+      
+      res.json({ 
+        tickets,
+        totalEligible: tickets.length
+      });
+    } catch (error) {
+      await logError(error, "GET /api/events/:eventId/raffle/eligible", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to get eligible raffle tickets" });
+    }
+  });
+  
+  app.post("/api/events/:eventId/raffle/draw", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { eventId } = req.params;
+      
+      // Check if user owns the event
+      const event = await storage.getEvent(eventId);
+      if (!event || event.userId !== userId) {
+        return res.status(403).json({ message: "Only event owners can draw raffles" });
+      }
+      
+      // Get all eligible tickets
+      const tickets = await storage.getEligibleRaffleTickets(eventId);
+      
+      if (tickets.length === 0) {
+        return res.status(400).json({ message: "No eligible tickets for raffle" });
+      }
+      
+      // Clear any previous raffle winners for this event
+      for (const ticket of tickets) {
+        if (ticket.isRaffleWinner) {
+          await storage.clearRaffleWinner(ticket.id);
+        }
+      }
+      
+      // Randomly select a winner
+      const randomIndex = Math.floor(Math.random() * tickets.length);
+      const winnerTicket = tickets[randomIndex];
+      
+      // Mark the ticket as a raffle winner
+      const updatedTicket = await storage.selectRaffleWinner(winnerTicket.id);
+      
+      if (!updatedTicket) {
+        return res.status(500).json({ message: "Failed to select raffle winner" });
+      }
+      
+      // Send notification to the winner
+      if (winnerTicket.userId) {
+        await storage.createNotification({
+          userId: winnerTicket.userId,
+          type: 'raffle_winner',
+          title: 'Congratulations! You Won a Raffle!',
+          description: `You won the raffle for "${event.name}"! Please see the event organizer.`,
+          metadata: JSON.stringify({
+            eventId,
+            ticketId: winnerTicket.id
+          })
+        });
+      }
+      
+      res.json({ 
+        winner: updatedTicket,
+        totalParticipants: tickets.length
+      });
+    } catch (error) {
+      await logError(error, "POST /api/events/:eventId/raffle/draw", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to draw raffle winner" });
     }
   });
 

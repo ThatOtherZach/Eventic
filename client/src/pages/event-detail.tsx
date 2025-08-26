@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -29,6 +29,8 @@ export default function EventDetailPage() {
   const [isAddingValidator, setIsAddingValidator] = useState(false);
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [isBoostModalOpen, setIsBoostModalOpen] = useState(false);
+  const [isRaffleModalOpen, setIsRaffleModalOpen] = useState(false);
+  const [raffleWinner, setRaffleWinner] = useState<TicketType | null>(null);
 
   const { data: event, isLoading, error } = useQuery<EventWithStats>({
     queryKey: [`/api/events/${id}`],
@@ -243,6 +245,32 @@ export default function EventDetailPage() {
         });
       }
       setIsPurchasing(false);
+    },
+  });
+
+  const raffleMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/events/${id}/raffle/draw`, {});
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to draw raffle");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setRaffleWinner(data.winner);
+      queryClient.invalidateQueries({ queryKey: [`/api/notifications`] });
+      toast({
+        title: "Raffle Winner Selected!",
+        description: `Ticket ${data.winner.ticketNumber} has won the raffle!`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -711,11 +739,19 @@ export default function EventDetailPage() {
                   </Link>
                   <button 
                     onClick={() => setIsBoostModalOpen(true)}
-                    className="btn btn-warning w-100"
+                    className="btn btn-warning w-100 mb-2"
                     data-testid="button-boost-event"
                   >
                     <Star size={18} className="me-2" />
                     Boost to Featured
+                  </button>
+                  <button 
+                    onClick={() => setIsRaffleModalOpen(true)}
+                    className="btn btn-success w-100"
+                    data-testid="button-raffle"
+                  >
+                    <Gift size={18} className="me-2" />
+                    Raffle
                   </button>
                   <div className="alert alert-info mt-3">
                     <small>You own this event</small>
@@ -802,11 +838,110 @@ export default function EventDetailPage() {
 
       {/* Boost Event Modal */}
       {isOwner && (
-        <BoostEventModal 
-          eventId={id!}
-          open={isBoostModalOpen}
-          onOpenChange={setIsBoostModalOpen}
-        />
+        <>
+          <BoostEventModal 
+            eventId={id!}
+            open={isBoostModalOpen}
+            onOpenChange={setIsBoostModalOpen}
+          />
+          
+          {/* Raffle Modal */}
+          {isRaffleModalOpen && (
+            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <Gift size={24} className="me-2 text-success" />
+                      Event Raffle
+                    </h5>
+                    <button 
+                      type="button" 
+                      className="btn-close" 
+                      onClick={() => {
+                        setIsRaffleModalOpen(false);
+                        setRaffleWinner(null);
+                      }}
+                    />
+                  </div>
+                  <div className="modal-body">
+                    {!raffleWinner ? (
+                      <div className="text-center">
+                        <p className="mb-4">Click the button below to randomly select a winner from all ticket holders.</p>
+                        <button
+                          className="btn btn-success btn-lg"
+                          onClick={() => raffleMutation.mutate()}
+                          disabled={raffleMutation.isPending}
+                          data-testid="button-draw-raffle"
+                        >
+                          {raffleMutation.isPending ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-2" />
+                              Drawing...
+                            </>
+                          ) : (
+                            <>
+                              <Gift size={20} className="me-2" />
+                              Draw Winner
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <div className="mb-4">
+                          <Award size={48} className="text-warning mb-3" />
+                          <h4 className="text-success">Winner Selected!</h4>
+                          <p className="lead mb-1">Ticket #{raffleWinner.ticketNumber}</p>
+                          {raffleWinner.recipientName && (
+                            <p className="text-muted">{raffleWinner.recipientName}</p>
+                          )}
+                          {raffleWinner.recipientEmail && (
+                            <p className="text-muted">{raffleWinner.recipientEmail}</p>
+                          )}
+                        </div>
+                        <p className="small text-muted mb-4">The winner has been notified and will see "Raffle Winner!" on their ticket.</p>
+                        <button
+                          className="btn btn-outline-success"
+                          onClick={() => {
+                            setRaffleWinner(null);
+                            raffleMutation.mutate();
+                          }}
+                          disabled={raffleMutation.isPending}
+                          data-testid="button-reroll-raffle"
+                        >
+                          {raffleMutation.isPending ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-2" />
+                              Rerolling...
+                            </>
+                          ) : (
+                            <>
+                              <RotateCcw size={18} className="me-2" />
+                              Reroll
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="modal-footer">
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      onClick={() => {
+                        setIsRaffleModalOpen(false);
+                        setRaffleWinner(null);
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

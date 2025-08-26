@@ -156,6 +156,11 @@ export interface IStorage {
   rateEvent(rating: InsertEventRating): Promise<EventRating | null>;
   hasUserRatedEvent(ticketId: string): Promise<boolean>;
   getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>;
+  
+  // Raffle Management
+  getEligibleRaffleTickets(eventId: string): Promise<Ticket[]>;
+  selectRaffleWinner(ticketId: string): Promise<Ticket | undefined>;
+  clearRaffleWinner(ticketId: string): Promise<Ticket | undefined>;
 }
 
 interface ValidationSession {
@@ -1926,6 +1931,44 @@ export class DatabaseStorage implements IStorage {
     
     // Otherwise compute fresh and update cache
     return this.updateUserReputationCache(userId);
+  }
+  
+  // Raffle Management
+  async getEligibleRaffleTickets(eventId: string): Promise<Ticket[]> {
+    const result = await db
+      .select()
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.eventId, eventId),
+          eq(tickets.status, "sent") // Only tickets that were successfully sent
+        )
+      );
+    return result;
+  }
+  
+  async selectRaffleWinner(ticketId: string): Promise<Ticket | undefined> {
+    const [ticket] = await db
+      .update(tickets)
+      .set({ 
+        isRaffleWinner: true,
+        raffleWonAt: new Date()
+      })
+      .where(eq(tickets.id, ticketId))
+      .returning();
+    return ticket;
+  }
+  
+  async clearRaffleWinner(ticketId: string): Promise<Ticket | undefined> {
+    const [ticket] = await db
+      .update(tickets)
+      .set({ 
+        isRaffleWinner: false,
+        raffleWonAt: null
+      })
+      .where(eq(tickets.id, ticketId))
+      .returning();
+    return ticket;
   }
   
   async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {

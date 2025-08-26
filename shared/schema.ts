@@ -131,6 +131,8 @@ export const tickets = pgTable("tickets", {
   purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }), // Original purchase price (for resale price enforcement)
   resellStatus: text("resell_status").default("not_for_resale"), // not_for_resale, for_resale, sold
   originalOwnerId: varchar("original_owner_id").references(() => users.id), // Original owner for resell tracking
+  isRaffleWinner: boolean("is_raffle_winner").default(false), // Whether this ticket won a raffle
+  raffleWonAt: timestamp("raffle_won_at"), // When the ticket won the raffle
   createdAt: timestamp("created_at").defaultNow(),
 });
 
