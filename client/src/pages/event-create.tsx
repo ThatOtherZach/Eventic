@@ -451,7 +451,7 @@ export function EventCreatePage() {
                       </div>
                     </div>
 
-                    <div className="col-md-6">
+                    <div className="col-12">
                       <FormField
                         control={form.control}
                         name="maxTickets"
@@ -501,7 +501,7 @@ export function EventCreatePage() {
                             <FormLabel>Early Validation</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger className="form-select" data-testid="select-early-validation">
+                                <SelectTrigger className="form-control w-100" data-testid="select-early-validation" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -529,7 +529,7 @@ export function EventCreatePage() {
                             <FormLabel>Ticket Type</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger className="form-select" data-testid="select-reentry-type">
+                                <SelectTrigger className="form-control w-100" data-testid="select-reentry-type" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>

@@ -65,6 +65,30 @@ h4 { font-size: 1.125rem; }
   h4 { font-size: 1.25rem; }
 }
 
+/* Fix for Select dropdown styling */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Custom Select trigger styling to match Bootstrap forms */
+button[role="combobox"] {
+  width: 100%;
+  text-align: left;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+button[role="combobox"]:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+}
+
 /* Custom button styles for mobile-first */
 .btn-primary {
   background-color: var(--bs-primary);
