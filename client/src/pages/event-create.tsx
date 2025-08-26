@@ -398,10 +398,10 @@ export function EventCreatePage() {
                       />
                     </div>
 
-                    {/* Ticket Pricing Section - Own Row */}
+                    {/* Tickets & Pricing Section - Own Row */}
                     <div className="col-12">
                       <div className="border rounded p-3 bg-light">
-                        <h6 className="mb-3">Ticket Pricing</h6>
+                        <h6 className="mb-3">Tickets & Pricing</h6>
                         <div className="row">
                           <div className="col-md-6">
                             <FormField
@@ -417,13 +417,12 @@ export function EventCreatePage() {
                                 </FormItem>
                               )}
                             />
-                          </div>
-                          <div className="col-md-6 d-flex align-items-end">
+                            
                             <FormField
                               control={form.control}
                               name="surgePricing"
                               render={({ field }) => (
-                                <FormItem className="mb-0">
+                                <FormItem className="mt-3">
                                   <div className="form-check">
                                     <FormControl>
                                       <input
@@ -447,49 +446,49 @@ export function EventCreatePage() {
                               )}
                             />
                           </div>
+                          
+                          <div className="col-md-6">
+                            <FormField
+                              control={form.control}
+                              name="maxTickets"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Maximum Tickets (Optional)</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      {...field} 
+                                      type="number"
+                                      min="1"
+                                      max="5000"
+                                      placeholder="Leave blank for unlimited" 
+                                      className="form-control" 
+                                      data-testid="input-max-tickets"
+                                      value={field.value || ''}
+                                      onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                          field.onChange(undefined);
+                                        } else {
+                                          const numValue = parseInt(value);
+                                          if (numValue > 5000) {
+                                            field.onChange(5000);
+                                          } else if (numValue < 1) {
+                                            field.onChange(1);
+                                          } else {
+                                            field.onChange(numValue);
+                                          }
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <div className="form-text">Maximum 5,000 tickets. Leave blank for unlimited.</div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="col-12">
-                      <FormField
-                        control={form.control}
-                        name="maxTickets"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Maximum Tickets (Optional)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                type="number"
-                                min="1"
-                                max="5000"
-                                placeholder="Leave blank for unlimited" 
-                                className="form-control" 
-                                data-testid="input-max-tickets"
-                                value={field.value || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  if (value === '') {
-                                    field.onChange(undefined);
-                                  } else {
-                                    const numValue = parseInt(value);
-                                    if (numValue > 5000) {
-                                      field.onChange(5000);
-                                    } else if (numValue < 1) {
-                                      field.onChange(1);
-                                    } else {
-                                      field.onChange(numValue);
-                                    }
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <div className="form-text">Maximum 5,000 tickets. Leave blank for unlimited.</div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
 
                     <div className="col-md-6">
