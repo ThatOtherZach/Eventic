@@ -322,6 +322,25 @@ export function EventCreatePage() {
                     </div>
 
                     <div className="col-12">
+                      <div className="mb-4">
+                        <label className="form-label">
+                          <Image size={18} className="me-2" />
+                          Featured Image
+                        </label>
+                        <ObjectUploader
+                          onGetUploadParameters={handleImageUpload}
+                          onComplete={(result) => handleImageComplete(result)}
+                          buttonClassName="btn btn-outline-primary"
+                          currentImageUrl={imageUrl}
+                          showPreview={true}
+                        >
+                          <Image size={18} className="me-2" />
+                          Choose Image
+                        </ObjectUploader>
+                      </div>
+                    </div>
+
+                    <div className="col-12">
                       <FormField
                         control={form.control}
                         name="description"
@@ -909,25 +928,6 @@ export function EventCreatePage() {
                             </FormItem>
                           )}
                         />
-                      </div>
-                    </div>
-
-                    <div className="col-12">
-                      <div className="mb-4">
-                        <label className="form-label">
-                          <Image size={18} className="me-2" />
-                          Feature Image
-                        </label>
-                        <ObjectUploader
-                          onGetUploadParameters={handleImageUpload}
-                          onComplete={(result) => handleImageComplete(result)}
-                          buttonClassName="btn btn-outline-primary"
-                          currentImageUrl={imageUrl}
-                          showPreview={true}
-                        >
-                          <Image size={18} className="me-2" />
-                          Choose Image
-                        </ObjectUploader>
                       </div>
                     </div>
 
