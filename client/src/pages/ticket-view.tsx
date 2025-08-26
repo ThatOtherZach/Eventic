@@ -367,7 +367,7 @@ export default function TicketViewPage(): React.ReactElement {
                   <h5 className="mb-2">
                     <span className="badge bg-warning text-dark">🎫 GOLDEN TICKET WINNER! 🎫</span>
                   </h5>
-                  <p className="mb-0">Congratulations! This ticket won the golden ticket contest!</p>
+                  <p className="mb-0">Congratulations!</p>
                 </div>
               )}
 
@@ -425,7 +425,6 @@ export default function TicketViewPage(): React.ReactElement {
                       {/* Validation Code Display - Prominent for mobile */}
                       <div className="text-center mb-3">
                         <div className="alert alert-success">
-                          <h6 className="mb-2">✅ Re-validation Active</h6>
                           
                           {currentCode && (
                             <div className="my-3">
@@ -518,8 +517,6 @@ export default function TicketViewPage(): React.ReactElement {
                   {/* Validation Code Display - Prominent for mobile */}
                   <div className="text-center mb-3">
                     <div className="alert alert-success">
-                      <h6 className="mb-2">✅ Validation Active</h6>
-                      
                       {currentCode && (
                         <div className="my-3">
                           <div className="bg-primary text-white rounded-3 p-4 mb-3">
