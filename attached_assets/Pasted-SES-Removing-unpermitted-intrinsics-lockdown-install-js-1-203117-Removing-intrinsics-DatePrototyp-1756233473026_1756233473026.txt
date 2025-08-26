@@ -1,0 +1,57 @@
+SES Removing unpermitted intrinsics lockdown-install.js:1:203117
+  Removing intrinsics.%DatePrototype%.toTemporalInstant lockdown-install.js:1:202962
+[vite] connecting... client:495:9
+[vite] connected. client:618:15
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools react-dom.development.js:29895:17
+Loading failed for the <script> with source “https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js”. create:1:1
+Error: Failed to load QR code library
+    onerror qr-utils.ts:71
+    loadQRCodeLibrary qr-utils.ts:71
+    loadQRCodeLibrary qr-utils.ts:62
+    <anonymous> qr-utils.ts:78
+
+The resource from “https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js” was blocked due to MIME type (“text/plain”) mismatch (X-Content-Type-Options: nosniff).
+create
+Warning: findDOMNode is deprecated and will be removed in the next major release. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://reactjs.org/link/strict-mode-find-node
+ReactQuill2@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-quill.js?v=abd36386:12915:30
+div
+_c6<@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/components/ui/form.tsx:126:3
+div
+_c2<@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/components/ui/form.tsx:68:3
+Controller@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YGCRICWC.js?v=abd36386:298:29
+FormField@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/components/ui/form.tsx:28:19
+div
+div
+form
+FormProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YGCRICWC.js?v=abd36386:102:33
+div
+div
+div
+div
+div
+EventCreatePage@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/pages/event-create.tsx:50:21
+Route@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=abd36386:323:13
+ProtectedRoute@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/lib/protected-route.tsx:20:31
+Switch@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=abd36386:379:14
+Router
+div
+div
+main
+div
+Provider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TA2TXMSM.js?v=abd36386:35:47
+TooltipProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=abd36386:58:7
+AuthProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/hooks/use-auth.tsx:37:29
+QueryClientProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=abd36386:2804:27
+ErrorBoundary@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/components/error-boundary.tsx:10:5
+App react-dom.development.js:86:30
+Adding a listener for DOMNodeInserted is deprecated and will be removed soon. Instead of a MutationEvent, use MutationObserver. https://developer.mozilla.org/docs/Web/API/MutationObserver quill.js:4237:19
+Source map error: Error: JSON.parse: unexpected character at line 1 column 1 of the JSON data
+Stack in the worker:parseSourceMapInput@resource://devtools/client/shared/vendor/source-map/lib/util.js:163:15
+_factory@resource://devtools/client/shared/vendor/source-map/lib/source-map-consumer.js:1066:22
+SourceMapConsumer@resource://devtools/client/shared/vendor/source-map/lib/source-map-consumer.js:26:12
+_fetch@resource://devtools/client/shared/source-map-loader/utils/fetchSourceMap.js:83:19
+
+Resource URL: https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/events/create
+Source Map URL: index.css.map
+
+A resource is blocked by OpaqueResponseBlocking, please check browser console for details.

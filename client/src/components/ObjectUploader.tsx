@@ -86,15 +86,21 @@ export function ObjectUploader({
       // Extract the base URL (without query parameters)
       const uploadUrl = url.split('?')[0];
       
+      // Convert the storage URL to our public endpoint URL
+      // Extract the filename from the storage URL
+      const parts = uploadUrl.split('/');
+      const filename = parts[parts.length - 1];
+      const publicUrl = `/public-objects/uploads/${filename}`;
+      
       // Call onComplete with a structure similar to what the component expects
       onComplete?.({
         successful: [{
-          uploadURL: uploadUrl
+          uploadURL: publicUrl
         }]
       });
       setSelectedFile(null);
       // Keep the preview of the uploaded image
-      setPreviewUrl(uploadUrl);
+      setPreviewUrl(publicUrl);
     } catch (err) {
       setError('Failed to upload file. Please try again.');
       console.error('Upload error:', err);
