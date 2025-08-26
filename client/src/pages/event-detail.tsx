@@ -255,7 +255,10 @@ export default function EventDetailPage() {
   };
 
   const handleResell = async (ticketId: string) => {
-    if (confirm("Are you sure you want to list this ticket for resale? When someone buys it, the payment will go to you, not the event organizer.")) {
+    const ticket = userTickets?.find(t => t.id === ticketId);
+    const originalPrice = (ticket as any)?.purchasePrice || event?.ticketPrice || "the original price";
+    
+    if (confirm(`Are you sure you want to list this ticket for resale at ${originalPrice}? When someone buys it, you'll receive the payment (minus a 2% platform fee) instead of the event organizer. Tickets can only be resold at their original purchase price.`)) {
       resellTicketMutation.mutate(ticketId);
     }
   };

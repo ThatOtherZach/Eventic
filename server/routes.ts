@@ -878,6 +878,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // No resell tickets available, create a new ticket
+      // Get current price for this ticket
+      const currentPrice = await storage.getCurrentPrice(req.params.eventId);
+      
       // Generate QR data for the ticket
       const tempTicketNumber = `${event.id.slice(0, 8)}-PENDING`;
       const qrData = JSON.stringify({
@@ -894,6 +897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         qrData,
         purchaserEmail: userEmail, // Track email for anti-scalping
         purchaserIp: userIp, // Track IP for anti-scalping
+        purchasePrice: currentPrice.toString(), // Store original purchase price for resale enforcement
       };
 
       // Use transactional ticket creation to prevent race conditions

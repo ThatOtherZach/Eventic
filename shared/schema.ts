@@ -128,6 +128,7 @@ export const tickets = pgTable("tickets", {
   status: text("status").default("pending"), // pending, sent, failed
   purchaserEmail: text("purchaser_email"), // Email of the person who purchased this ticket
   purchaserIp: text("purchaser_ip"), // IP address of the person who purchased this ticket
+  purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }), // Original purchase price (for resale price enforcement)
   resellStatus: text("resell_status").default("not_for_resale"), // not_for_resale, for_resale, sold
   originalOwnerId: varchar("original_owner_id").references(() => users.id), // Original owner for resell tracking
   createdAt: timestamp("created_at").defaultNow(),

@@ -12,12 +12,14 @@ Preferred communication style: Simple, everyday language.
 
 ### Ticket Resale System (Added January 2025)
 - **Replaces Refund System**: Tickets can no longer be refunded, but can be listed for resale to other users
+- **Price Enforcement**: Tickets can only be resold at their original purchase price - no markup allowed
+- **Platform Fee**: 2% transaction fee is charged on resell transactions and goes to the platform
 - **Resale Queue Management**: Tickets listed for resale are queued in order, with the first listed having priority for new purchases
 - **Automatic Matching**: When users buy tickets for an event, they are automatically matched with the first available resell ticket before creating new tickets
-- **Owner Transfer**: Resold tickets transfer from the original owner to the new buyer, with payment going directly to the original owner
-- **Database Changes**: Added `resellQueue` table and `resellStatus`/`originalOwnerId` fields to tickets table
+- **Owner Transfer**: Resold tickets transfer from the original owner to the new buyer, with payment going directly to the original owner (minus 2% fee)
+- **Database Changes**: Added `resellQueue`, `resellTransactions` tables and `resellStatus`/`originalOwnerId`/`purchasePrice` fields to tickets table
 - **API Updates**: Replaced `/api/tickets/:id/refund` endpoint with `/api/tickets/:id/resell` endpoint
-- **UI Changes**: "Refund" buttons changed to "Resell" buttons with appropriate messaging and confirmation dialogs
+- **UI Changes**: "Refund" buttons changed to "Resell" buttons with clear pricing information and transaction fee disclosure
 
 ### Error Logging System (Added August 2025)
 - **Comprehensive System Logging**: All server errors are automatically logged to a `system_logs` table with detailed context including stack traces, user information, and request metadata

@@ -528,12 +528,13 @@ export class DatabaseStorage implements IStorage {
           })
           .where(eq(tickets.id, ticketId));
         
-        // Add to resell queue
+        // Add to resell queue using the ticket's original purchase price
+        const resellPrice = ticket.purchasePrice || event.ticketPrice; // Use stored purchase price or fallback to event price
         await tx.insert(resellQueue).values({
           ticketId,
           eventId: ticket.eventId,
           originalOwnerId: userId,
-          ticketPrice: event.ticketPrice,
+          ticketPrice: resellPrice, // Enforce resale at original purchase price
           position: nextPosition,
         });
       });
