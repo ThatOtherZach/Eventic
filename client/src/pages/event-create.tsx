@@ -208,6 +208,7 @@ export function EventCreatePage() {
 
 
   // Create a sample ticket for preview
+  const goldenTicketEnabled = form.watch('goldenTicketEnabled');
   const sampleTicket: Ticket = {
     id: "sample",
     eventId: "sample",
@@ -218,7 +219,7 @@ export function EventCreatePage() {
     validatedAt: null,
     validationCode: null,
     useCount: 0,
-    isGoldenTicket: form.watch('goldenTicketEnabled') || false, // Apply golden ticket effect when enabled
+    isGoldenTicket: goldenTicketEnabled === true, // Apply golden ticket effect when enabled
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
