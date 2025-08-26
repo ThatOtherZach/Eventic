@@ -1832,6 +1832,21 @@ export class DatabaseStorage implements IStorage {
     
     return !!rating;
   }
+
+  async hasUserRatedEventByUser(userId: string, eventId: string): Promise<boolean> {
+    // Check if user has rated this event with any of their tickets
+    const [rating] = await db
+      .select()
+      .from(eventRatings)
+      .innerJoin(tickets, eq(eventRatings.ticketId, tickets.id))
+      .where(and(
+        eq(tickets.userId, userId),
+        eq(eventRatings.eventId, eventId)
+      ))
+      .limit(1);
+    
+    return !!rating;
+  }
   
   async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
     const ratings = await db

@@ -2056,7 +2056,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { ticketId } = req.params;
-      const { rating, eventId, eventOwnerId } = req.body;
+      const { rating } = req.body;
 
       // Validate rating
       if (!rating || !['thumbs_up', 'thumbs_down'].includes(rating)) {
@@ -2069,8 +2069,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only rate events for your own tickets" });
       }
 
-      // Check if already rated
-      const hasRated = await storage.hasUserRatedEvent(ticketId);
+      // Get event details to fetch the owner ID
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event || !event.userId) {
+        return res.status(404).json({ message: "Event not found or has no owner" });
+      }
+
+      // Check if user has already rated this event (with any ticket)
+      const hasRated = await storage.hasUserRatedEventByUser(userId, ticket.eventId);
       if (hasRated) {
         return res.status(400).json({ message: "You have already rated this event" });
       }
@@ -2078,8 +2084,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the rating
       const eventRating = await storage.rateEvent({
         ticketId,
-        eventId,
-        eventOwnerId,
+        eventId: ticket.eventId,
+        eventOwnerId: event.userId,
         rating
       });
 
@@ -2098,9 +2104,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/tickets/:ticketId/rating", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const { ticketId } = req.params;
       
-      const hasRated = await storage.hasUserRatedEvent(ticketId);
+      // Get the ticket to find the event ID
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      // Check if user has rated this event with any ticket
+      const hasRated = await storage.hasUserRatedEventByUser(userId, ticket.eventId);
       res.json({ hasRated });
     } catch (error) {
       await logError(error, "GET /api/tickets/:ticketId/rating", {

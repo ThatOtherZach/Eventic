@@ -115,9 +115,7 @@ export default function TicketViewPage(): React.ReactElement {
   const submitRatingMutation = useMutation({
     mutationFn: async (rating: 'thumbs_up' | 'thumbs_down') => {
       const response = await apiRequest("POST", `/api/tickets/${ticketId}/rate`, {
-        rating,
-        eventId: ticketData?.event.id,
-        eventOwnerId: ticketData?.event.userId,
+        rating
       });
       return response.json();
     },
@@ -127,7 +125,8 @@ export default function TicketViewPage(): React.ReactElement {
         title: "Rating Submitted",
         description: "Thank you for rating this event!",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}/rating`] });
+      // Invalidate all ticket rating queries for this event to sync across tickets
+      queryClient.invalidateQueries({ queryKey: ['/api/tickets'] });
     },
     onError: (error: any) => {
       toast({
@@ -602,37 +601,43 @@ export default function TicketViewPage(): React.ReactElement {
           {isEventStarted() && !hasRated && (
             <div className="card mt-3">
               <div className="card-body">
-                <h5 className="card-title mb-3">Rate Event</h5>
-                <p className="text-muted mb-3">How is the event?</p>
-                
-                <div className="d-flex justify-content-center gap-3">
-                  <button
-                    className={`btn btn-lg ${selectedRating === 'thumbs_up' ? 'btn-success' : 'btn-outline-success'} px-4`}
-                    onClick={() => {
-                      setSelectedRating('thumbs_up');
-                      submitRatingMutation.mutate('thumbs_up');
-                    }}
-                    disabled={submitRatingMutation.isPending || hasRated}
-                    data-testid="button-thumbs-up"
-                  >
-                    <ThumbsUp size={24} />
-                  </button>
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 className="card-title mb-1">Rate Event</h5>
+                    <p className="text-muted mb-0 small">How is the event?</p>
+                  </div>
                   
-                  <button
-                    className={`btn btn-lg ${selectedRating === 'thumbs_down' ? 'btn-danger' : 'btn-outline-danger'} px-4`}
-                    onClick={() => {
-                      setSelectedRating('thumbs_down');
-                      submitRatingMutation.mutate('thumbs_down');
-                    }}
-                    disabled={submitRatingMutation.isPending || hasRated}
-                    data-testid="button-thumbs-down"
-                  >
-                    <ThumbsDown size={24} />
-                  </button>
+                  <div className="d-flex gap-2">
+                    <button
+                      className={`btn ${selectedRating === 'thumbs_up' ? 'btn-success' : 'btn-outline-success'}`}
+                      onClick={() => {
+                        setSelectedRating('thumbs_up');
+                        submitRatingMutation.mutate('thumbs_up');
+                      }}
+                      disabled={submitRatingMutation.isPending || hasRated}
+                      data-testid="button-thumbs-up"
+                      style={{ padding: '8px 16px' }}
+                    >
+                      <ThumbsUp size={20} />
+                    </button>
+                    
+                    <button
+                      className={`btn ${selectedRating === 'thumbs_down' ? 'btn-danger' : 'btn-outline-danger'}`}
+                      onClick={() => {
+                        setSelectedRating('thumbs_down');
+                        submitRatingMutation.mutate('thumbs_down');
+                      }}
+                      disabled={submitRatingMutation.isPending || hasRated}
+                      data-testid="button-thumbs-down"
+                      style={{ padding: '8px 16px' }}
+                    >
+                      <ThumbsDown size={20} />
+                    </button>
+                  </div>
                 </div>
                 
                 {submitRatingMutation.isPending && (
-                  <div className="text-center mt-3">
+                  <div className="text-center mt-2">
                     <div className="spinner-border spinner-border-sm text-primary" role="status">
                       <span className="visually-hidden">Submitting rating...</span>
                     </div>
