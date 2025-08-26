@@ -199,7 +199,7 @@ export function EventCreatePage() {
       // Store the raw URL - it will be normalized by the server
       setImageUrl(uploadedUrl);
       toast({
-        title: "Feature image uploaded",
+        title: "Featured image uploaded",
         description: "Image applied to both event and ticket preview",
       });
     }
@@ -327,12 +327,15 @@ export function EventCreatePage() {
                           <Image size={18} className="me-2" />
                           Featured Image
                         </label>
+                        <div className="form-text mb-2">Maximum file size: 5MB. Accepted formats: JPEG, JPG, PNG</div>
                         <ObjectUploader
                           onGetUploadParameters={handleImageUpload}
                           onComplete={(result) => handleImageComplete(result)}
                           buttonClassName="btn btn-outline-primary"
                           currentImageUrl={imageUrl}
                           showPreview={true}
+                          accept="image/jpeg,image/jpg,image/png"
+                          maxFileSize={5 * 1024 * 1024}
                         >
                           <Image size={18} className="me-2" />
                           Choose Image
