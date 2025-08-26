@@ -198,10 +198,6 @@ export function EventCreatePage() {
     if (uploadedUrl) {
       // Store the raw URL - it will be normalized by the server
       setImageUrl(uploadedUrl);
-      toast({
-        title: "Featured image uploaded",
-        description: "Image applied to both event and ticket preview",
-      });
     }
   };
 
