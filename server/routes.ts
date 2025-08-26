@@ -2075,25 +2075,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found or has no owner" });
       }
 
-      // Check if user has already rated this event (with any ticket)
-      const hasRated = await storage.hasUserRatedEventByUser(userId, ticket.eventId);
-      if (hasRated) {
-        return res.status(400).json({ message: "You have already rated this event" });
+      // Check if event rating period is still valid (within 24 hours after start)
+      const eventStart = new Date(event.startsOn);
+      const now = new Date();
+      const hoursSinceStart = (now.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceStart > 24) {
+        return res.status(400).json({ message: "Rating period has ended (24 hours after event start)" });
       }
 
-      // Create the rating
-      const eventRating = await storage.rateEvent({
-        ticketId,
-        eventId: ticket.eventId,
-        eventOwnerId: event.userId,
-        rating
-      });
+      // Check if user has already rated this event
+      const existingRating = await storage.getUserEventRating(userId, ticket.eventId);
+      
+      if (existingRating) {
+        // User has already rated, update their rating
+        const updatedRating = await storage.updateEventRating(userId, ticket.eventId, rating);
+        
+        if (!updatedRating) {
+          return res.status(400).json({ message: "Failed to update rating" });
+        }
+        
+        res.json({ success: true, rating: updatedRating, updated: true });
+      } else {
+        // Create new rating
+        const eventRating = await storage.rateEvent({
+          ticketId,
+          eventId: ticket.eventId,
+          eventOwnerId: event.userId,
+          rating
+        });
 
-      if (!eventRating) {
-        return res.status(400).json({ message: "Failed to submit rating" });
+        if (!eventRating) {
+          return res.status(400).json({ message: "Failed to submit rating" });
+        }
+
+        res.json({ success: true, rating: eventRating, updated: false });
       }
-
-      res.json({ success: true, rating: eventRating });
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/rate", {
         request: req
@@ -2117,9 +2134,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ticket not found" });
       }
       
-      // Check if user has rated this event with any ticket
-      const hasRated = await storage.hasUserRatedEventByUser(userId, ticket.eventId);
-      res.json({ hasRated });
+      // Get the event to check if rating period is still valid
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Check if within rating period (24 hours after event start)
+      const eventStart = new Date(event.startsOn);
+      const now = new Date();
+      const hoursSinceStart = (now.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
+      const canRate = hoursSinceStart <= 24;
+      
+      // Get user's existing rating if any
+      const existingRating = await storage.getUserEventRating(userId, ticket.eventId);
+      
+      res.json({ 
+        hasRated: !!existingRating,
+        currentRating: existingRating?.rating || null,
+        canRate,
+        ratingPeriodEnded: hoursSinceStart > 24
+      });
     } catch (error) {
       await logError(error, "GET /api/tickets/:ticketId/rating", {
         request: req

@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, notInArray, sql, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -1800,17 +1800,6 @@ export class DatabaseStorage implements IStorage {
   // Event Ratings
   async rateEvent(rating: InsertEventRating): Promise<EventRating | null> {
     try {
-      // Check if this ticket has already rated
-      const existingRating = await db
-        .select()
-        .from(eventRatings)
-        .where(eq(eventRatings.ticketId, rating.ticketId))
-        .limit(1);
-      
-      if (existingRating.length > 0) {
-        return null; // Already rated
-      }
-      
       const [eventRating] = await db
         .insert(eventRatings)
         .values(rating)
@@ -1819,6 +1808,71 @@ export class DatabaseStorage implements IStorage {
       return eventRating;
     } catch (error) {
       console.error("Error rating event:", error);
+      return null;
+    }
+  }
+
+  async updateEventRating(userId: string, eventId: string, newRating: 'thumbs_up' | 'thumbs_down'): Promise<EventRating | null> {
+    try {
+      // Find the existing rating through user's tickets
+      const existingRatings = await db
+        .select({
+          ratingId: eventRatings.id,
+          ticketId: eventRatings.ticketId
+        })
+        .from(eventRatings)
+        .innerJoin(tickets, eq(eventRatings.ticketId, tickets.id))
+        .where(and(
+          eq(tickets.userId, userId),
+          eq(eventRatings.eventId, eventId)
+        ))
+        .limit(1);
+      
+      if (existingRatings.length === 0) {
+        return null;
+      }
+      
+      const [updated] = await db
+        .update(eventRatings)
+        .set({ 
+          rating: newRating,
+          createdAt: new Date() // Update timestamp to track when vote was changed
+        })
+        .where(eq(eventRatings.id, existingRatings[0].ratingId))
+        .returning();
+      
+      return updated;
+    } catch (error) {
+      console.error("Error updating event rating:", error);
+      return null;
+    }
+  }
+
+  async getUserEventRating(userId: string, eventId: string): Promise<{ rating: 'thumbs_up' | 'thumbs_down'; createdAt: Date } | null> {
+    try {
+      const result = await db
+        .select({
+          rating: eventRatings.rating,
+          createdAt: eventRatings.createdAt
+        })
+        .from(eventRatings)
+        .innerJoin(tickets, eq(eventRatings.ticketId, tickets.id))
+        .where(and(
+          eq(tickets.userId, userId),
+          eq(eventRatings.eventId, eventId)
+        ))
+        .limit(1);
+      
+      if (result.length > 0 && result[0].createdAt) {
+        return {
+          rating: result[0].rating as 'thumbs_up' | 'thumbs_down',
+          createdAt: result[0].createdAt
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error getting user event rating:", error);
       return null;
     }
   }
@@ -1849,6 +1903,32 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
+    // First check cache
+    const [cached] = await db
+      .select()
+      .from(userReputationCache)
+      .where(eq(userReputationCache.userId, userId))
+      .limit(1);
+    
+    // If cache exists and is less than 1 hour old, use it
+    if (cached) {
+      const cacheAge = Date.now() - cached.lastUpdated.getTime();
+      const oneHour = 60 * 60 * 1000;
+      
+      if (cacheAge < oneHour) {
+        return {
+          thumbsUp: cached.thumbsUp,
+          thumbsDown: cached.thumbsDown,
+          percentage: cached.percentage
+        };
+      }
+    }
+    
+    // Otherwise compute fresh and update cache
+    return this.updateUserReputationCache(userId);
+  }
+  
+  async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
     const ratings = await db
       .select({
         rating: eventRatings.rating,
@@ -1872,7 +1952,41 @@ export class DatabaseStorage implements IStorage {
     const total = thumbsUp + thumbsDown;
     const percentage = total > 0 ? Math.round((thumbsUp / total) * 100) : null;
     
+    // Update or insert cache
+    await db
+      .insert(userReputationCache)
+      .values({
+        userId,
+        thumbsUp,
+        thumbsDown,
+        percentage,
+        lastUpdated: new Date()
+      })
+      .onConflictDoUpdate({
+        target: userReputationCache.userId,
+        set: {
+          thumbsUp,
+          thumbsDown,
+          percentage,
+          lastUpdated: new Date()
+        }
+      });
+    
     return { thumbsUp, thumbsDown, percentage };
+  }
+  
+  async updateAllUserReputations(): Promise<void> {
+    // Get all users who have received ratings
+    const usersWithRatings = await db
+      .selectDistinct({ userId: eventRatings.eventOwnerId })
+      .from(eventRatings);
+    
+    // Update each user's reputation cache
+    for (const { userId } of usersWithRatings) {
+      if (userId) {
+        await this.updateUserReputationCache(userId);
+      }
+    }
   }
 
   // Paginated ticket queries

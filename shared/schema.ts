@@ -173,6 +173,17 @@ export const eventRatings = pgTable("event_ratings", {
   eventOwnerId: varchar("event_owner_id").references(() => users.id).notNull(), // Track who gets the rating
   rating: text("rating").notNull(), // "thumbs_up" or "thumbs_down"
   ratedAt: timestamp("rated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(), // Track when vote was cast/changed
+});
+
+// Cached User Reputation table (updated hourly)
+export const userReputationCache = pgTable("user_reputation_cache", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  thumbsUp: integer("thumbs_up").default(0).notNull(),
+  thumbsDown: integer("thumbs_down").default(0).notNull(),
+  percentage: integer("percentage"), // null if no ratings
+  lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
 export const systemLogs = pgTable("system_logs", {

@@ -88,6 +88,8 @@ export default function TicketViewPage(): React.ReactElement {
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [selectedRating, setSelectedRating] = useState<'thumbs_up' | 'thumbs_down' | null>(null);
   const [hasRated, setHasRated] = useState(false);
+  const [canRate, setCanRate] = useState(false);
+  const [ratingPeriodEnded, setRatingPeriodEnded] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -119,14 +121,15 @@ export default function TicketViewPage(): React.ReactElement {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setSelectedRating(data.rating.rating);
       setHasRated(true);
       toast({
-        title: "Rating Submitted",
-        description: "Thank you for rating this event!",
+        title: data.updated ? "Rating Updated" : "Rating Submitted",
+        description: data.updated ? "Your rating has been updated!" : "Thank you for rating this event!",
       });
-      // Invalidate all ticket rating queries for this event to sync across tickets
-      queryClient.invalidateQueries({ queryKey: ['/api/tickets'] });
+      // Invalidate rating queries to sync across tickets
+      queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}/rating`] });
     },
     onError: (error: any) => {
       toast({
@@ -251,19 +254,27 @@ export default function TicketViewPage(): React.ReactElement {
     }
   }, [ticketData?.ticket?.isValidated]);
 
-  // Check if event has started (for showing rating option)
-  const isEventStarted = () => {
+  // Check if within rating period (before event OR within 24 hours after start)
+  const isWithinRatingPeriod = () => {
     if (!ticketData?.event) return false;
     const now = new Date();
     const startDateTime = `${ticketData.event.date}T${ticketData.event.time}:00`;
     const startDate = new Date(startDateTime);
-    return now >= startDate;
+    const hoursSinceStart = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+    
+    // Allow rating anytime before event or within 24 hours after start
+    return hoursSinceStart <= 24;
   };
 
-  // Update hasRated state when rating status changes
+  // Update rating state when rating status changes
   useEffect(() => {
-    if (ratingStatus?.hasRated) {
-      setHasRated(true);
+    if (ratingStatus) {
+      setHasRated(ratingStatus.hasRated);
+      setCanRate(ratingStatus.canRate);
+      setRatingPeriodEnded(ratingStatus.ratingPeriodEnded);
+      if (ratingStatus.currentRating) {
+        setSelectedRating(ratingStatus.currentRating);
+      }
     }
   }, [ratingStatus]);
 
@@ -598,23 +609,24 @@ export default function TicketViewPage(): React.ReactElement {
           </div>
 
           {/* Event Rating Section */}
-          {isEventStarted() && !hasRated && (
+          {canRate && (
             <div className="card mt-3">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <h5 className="card-title mb-1">Rate Event</h5>
-                    <p className="text-muted mb-0 small">How is the event?</p>
+                    <p className="text-muted mb-0 small">
+                      {hasRated ? 'You can change your rating' : 'How is the event?'}
+                    </p>
                   </div>
                   
                   <div className="d-flex gap-2">
                     <button
                       className={`btn ${selectedRating === 'thumbs_up' ? 'btn-success' : 'btn-outline-success'}`}
                       onClick={() => {
-                        setSelectedRating('thumbs_up');
                         submitRatingMutation.mutate('thumbs_up');
                       }}
-                      disabled={submitRatingMutation.isPending || hasRated}
+                      disabled={submitRatingMutation.isPending}
                       data-testid="button-thumbs-up"
                       style={{ padding: '8px 16px' }}
                     >
@@ -624,10 +636,9 @@ export default function TicketViewPage(): React.ReactElement {
                     <button
                       className={`btn ${selectedRating === 'thumbs_down' ? 'btn-danger' : 'btn-outline-danger'}`}
                       onClick={() => {
-                        setSelectedRating('thumbs_down');
                         submitRatingMutation.mutate('thumbs_down');
                       }}
-                      disabled={submitRatingMutation.isPending || hasRated}
+                      disabled={submitRatingMutation.isPending}
                       data-testid="button-thumbs-down"
                       style={{ padding: '8px 16px' }}
                     >
@@ -643,6 +654,27 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+          
+          {/* Rating Period Ended Message */}
+          {ratingPeriodEnded && hasRated && (
+            <div className="card mt-3">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 className="card-title mb-1">Your Rating</h5>
+                    <p className="text-muted mb-0 small">Rating period has ended</p>
+                  </div>
+                  <div>
+                    {selectedRating === 'thumbs_up' ? (
+                      <span className="text-success"><ThumbsUp size={20} /></span>
+                    ) : (
+                      <span className="text-danger"><ThumbsDown size={20} /></span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
