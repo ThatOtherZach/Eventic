@@ -16,9 +16,6 @@ interface TicketCardProps {
 export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValidating = false }: TicketCardProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   
-  // Debug: Log what's being received
-  console.log("TicketCard - ticketBackgroundUrl:", event.ticketBackgroundUrl);
-  
   // Check if this ticket has any special effects
   const hasSpecialEffects = ticket.isGoldenTicket || detectSpecialEffect(event, { isValidated: !!ticket.isValidated }) !== null;
 

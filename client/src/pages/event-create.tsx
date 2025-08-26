@@ -164,11 +164,9 @@ export function EventCreatePage() {
   const handleImageComplete = (result: any) => {
     // Extract the uploaded URL from the result
     const uploadedUrl = result.successful?.[0]?.uploadURL;
-    console.log("handleImageComplete - uploadedUrl:", uploadedUrl);
     if (uploadedUrl) {
       // Store the raw URL - it will be normalized by the server
       setImageUrl(uploadedUrl);
-      console.log("Image URL set to state:", uploadedUrl);
       toast({
         title: "Feature image uploaded",
         description: "Image applied to both event and ticket preview",
@@ -222,8 +220,7 @@ export function EventCreatePage() {
     }
   };
   
-  // Debug: Log imageUrl state whenever preview renders
-  console.log("Current imageUrl state for preview:", imageUrl);
+
   
   const previewEvent: Event = {
     id: "preview",
