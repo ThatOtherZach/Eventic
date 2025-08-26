@@ -8,11 +8,12 @@ interface ObjectUploaderProps {
     method: "PUT";
     url: string;
   }>;
-  onComplete?: (uploadUrl: string) => void;
+  onComplete?: (result: any) => void;
   buttonClassName?: string;
   children?: ReactNode;
   accept?: string;
-  currentImageUrl?: string;
+  currentImageUrl?: string | null;
+  showPreview?: boolean;
 }
 
 export function ObjectUploader({
@@ -22,7 +23,8 @@ export function ObjectUploader({
   buttonClassName = "btn btn-primary",
   children,
   accept = "image/*",
-  currentImageUrl
+  currentImageUrl,
+  showPreview = true
 }: ObjectUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -77,7 +79,12 @@ export function ObjectUploader({
       // Extract the base URL (without query parameters)
       const uploadUrl = url.split('?')[0];
       
-      onComplete?.(uploadUrl);
+      // Call onComplete with a structure similar to what the component expects
+      onComplete?.({
+        successful: [{
+          uploadURL: uploadUrl
+        }]
+      });
       setSelectedFile(null);
     } catch (err) {
       setError('Failed to upload file. Please try again.');
@@ -95,7 +102,7 @@ export function ObjectUploader({
 
   return (
     <div>
-      {previewUrl && (
+      {showPreview && previewUrl && (
         <div className="mb-3">
           <img 
             src={previewUrl} 

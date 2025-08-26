@@ -873,13 +873,14 @@ export function EventCreatePage() {
                             onComplete={(result) => handleTicketBackgroundComplete(result)}
                             buttonClassName="btn btn-outline-primary"
                             currentImageUrl={null}
+                            showPreview={false}
                           >
                             <CreditCard size={18} className="me-2" />
                             Upload Ticket Background
                           </ObjectUploader>
                           {ticketBackgroundUrl && (
                             <p className="text-muted small mt-2 mb-0">
-                              Background applied! Click button again to change.
+                              ✓ Background applied! Click button again to change.
                             </p>
                           )}
                         </div>
