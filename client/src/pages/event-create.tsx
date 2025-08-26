@@ -157,6 +157,18 @@ export function EventCreatePage() {
         return;
       }
     }
+    
+    // Validate surge pricing minimum ticket price
+    if (data.surgePricing) {
+      const ticketPrice = parseFloat(data.ticketPrice || '0');
+      if (ticketPrice < 1.00) {
+        form.setError('ticketPrice', {
+          type: 'manual',
+          message: 'Ticket price must be at least $1.00 for surge pricing'
+        });
+        return;
+      }
+    }
 
     // Ensure maxTickets has a default value of 100 if not set
     const submitData = {
@@ -469,7 +481,31 @@ export function EventCreatePage() {
                                 <FormItem>
                                   <FormLabel>Ticket Price ($)</FormLabel>
                                   <FormControl>
-                                    <Input {...field} type="number" step="0.01" min="0" placeholder="0.00" className="form-control" data-testid="input-price" />
+                                    <Input 
+                                      {...field} 
+                                      type="number" 
+                                      step="0.01" 
+                                      min="0" 
+                                      placeholder="0.00" 
+                                      className="form-control" 
+                                      data-testid="input-price"
+                                      onChange={(e) => {
+                                        field.onChange(e);
+                                        // Clear surge pricing error if price meets requirement
+                                        const surgePricing = form.getValues('surgePricing');
+                                        if (surgePricing) {
+                                          const ticketPrice = parseFloat(e.target.value || '0');
+                                          if (ticketPrice >= 1.00) {
+                                            form.clearErrors('ticketPrice');
+                                          } else {
+                                            form.setError('ticketPrice', {
+                                              type: 'manual',
+                                              message: 'Ticket price must be at least $1.00 for surge pricing'
+                                            });
+                                          }
+                                        }
+                                      }}
+                                    />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -486,16 +522,31 @@ export function EventCreatePage() {
                                       <input
                                         type="checkbox"
                                         checked={field.value}
-                                        onChange={field.onChange}
+                                        onChange={(e) => {
+                                          field.onChange(e);
+                                          // Validate ticket price when enabling surge pricing
+                                          if (e.target.checked) {
+                                            const ticketPrice = parseFloat(form.getValues('ticketPrice') || '0');
+                                            if (ticketPrice < 1.00) {
+                                              form.setError('ticketPrice', {
+                                                type: 'manual',
+                                                message: 'Ticket price must be at least $1.00 for surge pricing'
+                                              });
+                                            }
+                                          } else {
+                                            // Clear the error when disabling surge pricing
+                                            form.clearErrors('ticketPrice');
+                                          }
+                                        }}
                                         className="form-check-input"
                                         id="surgePricingCheck"
                                         data-testid="checkbox-surge-pricing"
                                       />
                                     </FormControl>
                                     <label className="form-check-label" htmlFor="surgePricingCheck">
-                                      <strong>Enable Surge Pricing</strong>
+                                      <strong>Surge Pricing</strong>
                                       <div className="text-muted small">
-                                        Prices increase with demand. Base price must be at least $1.00.
+                                        Ticket prices increase with demand. Minimum $1.00 ticket price.
                                       </div>
                                     </label>
                                   </div>
