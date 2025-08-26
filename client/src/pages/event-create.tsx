@@ -877,7 +877,7 @@ export function EventCreatePage() {
                                   Enable Special Effects
                                 </label>
                               </div>
-                              <div className="form-text">Validated tickets may display special visual effects on holidays and themed events.</div>
+                              <div className="form-text">Validated tickets may display special visual effects on holidays and themed events. These effects are randomly assigned, not all tickets will get an effect.</div>
                               <FormMessage />
                             </FormItem>
                           )}
