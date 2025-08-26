@@ -521,9 +521,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const page = parseInt(req.query.page as string) || 1;
       const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 items per page
       
-      // Auto-update user location based on recent events
-      await storage.autoUpdateUserLocation(userId);
-      
       // Use paginated query if page is specified
       if (req.query.page) {
         const result = await storage.getTicketsByUserIdPaginated(userId, { page, limit });
@@ -560,10 +557,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const events = await storage.getEventsByUserId(userId);
-      
-      // Auto-update user location based on recent events
-      await storage.autoUpdateUserLocation(userId);
-      
       res.json(events);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user events" });
@@ -654,6 +647,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...createData,
         userId, // Now we can use the actual userId since user exists in DB
       });
+      
+      // Auto-update user location after creating an event
+      if (userId) {
+        await storage.autoUpdateUserLocation(userId);
+      }
+      
       res.status(201).json(event);
     } catch (error) {
       await logError(error, "POST /api/events", {
@@ -905,6 +904,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         );
+        
+        // Auto-update user location after purchasing a resell ticket
+        if (userId) {
+          await storage.autoUpdateUserLocation(userId);
+        }
+        
         return res.status(201).json(resellTicket);
       }
 
@@ -933,6 +938,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use transactional ticket creation to prevent race conditions
       const ticket = await storage.createTicketWithTransaction(ticketData);
+      
+      // Auto-update user location after purchasing a ticket
+      if (userId) {
+        await storage.autoUpdateUserLocation(userId);
+      }
+      
       res.status(201).json(ticket);
     } catch (error) {
       await logError(error, "POST /api/events/:eventId/tickets", {
