@@ -83,6 +83,13 @@ Preferred communication style: Simple, everyday language.
 - **Input Validation**: Robust Zod validation schemas with comprehensive regex patterns for data integrity
 - **Performance**: Implemented reputation caching system to reduce database load during high traffic
 
+### Venue Address System (Added January 2025)
+- **Separate Address Fields**: Venue creation now uses three separate fields: Street Address, City, and Country
+- **Country Dropdown**: Country field provides a complete dropdown list of all valid countries for consistent data entry
+- **Smart Parsing**: When editing existing events, the venue string is intelligently parsed to populate the three fields
+- **Validation**: At least one address field must be filled when creating or editing an event
+- **Automatic Combination**: The three fields automatically combine into a single venue string for storage (e.g., "123 Main St, New York, United States")
+
 ## System Architecture
 
 ### Frontend Architecture

@@ -12,6 +12,7 @@ import { TicketCard } from "@/components/tickets/ticket-card";
 import { ArrowLeft, CreditCard, Image } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { countries } from "@/lib/countries";
 import {
   Form,
   FormControl,
@@ -359,14 +360,19 @@ export function EventCreatePage() {
                           />
                         </div>
                         <div className="col-md-6">
-                          <input
-                            type="text"
+                          <select
                             className="form-control"
-                            placeholder="Country"
                             value={country}
                             onChange={(e) => setCountry(e.target.value)}
                             data-testid="input-country"
-                          />
+                          >
+                            <option value="">Select Country</option>
+                            {countries.map((countryName) => (
+                              <option key={countryName} value={countryName}>
+                                {countryName}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                       {!address && !city && !country && (
