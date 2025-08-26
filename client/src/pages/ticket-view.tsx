@@ -532,9 +532,9 @@ export default function TicketViewPage(): React.ReactElement {
                           <div className="alert alert-info small text-start">
                             <strong>📱 Instructions:</strong>
                             <ol className="mb-0 ps-3">
-                              <li>Show this code to the event validator</li>
-                              <li>They will enter it manually if QR scanning doesn't work</li>
-                              <li>The code refreshes automatically every 10 seconds</li>
+                              <li>Show this code at the event</li>
+                              <li>The event will need to know the code to validate the ticket</li>
+                              <li>Tickets cannot be resold after validation. Buy the ticket take the ride.</li>
                             </ol>
                           </div>
                         </div>
