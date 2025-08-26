@@ -336,7 +336,11 @@ export default function TicketViewPage(): React.ReactElement {
       {/* Page Title */}
       <div className="row mb-4">
         <div className="col text-center">
-          <h1 className="h3 fw-bold">{event.name} Ticket</h1>
+          <h1 className="h3 fw-bold">
+            <Link href={`/events/${event.id}`}>
+              <a className="text-decoration-none text-dark">{event.name} Ticket</a>
+            </Link>
+          </h1>
           <p className="text-muted">View and validate your ticket</p>
         </div>
       </div>
