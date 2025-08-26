@@ -83,35 +83,15 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
 
       {/* Golden Ticket Glow Overlay */}
       {ticket.isGoldenTicket && (
-        <>
-          <div 
-            className="position-absolute w-100 h-100 pointer-events-none"
-            style={{
-              background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 70%)',
-              boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.225), inset 0 0 60px rgba(255, 215, 0, 0.075)',
-              animation: 'goldenGlow 3s ease-in-out infinite',
-              zIndex: 2,
-            }}
-          />
-          {/* Golden Ticket Badge */}
-          <div 
-            className="position-absolute"
-            style={{
-              top: '10px',
-              right: '10px',
-              zIndex: 10,
-              padding: '4px 8px',
-              borderRadius: '4px',
-              backgroundColor: 'rgba(255, 215, 0, 0.675)',
-              color: '#000',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-            }}
-          >
-            🎫 GOLDEN
-          </div>
-        </>
+        <div 
+          className="position-absolute w-100 h-100 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 70%)',
+            boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.225), inset 0 0 60px rgba(255, 215, 0, 0.075)',
+            animation: 'goldenGlow 3s ease-in-out infinite',
+            zIndex: 2,
+          }}
+        />
       )}
 
       {/* Special Event Effects Badge */}
@@ -129,7 +109,22 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         <div className="flex-grow-1 p-3 text-white d-flex flex-column justify-content-between">
           <div>
             <h5 className="mb-1 text-truncate fw-bold" style={{ fontSize: '16px' }}>
-              {event.name}
+              {ticket.isGoldenTicket ? (
+                <span 
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(255, 215, 0, 0.85)',
+                    color: '#000',
+                    display: 'inline-block',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                  }}
+                >
+                  {event.name}
+                </span>
+              ) : (
+                event.name
+              )}
             </h5>
             <div className="small opacity-75">
               <div className="d-flex align-items-center mb-1">
@@ -149,7 +144,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           <div className="mt-2">
             <div className="small opacity-75">Ticket #</div>
             <div className="fst-italic" style={{ fontSize: '14px' }}>
-              {ticket.ticketNumber}
+              {ticket.ticketNumber}{ticket.isGoldenTicket && ' 🎫'}
             </div>
           </div>
         </div>
