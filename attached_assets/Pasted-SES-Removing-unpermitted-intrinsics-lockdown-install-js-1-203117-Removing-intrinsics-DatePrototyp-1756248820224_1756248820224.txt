@@ -1,0 +1,34 @@
+SES Removing unpermitted intrinsics lockdown-install.js:1:203117
+  Removing intrinsics.%DatePrototype%.toTemporalInstant lockdown-install.js:1:202962
+[vite] connecting... client:495:9
+[vite] connected. client:618:15
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools react-dom.development.js:29895:17
+Loading failed for the <script> with source “https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js”. create:1:1
+Error: Failed to load QR code library
+    onerror qr-utils.ts:71
+
+The resource from “https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js” was blocked due to MIME type (“text/plain”) mismatch (X-Content-Type-Options: nosniff).
+create
+SES_UNCAUGHT_EXCEPTION: ReferenceError: can't access lexical declaration 'form' before initialization
+    EventCreatePage event-create.tsx:46
+    React 11
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+lockdown-install.js:1:145467
+SES_UNCAUGHT_EXCEPTION: ReferenceError: can't access lexical declaration 'form' before initialization
+    EventCreatePage event-create.tsx:46
+    React 12
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+lockdown-install.js:1:145467
+Error caught by boundary: ReferenceError: can't access lexical declaration 'form' before initialization
+    EventCreatePage event-create.tsx:46
+    React 9
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+ 
+Object { componentStack: "\nEventCreatePage@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/pages/event-create.tsx:44:21\nRoute@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=abd36386:323:13\nProtectedRoute@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/lib/protected-route.tsx:20:31\nSwitch@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=abd36386:379:14\nRouter\ndiv\ndiv\nmain\ndiv\nProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TA2TXMSM.js?v=abd36386:35:47\nTooltipProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=abd36386:58:7\nAuthProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/hooks/use-auth.tsx:37:29\nQueryClientProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=abd36386:2804:27\nErrorBoundary@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/components/error-boundary.tsx:10:5\nApp" }
+error-boundary.tsx:27:13

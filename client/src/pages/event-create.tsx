@@ -36,15 +36,6 @@ export function EventCreatePage() {
   const [city, setCity] = useState<string>("");
   const [country, setCountry] = useState<string>("");
   
-  // Update venue field when address components change
-  useEffect(() => {
-    const venueString = [address, city, country]
-      .filter(Boolean)
-      .join(', ');
-    // Always set venue value, even if empty to trigger validation
-    form.setValue('venue', venueString || '', { shouldValidate: true });
-  }, [address, city, country, form]);
-  
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -81,6 +72,15 @@ export function EventCreatePage() {
       raffleEnabled: false,
     },
   });
+
+  // Update venue field when address components change
+  useEffect(() => {
+    const venueString = [address, city, country]
+      .filter(Boolean)
+      .join(', ');
+    // Always set venue value, even if empty to trigger validation
+    form.setValue('venue', venueString || '', { shouldValidate: true });
+  }, [address, city, country, form]);
 
   const createEventMutation = useMutation({
     mutationFn: async (data: InsertEvent) => {
