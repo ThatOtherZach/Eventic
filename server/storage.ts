@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, notInArray, sql, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -35,7 +35,9 @@ export interface IStorage {
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
-  refundTicket(ticketId: string, userId: string): Promise<boolean>;
+  resellTicket(ticketId: string, userId: string): Promise<boolean>;
+  getNextResellTicket(eventId: string): Promise<{ ticket: Ticket; resellEntry: ResellQueue } | null>;
+  processResellPurchase(eventId: string, newBuyerId: string, buyerEmail: string, buyerIp: string): Promise<Ticket | null>;
   checkUserHasTicketForEvent(eventId: string, userId: string, email: string, ip: string): Promise<boolean>;
   getCurrentPrice(eventId: string): Promise<number>;
   getUniqueTicketHolders(eventId: string): Promise<string[]>;
@@ -482,7 +484,7 @@ export class DatabaseStorage implements IStorage {
     return ticket;
   }
 
-  async refundTicket(ticketId: string, userId: string): Promise<boolean> {
+  async resellTicket(ticketId: string, userId: string): Promise<boolean> {
     try {
       // Get the ticket
       const ticket = await this.getTicket(ticketId);
@@ -493,6 +495,9 @@ export class DatabaseStorage implements IStorage {
       
       // Check if ticket has been validated
       if (ticket.isValidated) return false;
+      
+      // Check if already for resale
+      if (ticket.resellStatus === "for_resale") return false;
       
       // Get the event to check timing
       const event = await this.getEvent(ticket.eventId);
@@ -505,13 +510,102 @@ export class DatabaseStorage implements IStorage {
       
       if (hoursUntilEvent < 1) return false;
       
-      // Delete the ticket from the database
-      await db.delete(tickets).where(eq(tickets.id, ticketId));
+      // Get the next position in the resell queue for this event
+      const maxPosition = await db
+        .select({ maxPos: sql<number>`COALESCE(MAX(${resellQueue.position}), 0)` })
+        .from(resellQueue)
+        .where(eq(resellQueue.eventId, ticket.eventId));
+      
+      const nextPosition = (maxPosition[0]?.maxPos || 0) + 1;
+      
+      // Start transaction to update ticket status and add to resell queue
+      await db.transaction(async (tx) => {
+        // Update ticket status and store original owner
+        await tx.update(tickets)
+          .set({ 
+            resellStatus: "for_resale", 
+            originalOwnerId: userId 
+          })
+          .where(eq(tickets.id, ticketId));
+        
+        // Add to resell queue
+        await tx.insert(resellQueue).values({
+          ticketId,
+          eventId: ticket.eventId,
+          originalOwnerId: userId,
+          ticketPrice: event.ticketPrice,
+          position: nextPosition,
+        });
+      });
       
       return true;
     } catch (error) {
-      console.error("Error refunding ticket:", error);
+      console.error("Error putting ticket up for resale:", error);
       return false;
+    }
+  }
+
+  async getNextResellTicket(eventId: string): Promise<{ ticket: Ticket; resellEntry: ResellQueue } | null> {
+    try {
+      // Get the ticket at position 1 (next to be sold) with its resell entry
+      const [result] = await db
+        .select()
+        .from(resellQueue)
+        .innerJoin(tickets, eq(resellQueue.ticketId, tickets.id))
+        .where(and(
+          eq(resellQueue.eventId, eventId),
+          eq(resellQueue.position, 1)
+        ))
+        .limit(1);
+      
+      if (!result) return null;
+      
+      return {
+        ticket: result.tickets,
+        resellEntry: result.resell_queue
+      };
+    } catch (error) {
+      console.error("Error getting next resell ticket:", error);
+      return null;
+    }
+  }
+
+  async processResellPurchase(eventId: string, newBuyerId: string, buyerEmail: string, buyerIp: string): Promise<Ticket | null> {
+    try {
+      const resellData = await this.getNextResellTicket(eventId);
+      if (!resellData) return null;
+      
+      const { ticket, resellEntry } = resellData;
+      
+      return await db.transaction(async (tx) => {
+        // Transfer ticket to new buyer
+        const [updatedTicket] = await tx.update(tickets)
+          .set({
+            userId: newBuyerId,
+            purchaserEmail: buyerEmail,
+            purchaserIp: buyerIp,
+            resellStatus: "sold",
+          })
+          .where(eq(tickets.id, ticket.id))
+          .returning();
+        
+        // Remove from resell queue
+        await tx.delete(resellQueue)
+          .where(eq(resellQueue.id, resellEntry.id));
+        
+        // Adjust positions for remaining tickets in queue
+        await tx.update(resellQueue)
+          .set({ position: sql`${resellQueue.position} - 1` })
+          .where(and(
+            eq(resellQueue.eventId, eventId),
+            gt(resellQueue.position, resellEntry.position)
+          ));
+        
+        return updatedTicket;
+      });
+    } catch (error) {
+      console.error("Error processing resell purchase:", error);
+      return null;
     }
   }
 

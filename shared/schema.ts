@@ -128,6 +128,8 @@ export const tickets = pgTable("tickets", {
   status: text("status").default("pending"), // pending, sent, failed
   purchaserEmail: text("purchaser_email"), // Email of the person who purchased this ticket
   purchaserIp: text("purchaser_ip"), // IP address of the person who purchased this ticket
+  resellStatus: text("resell_status").default("not_for_resale"), // not_for_resale, for_resale, sold
+  originalOwnerId: varchar("original_owner_id").references(() => users.id), // Original owner for resell tracking
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -136,6 +138,17 @@ export const delegatedValidators = pgTable("delegated_validators", {
   eventId: varchar("event_id").references(() => events.id).notNull(),
   email: text("email").notNull(),
   addedBy: varchar("added_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Resell queue for tickets put up for resale
+export const resellQueue = pgTable("resell_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").references(() => tickets.id).notNull().unique(),
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  originalOwnerId: varchar("original_owner_id").references(() => users.id).notNull(), // User who put ticket for resale
+  ticketPrice: decimal("ticket_price", { precision: 10, scale: 2 }).notNull(), // Original ticket price
+  position: integer("position").notNull(), // Position in resell queue (1 is next to be sold)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -502,6 +515,11 @@ export const insertSessionsSchema = createInsertSchema(sessions).omit({
   lastActiveAt: true
 });
 
+export const insertResellQueueSchema = createInsertSchema(resellQueue).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -540,3 +558,5 @@ export type InsertAuthEvent = z.infer<typeof insertAuthEventsSchema>;
 export type AuthEvent = typeof authEvents.$inferSelect;
 export type InsertSession = z.infer<typeof insertSessionsSchema>;
 export type Session = typeof sessions.$inferSelect;
+export type InsertResellQueue = z.infer<typeof insertResellQueueSchema>;
+export type ResellQueue = typeof resellQueue.$inferSelect;

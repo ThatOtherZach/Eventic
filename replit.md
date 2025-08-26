@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Features
 
+### Ticket Resale System (Added January 2025)
+- **Replaces Refund System**: Tickets can no longer be refunded, but can be listed for resale to other users
+- **Resale Queue Management**: Tickets listed for resale are queued in order, with the first listed having priority for new purchases
+- **Automatic Matching**: When users buy tickets for an event, they are automatically matched with the first available resell ticket before creating new tickets
+- **Owner Transfer**: Resold tickets transfer from the original owner to the new buyer, with payment going directly to the original owner
+- **Database Changes**: Added `resellQueue` table and `resellStatus`/`originalOwnerId` fields to tickets table
+- **API Updates**: Replaced `/api/tickets/:id/refund` endpoint with `/api/tickets/:id/resell` endpoint
+- **UI Changes**: "Refund" buttons changed to "Resell" buttons with appropriate messaging and confirmation dialogs
+
 ### Error Logging System (Added August 2025)
 - **Comprehensive System Logging**: All server errors are automatically logged to a `system_logs` table with detailed context including stack traces, user information, and request metadata
 - **90-Day Retention Policy**: Logs are automatically cleaned up after 90 days to manage storage

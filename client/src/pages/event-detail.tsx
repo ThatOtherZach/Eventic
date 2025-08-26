@@ -181,15 +181,15 @@ export default function EventDetailPage() {
     },
   });
 
-  const refundTicketMutation = useMutation({
+  const resellTicketMutation = useMutation({
     mutationFn: async (ticketId: string) => {
-      const response = await apiRequest("POST", `/api/tickets/${ticketId}/refund`, {});
+      const response = await apiRequest("POST", `/api/tickets/${ticketId}/resell`, {});
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Refund Successful",
-        description: "Your ticket has been refunded successfully.",
+        title: "Listed for Resale",
+        description: "Your ticket has been listed for resale successfully.",
       });
       // Refresh tickets and event data
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/user-tickets`] });
@@ -197,8 +197,8 @@ export default function EventDetailPage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Refund Failed",
-        description: error.message || "Unable to refund ticket",
+        title: "Resale Failed",
+        description: error.message || "Unable to list ticket for resale",
         variant: "destructive",
       });
     },
@@ -237,11 +237,14 @@ export default function EventDetailPage() {
     },
   });
 
-  const canRefundTicket = (ticket: TicketType) => {
+  const canResellTicket = (ticket: TicketType) => {
     if (!event) return false;
     
     // Check if ticket has been validated
     if (ticket.isValidated) return false;
+    
+    // Check if ticket is already for resale
+    if ((ticket as any).resellStatus === "for_resale") return false;
     
     // Check if event start is at least 1 hour in the future
     const eventStartTime = new Date(`${event.date}T${event.time}:00`);
@@ -251,9 +254,9 @@ export default function EventDetailPage() {
     return hoursUntilEvent >= 1;
   };
 
-  const handleRefund = async (ticketId: string) => {
-    if (confirm("Are you sure you want to refund this ticket? This action cannot be undone.")) {
-      refundTicketMutation.mutate(ticketId);
+  const handleResell = async (ticketId: string) => {
+    if (confirm("Are you sure you want to list this ticket for resale? When someone buys it, the payment will go to you, not the event organizer.")) {
+      resellTicketMutation.mutate(ticketId);
     }
   };
 
@@ -401,6 +404,9 @@ export default function EventDetailPage() {
                       <div>
                         <span className="badge bg-primary me-2">{ticket.ticketNumber}</span>
                         {ticket.isValidated && <span className="badge bg-success">Used</span>}
+                        {(ticket as any).resellStatus === "for_resale" && (
+                          <span className="badge bg-warning text-dark">Listed for Resale</span>
+                        )}
                       </div>
                       <div className="d-flex gap-2">
                         <Link href={`/tickets/${ticket.id}`}>
@@ -409,15 +415,15 @@ export default function EventDetailPage() {
                             View
                           </a>
                         </Link>
-                        {canRefundTicket(ticket) && (
+                        {canResellTicket(ticket) && (
                           <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleRefund(ticket.id)}
-                            disabled={refundTicketMutation.isPending}
-                            data-testid={`button-refund-ticket-${ticket.id}`}
+                            className="btn btn-sm btn-outline-warning"
+                            onClick={() => handleResell(ticket.id)}
+                            disabled={resellTicketMutation.isPending}
+                            data-testid={`button-resell-ticket-${ticket.id}`}
                           >
                             <RotateCcw size={14} className="me-1" />
-                            Refund
+                            Resell
                           </button>
                         )}
                       </div>

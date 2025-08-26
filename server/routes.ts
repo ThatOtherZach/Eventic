@@ -849,6 +849,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // First, check if there are any resell tickets available
+      const resellTicket = await storage.processResellPurchase(
+        req.params.eventId,
+        userId || '',
+        userEmail || '',
+        userIp
+      );
+
+      if (resellTicket) {
+        // Found and purchased a resell ticket
+        await logInfo(
+          "Resell ticket purchased",
+          "POST /api/events/:eventId/tickets",
+          {
+            userId,
+            ticketId: resellTicket.id,
+            eventId: req.params.eventId,
+            metadata: {
+              ticketNumber: resellTicket.ticketNumber,
+              eventName: event.name,
+              originalOwnerId: resellTicket.originalOwnerId,
+              purchaseTime: new Date().toISOString()
+            }
+          }
+        );
+        return res.status(201).json(resellTicket);
+      }
+
+      // No resell tickets available, create a new ticket
       // Generate QR data for the ticket
       const tempTicketNumber = `${event.id.slice(0, 8)}-PENDING`;
       const qrData = JSON.stringify({
@@ -879,8 +908,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Refund ticket endpoint
-  app.post("/api/tickets/:ticketId/refund", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // Resell ticket endpoint
+  app.post("/api/tickets/:ticketId/resell", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -896,12 +925,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (ticket.userId !== userId) {
-        return res.status(403).json({ message: "You can only refund your own tickets" });
+        return res.status(403).json({ message: "You can only resell your own tickets" });
       }
 
       // Check if ticket has been validated
       if (ticket.isValidated) {
-        return res.status(400).json({ message: "Cannot refund a validated ticket" });
+        return res.status(400).json({ message: "Cannot resell a validated ticket" });
+      }
+
+      // Check if already for resale
+      if (ticket.resellStatus === "for_resale") {
+        return res.status(400).json({ message: "Ticket is already listed for resale" });
       }
 
       // Get the event to check timing
@@ -917,21 +951,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (hoursUntilEvent < 1) {
         return res.status(400).json({ 
-          message: "Refunds are only available until 1 hour before the event starts" 
+          message: "Reselling is only available until 1 hour before the event starts" 
         });
       }
 
-      // Process the refund
-      const refunded = await storage.refundTicket(ticketId, userId);
+      // Process the resell listing
+      const listed = await storage.resellTicket(ticketId, userId);
       
-      if (!refunded) {
-        return res.status(500).json({ message: "Failed to process refund" });
+      if (!listed) {
+        return res.status(500).json({ message: "Failed to list ticket for resale" });
       }
 
-      // Log the refund
+      // Log the resell listing
       await logInfo(
-        "Ticket refunded",
-        "POST /api/tickets/:ticketId/refund",
+        "Ticket listed for resale",
+        "POST /api/tickets/:ticketId/resell",
         {
           userId,
           ticketId,
@@ -939,21 +973,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           metadata: {
             ticketNumber: ticket.ticketNumber,
             eventName: event.name,
-            refundTime: new Date().toISOString()
+            resellTime: new Date().toISOString()
           }
         }
       );
 
       res.json({ 
-        message: "Ticket refunded successfully",
-        refunded: true
+        message: "Ticket listed for resale successfully",
+        resold: true
       });
     } catch (error) {
-      await logError(error, "POST /api/tickets/:ticketId/refund", {
+      await logError(error, "POST /api/tickets/:ticketId/resell", {
         request: req,
         metadata: { ticketId: req.params.ticketId }
       });
-      res.status(500).json({ message: "Failed to process refund" });
+      res.status(500).json({ message: "Failed to list ticket for resale" });
     }
   });
 
