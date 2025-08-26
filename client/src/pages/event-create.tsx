@@ -36,6 +36,15 @@ export function EventCreatePage() {
   const [city, setCity] = useState<string>("");
   const [country, setCountry] = useState<string>("");
   
+  // Update venue field when address components change
+  useEffect(() => {
+    const venueString = [address, city, country]
+      .filter(Boolean)
+      .join(', ');
+    // Always set venue value, even if empty to trigger validation
+    form.setValue('venue', venueString || '', { shouldValidate: true });
+  }, [address, city, country, form]);
+  
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -98,8 +107,8 @@ export function EventCreatePage() {
   });
 
   const onSubmit = (data: InsertEvent) => {
-    // Validate at least one address field is filled
-    if (!address && !city && !country) {
+    // Venue is already set by the useEffect hook, just validate it exists
+    if (!data.venue || data.venue.trim() === '') {
       toast({
         title: "Validation Error",
         description: "Please enter at least one venue location field",
@@ -107,14 +116,6 @@ export function EventCreatePage() {
       });
       return;
     }
-    
-    // Combine address components into venue field
-    const venueString = [address, city, country]
-      .filter(Boolean)
-      .join(', ');
-    
-    // Update data with combined venue
-    data.venue = venueString;
     
     // Validate start date is at least 1 day in the future
     const now = new Date();
@@ -363,47 +364,54 @@ export function EventCreatePage() {
                     </div>
 
                     <div className="col-12">
-                      <label className="form-label">Venue Location</label>
-                      <div className="row g-2">
-                        <div className="col-12">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Street Address"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            data-testid="input-address"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="City"
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                            data-testid="input-city"
-                          />
-                        </div>
-                        <div className="col-md-6">
-                          <select
-                            className="form-control"
-                            value={country}
-                            onChange={(e) => setCountry(e.target.value)}
-                            data-testid="input-country"
-                          >
-                            <option value="">Select Country</option>
-                            {countries.map((countryName) => (
-                              <option key={countryName} value={countryName}>
-                                {countryName}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      {!address && !city && !country && (
-                        <div className="text-danger small mt-1">Please enter at least one location field</div>
-                      )}
+                      <FormField
+                        control={form.control}
+                        name="venue"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Venue Location</FormLabel>
+                            <input type="hidden" {...field} />
+                            <div className="row g-2">
+                              <div className="col-12">
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  placeholder="Street Address"
+                                  value={address}
+                                  onChange={(e) => setAddress(e.target.value)}
+                                  data-testid="input-address"
+                                />
+                              </div>
+                              <div className="col-md-6">
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  placeholder="City"
+                                  value={city}
+                                  onChange={(e) => setCity(e.target.value)}
+                                  data-testid="input-city"
+                                />
+                              </div>
+                              <div className="col-md-6">
+                                <select
+                                  className="form-control"
+                                  value={country}
+                                  onChange={(e) => setCountry(e.target.value)}
+                                  data-testid="input-country"
+                                >
+                                  <option value="">Select Country</option>
+                                  {countries.map((countryName) => (
+                                    <option key={countryName} value={countryName}>
+                                      {countryName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
                     <div className="col-md-6">
