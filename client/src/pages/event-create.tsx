@@ -37,6 +37,11 @@ export function EventCreatePage() {
   const queryClient = useQueryClient();
   const [imageUrl, setImageUrl] = useState<string>("");
   
+  // Debug: Monitor image URL changes
+  useEffect(() => {
+    console.log("imageUrl state changed to:", imageUrl);
+  }, [imageUrl]);
+  
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -164,12 +169,14 @@ export function EventCreatePage() {
   const handleImageComplete = (result: any) => {
     // Extract the uploaded URL from the result
     const uploadedUrl = result.successful?.[0]?.uploadURL;
+    console.log("Image upload complete, URL:", uploadedUrl);
     if (uploadedUrl) {
       // Store the raw URL - it will be normalized by the server
       setImageUrl(uploadedUrl);
+      console.log("Image URL state set to:", uploadedUrl);
       toast({
         title: "Feature image uploaded",
-        description: "Feature image will be included when you create the event",
+        description: "Image applied to both event and ticket preview",
       });
     }
   };
@@ -221,6 +228,9 @@ export function EventCreatePage() {
   };
   
 
+  
+  // Debug: Log the image URL being used for preview
+  console.log("Creating previewEvent with imageUrl:", imageUrl);
   
   const previewEvent: Event = {
     id: "preview",
@@ -815,6 +825,7 @@ export function EventCreatePage() {
                           onComplete={(result) => handleImageComplete(result)}
                           buttonClassName="btn btn-outline-primary"
                           currentImageUrl={imageUrl}
+                          showPreview={true}
                         >
                           <Image size={18} className="me-2" />
                           Choose Image
