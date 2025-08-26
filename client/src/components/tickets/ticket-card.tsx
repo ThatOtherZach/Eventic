@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import QRCode from "qrcode";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import type { Event, Ticket } from "@shared/schema";
@@ -6,11 +8,36 @@ import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecial
 interface TicketCardProps {
   ticket: Ticket;
   event: Event;
+  showQR?: boolean;
+  dynamicQrUrl?: string;
+  isValidating?: boolean;
 }
 
-export function TicketCard({ ticket, event }: TicketCardProps) {
+export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValidating = false }: TicketCardProps) {
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  
   // Check if this ticket has any special effects
   const hasSpecialEffects = ticket.isGoldenTicket || detectSpecialEffect(event, { isValidated: !!ticket.isValidated }) !== null;
+
+  useEffect(() => {
+    if (showQR && qrCanvasRef.current && ticket.qrData) {
+      QRCode.toCanvas(
+        qrCanvasRef.current,
+        ticket.qrData,
+        {
+          width: 180,
+          margin: 1,
+          color: {
+            dark: "#000000",
+            light: "#FFFFFF",
+          },
+        },
+        (error: any) => {
+          if (error) console.error("QR Generation error:", error);
+        }
+      );
+    }
+  }, [ticket.qrData, showQR]);
 
   // Business card dimensions: 3.5" x 2" (aspect ratio 7:4)
   // For screen display: maintain aspect ratio but allow width to be responsive
@@ -18,7 +45,7 @@ export function TicketCard({ ticket, event }: TicketCardProps) {
     <div 
       className="ticket-card position-relative w-100"
       style={{
-        aspectRatio: '2/1',
+        aspectRatio: showQR || isValidating ? '7/4' : '2/1',
         maxWidth: '100%',
         minHeight: '150px',
         borderRadius: '8px',
@@ -31,12 +58,16 @@ export function TicketCard({ ticket, event }: TicketCardProps) {
       }}
       data-testid={`ticket-card-${ticket.id}`}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+        if (!showQR && !isValidating) {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        if (!showQR && !isValidating) {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        }
       }}
     >
       {/* Semi-transparent overlay for text readability */}
@@ -123,7 +154,33 @@ export function TicketCard({ ticket, event }: TicketCardProps) {
           </div>
         </div>
 
-
+        {/* Right side - QR Code (only show when QR is enabled or validating) */}
+        {(showQR || isValidating) && (
+          <div 
+            className="d-flex align-items-center justify-content-center"
+            style={{
+              width: '210px',
+              backgroundColor: 'white',
+              borderRadius: '0 8px 8px 0',
+            }}
+          >
+            {isValidating && dynamicQrUrl ? (
+              <div className="text-center">
+                <img 
+                  src={dynamicQrUrl} 
+                  alt="Validation QR Code" 
+                  style={{ width: '180px', height: '180px' }}
+                />
+                <div className="small text-muted mt-1" style={{ fontSize: '10px' }}>Validation Code</div>
+              </div>
+            ) : (
+              <canvas
+                ref={qrCanvasRef}
+                style={{ display: 'block' }}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Special Effects Explanation Link */}

@@ -11,6 +11,7 @@ import Events from "@/pages/events";
 import EventDetail from "@/pages/event-detail";
 import EventEdit from "@/pages/event-edit";
 import { EventCreatePage } from "@/pages/event-create";
+import Scanner from "@/pages/scanner";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
 import NotificationsPage from "@/pages/notifications-page";
@@ -26,8 +27,9 @@ function Router() {
       <Route path="/" component={Events} />
       <Route path="/events" component={Events} />
       <ProtectedRoute path="/events/create" component={EventCreatePage} />
-      <Route path="/events/:id" component={EventDetail} />
+      <Route path="/events/:id">{(params) => <EventDetail />}</Route>
       <ProtectedRoute path="/events/:id/edit" component={EventEdit} />
+      <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/monitoring" component={MonitoringPage} />
