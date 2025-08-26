@@ -768,37 +768,34 @@ export function EventCreatePage() {
                             </FormItem>
                           )}
                         />
+                        
+                        {/* Allow Minting - moved to bottom */}
+                        <FormField
+                          control={form.control}
+                          name="allowMinting"
+                          render={({ field }) => (
+                            <FormItem className="mt-3">
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id="allowMinting"
+                                  checked={field.value}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  data-testid="checkbox-allow-minting"
+                                />
+                                <label className="form-check-label" htmlFor="allowMinting">
+                                  <span className="badge bg-info text-dark me-2">🎨</span>
+                                  Allow Minting
+                                </label>
+                              </div>
+                              <div className="form-text">Attendees will be allowed to mint a digital collectible of the event ticket. Some details of the ticket can be listed publicly if this is enabled.</div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
-
-                    <div className="col-12">
-                      <FormField
-                        control={form.control}
-                        name="allowMinting"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="form-check">
-                              <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="allowMinting"
-                                checked={field.value}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                data-testid="checkbox-allow-minting"
-                              />
-                              <label className="form-check-label" htmlFor="allowMinting">
-                                <span className="badge bg-info text-dark me-2">NFT</span>
-                                Allow Minting
-                              </label>
-                            </div>
-                            <div className="form-text">Attendees will be allowed to mint a digital collectible of the event ticket. Some details of the ticket can be listed publicly if this is enabled.</div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-
 
                     <div className="col-12">
                       <div className="mb-4">
