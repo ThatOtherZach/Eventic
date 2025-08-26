@@ -214,7 +214,7 @@ export function EventCreatePage() {
     userId: user?.id || "",
     ticketNumber: "PREVIEW-001",
     qrData: "sample-qr-data", // Need QR data to show QR code in preview
-    isValidated: false,
+    isValidated: form.watch('specialEffectsEnabled') || false, // Mark as validated for preview when special effects enabled
     validatedAt: null,
     validationCode: null,
     useCount: 0,
@@ -877,7 +877,7 @@ export function EventCreatePage() {
                                   Enable Special Effects
                                 </label>
                               </div>
-                              <div className="form-text">Validated tickets may display special visual effects on holidays and themed events</div>
+                              <div className="form-text">Validated tickets may display special visual effects on holidays and themed events.</div>
                               <FormMessage />
                             </FormItem>
                           )}

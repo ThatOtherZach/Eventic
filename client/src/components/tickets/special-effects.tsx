@@ -102,6 +102,11 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
     return null;
   }
   
+  // Special case: for preview tickets (id = "sample"), always show monthly effect
+  if (ticket && 'id' in ticket && (ticket as any).id === 'sample' && event.specialEffectsEnabled) {
+    return 'monthly';
+  }
+  
   // Only apply effects to validated tickets
   if (!ticket?.isValidated) {
     return null;
@@ -358,8 +363,10 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
   
   // Monthly color glow
   if (effectType === 'monthly') {
-    const eventDate = new Date(event.date);
-    const month = eventDate.getMonth();
+    // For preview tickets, use current month; for real tickets use event date
+    const isPreview = ticket && 'id' in ticket && (ticket as any).id === 'sample';
+    const dateToUse = isPreview ? new Date() : new Date(event.date);
+    const month = dateToUse.getMonth();
     const monthColor = MONTHLY_COLORS[month];
     
     return (
