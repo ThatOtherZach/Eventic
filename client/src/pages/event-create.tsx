@@ -206,6 +206,9 @@ export function EventCreatePage() {
     status: "pending",
     purchaserEmail: null,
     purchaserIp: null,
+    purchasePrice: "0",
+    resellStatus: null,
+    originalOwnerId: null,
   };
 
   const watchedValues = form.watch();
@@ -395,49 +398,57 @@ export function EventCreatePage() {
                       />
                     </div>
 
-                    <div className="col-md-6">
-                      <FormField
-                        control={form.control}
-                        name="ticketPrice"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ticket Price ($)</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="number" step="0.01" min="0" placeholder="0.00" className="form-control" data-testid="input-price" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="col-12 mb-3">
-                      <FormField
-                        control={form.control}
-                        name="surgePricing"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <input
-                                type="checkbox"
-                                checked={field.value}
-                                onChange={field.onChange}
-                                className="form-check-input mt-1"
-                                data-testid="checkbox-surge-pricing"
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="form-check-label">
-                                Enable Surge Pricing
-                              </FormLabel>
-                              <FormDescription className="text-muted">
-                                Ticket prices will increase as more tickets are sold. Base price must be at least $1.00.
-                              </FormDescription>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    {/* Ticket Pricing Section - Own Row */}
+                    <div className="col-12">
+                      <div className="border rounded p-3 bg-light">
+                        <h6 className="mb-3">Ticket Pricing</h6>
+                        <div className="row">
+                          <div className="col-md-6">
+                            <FormField
+                              control={form.control}
+                              name="ticketPrice"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Ticket Price ($)</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="number" step="0.01" min="0" placeholder="0.00" className="form-control" data-testid="input-price" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          <div className="col-md-6 d-flex align-items-end">
+                            <FormField
+                              control={form.control}
+                              name="surgePricing"
+                              render={({ field }) => (
+                                <FormItem className="mb-0">
+                                  <div className="form-check">
+                                    <FormControl>
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        className="form-check-input"
+                                        id="surgePricingCheck"
+                                        data-testid="checkbox-surge-pricing"
+                                      />
+                                    </FormControl>
+                                    <label className="form-check-label" htmlFor="surgePricingCheck">
+                                      <strong>Enable Surge Pricing</strong>
+                                      <div className="text-muted small">
+                                        Prices increase with demand. Base price must be at least $1.00.
+                                      </div>
+                                    </label>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="col-md-6">
@@ -572,133 +583,137 @@ export function EventCreatePage() {
                       </div>
                     )}
 
+                    {/* Additional Event Options */}
                     <div className="col-12">
-                      <FormField
-                        control={form.control}
-                        name="oneTicketPerUser"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="form-check">
-                              <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="oneTicketPerUser"
-                                checked={field.value}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                data-testid="checkbox-one-ticket-per-user"
-                              />
-                              <label className="form-check-label" htmlFor="oneTicketPerUser">
-                                <span className="badge bg-info text-white me-2">👤</span>
-                                Limit to One Ticket Per User
-                              </label>
-                            </div>
-                            <div className="form-text">Prevent scalping by restricting users to purchasing only one ticket (tracks by email and IP)</div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="col-12">
-                      <FormField
-                        control={form.control}
-                        name="goldenTicketEnabled"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="form-check">
-                              <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="goldenTicketEnabled"
-                                checked={field.value}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                data-testid="checkbox-golden-ticket"
-                              />
-                              <label className="form-check-label" htmlFor="goldenTicketEnabled">
-                                <span className="badge bg-warning text-dark me-2">🎫</span>
-                                Enable Golden Ticket Contest
-                              </label>
-                            </div>
-                            <div className="form-text">A random ticket will win based on validation timing</div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {form.watch('goldenTicketEnabled') && (
-                      <div className="col-12">
+                      <div className="border rounded p-3 bg-light">
+                        <h6 className="mb-3">Additional Options</h6>
                         <FormField
                           control={form.control}
-                          name="goldenTicketCount"
+                          name="oneTicketPerUser"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Golden Ticket Count (1-100)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  min="1"
-                                  max="100"
-                                  placeholder="Enter number of golden tickets"
-                                  className="form-control"
-                                  data-testid="input-golden-number"
-                                  value={field.value || ''}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value);
-                                    const maxTickets = form.getValues('maxTickets');
-                                    const maxGoldenTickets = maxTickets ? Math.floor(maxTickets / 2) : 100;
-                                    
-                                    if (isNaN(value)) {
-                                      field.onChange(undefined);
-                                    } else if (value < 1) {
-                                      field.onChange(1);
-                                    } else if (value > maxGoldenTickets) {
-                                      field.onChange(maxGoldenTickets);
-                                    } else {
-                                      field.onChange(value);
-                                    }
-                                  }}
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id="oneTicketPerUser"
+                                  checked={field.value}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  data-testid="checkbox-one-ticket-per-user"
                                 />
-                              </FormControl>
-                              <div className="form-text">
-                                Maximum number of golden tickets that can be won for this event
-                                {form.watch('maxTickets') && (
-                                  <span className="text-muted"> (limit: {Math.floor((form.watch('maxTickets') || 0) / 2)} - half of total tickets)</span>
-                                )}
+                                <label className="form-check-label" htmlFor="oneTicketPerUser">
+                                  <span className="badge bg-info text-white me-2">👤</span>
+                                  Limit to One Ticket Per User
+                                </label>
                               </div>
+                              <div className="form-text">Prevent scalping by restricting users to purchasing only one ticket (tracks by email and IP)</div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-                    )}
+                    </div>
 
+                    {/* Special Features Section */}
                     <div className="col-12">
-                      <FormField
-                        control={form.control}
-                        name="specialEffectsEnabled"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="form-check">
-                              <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="specialEffectsEnabled"
-                                checked={field.value || false}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                data-testid="checkbox-special-effects"
-                              />
-                              <label className="form-check-label" htmlFor="specialEffectsEnabled">
-                                <span className="badge bg-primary me-2">✨</span>
-                                Enable Special Effects
-                              </label>
-                            </div>
-                            <div className="form-text">Validated tickets may display special visual effects on holidays and themed events</div>
-                            <FormMessage />
-                          </FormItem>
+                      <div className="border rounded p-3 bg-light">
+                        <h6 className="mb-3">Special Features</h6>
+                        <FormField
+                          control={form.control}
+                          name="goldenTicketEnabled"
+                          render={({ field }) => (
+                            <FormItem className="mb-3">
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id="goldenTicketEnabled"
+                                  checked={field.value}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  data-testid="checkbox-golden-ticket"
+                                />
+                                <label className="form-check-label" htmlFor="goldenTicketEnabled">
+                                  <span className="badge bg-warning text-dark me-2">🎫</span>
+                                  Enable Golden Ticket Contest
+                                </label>
+                              </div>
+                              <div className="form-text">A random ticket will win based on validation timing</div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {form.watch('goldenTicketEnabled') && (
+                          <FormField
+                            control={form.control}
+                            name="goldenTicketCount"
+                            render={({ field }) => (
+                              <FormItem className="mb-3">
+                                <FormLabel>Golden Ticket Count (1-100)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    placeholder="Enter number of golden tickets"
+                                    className="form-control"
+                                    data-testid="input-golden-number"
+                                    value={field.value || ''}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value);
+                                      const maxTickets = form.getValues('maxTickets');
+                                      const maxGoldenTickets = maxTickets ? Math.floor(maxTickets / 2) : 100;
+                                      
+                                      if (isNaN(value)) {
+                                        field.onChange(undefined);
+                                      } else if (value < 1) {
+                                        field.onChange(1);
+                                      } else if (value > maxGoldenTickets) {
+                                        field.onChange(maxGoldenTickets);
+                                      } else {
+                                        field.onChange(value);
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="form-text">
+                                  Maximum number of golden tickets that can be won for this event
+                                  {form.watch('maxTickets') && (
+                                    <span className="text-muted"> (limit: {Math.floor((form.watch('maxTickets') || 0) / 2)} - half of total tickets)</span>
+                                  )}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         )}
-                      />
+
+                        <FormField
+                          control={form.control}
+                          name="specialEffectsEnabled"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id="specialEffectsEnabled"
+                                  checked={field.value || false}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  data-testid="checkbox-special-effects"
+                                />
+                                <label className="form-check-label" htmlFor="specialEffectsEnabled">
+                                  <span className="badge bg-primary me-2">✨</span>
+                                  Enable Special Effects
+                                </label>
+                              </div>
+                              <div className="form-text">Validated tickets may display special visual effects on holidays and themed events</div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
 
                     <div className="col-12">
