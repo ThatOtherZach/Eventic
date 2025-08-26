@@ -369,7 +369,7 @@ export function EventCreatePage() {
                         name="venue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Venue Location</FormLabel>
+                            <FormLabel className="text-dark">Venue Location</FormLabel>
                             <input type="hidden" {...field} />
                             <div className="row g-2">
                               <div className="col-12">
