@@ -56,7 +56,7 @@ export function EventCreatePage() {
       endDate: "",
       endTime: "",
       ticketPrice: "0",
-      maxTickets: undefined,
+      maxTickets: 100,
       imageUrl: undefined,
       ticketBackgroundUrl: undefined,
       earlyValidation: "Allow at Anytime",
@@ -158,8 +158,10 @@ export function EventCreatePage() {
       }
     }
 
+    // Ensure maxTickets has a default value of 100 if not set
     const submitData = {
       ...data,
+      maxTickets: data.maxTickets || 100,
       imageUrl: imageUrl || undefined,
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
     };
@@ -509,27 +511,27 @@ export function EventCreatePage() {
                               name="maxTickets"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Maximum Tickets (Optional)</FormLabel>
+                                  <FormLabel>Maximum Tickets</FormLabel>
                                   <FormControl>
                                     <Input 
                                       {...field} 
                                       type="number"
-                                      min="1"
+                                      min="5"
                                       max="5000"
-                                      placeholder="Leave blank for unlimited" 
+                                      placeholder="100" 
                                       className="form-control" 
                                       data-testid="input-max-tickets"
                                       value={field.value || ''}
                                       onChange={(e) => {
                                         const value = e.target.value;
                                         if (value === '') {
-                                          field.onChange(undefined);
+                                          field.onChange(100);
                                         } else {
                                           const numValue = parseInt(value);
                                           if (numValue > 5000) {
                                             field.onChange(5000);
-                                          } else if (numValue < 1) {
-                                            field.onChange(1);
+                                          } else if (numValue < 5) {
+                                            field.onChange(5);
                                           } else {
                                             field.onChange(numValue);
                                           }
@@ -537,7 +539,7 @@ export function EventCreatePage() {
                                       }}
                                     />
                                   </FormControl>
-                                  <div className="form-text">Maximum 5,000 tickets. Leave blank for unlimited.</div>
+                                  <div className="form-text">Minimum 5, maximum 5,000 tickets. Default is 100.</div>
                                   <FormMessage />
                                 </FormItem>
                               )}
