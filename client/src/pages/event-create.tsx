@@ -792,6 +792,36 @@ export function EventCreatePage() {
                       </div>
                     </div>
 
+                    {/* Ticket Preview Section */}
+                    <div className="col-12">
+                      <div className="mb-4">
+                        <label className="form-label">
+                          <CreditCard size={18} className="me-2" />
+                          Ticket Preview
+                        </label>
+                        <p className="text-muted small mb-3">
+                          This is how your event tickets will appear to attendees. The featured image will be used as the ticket background.
+                        </p>
+                        
+                        {/* Ticket Preview */}
+                        <div className="mb-3">
+                          <div className="bg-light rounded p-4" style={{ backgroundColor: '#f8f9fa' }}>
+                            <div className="mx-auto" style={{ maxWidth: '400px' }}>
+                              <TicketCard
+                                ticket={sampleTicket}
+                                event={previewEvent}
+                                showQR={false}
+                              />
+                            </div>
+                            <p className="text-center text-muted small mt-3 mb-0">
+                              <i className="bi bi-info-circle me-1"></i>
+                              {imageUrl ? "Your featured image is being used as the ticket background" : "Upload a featured image to customize the ticket background"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Special Features Section */}
                     <div className="col-12">
                       <div className="border rounded p-3 bg-light">
@@ -928,35 +958,6 @@ export function EventCreatePage() {
                             </FormItem>
                           )}
                         />
-                      </div>
-                    </div>
-
-                    <div className="col-12">
-                      <div className="mb-4">
-                        <label className="form-label">
-                          <CreditCard size={18} className="me-2" />
-                          Ticket Preview
-                        </label>
-                        <p className="text-muted small mb-3">
-                          This is how your event tickets will appear to attendees. The featured image will be used as the ticket background.
-                        </p>
-                        
-                        {/* Ticket Preview */}
-                        <div className="mb-3">
-                          <div className="bg-light rounded p-4" style={{ backgroundColor: '#f8f9fa' }}>
-                            <div className="mx-auto" style={{ maxWidth: '400px' }}>
-                              <TicketCard
-                                ticket={sampleTicket}
-                                event={previewEvent}
-                                showQR={false}
-                              />
-                            </div>
-                            <p className="text-center text-muted small mt-3 mb-0">
-                              <i className="bi bi-info-circle me-1"></i>
-                              {imageUrl ? "Your featured image is being used as the ticket background" : "Upload a featured image to customize the ticket background"}
-                            </p>
-                          </div>
-                        </div>
                       </div>
                     </div>
 
