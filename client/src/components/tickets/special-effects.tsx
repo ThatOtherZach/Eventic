@@ -18,7 +18,7 @@ function getDayOfYear(date: Date): number {
 }
 
 // Monthly colors for glow effects
-const MONTHLY_COLORS: { [key: number]: { name: string; color1: string; color2: string } } = {
+export const MONTHLY_COLORS: { [key: number]: { name: string; color1: string; color2: string } } = {
   0: { name: 'Navy Blue', color1: '#002366', color2: '#003380' },      // January
   1: { name: 'Crimson', color1: '#DC143C', color2: '#B91C3C' },       // February
   2: { name: 'Emerald', color1: '#008000', color2: '#00A000' },       // March
@@ -32,6 +32,15 @@ const MONTHLY_COLORS: { [key: number]: { name: string; color1: string; color2: s
   10: { name: 'Brown', color1: '#8B4513', color2: '#A0522D' },        // November
   11: { name: 'Holiday Green', color1: '#006400', color2: '#228B22' } // December
 };
+
+// Helper function to get monthly color for a ticket/event
+export function getMonthlyColor(event: Event, ticket?: { id?: string }): { color1: string; color2: string } | null {
+  // For preview tickets, use current month; for real tickets use event date
+  const isPreview = ticket && ticket.id === 'sample';
+  const dateToUse = isPreview ? new Date() : new Date(event.date);
+  const month = dateToUse.getMonth();
+  return MONTHLY_COLORS[month] || null;
+}
 
 // Define special effect conditions (ordered by priority)
 const SPECIAL_EFFECTS: SpecialEffectConfig[] = [

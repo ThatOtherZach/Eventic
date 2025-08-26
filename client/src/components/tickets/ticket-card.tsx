@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import type { Event, Ticket } from "@shared/schema";
-import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect } from "./special-effects";
+import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "./special-effects";
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -17,7 +17,9 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   
   // Check if this ticket has any special effects
-  const hasSpecialEffects = ticket.isGoldenTicket || detectSpecialEffect(event, { isValidated: !!ticket.isValidated }) !== null;
+  const specialEffect = detectSpecialEffect(event, ticket);
+  const hasSpecialEffects = ticket.isGoldenTicket || specialEffect !== null;
+  const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event, ticket) : null;
 
   useEffect(() => {
     if (showQR && qrCanvasRef.current && ticket.qrData) {
@@ -110,6 +112,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           <div>
             <h5 className="mb-1 text-truncate fw-bold" style={{ fontSize: '16px' }}>
               {ticket.isGoldenTicket ? (
+                // Golden ticket takes priority
                 <span 
                   style={{
                     padding: '2px 8px',
@@ -118,6 +121,21 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
                     color: '#000',
                     display: 'inline-block',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                  }}
+                >
+                  {event.name}
+                </span>
+              ) : monthlyColor ? (
+                // Monthly effect badge
+                <span 
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    background: `linear-gradient(135deg, ${monthlyColor.color1}, ${monthlyColor.color2})`,
+                    color: '#fff',
+                    display: 'inline-block',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
                   }}
                 >
                   {event.name}
