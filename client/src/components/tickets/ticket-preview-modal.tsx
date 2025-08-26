@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { generateQRCode } from "@/lib/qr-utils";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import type { Event, Ticket } from "@shared/schema";
-import { QrCode, Download } from "lucide-react";
 
 interface TicketPreviewModalProps {
   open: boolean;
@@ -17,7 +15,6 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [ticket, setTicket] = useState<Ticket | null>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
   const createTicketMutation = useMutation({
     mutationFn: async (eventId: string) => {
@@ -43,29 +40,7 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
     },
   });
 
-  const generateQR = async () => {
-    if (!ticket) return;
 
-    try {
-      const qrUrl = await generateQRCode(ticket.qrData);
-      setQrCodeUrl(qrUrl);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate QR code",
-        variant: "error",
-      });
-    }
-  };
-
-  const downloadTicket = () => {
-    if (!qrCodeUrl) return;
-
-    const link = document.createElement("a");
-    link.download = `ticket-${ticket?.ticketNumber || "unknown"}.png`;
-    link.href = qrCodeUrl;
-    link.click();
-  };
 
   useEffect(() => {
     if (open && !ticket) {
@@ -76,7 +51,6 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
   useEffect(() => {
     if (!open) {
       setTicket(null);
-      setQrCodeUrl("");
     }
   }, [open]);
 
@@ -108,47 +82,17 @@ export function TicketPreviewModal({ open, onOpenChange, event }: TicketPreviewM
             </div>
           </div>
 
-          {/* QR Code Container */}
-          <div className="text-center">
-            <div className="bg-light border rounded p-3 mx-auto mb-3" style={{ width: "150px", height: "150px" }}>
-              {qrCodeUrl ? (
-                <img 
-                  src={qrCodeUrl} 
-                  alt="Ticket QR Code" 
-                  className="w-100 h-100"
-                  style={{ objectFit: "contain" }}
-                  data-testid="img-qr-code"
-                />
-              ) : (
-                <div className="d-flex flex-column align-items-center justify-content-center h-100" data-testid="qr-placeholder">
-                  <QrCode className="text-muted mb-2" size={40} />
-                  <p className="text-muted small mb-0">QR Code</p>
-                </div>
-              )}
-            </div>
-            <p className="text-muted small">Present this QR code at the event entrance</p>
-          </div>
+
         </div>
       </ModalBody>
       
       <ModalFooter>
         <button
-          onClick={generateQR}
+          onClick={() => onOpenChange(false)}
           className="btn btn-primary"
-          disabled={!ticket || !!qrCodeUrl}
-          data-testid="button-generate-qr"
+          data-testid="button-close-modal"
         >
-          <QrCode className="me-2" size={16} />
-          {qrCodeUrl ? "QR Generated" : "Generate QR"}
-        </button>
-        <button
-          onClick={downloadTicket}
-          className="btn btn-outline-secondary"
-          disabled={!qrCodeUrl}
-          data-testid="button-download-ticket"
-        >
-          <Download className="me-2" size={16} />
-          Download
+          Close
         </button>
       </ModalFooter>
     </Modal>
