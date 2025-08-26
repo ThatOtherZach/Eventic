@@ -539,10 +539,6 @@ export default function TicketViewPage(): React.ReactElement {
                           </div>
                         </div>
                       )}
-                      
-                      <p className="small text-muted mb-0">
-                        The QR code on your ticket also updates every 10 seconds
-                      </p>
                     </div>
                   </div>
 
