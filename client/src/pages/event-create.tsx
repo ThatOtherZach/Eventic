@@ -218,7 +218,7 @@ export function EventCreatePage() {
     validatedAt: null,
     validationCode: null,
     useCount: 0,
-    isGoldenTicket: false,
+    isGoldenTicket: form.watch('goldenTicketEnabled') || false, // Apply golden ticket effect when enabled
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -792,10 +792,10 @@ export function EventCreatePage() {
                                 />
                                 <label className="form-check-label" htmlFor="goldenTicketEnabled">
                                   <span className="badge bg-warning text-dark me-2">🎫</span>
-                                  Enable Golden Ticket Contest
+                                  Enable Golden Tickets
                                 </label>
                               </div>
-                              <div className="form-text">A random ticket will win based on validation timing</div>
+                              <div className="form-text">Random ticket(s) will be golden when validated.</div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -807,7 +807,7 @@ export function EventCreatePage() {
                             name="goldenTicketCount"
                             render={({ field }) => (
                               <FormItem className="mb-3">
-                                <FormLabel>Golden Ticket Count (1-100)</FormLabel>
+                                <FormLabel>Number of Golden Tickets (1-100)</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
@@ -818,14 +818,25 @@ export function EventCreatePage() {
                                     className="form-control"
                                     data-testid="input-golden-number"
                                     value={field.value || ''}
+                                    onKeyPress={(e) => {
+                                      // Prevent non-numeric characters
+                                      if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') {
+                                        e.preventDefault();
+                                      }
+                                    }}
                                     onChange={(e) => {
-                                      const value = parseInt(e.target.value);
+                                      // Only allow numbers
+                                      const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                                      if (rawValue === '') {
+                                        field.onChange(undefined);
+                                        return;
+                                      }
+                                      
+                                      const value = parseInt(rawValue);
                                       const maxTickets = form.getValues('maxTickets');
                                       const maxGoldenTickets = maxTickets ? Math.floor(maxTickets / 2) : 100;
                                       
-                                      if (isNaN(value)) {
-                                        field.onChange(undefined);
-                                      } else if (value < 1) {
+                                      if (value < 1) {
                                         field.onChange(1);
                                       } else if (value > maxGoldenTickets) {
                                         field.onChange(maxGoldenTickets);
