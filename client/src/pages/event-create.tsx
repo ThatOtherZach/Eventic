@@ -847,11 +847,11 @@ export function EventCreatePage() {
                             <span className="badge bg-info text-white small">Updates as you type</span>
                           </div>
                           <div className="bg-light rounded p-4" style={{ backgroundColor: '#f8f9fa' }}>
-                            <div className="mx-auto" style={{ maxWidth: '600px' }}>
+                            <div className="mx-auto" style={{ maxWidth: '400px' }}>
                               <TicketCard
                                 ticket={sampleTicket}
                                 event={previewEvent}
-                                showQR={true}
+                                showQR={false}
                               />
                             </div>
                             <p className="text-center text-muted small mt-3 mb-0">
