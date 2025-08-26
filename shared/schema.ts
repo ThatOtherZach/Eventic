@@ -336,7 +336,7 @@ export const insertEventSchema = createInsertSchema(events).omit({
     .optional()
     .transform(val => val?.trim()),
   venue: z.string()
-    .min(1, "Venue is required")
+    .min(1, "A venue name is required. City and Country are optional.")
     .max(200, "Venue must be less than 200 characters")
     .regex(/^[a-zA-Z0-9\s\-_&.,!'"()#/@]+$/, "Venue contains invalid characters"),
   date: z.string()
