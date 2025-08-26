@@ -590,11 +590,38 @@ export function EventCreatePage() {
                     <div className="col-12">
                       <div className="border rounded p-3 bg-light">
                         <h6 className="mb-3">Additional Options</h6>
+                        
+                        {/* Private Event Setting - moved to top */}
+                        <FormField
+                          control={form.control}
+                          name="isPrivate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id="isPrivate"
+                                  checked={field.value}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  data-testid="checkbox-is-private"
+                                />
+                                <label className="form-check-label" htmlFor="isPrivate">
+                                  <span className="badge bg-secondary me-2">🔒</span>
+                                  Private Event
+                                </label>
+                              </div>
+                              <div className="form-text">Private events won't appear in search results or be featured. Only accessible via direct link.</div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
                         <FormField
                           control={form.control}
                           name="oneTicketPerUser"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="mt-3">
                               <div className="form-check">
                                 <input
                                   type="checkbox"
@@ -771,32 +798,7 @@ export function EventCreatePage() {
                       />
                     </div>
 
-                    <div className="col-12">
-                      <FormField
-                        control={form.control}
-                        name="isPrivate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="form-check">
-                              <input
-                                type="checkbox"
-                                className="form-check-input"
-                                id="isPrivate"
-                                checked={field.value}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                data-testid="checkbox-is-private"
-                              />
-                              <label className="form-check-label" htmlFor="isPrivate">
-                                <span className="badge bg-secondary me-2">Private</span>
-                                Private Event
-                              </label>
-                            </div>
-                            <div className="form-text">Private events won't appear in search results or be featured. Only accessible via direct link.</div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+
 
                     <div className="col-12">
                       <div className="mb-4">
