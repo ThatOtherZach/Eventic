@@ -376,7 +376,7 @@ export function EventCreatePage() {
                                 <input
                                   type="text"
                                   className="form-control"
-                                  placeholder="Street Address"
+                                  placeholder="Street Address, GPS Coordinates, Online, etc."
                                   value={address}
                                   onChange={(e) => setAddress(e.target.value)}
                                   data-testid="input-address"
