@@ -105,17 +105,17 @@ export class ObjectStorageService {
 
   async getObjectEntityUploadURL(): Promise<string> {
     // Use public directory for event images so they can be displayed in the browser
-    const publicPaths = this.getPublicObjectSearchPaths();
-    if (!publicPaths || publicPaths.length === 0) {
+    const publicPath = process.env.PUBLIC_OBJECT_SEARCH_PATHS;
+    if (!publicPath) {
       throw new Error(
         "PUBLIC_OBJECT_SEARCH_PATHS not set. Create a bucket in 'Object Storage' " +
           "tool and set PUBLIC_OBJECT_SEARCH_PATHS env var."
       );
     }
     const objectId = randomUUID();
-    // Use the first public path (usually public/)
-    const publicPath = publicPaths[0];
-    const fullPath = `${publicPath}/uploads/${objectId}`;
+    // Parse the first public path from the comma-separated list
+    const firstPublicPath = publicPath.split(',')[0].trim();
+    const fullPath = `${firstPublicPath}/uploads/${objectId}`;
     const { bucketName, objectName } = parseObjectPath(fullPath);
     return signObjectURL({
       bucketName,
