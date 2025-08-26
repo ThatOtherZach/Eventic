@@ -37,6 +37,11 @@ export function EventCreatePage() {
   const queryClient = useQueryClient();
   const [imageUrl, setImageUrl] = useState<string>("");
   
+  // Address component states
+  const [address, setAddress] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [country, setCountry] = useState<string>("");
+  
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -99,6 +104,24 @@ export function EventCreatePage() {
   });
 
   const onSubmit = (data: InsertEvent) => {
+    // Validate at least one address field is filled
+    if (!address && !city && !country) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter at least one venue location field",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Combine address components into venue field
+    const venueString = [address, city, country]
+      .filter(Boolean)
+      .join(', ');
+    
+    // Update data with combined venue
+    data.venue = venueString;
+    
     // Validate start date is at least 1 day in the future
     const now = new Date();
     const tomorrow = new Date(now);
@@ -313,19 +336,42 @@ export function EventCreatePage() {
                     </div>
 
                     <div className="col-12">
-                      <FormField
-                        control={form.control}
-                        name="venue"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Venue</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter venue address" className="form-control" data-testid="input-venue" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <label className="form-label">Venue Location</label>
+                      <div className="row g-2">
+                        <div className="col-12">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Street Address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            data-testid="input-address"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="City"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            data-testid="input-city"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Country"
+                            value={country}
+                            onChange={(e) => setCountry(e.target.value)}
+                            data-testid="input-country"
+                          />
+                        </div>
+                      </div>
+                      {!address && !city && !country && (
+                        <div className="text-danger small mt-1">Please enter at least one location field</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">

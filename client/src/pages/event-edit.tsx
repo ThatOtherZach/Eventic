@@ -24,6 +24,11 @@ export default function EventEditPage() {
   const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
   const [ticketsSold, setTicketsSold] = useState(0);
+  
+  // Address component states
+  const [address, setAddress] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [country, setCountry] = useState<string>("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -67,6 +72,19 @@ export default function EventEditPage() {
         return;
       }
 
+      // Parse venue string to populate address fields
+      const venueParts = event.venue.split(',').map(part => part.trim());
+      if (venueParts.length === 3) {
+        setAddress(venueParts[0]);
+        setCity(venueParts[1]);
+        setCountry(venueParts[2]);
+      } else if (venueParts.length === 2) {
+        setCity(venueParts[0]);
+        setCountry(venueParts[1]);
+      } else {
+        setAddress(event.venue);
+      }
+      
       setFormData({
         name: event.name,
         description: event.description || "",
@@ -132,6 +150,24 @@ export default function EventEditPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate at least one address field is filled
+    if (!address && !city && !country) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter at least one venue location field",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Combine address components into venue field
+    const venueString = [address, city, country]
+      .filter(Boolean)
+      .join(', ');
+    
+    // Update formData with combined venue
+    formData.venue = venueString;
     
     // Validate max tickets against tickets sold and maximum limit
     if (formData.maxTickets) {
@@ -351,17 +387,42 @@ export default function EventEditPage() {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="venue" className="form-label">
-                Venue *
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="venue"
-                value={formData.venue}
-                onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                required
-              />
+              <label className="form-label">Venue Location *</label>
+              <div className="row g-2">
+                <div className="col-12">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Street Address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    data-testid="input-address"
+                  />
+                </div>
+                <div className="col-md-6">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="City"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    data-testid="input-city"
+                  />
+                </div>
+                <div className="col-md-6">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    data-testid="input-country"
+                  />
+                </div>
+              </div>
+              {!address && !city && !country && (
+                <div className="text-danger small mt-1">Please enter at least one location field</div>
+              )}
             </div>
 
             <div className="mb-3">
