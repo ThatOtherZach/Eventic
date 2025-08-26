@@ -842,10 +842,7 @@ export function EventCreatePage() {
                         
                         {/* Ticket Preview */}
                         <div className="mb-3">
-                          <div className="d-flex align-items-center justify-content-between mb-2">
-                            <h6 className="mb-0">Live Ticket Preview:</h6>
-                            <span className="badge bg-info text-white small">Updates as you type</span>
-                          </div>
+                          <h6 className="mb-2">Live Ticket Preview:</h6>
                           <div className="bg-light rounded p-4" style={{ backgroundColor: '#f8f9fa' }}>
                             <div className="mx-auto" style={{ maxWidth: '400px' }}>
                               <TicketCard
@@ -861,15 +858,22 @@ export function EventCreatePage() {
                           </div>
                         </div>
                         
-                        <ObjectUploader
-                          onGetUploadParameters={handleImageUpload}
-                          onComplete={(result) => handleTicketBackgroundComplete(result)}
-                          buttonClassName="btn btn-outline-primary"
-                          currentImageUrl={ticketBackgroundUrl}
-                        >
-                          <CreditCard size={18} className="me-2" />
-                          Choose Ticket Background
-                        </ObjectUploader>
+                        <div className="text-center">
+                          <ObjectUploader
+                            onGetUploadParameters={handleImageUpload}
+                            onComplete={(result) => handleTicketBackgroundComplete(result)}
+                            buttonClassName="btn btn-outline-primary"
+                            currentImageUrl={null}
+                          >
+                            <CreditCard size={18} className="me-2" />
+                            Upload Ticket Background
+                          </ObjectUploader>
+                          {ticketBackgroundUrl && (
+                            <p className="text-muted small mt-2 mb-0">
+                              Background applied! Click button again to change.
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
 
