@@ -761,10 +761,10 @@ export function EventCreatePage() {
                                 />
                                 <label className="form-check-label" htmlFor="raffleEnabled">
                                   <span className="badge bg-success text-white me-2">🎁</span>
-                                  Enable Raffle Feature
+                                  Enable Raffle
                                 </label>
                               </div>
-                              <div className="form-text">Allow event owners to randomly select winners from ticket holders (cannot be disabled once activated)</div>
+                              <div className="form-text">Event organizers can randomly select winning tickets from ticket holders (cannot be disabled once activated, validated tickets only).</div>
                               <FormMessage />
                             </FormItem>
                           )}

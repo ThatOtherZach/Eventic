@@ -2012,7 +2012,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(tickets.eventId, eventId),
-          eq(tickets.status, "sent") // Only tickets that were successfully sent
+          eq(tickets.isValidated, true) // Only validated tickets are eligible for raffle
         )
       );
     return result;

@@ -879,7 +879,7 @@ export default function EventDetailPage() {
                   <div className="modal-body">
                     {!raffleWinner ? (
                       <div className="text-center">
-                        <p className="mb-4">Click the button below to randomly select a winner from all ticket holders.</p>
+                        <p className="mb-4">Click the button below to randomly select a winner from validated ticket holders only.</p>
                         <button
                           className="btn btn-success btn-lg"
                           onClick={() => raffleMutation.mutate()}
