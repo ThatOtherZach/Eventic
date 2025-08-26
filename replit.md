@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Features
 
+### Event Reputation System (Added January 2025)
+- **Event Ratings**: Attendees can rate events with thumbs up/down on the event start date
+- **One Vote Per Ticket**: Each ticket holder gets one vote, cannot be changed after submission
+- **Reputation Score**: Event owners' reputation displayed as percentage on their account page
+- **Rating UI**: Shows on ticket page once event has started with simple thumbs up/down buttons
+- **Database**: Added `eventRatings` table tracking ratings per ticket with event owner association
+- **API Endpoints**: `/api/tickets/:id/rate`, `/api/tickets/:id/rating`, `/api/users/:id/reputation`
+
 ### Ticket Resale System (Added January 2025)
 - **Replaces Refund System**: Tickets can no longer be refunded, but can be listed for resale to other users
 - **Price Enforcement**: Tickets can only be resold at their original purchase price - no markup allowed

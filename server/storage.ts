@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, notInArray, sql, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -151,6 +151,11 @@ export interface IStorage {
   getQueuePosition(email: string): Promise<number | null>;
   processAuthQueue(): Promise<AuthQueue[]>;
   updateQueueStatus(id: string, status: string, processedAt?: Date): Promise<AuthQueue | undefined>;
+  
+  // Event Ratings
+  rateEvent(rating: InsertEventRating): Promise<EventRating | null>;
+  hasUserRatedEvent(ticketId: string): Promise<boolean>;
+  getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>;
 }
 
 interface ValidationSession {
@@ -1790,6 +1795,69 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(sessions)
       .where(lt(sessions.expiresAt, new Date()));
+  }
+
+  // Event Ratings
+  async rateEvent(rating: InsertEventRating): Promise<EventRating | null> {
+    try {
+      // Check if this ticket has already rated
+      const existingRating = await db
+        .select()
+        .from(eventRatings)
+        .where(eq(eventRatings.ticketId, rating.ticketId))
+        .limit(1);
+      
+      if (existingRating.length > 0) {
+        return null; // Already rated
+      }
+      
+      const [eventRating] = await db
+        .insert(eventRatings)
+        .values(rating)
+        .returning();
+      
+      return eventRating;
+    } catch (error) {
+      console.error("Error rating event:", error);
+      return null;
+    }
+  }
+  
+  async hasUserRatedEvent(ticketId: string): Promise<boolean> {
+    const [rating] = await db
+      .select()
+      .from(eventRatings)
+      .where(eq(eventRatings.ticketId, ticketId))
+      .limit(1);
+    
+    return !!rating;
+  }
+  
+  async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
+    const ratings = await db
+      .select({
+        rating: eventRatings.rating,
+        count: count()
+      })
+      .from(eventRatings)
+      .where(eq(eventRatings.eventOwnerId, userId))
+      .groupBy(eventRatings.rating);
+    
+    let thumbsUp = 0;
+    let thumbsDown = 0;
+    
+    for (const row of ratings) {
+      if (row.rating === 'thumbs_up') {
+        thumbsUp = row.count;
+      } else if (row.rating === 'thumbs_down') {
+        thumbsDown = row.count;
+      }
+    }
+    
+    const total = thumbsUp + thumbsDown;
+    const percentage = total > 0 ? Math.round((thumbsUp / total) * 100) : null;
+    
+    return { thumbsUp, thumbsDown, percentage };
   }
 
   // Paginated ticket queries

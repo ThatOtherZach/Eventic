@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, LogOut, Eye, Sparkles, Edit, Save, X } from "lucide-react";
+import { Calendar, Ticket, User, LogOut, Eye, Sparkles, Edit, Save, X, Star } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -44,6 +44,15 @@ export default function AccountPage() {
       return response.json();
     },
     enabled: !!user,
+  });
+
+  const { data: reputation } = useQuery<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>({
+    queryKey: [`/api/users/${user?.id}/reputation`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${user?.id}/reputation`);
+      return response.json();
+    },
+    enabled: !!user?.id,
   });
 
   const updateLocationsMutation = useMutation({
@@ -123,6 +132,17 @@ export default function AccountPage() {
                   <div>
                     <h5 className="card-title mb-1">Account Details</h5>
                     <p className="text-muted mb-0">{user.email}</p>
+                    {reputation && reputation.percentage !== null && (
+                      <div className="d-flex align-items-center mt-2 mb-2">
+                        <Star size={16} className="text-warning me-2" />
+                        <span className="text-muted small">
+                          Reputation: <strong>{reputation.percentage}%</strong>
+                          <span className="ms-2 text-secondary">
+                            ({reputation.thumbsUp} 👍 / {reputation.thumbsDown} 👎)
+                          </span>
+                        </span>
+                      </div>
+                    )}
                     <div className="d-flex align-items-center mt-2">
                       {isEditingCity ? (
                         <div className="d-flex align-items-center gap-2">

@@ -2047,6 +2047,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Event Rating endpoints
+  app.post("/api/tickets/:ticketId/rate", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+      const { rating, eventId, eventOwnerId } = req.body;
+
+      // Validate rating
+      if (!rating || !['thumbs_up', 'thumbs_down'].includes(rating)) {
+        return res.status(400).json({ message: "Invalid rating. Must be 'thumbs_up' or 'thumbs_down'" });
+      }
+
+      // Verify the ticket belongs to the user
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket || ticket.userId !== userId) {
+        return res.status(403).json({ message: "You can only rate events for your own tickets" });
+      }
+
+      // Check if already rated
+      const hasRated = await storage.hasUserRatedEvent(ticketId);
+      if (hasRated) {
+        return res.status(400).json({ message: "You have already rated this event" });
+      }
+
+      // Create the rating
+      const eventRating = await storage.rateEvent({
+        ticketId,
+        eventId,
+        eventOwnerId,
+        rating
+      });
+
+      if (!eventRating) {
+        return res.status(400).json({ message: "Failed to submit rating" });
+      }
+
+      res.json({ success: true, rating: eventRating });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/rate", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to submit event rating" });
+    }
+  });
+
+  app.get("/api/tickets/:ticketId/rating", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { ticketId } = req.params;
+      
+      const hasRated = await storage.hasUserRatedEvent(ticketId);
+      res.json({ hasRated });
+    } catch (error) {
+      await logError(error, "GET /api/tickets/:ticketId/rating", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to check rating status" });
+    }
+  });
+
+  app.get("/api/users/:userId/reputation", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const reputation = await storage.getUserReputation(userId);
+      res.json(reputation);
+    } catch (error) {
+      await logError(error, "GET /api/users/:userId/reputation", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch user reputation" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

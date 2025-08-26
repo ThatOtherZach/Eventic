@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Shield, Clock, CheckCircle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Shield, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -86,6 +86,8 @@ export default function TicketViewPage(): React.ReactElement {
   const [currentCode, setCurrentCode] = useState<string>("");
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const [selectedRating, setSelectedRating] = useState<'thumbs_up' | 'thumbs_down' | null>(null);
+  const [hasRated, setHasRated] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -96,6 +98,43 @@ export default function TicketViewPage(): React.ReactElement {
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/tickets/${ticketId}`);
       return response.json();
+    },
+  });
+
+  // Check if user has already rated
+  const { data: ratingStatus } = useQuery({
+    queryKey: [`/api/tickets/${ticketId}/rating`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/tickets/${ticketId}/rating`);
+      return response.json();
+    },
+    enabled: !!ticketId,
+  });
+
+  // Submit rating mutation
+  const submitRatingMutation = useMutation({
+    mutationFn: async (rating: 'thumbs_up' | 'thumbs_down') => {
+      const response = await apiRequest("POST", `/api/tickets/${ticketId}/rate`, {
+        rating,
+        eventId: ticketData?.event.id,
+        eventOwnerId: ticketData?.event.userId,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setHasRated(true);
+      toast({
+        title: "Rating Submitted",
+        description: "Thank you for rating this event!",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}/rating`] });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Rating Failed",
+        description: error.message || "Could not submit rating",
+      });
     },
   });
 
@@ -212,6 +251,22 @@ export default function TicketViewPage(): React.ReactElement {
       stopValidation();
     }
   }, [ticketData?.ticket?.isValidated]);
+
+  // Check if event has started (for showing rating option)
+  const isEventStarted = () => {
+    if (!ticketData?.event) return false;
+    const now = new Date();
+    const startDateTime = `${ticketData.event.date}T${ticketData.event.time}:00`;
+    const startDate = new Date(startDateTime);
+    return now >= startDate;
+  };
+
+  // Update hasRated state when rating status changes
+  useEffect(() => {
+    if (ratingStatus?.hasRated) {
+      setHasRated(true);
+    }
+  }, [ratingStatus]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -542,6 +597,62 @@ export default function TicketViewPage(): React.ReactElement {
               )}
             </div>
           </div>
+
+          {/* Event Rating Section */}
+          {isEventStarted() && !hasRated && (
+            <div className="card mt-3">
+              <div className="card-body">
+                <h5 className="card-title mb-3">Rate Event</h5>
+                <p className="text-muted mb-3">How is the event?</p>
+                
+                <div className="d-flex justify-content-center gap-3">
+                  <button
+                    className={`btn btn-lg ${selectedRating === 'thumbs_up' ? 'btn-success' : 'btn-outline-success'} px-4`}
+                    onClick={() => {
+                      setSelectedRating('thumbs_up');
+                      submitRatingMutation.mutate('thumbs_up');
+                    }}
+                    disabled={submitRatingMutation.isPending || hasRated}
+                    data-testid="button-thumbs-up"
+                  >
+                    <ThumbsUp size={24} />
+                  </button>
+                  
+                  <button
+                    className={`btn btn-lg ${selectedRating === 'thumbs_down' ? 'btn-danger' : 'btn-outline-danger'} px-4`}
+                    onClick={() => {
+                      setSelectedRating('thumbs_down');
+                      submitRatingMutation.mutate('thumbs_down');
+                    }}
+                    disabled={submitRatingMutation.isPending || hasRated}
+                    data-testid="button-thumbs-down"
+                  >
+                    <ThumbsDown size={24} />
+                  </button>
+                </div>
+                
+                {submitRatingMutation.isPending && (
+                  <div className="text-center mt-3">
+                    <div className="spinner-border spinner-border-sm text-primary" role="status">
+                      <span className="visually-hidden">Submitting rating...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Show rating status if already rated */}
+          {hasRated && (
+            <div className="card mt-3">
+              <div className="card-body">
+                <div className="text-center">
+                  <CheckCircle size={24} className="text-success mb-2" />
+                  <h6 className="mb-0">Thank you for rating this event!</h6>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* NFT Minting Section */}
           {ticket.isValidated && event.allowMinting && (

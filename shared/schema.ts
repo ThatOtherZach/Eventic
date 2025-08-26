@@ -165,6 +165,16 @@ export const resellTransactions = pgTable("resell_transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Event ratings table for reputation system
+export const eventRatings = pgTable("event_ratings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").references(() => tickets.id).notNull().unique(), // One vote per ticket
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  eventOwnerId: varchar("event_owner_id").references(() => users.id).notNull(), // Track who gets the rating
+  rating: text("rating").notNull(), // "thumbs_up" or "thumbs_down"
+  ratedAt: timestamp("rated_at").defaultNow(),
+});
+
 export const systemLogs = pgTable("system_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   level: text("level").notNull(), // error, warning, info
@@ -451,6 +461,13 @@ export const insertResellTransactionSchema = createInsertSchema(resellTransactio
   createdAt: true,
 });
 
+export const insertEventRatingSchema = createInsertSchema(eventRatings).omit({
+  id: true,
+  ratedAt: true,
+}).extend({
+  rating: z.enum(["thumbs_up", "thumbs_down"]),
+});
+
 export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({
   id: true,
   createdAt: true,
@@ -580,3 +597,5 @@ export type InsertResellQueue = z.infer<typeof insertResellQueueSchema>;
 export type ResellQueue = typeof resellQueue.$inferSelect;
 export type InsertResellTransaction = z.infer<typeof insertResellTransactionSchema>;
 export type ResellTransaction = typeof resellTransactions.$inferSelect;
+export type InsertEventRating = z.infer<typeof insertEventRatingSchema>;
+export type EventRating = typeof eventRatings.$inferSelect;
