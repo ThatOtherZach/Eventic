@@ -93,6 +93,8 @@ export function ObjectUploader({
         }]
       });
       setSelectedFile(null);
+      // Keep the preview of the uploaded image
+      setPreviewUrl(uploadUrl);
     } catch (err) {
       setError('Failed to upload file. Please try again.');
       console.error('Upload error:', err);
