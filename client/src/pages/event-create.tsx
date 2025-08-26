@@ -159,6 +159,15 @@ export function EventCreatePage() {
       url: data.uploadURL,
     };
   };
+  
+  const handleTicketBackgroundUpload = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload", {});
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
 
   const handleImageComplete = (result: any) => {
     // Extract the uploaded URL from the result
@@ -168,7 +177,7 @@ export function EventCreatePage() {
       setImageUrl(uploadedUrl);
       toast({
         title: "Image uploaded",
-        description: "Image will be included when you create the event",
+        description: "Feature image will be included when you create the event",
       });
     }
   };
@@ -181,7 +190,7 @@ export function EventCreatePage() {
       setTicketBackgroundUrl(uploadedUrl);
       toast({
         title: "Ticket background uploaded",
-        description: "Ticket design will be applied when you create the event",
+        description: "Ticket design has been applied to the preview",
       });
     }
   };
@@ -860,7 +869,7 @@ export function EventCreatePage() {
                         
                         <div className="text-center">
                           <ObjectUploader
-                            onGetUploadParameters={handleImageUpload}
+                            onGetUploadParameters={handleTicketBackgroundUpload}
                             onComplete={(result) => handleTicketBackgroundComplete(result)}
                             buttonClassName="btn btn-outline-primary"
                             currentImageUrl={null}
