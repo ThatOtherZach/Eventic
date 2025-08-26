@@ -75,7 +75,7 @@ export default function EventDetailPage() {
       // Create description from event description or fallback
       const description = event.description 
         ? event.description.replace(/<[^>]*>/g, '').substring(0, 160) + (event.description.length > 160 ? '...' : '')
-        : `Join us for ${event.name} at ${event.venue} on ${format(new Date(event.date), 'MMMM d, yyyy')}. Get your tickets now!`;
+        : `Join us for ${event.name} at ${event.venue} on ${event.date}. Get your tickets now!`;
       
       // Add meta description
       const metaDescription = document.createElement('meta');
@@ -339,7 +339,14 @@ export default function EventDetailPage() {
     );
   }
 
-  const eventDate = event.date ? new Date(event.date) : null;
+  const eventDate = event.date ? (() => {
+    try {
+      const date = new Date(event.date);
+      return isNaN(date.getTime()) ? null : date;
+    } catch {
+      return null;
+    }
+  })() : null;
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
 
@@ -370,7 +377,14 @@ export default function EventDetailPage() {
               <Calendar size={18} className="me-2" />
               {event.endDate ? (
                 <>
-                  {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date} - {event.endDate && event.endDate !== '' ? format(new Date(event.endDate), "MMMM d, yyyy") : 'No end date'}
+                  {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date} - {event.endDate && event.endDate !== '' ? (() => {
+                    try {
+                      const endDate = new Date(event.endDate);
+                      return isNaN(endDate.getTime()) ? 'Invalid end date' : format(endDate, "MMMM d, yyyy");
+                    } catch {
+                      return 'Invalid end date';
+                    }
+                  })() : 'No end date'}
                 </>
               ) : (
                 eventDate ? format(eventDate, "MMMM d, yyyy") : event.date
@@ -603,9 +617,16 @@ export default function EventDetailPage() {
                             const increasePercent = Math.round((increase / basePrice) * 100);
                             
                             // Calculate time to event
-                            const eventDateTime = new Date(`${event.date}T${event.time}:00`);
-                            const now = new Date();
-                            const daysUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+                            let daysUntilEvent = 0;
+                            try {
+                              const eventDateTime = new Date(`${event.date}T${event.time}:00`);
+                              if (!isNaN(eventDateTime.getTime())) {
+                                const now = new Date();
+                                daysUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+                              }
+                            } catch {
+                              // Handle invalid date gracefully
+                            }
                             
                             const factors = [];
                             

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -165,7 +165,7 @@ export const resellTransactions = pgTable("resell_transactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Event ratings table for reputation system
+// Event ratings table for reputation system - one vote per event per user
 export const eventRatings = pgTable("event_ratings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ticketId: varchar("ticket_id").references(() => tickets.id).notNull().unique(), // One vote per ticket
@@ -479,6 +479,11 @@ export const insertEventRatingSchema = createInsertSchema(eventRatings).omit({
   rating: z.enum(["thumbs_up", "thumbs_down"]),
 });
 
+export const insertUserReputationCacheSchema = createInsertSchema(userReputationCache).omit({
+  id: true,
+  lastUpdated: true,
+});
+
 export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({
   id: true,
   createdAt: true,
@@ -610,3 +615,5 @@ export type InsertResellTransaction = z.infer<typeof insertResellTransactionSche
 export type ResellTransaction = typeof resellTransactions.$inferSelect;
 export type InsertEventRating = z.infer<typeof insertEventRatingSchema>;
 export type EventRating = typeof eventRatings.$inferSelect;
+export type InsertUserReputationCache = z.infer<typeof insertUserReputationCacheSchema>;
+export type UserReputationCache = typeof userReputationCache.$inferSelect;

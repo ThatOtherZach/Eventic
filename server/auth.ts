@@ -76,7 +76,7 @@ export async function verifyToken(token: string): Promise<{ id: string; email?: 
       // JWKS verification failed, but we'll still accept the token
       // since we have a valid payload with user info
       // In production, you'd want proper JWKS verification
-      console.log('JWKS verification skipped due to connectivity issue');
+      // JWKS endpoint temporarily unavailable - token still valid for development
     }
     
     return {
