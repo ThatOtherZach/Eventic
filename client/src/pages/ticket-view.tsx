@@ -151,9 +151,6 @@ export default function TicketViewPage(): React.ReactElement {
       setTimeRemaining(180); // 3 minutes in seconds
       startTokenRotation();
       startCountdown();
-      toast({
-        title: "Validation Started",
-      });
     },
     onError: (error: any) => {
       toast({
