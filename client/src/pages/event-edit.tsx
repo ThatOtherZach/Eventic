@@ -341,455 +341,548 @@ export default function EventEditPage() {
 
   return (
     <div className="container py-5">
-      <Link href={`/events/${id}`} className="btn btn-link mb-3 text-decoration-none">
-        <ArrowLeft size={18} className="me-2" />
-        Back to Event
-      </Link>
+      {/* Header Section */}
+      <div className="row mb-4">
+        <div className="col">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 className="display-5 fw-bold mb-2">Edit Event</h1>
+              <p className="text-muted">Update your event details</p>
+            </div>
+            <Link href={`/events/${id}`}>
+              <button className="btn btn-outline-secondary">
+                <ArrowLeft size={18} className="me-2" />
+                Back to Event
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
 
       <div className="row">
         <div className="col-lg-8">
-          <h2 className="mb-4">Edit Event</h2>
-
           <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="name" className="form-label">
-                Event Name *
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="name"
-                value={formData.name}
-                disabled
-                title="Event name cannot be changed after creation"
-              />
-              <small className="text-muted">Event name cannot be changed after creation</small>
-            </div>
+            {/* Basic Information Card */}
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4">Basic Information</h5>
+                
+                <div className="row">
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <label htmlFor="name" className="form-label">Event Name *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="name"
+                        value={formData.name}
+                        disabled
+                        title="Event name cannot be changed after creation"
+                        data-testid="input-name"
+                      />
+                      <small className="text-muted">Event name cannot be changed after creation</small>
+                    </div>
+                  </div>
 
-            <div className="mb-3">
-              <label htmlFor="description" className="form-label">
-                Description
-              </label>
-              <ReactQuill 
-                theme="snow"
-                value={formData.description}
-                onChange={(value) => setFormData({ ...formData, description: value })}
-                placeholder="Tell people about your event..."
-                modules={{
-                  toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link'],
-                    ['clean']
-                  ]
-                }}
-              />
-            </div>
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <label htmlFor="description" className="form-label">Description</label>
+                      <ReactQuill 
+                        theme="snow"
+                        value={formData.description}
+                        onChange={(value) => setFormData({ ...formData, description: value })}
+                        placeholder="Tell people about your event..."
+                        className="bg-white"
+                        data-testid="input-description"
+                        modules={{
+                          toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link'],
+                            ['clean']
+                          ]
+                        }}
+                      />
+                    </div>
+                  </div>
 
-            <div className="mb-3">
-              <label className="form-label">Venue Location *</label>
-              <div className="row g-2">
-                <div className="col-12">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Street Address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    data-testid="input-address"
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="City"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    data-testid="input-city"
-                  />
-                </div>
-                <div className="col-md-6">
-                  <select
-                    className="form-control"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    data-testid="input-country"
-                  >
-                    <option value="">Select Country</option>
-                    {countries.map((countryName) => (
-                      <option key={countryName} value={countryName}>
-                        {countryName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              {!address && !city && !country && (
-                <div className="text-danger small mt-1">Please enter at least one location field</div>
-              )}
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label fw-bold">Starts on *</label>
-              <div className="row">
-                <div className="col-md-6 mb-2">
-                  <input
-                    type="date"
-                    className="form-control"
-                    id="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="col-md-6 mb-2">
-                  <input
-                    type="time"
-                    className="form-control"
-                    id="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    required
-                  />
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <label className="form-label text-dark">Venue Location</label>
+                      <div className="row g-2">
+                        <div className="col-12">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Street Address, GPS Coordinates, Online, etc."
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            data-testid="input-address"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="City"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            data-testid="input-city"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <select
+                            className="form-control"
+                            value={country}
+                            onChange={(e) => setCountry(e.target.value)}
+                            data-testid="input-country"
+                          >
+                            <option value="">Select Country</option>
+                            {countries.map((countryName) => (
+                              <option key={countryName} value={countryName}>
+                                {countryName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      {!address && !city && !country && (
+                        <div className="text-danger small mt-1">A venue name is required. City and Country are optional.</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mb-3">
-              <label className="form-label fw-bold">Ends on <span className="text-muted">(optional)</span></label>
-              <div className="row">
-                <div className="col-md-6 mb-2">
-                  <input
-                    type="date"
-                    className="form-control"
-                    id="endDate"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    min={formData.date}
-                  />
+            {/* Date & Time Card */}
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4">Date & Time</h5>
+                
+                <div className="row">
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Starts on *</label>
+                      <div className="row">
+                        <div className="col-md-6 mb-2">
+                          <input
+                            type="date"
+                            className="form-control"
+                            id="date"
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            required
+                            data-testid="input-date"
+                          />
+                        </div>
+                        <div className="col-md-6 mb-2">
+                          <input
+                            type="time"
+                            className="form-control"
+                            id="time"
+                            value={formData.time}
+                            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                            required
+                            data-testid="input-time"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Ends on <span className="text-muted">(optional)</span></label>
+                      <div className="row">
+                        <div className="col-md-6 mb-2">
+                          <input
+                            type="date"
+                            className="form-control"
+                            id="endDate"
+                            value={formData.endDate}
+                            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                            min={formData.date}
+                            data-testid="input-endDate"
+                          />
+                        </div>
+                        <div className="col-md-6 mb-2">
+                          <input
+                            type="time"
+                            className="form-control"
+                            id="endTime"
+                            value={formData.endTime}
+                            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                            data-testid="input-endTime"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <div className="col-md-6 mb-2">
-                  <input
-                    type="time"
-                    className="form-control"
-                    id="endTime"
-                    value={formData.endTime}
-                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  />
+            {/* Ticketing Card */}
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4">Ticketing</h5>
+                
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label htmlFor="ticketPrice" className="form-label">Ticket Price ($) *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="form-control"
+                        id="ticketPrice"
+                        value={formData.ticketPrice}
+                        onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
+                        required
+                        data-testid="input-ticketPrice"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label htmlFor="maxTickets" className="form-label">Maximum Tickets (optional)</label>
+                      <input
+                        type="number"
+                        min={ticketsSold || 1}
+                        max="5000"
+                        className="form-control"
+                        id="maxTickets"
+                        value={formData.maxTickets}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value && parseInt(value) > 5000) {
+                            setFormData({ ...formData, maxTickets: "5000" });
+                          } else {
+                            setFormData({ ...formData, maxTickets: value });
+                          }
+                        }}
+                        placeholder="Leave empty for unlimited (max 5,000)"
+                        data-testid="input-maxTickets"
+                      />
+                      {ticketsSold > 0 && (
+                        <small className="text-muted">
+                          Minimum: {ticketsSold} (tickets already sold)
+                        </small>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label htmlFor="ticketPrice" className="form-label">
-                  Ticket Price ($) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="form-control"
-                  id="ticketPrice"
-                  value={formData.ticketPrice}
-                  onChange={(e) => setFormData({ ...formData, ticketPrice: e.target.value })}
-                  required
-                />
-              </div>
+            {/* Event Settings Card */}
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4">Event Settings</h5>
+                
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label htmlFor="earlyValidation" className="form-label">Ticket Validation Timing</label>
+                      <select
+                        className="form-select"
+                        id="earlyValidation"
+                        value={formData.earlyValidation}
+                        disabled
+                        title="Validation timing cannot be changed after creation"
+                        data-testid="select-earlyValidation"
+                      >
+                        <option value="Allow at Anytime">Allow at Anytime</option>
+                        <option value="Two Hours Before">Two Hours Before</option>
+                        <option value="One Hour Before">One Hour Before</option>
+                        <option value="At Start Time">At Start Time</option>
+                      </select>
+                      <small className="text-muted">Validation timing cannot be changed after event creation</small>
+                    </div>
+                  </div>
 
-              <div className="col-md-6 mb-3">
-                <label htmlFor="maxTickets" className="form-label">
-                  Maximum Tickets (optional)
-                </label>
-                <input
-                  type="number"
-                  min={ticketsSold || 1}
-                  max="5000"
-                  className="form-control"
-                  id="maxTickets"
-                  value={formData.maxTickets}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value && parseInt(value) > 5000) {
-                      setFormData({ ...formData, maxTickets: "5000" });
-                    } else {
-                      setFormData({ ...formData, maxTickets: value });
-                    }
-                  }}
-                  placeholder="Leave empty for unlimited (max 5,000)"
-                />
-                {ticketsSold > 0 && (
-                  <small className="text-muted">
-                    Minimum: {ticketsSold} (tickets already sold)
-                  </small>
-                )}
-              </div>
-            </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label htmlFor="reentryType" className="form-label">Re-entry Policy</label>
+                      <select
+                        className="form-select"
+                        id="reentryType"
+                        value={formData.reentryType}
+                        disabled
+                        title="Re-entry policy cannot be changed after creation"
+                        data-testid="select-reentryType"
+                      >
+                        <option value="No Reentry (Single Use)">No Re-entry (Single Use)</option>
+                        <option value="Pass (Multiple Use)">Pass (Multiple Use)</option>
+                        <option value="No Limit">No Limit</option>
+                      </select>
+                      <small className="text-muted">Re-entry policy cannot be changed after event creation</small>
+                    </div>
+                  </div>
 
-            <div className="mb-3">
-              <label htmlFor="earlyValidation" className="form-label">
-                Ticket Validation Timing
-              </label>
-              <select
-                className="form-select"
-                id="earlyValidation"
-                value={formData.earlyValidation}
-                disabled
-                title="Validation timing cannot be changed after creation"
-              >
-                <option value="Allow at Anytime">Allow at Anytime</option>
-                <option value="Two Hours Before">Two Hours Before</option>
-                <option value="One Hour Before">One Hour Before</option>
-                <option value="At Start Time">At Start Time</option>
-              </select>
-              <small className="text-muted">
-                Validation timing cannot be changed after event creation
-              </small>
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="reentryType" className="form-label">
-                Re-entry Policy
-              </label>
-              <select
-                className="form-select"
-                id="reentryType"
-                value={formData.reentryType}
-                disabled
-                title="Re-entry policy cannot be changed after creation"
-              >
-                <option value="No Reentry (Single Use)">No Re-entry (Single Use)</option>
-                <option value="Pass (Multiple Use)">Pass (Multiple Use)</option>
-                <option value="No Limit">No Limit</option>
-              </select>
-              <small className="text-muted">
-                Re-entry policy cannot be changed after event creation
-              </small>
-            </div>
-
-            {formData.reentryType === 'Pass (Multiple Use)' && (
-              <div className="mb-3">
-                <label htmlFor="maxUses" className="form-label">
-                  Number of Uses
-                </label>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="maxUses"
-                  value={formData.maxUses}
-                  disabled
-                  title="Number of uses cannot be changed after creation"
-                />
-                <small className="text-muted">
-                  Number of uses cannot be changed after event creation
-                </small>
-              </div>
-            )}
-
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="goldenTicketEnabled"
-                  checked={formData.goldenTicketEnabled}
-                  disabled
-                  title="Golden ticket contest cannot be changed after creation"
-                />
-                <label className="form-check-label" htmlFor="goldenTicketEnabled">
-                  <span className="badge bg-warning text-dark me-2">🎫</span>
-                  Golden Ticket Contest Enabled
-                </label>
-              </div>
-              <small className="text-muted">
-                Golden ticket contest settings cannot be changed after event creation
-              </small>
-            </div>
-
-            {formData.goldenTicketEnabled && (
-              <div className="mb-3">
-                <label htmlFor="goldenTicketCount" className="form-label">
-                  Number of Golden Tickets
-                </label>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="goldenTicketCount"
-                  value={formData.goldenTicketCount || ''}
-                  disabled
-                  title="Golden ticket count cannot be changed after creation"
-                />
-                <small className="text-muted">
-                  Number of golden tickets cannot be changed after event creation
-                  {formData.maxTickets && (
-                    <span> (limit: {Math.floor(parseInt(formData.maxTickets) / 2)} - half of total tickets)</span>
+                  {formData.reentryType === 'Pass (Multiple Use)' && (
+                    <div className="col-12">
+                      <div className="mb-3">
+                        <label htmlFor="maxUses" className="form-label">Number of Uses</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          id="maxUses"
+                          value={formData.maxUses}
+                          disabled
+                          title="Number of uses cannot be changed after creation"
+                          data-testid="input-maxUses"
+                        />
+                        <small className="text-muted">Number of uses cannot be changed after event creation</small>
+                      </div>
+                    </div>
                   )}
-                </small>
-              </div>
-            )}
 
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="oneTicketPerUser"
-                  checked={formData.oneTicketPerUser}
-                  disabled
-                  title="Ticket purchase limit cannot be changed after creation"
-                />
-                <label className="form-check-label" htmlFor="oneTicketPerUser">
-                  <span className="badge bg-info text-white me-2">👤</span>
-                  One Ticket Per User Limit
-                </label>
+                </div>
               </div>
-              <small className="text-muted">
-                Ticket purchase limit cannot be changed after event creation. 
-                {formData.oneTicketPerUser && " Users are limited to purchasing one ticket (tracked by email and IP)."}
-              </small>
             </div>
 
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="surgePricing"
-                  checked={formData.surgePricing}
-                  onChange={() => {}}
-                  disabled
-                  title="Surge pricing setting cannot be changed after creation"
-                />
-                <label className="form-check-label" htmlFor="surgePricing">
-                  <span className="badge bg-warning text-dark me-2">📈</span>
-                  Surge Pricing
-                </label>
+            {/* Additional Features Card */}
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4">Additional Features</h5>
+                
+                <div className="row">
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="goldenTicketEnabled"
+                          checked={formData.goldenTicketEnabled}
+                          disabled
+                          title="Golden ticket contest cannot be changed after creation"
+                          data-testid="checkbox-goldenTicket"
+                        />
+                        <label className="form-check-label" htmlFor="goldenTicketEnabled">
+                          <span className="badge bg-warning text-dark me-2">🎫</span>
+                          Golden Ticket Contest Enabled
+                        </label>
+                      </div>
+                      <small className="text-muted">Golden ticket contest settings cannot be changed after event creation</small>
+                    </div>
+                  </div>
+
+                  {formData.goldenTicketEnabled && (
+                    <div className="col-12">
+                      <div className="mb-3">
+                        <label htmlFor="goldenTicketCount" className="form-label">Number of Golden Tickets</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          id="goldenTicketCount"
+                          value={formData.goldenTicketCount || ''}
+                          disabled
+                          title="Golden ticket count cannot be changed after creation"
+                          data-testid="input-goldenTicketCount"
+                        />
+                        <small className="text-muted">
+                          Number of golden tickets cannot be changed after event creation
+                          {formData.maxTickets && (
+                            <span> (limit: {Math.floor(parseInt(formData.maxTickets) / 2)} - half of total tickets)</span>
+                          )}
+                        </small>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="oneTicketPerUser"
+                          checked={formData.oneTicketPerUser}
+                          disabled
+                          title="Ticket purchase limit cannot be changed after creation"
+                          data-testid="checkbox-oneTicketPerUser"
+                        />
+                        <label className="form-check-label" htmlFor="oneTicketPerUser">
+                          <span className="badge bg-info text-white me-2">👤</span>
+                          One Ticket Per User Limit
+                        </label>
+                      </div>
+                      <small className="text-muted">
+                        Ticket purchase limit cannot be changed after event creation. 
+                        {formData.oneTicketPerUser && " Users are limited to purchasing one ticket (tracked by email and IP)."}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="surgePricing"
+                          checked={formData.surgePricing}
+                          onChange={() => {}}
+                          disabled
+                          title="Surge pricing setting cannot be changed after creation"
+                          data-testid="checkbox-surgePricing"
+                        />
+                        <label className="form-check-label" htmlFor="surgePricing">
+                          <span className="badge bg-warning text-dark me-2">📈</span>
+                          Surge Pricing
+                        </label>
+                      </div>
+                      <small className="text-muted">
+                        Surge pricing setting cannot be changed after event creation. 
+                        {formData.surgePricing && " Ticket prices increase dynamically as more tickets are sold."}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="specialEffectsEnabled"
+                          checked={formData.specialEffectsEnabled}
+                          disabled
+                          title="Special effects settings cannot be changed after creation"
+                          data-testid="checkbox-specialEffects"
+                        />
+                        <label className="form-check-label" htmlFor="specialEffectsEnabled">
+                          <span className="badge bg-primary me-2">✨</span>
+                          Special Effects Enabled
+                        </label>
+                      </div>
+                      <small className="text-muted">
+                        Special effects settings cannot be changed after event creation.
+                        {formData.specialEffectsEnabled && " Validated tickets may display special visual effects on holidays and themed events."}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="raffleEnabled"
+                          checked={formData.raffleEnabled || false}
+                          onChange={(e) => setFormData({ ...formData, raffleEnabled: e.target.checked })}
+                          disabled={event?.raffleEnabled === true}
+                          title={event?.raffleEnabled ? "Raffle cannot be disabled once enabled" : "Enable raffle feature for this event"}
+                          data-testid="checkbox-raffle-enabled"
+                        />
+                        <label className="form-check-label" htmlFor="raffleEnabled">
+                          <span className="badge bg-success text-white me-2">🎁</span>
+                          Enable Raffle Feature
+                        </label>
+                      </div>
+                      <small className="text-muted">
+                        {event?.raffleEnabled 
+                          ? "Raffle is enabled for this event and cannot be disabled."
+                          : "Allow random selection of winners from ticket holders. Cannot be disabled once enabled."}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="allowMinting"
+                          checked={formData.allowMinting}
+                          disabled
+                          title="NFT minting settings cannot be changed after creation"
+                          data-testid="checkbox-allowMinting"
+                        />
+                        <label className="form-check-label" htmlFor="allowMinting">
+                          <span className="badge bg-info text-dark me-2">NFT</span>
+                          NFT Minting Allowed
+                        </label>
+                      </div>
+                      <small className="text-muted">
+                        NFT minting settings cannot be changed after event creation.
+                        {formData.allowMinting && " Attendees can mint their validated tickets as digital collectibles."}
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="form-check">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="isPrivate"
+                          checked={formData.isPrivate}
+                          disabled
+                          title="Private event settings cannot be changed after creation"
+                          data-testid="checkbox-isPrivate"
+                        />
+                        <label className="form-check-label" htmlFor="isPrivate">
+                          <span className="badge bg-secondary me-2">Private</span>
+                          Private Event
+                        </label>
+                      </div>
+                      <small className="text-muted">
+                        Private event settings cannot be changed after event creation.
+                        {formData.isPrivate && " This event is excluded from search results and cannot be featured or boosted. Only accessible by direct link."}
+                      </small>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <small className="text-muted">
-                Surge pricing setting cannot be changed after event creation. 
-                {formData.surgePricing && " Ticket prices increase dynamically as more tickets are sold."}
-              </small>
             </div>
 
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="specialEffectsEnabled"
-                  checked={formData.specialEffectsEnabled}
-                  disabled
-                  title="Special effects settings cannot be changed after creation"
-                />
-                <label className="form-check-label" htmlFor="specialEffectsEnabled">
-                  <span className="badge bg-primary me-2">✨</span>
-                  Special Effects Enabled
-                </label>
+            {/* Event Image Card */}
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4">Event Image</h5>
+                
+                <div className="mb-3">
+                  <label className="form-label">
+                    <Image size={18} className="me-2" />
+                    Feature Image
+                  </label>
+                  <ObjectUploader
+                    onGetUploadParameters={handleImageUpload}
+                    onComplete={(result) => handleImageComplete(result)}
+                    buttonClassName="btn btn-outline-primary"
+                    currentImageUrl={formData.imageUrl}
+                  >
+                    <Image size={18} className="me-2" />
+                    Choose Image
+                  </ObjectUploader>
+                  <small className="text-muted d-block mt-2">
+                    Recommended size: 1200x630px (16:9 ratio) for best display
+                  </small>
+                </div>
               </div>
-              <small className="text-muted">
-                Special effects settings cannot be changed after event creation.
-                {formData.specialEffectsEnabled && " Validated tickets may display special visual effects on holidays and themed events."}
-              </small>
             </div>
 
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="raffleEnabled"
-                  checked={formData.raffleEnabled || false}
-                  onChange={(e) => setFormData({ ...formData, raffleEnabled: e.target.checked })}
-                  disabled={event?.raffleEnabled === true}
-                  title={event?.raffleEnabled ? "Raffle cannot be disabled once enabled" : "Enable raffle feature for this event"}
-                  data-testid="checkbox-raffle-enabled"
-                />
-                <label className="form-check-label" htmlFor="raffleEnabled">
-                  <span className="badge bg-success text-white me-2">🎁</span>
-                  Enable Raffle Feature
-                </label>
-              </div>
-              <small className="text-muted">
-                {event?.raffleEnabled 
-                  ? "Raffle is enabled for this event and cannot be disabled."
-                  : "Allow random selection of winners from ticket holders. Cannot be disabled once enabled."}
-              </small>
-            </div>
-
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="allowMinting"
-                  checked={formData.allowMinting}
-                  disabled
-                  title="NFT minting settings cannot be changed after creation"
-                />
-                <label className="form-check-label" htmlFor="allowMinting">
-                  <span className="badge bg-info text-dark me-2">NFT</span>
-                  NFT Minting Allowed
-                </label>
-              </div>
-              <small className="text-muted">
-                NFT minting settings cannot be changed after event creation.
-                {formData.allowMinting && " Attendees can mint their validated tickets as digital collectibles."}
-              </small>
-            </div>
-
-            <div className="mb-3">
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="isPrivate"
-                  checked={formData.isPrivate}
-                  disabled
-                  title="Private event settings cannot be changed after creation"
-                />
-                <label className="form-check-label" htmlFor="isPrivate">
-                  <span className="badge bg-secondary me-2">Private</span>
-                  Private Event
-                </label>
-              </div>
-              <small className="text-muted">
-                Private event settings cannot be changed after event creation.
-                {formData.isPrivate && " This event is excluded from search results and cannot be featured or boosted. Only accessible by direct link."}
-              </small>
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label">
-                <Image size={18} className="me-2" />
-                Feature Image
-              </label>
-              <ObjectUploader
-                onGetUploadParameters={handleImageUpload}
-                onComplete={(result) => handleImageComplete(result)}
-                buttonClassName="btn btn-outline-primary"
-                currentImageUrl={formData.imageUrl}
-              >
-                <Image size={18} className="me-2" />
-                Choose Image
-              </ObjectUploader>
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label">
-                <CreditCard size={18} className="me-2" />
-                Ticket Design
-              </label>
-              <p className="text-muted small mb-3">
-                Customize the background image for your event tickets. Tickets are business card sized (3.5" x 2").
-              </p>
-              
-              {/* Ticket Preview */}
-              <div className="mb-3">
-                <h6 className="mb-2">Ticket Preview:</h6>
+            {/* Ticket Preview Card */}
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4">
+                  <CreditCard size={18} className="me-2" />
+                  Ticket Preview
+                </h5>
+                <p className="text-muted small mb-3">
+                  Your featured image will be used as the ticket background. Tickets are business card sized (3.5" x 2").
+                </p>
+                
                 <div className="d-flex justify-content-center p-3 bg-light rounded">
                   <TicketCard 
                     ticket={sampleTicket} 
@@ -797,18 +890,20 @@ export default function EventEditPage() {
                     showQR={false}
                   />
                 </div>
+                
+                <small className="text-muted d-block mt-2">
+                  The ticket displays event details on the left and a QR code on the right.
+                </small>
               </div>
-
-              <small className="text-muted d-block mt-2">
-                The featured image will be used as the ticket background. The ticket displays event details on the left and a QR code on the right.
-              </small>
             </div>
 
+            {/* Submit Buttons */}
             <div className="d-flex gap-2">
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-primary btn-lg px-5"
                 disabled={updateEventMutation.isPending}
+                data-testid="button-save"
               >
                 {updateEventMutation.isPending ? (
                   <>
@@ -822,8 +917,11 @@ export default function EventEditPage() {
                   </>
                 )}
               </button>
-              <Link href={`/events/${id}`} className="btn btn-outline-secondary">
-                Cancel
+              
+              <Link href={`/events/${id}`}>
+                <button type="button" className="btn btn-outline-secondary btn-lg">
+                  Cancel
+                </button>
               </Link>
             </div>
           </form>
