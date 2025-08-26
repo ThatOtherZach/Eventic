@@ -15,6 +15,12 @@ Preferred communication style: Simple, everyday language.
 - **One Vote Per Ticket**: Each ticket holder gets one vote, cannot be changed after submission
 - **Reputation Score**: Event owners' reputation displayed as percentage on their account page
 - **Rating UI**: Shows on ticket page once event has started with simple thumbs up/down buttons
+- **Reputation Badges on Event Page**: 
+  - "New" badge for 0% reputation
+  - "Novice" badge for 1-25% reputation  
+  - Raw percentage with vote count for 26%+ reputation
+  - "Bestie" badge for organizers with 1,000+ total votes
+- **Vote Count Formatting**: 1,000 → 1k, 999,000 → 999k, 1,000,000+ → +1M
 - **Database**: Added `eventRatings` table tracking ratings per ticket with event owner association
 - **API Endpoints**: `/api/tickets/:id/rate`, `/api/tickets/:id/rating`, `/api/users/:id/reputation`
 

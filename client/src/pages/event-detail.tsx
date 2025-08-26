@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -49,6 +49,15 @@ export default function EventDetailPage() {
     enabled: !!id && !!user && event?.userId === user.id,
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/events/${id}/validators`);
+      return response.json();
+    },
+  });
+
+  const { data: organizerReputation } = useQuery<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>({
+    queryKey: [`/api/users/${event?.userId}/reputation`],
+    enabled: !!event?.userId,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${event?.userId}/reputation`);
       return response.json();
     },
   });
@@ -277,6 +286,33 @@ export default function EventDetailPage() {
     purchaseTicketMutation.mutate();
   };
 
+  // Format vote count (1000 -> 1k, 999000 -> 999k, 1000000+ -> +1M)
+  const formatVoteCount = (count: number) => {
+    if (count >= 1000000) {
+      return "+1M";
+    } else if (count >= 1000) {
+      const k = Math.floor(count / 1000);
+      return `${k}k`;
+    }
+    return count.toString();
+  };
+
+  // Get reputation badge and display
+  const getReputationDisplay = () => {
+    if (!organizerReputation) return null;
+    
+    const { percentage, thumbsUp, thumbsDown } = organizerReputation;
+    const totalVotes = thumbsUp + thumbsDown;
+    
+    if (percentage === null || percentage === 0) {
+      return { badge: "New", showPercentage: false, totalVotes };
+    } else if (percentage >= 1 && percentage <= 25) {
+      return { badge: "Novice", showPercentage: false, totalVotes };
+    } else {
+      return { badge: null, showPercentage: true, percentage, totalVotes };
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container py-5">
@@ -467,6 +503,40 @@ export default function EventDetailPage() {
           <div className="card sticky-top" style={{ top: '80px' }}>
             <div className="card-body">
               <h5 className="card-title">Ticket Information</h5>
+              
+              {/* Organizer Reputation */}
+              {organizerReputation && (() => {
+                const reputationInfo = getReputationDisplay();
+                if (!reputationInfo) return null;
+                
+                const { badge, showPercentage, percentage, totalVotes } = reputationInfo;
+                const formattedVotes = formatVoteCount(totalVotes);
+                
+                return (
+                  <div className="mb-3 p-3 bg-light rounded">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span className="text-muted small">Organizer Reputation</span>
+                      {totalVotes >= 1000 && (
+                        <span className="badge bg-warning text-dark">
+                          <Award size={14} className="me-1" />
+                          Bestie
+                        </span>
+                      )}
+                    </div>
+                    <div className="d-flex align-items-center mt-1">
+                      <Star size={16} className="text-warning me-2" />
+                      {badge ? (
+                        <span className="badge bg-secondary">{badge}</span>
+                      ) : showPercentage ? (
+                        <span>
+                          <strong>{percentage}%</strong>
+                          <span className="text-muted ms-2">({formattedVotes} votes)</span>
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })()}
               
               <div className="mb-3">
                 <div className="d-flex justify-content-between mb-2">
