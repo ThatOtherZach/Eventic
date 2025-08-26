@@ -71,6 +71,7 @@ export function EventCreatePage() {
       isPrivate: false,
       oneTicketPerUser: false,
       surgePricing: false,
+      raffleEnabled: false,
     },
   });
 
@@ -209,6 +210,8 @@ export function EventCreatePage() {
     purchasePrice: "0",
     resellStatus: null,
     originalOwnerId: null,
+    isRaffleWinner: false,
+    raffleWonAt: null,
   };
 
   const watchedValues = form.watch();
@@ -239,6 +242,7 @@ export function EventCreatePage() {
     ticketPurchasesEnabled: true,
     oneTicketPerUser: watchedValues.oneTicketPerUser || false,
     surgePricing: watchedValues.surgePricing || false,
+    raffleEnabled: watchedValues.raffleEnabled || false,
     createdAt: new Date(),
   };
 
@@ -606,6 +610,31 @@ export function EventCreatePage() {
                                 </label>
                               </div>
                               <div className="form-text">Prevent scalping by restricting users to purchasing only one ticket (tracks by email and IP)</div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="raffleEnabled"
+                          render={({ field }) => (
+                            <FormItem className="mt-3">
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id="raffleEnabled"
+                                  checked={field.value || false}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  data-testid="checkbox-raffle-enabled"
+                                />
+                                <label className="form-check-label" htmlFor="raffleEnabled">
+                                  <span className="badge bg-success text-white me-2">🎁</span>
+                                  Enable Raffle Feature
+                                </label>
+                              </div>
+                              <div className="form-text">Allow event owners to randomly select winners from ticket holders (cannot be disabled once activated)</div>
                               <FormMessage />
                             </FormItem>
                           )}

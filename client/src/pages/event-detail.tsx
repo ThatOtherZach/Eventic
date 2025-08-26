@@ -745,14 +745,16 @@ export default function EventDetailPage() {
                     <Star size={18} className="me-2" />
                     Boost to Featured
                   </button>
-                  <button 
-                    onClick={() => setIsRaffleModalOpen(true)}
-                    className="btn btn-success w-100"
-                    data-testid="button-raffle"
-                  >
-                    <Gift size={18} className="me-2" />
-                    Raffle
-                  </button>
+                  {event.raffleEnabled && (
+                    <button 
+                      onClick={() => setIsRaffleModalOpen(true)}
+                      className="btn btn-success w-100"
+                      data-testid="button-raffle"
+                    >
+                      <Gift size={18} className="me-2" />
+                      Raffle
+                    </button>
+                  )}
                   <div className="alert alert-info mt-3">
                     <small>You own this event</small>
                   </div>

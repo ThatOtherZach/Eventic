@@ -47,6 +47,7 @@ export default function EventEditPage() {
     isPrivate: false,
     oneTicketPerUser: false,
     surgePricing: false,
+    raffleEnabled: false,
   });
 
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
@@ -89,6 +90,7 @@ export default function EventEditPage() {
         isPrivate: event.isPrivate || false,
         oneTicketPerUser: event.oneTicketPerUser || false,
         surgePricing: event.surgePricing || false,
+        raffleEnabled: event.raffleEnabled || false,
       });
       
       // Store tickets sold for validation
@@ -253,6 +255,11 @@ export default function EventEditPage() {
     status: "pending",
     purchaserEmail: null,
     purchaserIp: null,
+    purchasePrice: "0",
+    resellStatus: "not_for_resale",
+    originalOwnerId: null,
+    isRaffleWinner: false,
+    raffleWonAt: null,
   };
 
   const previewEvent: Event = {
@@ -282,6 +289,7 @@ export default function EventEditPage() {
     ticketPurchasesEnabled: true,
     oneTicketPerUser: formData.oneTicketPerUser || false,
     surgePricing: formData.surgePricing || false,
+    raffleEnabled: formData.raffleEnabled || false,
     createdAt: new Date(),
   };
 
@@ -631,6 +639,30 @@ export default function EventEditPage() {
               <small className="text-muted">
                 Special effects settings cannot be changed after event creation.
                 {formData.specialEffectsEnabled && " Validated tickets may display special visual effects on holidays and themed events."}
+              </small>
+            </div>
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="raffleEnabled"
+                  checked={formData.raffleEnabled || false}
+                  onChange={(e) => setFormData({ ...formData, raffleEnabled: e.target.checked })}
+                  disabled={event?.raffleEnabled}
+                  title={event?.raffleEnabled ? "Raffle cannot be disabled once enabled" : "Enable raffle feature for this event"}
+                  data-testid="checkbox-raffle-enabled"
+                />
+                <label className="form-check-label" htmlFor="raffleEnabled">
+                  <span className="badge bg-success text-white me-2">🎁</span>
+                  Enable Raffle Feature
+                </label>
+              </div>
+              <small className="text-muted">
+                {event?.raffleEnabled 
+                  ? "Raffle is enabled for this event and cannot be disabled."
+                  : "Allow random selection of winners from ticket holders. Cannot be disabled once enabled."}
               </small>
             </div>
 

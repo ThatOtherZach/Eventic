@@ -393,6 +393,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateEvent(id: string, updateData: Partial<InsertEvent>): Promise<Event | undefined> {
+    // If raffle is already enabled, prevent it from being disabled
+    const existingEvent = await this.getEvent(id);
+    if (existingEvent?.raffleEnabled && updateData.raffleEnabled === false) {
+      delete updateData.raffleEnabled; // Remove the field to prevent disabling
+    }
+    
     const [event] = await db
       .update(events)
       .set(updateData)

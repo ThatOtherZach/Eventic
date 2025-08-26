@@ -11,14 +11,16 @@ Preferred communication style: Simple, everyday language.
 ## Recent Features
 
 ### Raffle System (Added January 2025)
+- **Optional Event Setting**: Raffle is an optional feature that can be enabled during event creation or editing
+- **One-Way Activation**: Once enabled, raffle cannot be disabled to ensure fairness and prevent manipulation
 - **Event Owner Raffle**: Event owners can run raffles to randomly select winners from ticket holders
 - **Winner Selection**: Random selection from all eligible tickets (status = "sent")
 - **Reroll Capability**: Owners can reroll to select a different winner if needed
 - **Winner Notification**: Winners receive notification in their notification center
 - **Ticket Display**: Winning tickets show "🎉 Raffle Winner! 🎉" badge with "Please see the event organizer" message
-- **Database**: Added `isRaffleWinner` and `raffleWonAt` fields to tickets table
+- **Database**: Added `raffleEnabled` field to events table and `isRaffleWinner`/`raffleWonAt` fields to tickets table
 - **API Endpoints**: `/api/events/:id/raffle/eligible`, `/api/events/:id/raffle/draw`
-- **UI Integration**: Raffle button in event owner controls with modal for drawing winners
+- **UI Integration**: Raffle checkbox in event creation/edit forms, raffle button appears in event owner controls only when enabled
 
 ### Event Reputation System (Added January 2025)
 - **Event Ratings**: Attendees can rate events with thumbs up/down on the event start date

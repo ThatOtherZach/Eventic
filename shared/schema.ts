@@ -106,6 +106,7 @@ export const events = pgTable("events", {
   ticketPurchasesEnabled: boolean("ticket_purchases_enabled").default(true), // Whether new tickets can be purchased
   oneTicketPerUser: boolean("one_ticket_per_user").default(false), // Restrict users to one ticket per event
   surgePricing: boolean("surge_pricing").default(false), // Enable dynamic pricing based on ticket sales
+  raffleEnabled: boolean("raffle_enabled").default(false), // Enable raffle feature (cannot be disabled once enabled)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
