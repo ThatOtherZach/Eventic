@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { Upload, X } from "lucide-react";
 
@@ -30,6 +30,13 @@ export function ObjectUploader({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Sync preview URL with parent's currentImageUrl
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreviewUrl(currentImageUrl || null);
+    }
+  }, [currentImageUrl, selectedFile]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

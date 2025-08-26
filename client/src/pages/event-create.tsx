@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -37,12 +37,6 @@ export function EventCreatePage() {
   const queryClient = useQueryClient();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [ticketBackgroundUrl, setTicketBackgroundUrl] = useState<string>("");
-  
-  // Debug effect to track state changes
-  useEffect(() => {
-    console.log("State update - Feature image URL:", imageUrl);
-    console.log("State update - Ticket background URL:", ticketBackgroundUrl);
-  }, [imageUrl, ticketBackgroundUrl]);
   
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
@@ -178,7 +172,6 @@ export function EventCreatePage() {
   const handleImageComplete = (result: any) => {
     // Extract the uploaded URL from the result
     const uploadedUrl = result.successful?.[0]?.uploadURL;
-    console.log("Feature image complete, URL:", uploadedUrl);
     if (uploadedUrl) {
       // Store the raw URL - it will be normalized by the server
       setImageUrl(uploadedUrl);
@@ -192,12 +185,9 @@ export function EventCreatePage() {
   const handleTicketBackgroundComplete = (result: any) => {
     // Extract the uploaded URL from the result
     const uploadedUrl = result.successful?.[0]?.uploadURL;
-    console.log("Ticket background complete, URL:", uploadedUrl);
     if (uploadedUrl) {
       // Store the raw URL - it will be normalized by the server
       setTicketBackgroundUrl(uploadedUrl);
-      // Ensure we're not accidentally setting the wrong state
-      console.log("Setting ticket background URL to:", uploadedUrl);
       toast({
         title: "Ticket background uploaded",
         description: "Ticket design has been applied to the preview",
