@@ -521,6 +521,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const page = parseInt(req.query.page as string) || 1;
       const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 items per page
       
+      // Auto-update user location based on recent events
+      await storage.autoUpdateUserLocation(userId);
+      
       // Use paginated query if page is specified
       if (req.query.page) {
         const result = await storage.getTicketsByUserIdPaginated(userId, { page, limit });
@@ -557,6 +560,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const events = await storage.getEventsByUserId(userId);
+      
+      // Auto-update user location based on recent events
+      await storage.autoUpdateUserLocation(userId);
+      
       res.json(events);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user events" });

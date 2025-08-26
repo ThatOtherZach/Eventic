@@ -89,6 +89,8 @@ Preferred communication style: Simple, everyday language.
 - **Smart Parsing**: When editing existing events, the venue string is intelligently parsed to populate the three fields
 - **Validation**: At least one address field must be filled when creating or editing an event
 - **Automatic Combination**: The three fields automatically combine into a single venue string for storage (e.g., "123 Main St, New York, United States")
+- **Auto Location Updates**: User location field automatically updates with countries from their latest 3 events (created or attended)
+- **"None" Protection**: If user explicitly sets location to "None", the system won't auto-update their location
 
 ## System Architecture
 
