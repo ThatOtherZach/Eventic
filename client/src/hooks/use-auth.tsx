@@ -11,7 +11,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
 };
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Global variable to prevent multiple initializations during HMR
 let hasGloballyInitialized = false;
@@ -245,8 +245,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+  
   return context;
 }
