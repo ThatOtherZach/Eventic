@@ -953,7 +953,7 @@ export function EventCreatePage() {
                                   Allow Minting
                                 </label>
                               </div>
-                              <div className="form-text">Attendees will be allowed to mint a digital collectible of the event ticket. Some details of the ticket can be listed publicly if this is enabled.</div>
+                              <div className="form-text">Attendees will be allowed to mint a digital collectible of the event ticket. The details seen in the ticket preview will be publicly accessible if enabled. Digital collectible will be issued on the Coinbase L2 network (Base, Ethereum).</div>
                               <FormMessage />
                             </FormItem>
                           )}
