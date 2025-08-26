@@ -152,6 +152,18 @@ export const resellQueue = pgTable("resell_queue", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const resellTransactions = pgTable("resell_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").references(() => tickets.id).notNull(),
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  originalOwnerId: varchar("original_owner_id").references(() => users.id).notNull(), // Seller
+  newOwnerId: varchar("new_owner_id").references(() => users.id).notNull(), // Buyer
+  ticketPrice: decimal("ticket_price", { precision: 10, scale: 2 }).notNull(), // Original ticket price
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(), // 2% platform fee
+  sellerAmount: decimal("seller_amount", { precision: 10, scale: 2 }).notNull(), // Amount paid to seller (price - fee)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const systemLogs = pgTable("system_logs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   level: text("level").notNull(), // error, warning, info
@@ -433,6 +445,11 @@ export const insertDelegatedValidatorSchema = createInsertSchema(delegatedValida
   createdAt: true,
 });
 
+export const insertResellTransactionSchema = createInsertSchema(resellTransactions).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({
   id: true,
   createdAt: true,
@@ -560,3 +577,5 @@ export type InsertSession = z.infer<typeof insertSessionsSchema>;
 export type Session = typeof sessions.$inferSelect;
 export type InsertResellQueue = z.infer<typeof insertResellQueueSchema>;
 export type ResellQueue = typeof resellQueue.$inferSelect;
+export type InsertResellTransaction = z.infer<typeof insertResellTransactionSchema>;
+export type ResellTransaction = typeof resellTransactions.$inferSelect;

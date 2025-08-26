@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, notInArray, sql, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -578,6 +578,11 @@ export class DatabaseStorage implements IStorage {
       const { ticket, resellEntry } = resellData;
       
       return await db.transaction(async (tx) => {
+        // Calculate transaction amounts (2% platform fee)
+        const ticketPrice = parseFloat(resellEntry.ticketPrice.toString());
+        const platformFee = Math.round(ticketPrice * 0.02 * 100) / 100; // 2% fee
+        const sellerAmount = Math.round((ticketPrice - platformFee) * 100) / 100; // Amount to seller
+        
         // Transfer ticket to new buyer
         const [updatedTicket] = await tx.update(tickets)
           .set({
@@ -588,6 +593,17 @@ export class DatabaseStorage implements IStorage {
           })
           .where(eq(tickets.id, ticket.id))
           .returning();
+        
+        // Record the resell transaction
+        await tx.insert(resellTransactions).values({
+          ticketId: ticket.id,
+          eventId: eventId,
+          originalOwnerId: resellEntry.originalOwnerId,
+          newOwnerId: newBuyerId,
+          ticketPrice: resellEntry.ticketPrice,
+          platformFee: platformFee.toString(),
+          sellerAmount: sellerAmount.toString(),
+        });
         
         // Remove from resell queue
         await tx.delete(resellQueue)
