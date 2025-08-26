@@ -185,9 +185,11 @@ export function EventCreatePage() {
   const handleTicketBackgroundComplete = (result: any) => {
     // Extract the uploaded URL from the result
     const uploadedUrl = result.successful?.[0]?.uploadURL;
+    console.log("Ticket background upload complete, URL:", uploadedUrl);
     if (uploadedUrl) {
-      // Store the raw URL - it will be normalized by the server
+      // IMMEDIATELY update the ticket background URL
       setTicketBackgroundUrl(uploadedUrl);
+      console.log("Ticket background state updated to:", uploadedUrl);
       toast({
         title: "Ticket background uploaded",
         description: "Ticket design has been applied to the preview",
@@ -208,7 +210,7 @@ export function EventCreatePage() {
     useCount: 0,
     isGoldenTicket: false,
     createdAt: new Date(),
-    recipientName: user?.name || "John Doe",
+    recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
     seatNumber: null,
     ticketType: null,
@@ -238,6 +240,11 @@ export function EventCreatePage() {
       return date;
     }
   };
+  
+  // Debug: Log ticket background URL to track changes
+  useEffect(() => {
+    console.log("Current ticketBackgroundUrl state:", ticketBackgroundUrl);
+  }, [ticketBackgroundUrl]);
   
   const previewEvent: Event = {
     id: "preview",
