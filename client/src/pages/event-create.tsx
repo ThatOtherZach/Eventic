@@ -807,7 +807,7 @@ export function EventCreatePage() {
                             name="goldenTicketCount"
                             render={({ field }) => (
                               <FormItem className="mb-3">
-                                <FormLabel>Number of Golden Tickets (1-100)</FormLabel>
+                                <FormLabel>Number of Golden Tickets</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
