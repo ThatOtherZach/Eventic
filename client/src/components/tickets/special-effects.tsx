@@ -96,14 +96,14 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   }
 ];
 
-export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean }): EffectType | null {
+export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean | null; id?: string; [key: string]: any }): EffectType | null {
   // Only apply effects if the event has special effects enabled
   if (!event.specialEffectsEnabled) {
     return null;
   }
   
   // Special case: for preview tickets (id = "sample"), always show monthly effect
-  if (ticket && 'id' in ticket && (ticket as any).id === 'sample' && event.specialEffectsEnabled) {
+  if (ticket && ticket.id === 'sample' && event.specialEffectsEnabled) {
     return 'monthly';
   }
   
@@ -153,7 +153,7 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
 
 interface SpecialEffectsProps {
   event: Event;
-  ticket?: { isValidated: boolean };
+  ticket?: { isValidated: boolean | null; id?: string; [key: string]: any };
   containerRef?: React.RefObject<HTMLElement>;
 }
 
@@ -313,7 +313,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
 }
 
 // Overlay component for glow effects
-export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?: { isValidated: boolean } }) {
+export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?: { isValidated: boolean | null; id?: string; [key: string]: any } }) {
   const effectType = detectSpecialEffect(event, ticket);
   
   if (!effectType) return null;
@@ -364,7 +364,7 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
   // Monthly color glow
   if (effectType === 'monthly') {
     // For preview tickets, use current month; for real tickets use event date
-    const isPreview = ticket && 'id' in ticket && (ticket as any).id === 'sample';
+    const isPreview = ticket && ticket.id === 'sample';
     const dateToUse = isPreview ? new Date() : new Date(event.date);
     const month = dateToUse.getMonth();
     const monthColor = MONTHLY_COLORS[month];
@@ -386,7 +386,7 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
 }
 
 // Badge component to show the special effect type (now hidden per user request)
-export function SpecialEffectBadge({ event, ticket }: { event: Event; ticket?: { isValidated: boolean } }) {
+export function SpecialEffectBadge({ event, ticket }: { event: Event; ticket?: { isValidated: boolean | null; id?: string; [key: string]: any } }) {
   // Don't show color badges anymore per user request
   return null;
 }

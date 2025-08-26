@@ -115,13 +115,13 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
       )}
 
       {/* Special Event Effects Badge */}
-      <SpecialEffectBadge event={event} ticket={{ isValidated: !!ticket.isValidated }} />
+      <SpecialEffectBadge event={event} ticket={ticket} />
       
       {/* Special Effects Overlay (for glows and text) */}
-      <SpecialEffectOverlay event={event} ticket={{ isValidated: !!ticket.isValidated }} />
+      <SpecialEffectOverlay event={event} ticket={ticket} />
       
       {/* Special Effects Animation (for particles) */}
-      <SpecialEffects event={event} ticket={{ isValidated: !!ticket.isValidated }} />
+      <SpecialEffects event={event} ticket={ticket} />
 
       {/* Ticket Content */}
       <div className="position-relative h-100 d-flex">
