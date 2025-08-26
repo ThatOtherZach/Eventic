@@ -195,12 +195,18 @@ export default function EventDetailPage() {
   const resellTicketMutation = useMutation({
     mutationFn: async (ticketId: string) => {
       const response = await apiRequest("POST", `/api/tickets/${ticketId}/resell`, {});
-      return response.json();
+      return { ...await response.json(), ticketId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      const ticket = userTickets?.find(t => t.id === data.ticketId);
+      const price = parseFloat((ticket as any)?.purchasePrice || event?.ticketPrice || "0");
+      const isReturn = price === 0;
+      
       toast({
-        title: "Listed for Resale",
-        description: "Your ticket has been listed for resale successfully.",
+        title: isReturn ? "Ticket Returned" : "Listed for Resale",
+        description: isReturn 
+          ? "Your ticket has been returned and is now available for others."
+          : "Your ticket has been listed for resale successfully.",
       });
       // Refresh tickets and event data
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/user-tickets`] });
@@ -293,9 +299,13 @@ export default function EventDetailPage() {
 
   const handleResell = async (ticketId: string) => {
     const ticket = userTickets?.find(t => t.id === ticketId);
-    const originalPrice = (ticket as any)?.purchasePrice || event?.ticketPrice || "the original price";
+    const originalPrice = parseFloat((ticket as any)?.purchasePrice || event?.ticketPrice || "0");
     
-    if (confirm(`Are you sure you want to list this ticket for resale at ${originalPrice}? When someone buys it, you'll receive the payment (minus a 2% platform fee) instead of the event organizer. Tickets can only be resold at their original purchase price.`)) {
+    const confirmMessage = originalPrice === 0
+      ? "Are you sure you want to return this free ticket? It will become available for others to claim."
+      : `Are you sure you want to list this ticket for resale at $${originalPrice.toFixed(2)}? When someone buys it, you'll receive the payment (minus a 2% platform fee). Tickets can only be resold at their original purchase price.`;
+    
+    if (confirm(confirmMessage)) {
       resellTicketMutation.mutate(ticketId);
     }
   };
@@ -536,7 +546,7 @@ export default function EventDetailPage() {
                             data-testid={`button-resell-ticket-${ticket.id}`}
                           >
                             <RotateCcw size={14} className="me-1" />
-                            Resell
+                            {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
                           </button>
                         )}
                       </div>

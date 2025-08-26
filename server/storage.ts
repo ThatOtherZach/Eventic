@@ -595,9 +595,10 @@ export class DatabaseStorage implements IStorage {
       const { ticket, resellEntry } = resellData;
       
       return await db.transaction(async (tx) => {
-        // Calculate transaction amounts (2% platform fee)
+        // Calculate transaction amounts
         const ticketPrice = parseFloat(resellEntry.ticketPrice.toString());
-        const platformFee = Math.round(ticketPrice * 0.02 * 100) / 100; // 2% fee
+        // No platform fee for free tickets (returns)
+        const platformFee = ticketPrice === 0 ? 0 : Math.round(ticketPrice * 0.02 * 100) / 100; // 2% fee only for paid tickets
         const sellerAmount = Math.round((ticketPrice - platformFee) * 100) / 100; // Amount to seller
         
         // Transfer ticket to new buyer
