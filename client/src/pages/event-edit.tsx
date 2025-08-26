@@ -36,7 +36,6 @@ export default function EventEditPage() {
     ticketPrice: "",
     maxTickets: "",
     imageUrl: "",
-    ticketBackgroundUrl: "",
     earlyValidation: "Allow at Anytime",
     reentryType: "No Reentry (Single Use)",
     maxUses: 1,
@@ -79,7 +78,6 @@ export default function EventEditPage() {
         ticketPrice: event.ticketPrice,
         maxTickets: event.maxTickets?.toString() || "",
         imageUrl: event.imageUrl || "",
-        ticketBackgroundUrl: event.ticketBackgroundUrl || "",
         earlyValidation: event.earlyValidation || "Allow at Anytime",
         reentryType: event.reentryType || "No Reentry (Single Use)",
         maxUses: event.maxUses || 1,
@@ -190,8 +188,9 @@ export default function EventEditPage() {
       updateData.imageUrl = formData.imageUrl;
     }
 
-    if (formData.ticketBackgroundUrl) {
-      updateData.ticketBackgroundUrl = formData.ticketBackgroundUrl;
+    // Use featured image for ticket background
+    if (formData.imageUrl) {
+      updateData.ticketBackgroundUrl = formData.imageUrl;
     }
 
     updateEventMutation.mutate(updateData);
@@ -220,19 +219,7 @@ export default function EventEditPage() {
     }
   };
 
-  const handleTicketBackgroundComplete = async (result: any) => {
-    // Extract the uploaded URL from the result
-    const uploadedUrl = result.successful?.[0]?.uploadURL;
-    if (uploadedUrl) {
-      // The URL needs to be normalized to /objects/ path format
-      // We'll send it to the server which will normalize it
-      setFormData(prev => ({ ...prev, ticketBackgroundUrl: uploadedUrl }));
-      toast({
-        title: "Ticket background uploaded",
-        description: "Save the event to apply changes",
-      });
-    }
-  };
+
 
   // Create a sample ticket for preview
   const sampleTicket: Ticket = {
@@ -276,7 +263,7 @@ export default function EventEditPage() {
     maxTickets: formData.maxTickets ? parseInt(formData.maxTickets) : null,
     userId: user?.id || null,
     imageUrl: formData.imageUrl,
-    ticketBackgroundUrl: formData.ticketBackgroundUrl,
+    ticketBackgroundUrl: formData.imageUrl, // Use featured image for ticket background
     earlyValidation: formData.earlyValidation || "Allow at Anytime",
     reentryType: formData.reentryType || "No Reentry (Single Use)",
     maxUses: formData.maxUses || 1,
@@ -650,7 +637,7 @@ export default function EventEditPage() {
                   id="raffleEnabled"
                   checked={formData.raffleEnabled || false}
                   onChange={(e) => setFormData({ ...formData, raffleEnabled: e.target.checked })}
-                  disabled={event?.raffleEnabled}
+                  disabled={event?.raffleEnabled === true}
                   title={event?.raffleEnabled ? "Raffle cannot be disabled once enabled" : "Enable raffle feature for this event"}
                   data-testid="checkbox-raffle-enabled"
                 />
@@ -745,17 +732,8 @@ export default function EventEditPage() {
                 </div>
               </div>
 
-              <ObjectUploader
-                onGetUploadParameters={handleImageUpload}
-                onComplete={(result) => handleTicketBackgroundComplete(result)}
-                buttonClassName="btn btn-outline-primary"
-                currentImageUrl={formData.ticketBackgroundUrl}
-              >
-                <CreditCard size={18} className="me-2" />
-                Choose Ticket Background
-              </ObjectUploader>
               <small className="text-muted d-block mt-2">
-                The ticket will display event details on the left and a QR code on the right.
+                The featured image will be used as the ticket background. The ticket displays event details on the left and a QR code on the right.
               </small>
             </div>
 

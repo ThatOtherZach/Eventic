@@ -10,6 +10,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Features
 
+### Simplified Image System (Updated January 2025)
+- **Single Upload**: Events now use only one image upload - the featured image
+- **Dual Purpose**: The featured image serves as both the event display image and ticket background
+- **Removed Complexity**: Eliminated separate ticket background upload to simplify user experience
+- **Automatic Application**: When a featured image is uploaded, it automatically applies to ticket designs
+
 ### Raffle System (Added January 2025)
 - **Optional Event Setting**: Raffle is an optional feature that can be enabled during event creation or editing
 - **One-Way Activation**: Once enabled, raffle cannot be disabled to ensure fairness and prevent manipulation

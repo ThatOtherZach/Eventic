@@ -36,7 +36,6 @@ export function EventCreatePage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [imageUrl, setImageUrl] = useState<string>("");
-  const [ticketBackgroundUrl, setTicketBackgroundUrl] = useState<string>("");
   
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
@@ -145,7 +144,7 @@ export function EventCreatePage() {
     const submitData = {
       ...data,
       imageUrl: imageUrl || undefined,
-      ticketBackgroundUrl: ticketBackgroundUrl || undefined,
+      ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
     };
 
     createEventMutation.mutate(submitData);
@@ -160,14 +159,7 @@ export function EventCreatePage() {
     };
   };
   
-  const handleTicketBackgroundUpload = async () => {
-    const response = await apiRequest("POST", "/api/objects/upload", {});
-    const data = await response.json();
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-    };
-  };
+
 
   const handleImageComplete = (result: any) => {
     // Extract the uploaded URL from the result
@@ -182,20 +174,7 @@ export function EventCreatePage() {
     }
   };
 
-  const handleTicketBackgroundComplete = (result: any) => {
-    // Extract the uploaded URL from the result
-    const uploadedUrl = result.successful?.[0]?.uploadURL;
-    console.log("Ticket background upload complete, URL:", uploadedUrl);
-    if (uploadedUrl) {
-      // IMMEDIATELY update the ticket background URL
-      setTicketBackgroundUrl(uploadedUrl);
-      console.log("Ticket background state updated to:", uploadedUrl);
-      toast({
-        title: "Ticket background uploaded",
-        description: "Ticket design has been applied to the preview",
-      });
-    }
-  };
+
 
   // Create a sample ticket for preview
   const sampleTicket: Ticket = {
@@ -241,10 +220,7 @@ export function EventCreatePage() {
     }
   };
   
-  // Debug: Log ticket background URL to track changes
-  useEffect(() => {
-    console.log("Current ticketBackgroundUrl state:", ticketBackgroundUrl);
-  }, [ticketBackgroundUrl]);
+
   
   const previewEvent: Event = {
     id: "preview",
@@ -260,7 +236,7 @@ export function EventCreatePage() {
     maxTickets: watchedValues.maxTickets || null,
     userId: user?.id || null,
     imageUrl: imageUrl || null,
-    ticketBackgroundUrl: ticketBackgroundUrl || null,
+    ticketBackgroundUrl: imageUrl || null, // Use featured image for ticket background
     earlyValidation: watchedValues.earlyValidation || "Allow at Anytime",
     reentryType: watchedValues.reentryType || "No Reentry (Single Use)",
     maxUses: watchedValues.maxUses || 1,
@@ -850,15 +826,14 @@ export function EventCreatePage() {
                       <div className="mb-4">
                         <label className="form-label">
                           <CreditCard size={18} className="me-2" />
-                          Ticket Design
+                          Ticket Preview
                         </label>
                         <p className="text-muted small mb-3">
-                          Customize the background image for your event tickets. Tickets are business card sized (3.5" x 2").
+                          This is how your event tickets will appear to attendees. The featured image will be used as the ticket background.
                         </p>
                         
                         {/* Ticket Preview */}
                         <div className="mb-3">
-                          <h6 className="mb-2">Live Ticket Preview:</h6>
                           <div className="bg-light rounded p-4" style={{ backgroundColor: '#f8f9fa' }}>
                             <div className="mx-auto" style={{ maxWidth: '400px' }}>
                               <TicketCard
@@ -869,27 +844,9 @@ export function EventCreatePage() {
                             </div>
                             <p className="text-center text-muted small mt-3 mb-0">
                               <i className="bi bi-info-circle me-1"></i>
-                              This is exactly how your ticket will appear to attendees
+                              {imageUrl ? "Your featured image is being used as the ticket background" : "Upload a featured image to customize the ticket background"}
                             </p>
                           </div>
-                        </div>
-                        
-                        <div className="text-center">
-                          <ObjectUploader
-                            onGetUploadParameters={handleTicketBackgroundUpload}
-                            onComplete={(result) => handleTicketBackgroundComplete(result)}
-                            buttonClassName="btn btn-outline-primary"
-                            currentImageUrl={null}
-                            showPreview={false}
-                          >
-                            <CreditCard size={18} className="me-2" />
-                            Upload Ticket Background
-                          </ObjectUploader>
-                          {ticketBackgroundUrl && (
-                            <p className="text-muted small mt-2 mb-0">
-                              ✓ Background applied! Click button again to change.
-                            </p>
-                          )}
                         </div>
                       </div>
                     </div>
