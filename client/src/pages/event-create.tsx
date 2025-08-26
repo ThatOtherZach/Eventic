@@ -191,20 +191,20 @@ export function EventCreatePage() {
     id: "sample",
     eventId: "sample",
     userId: user?.id || "",
-    ticketNumber: "ABC-001",
-    qrData: "",
+    ticketNumber: "PREVIEW-001",
+    qrData: "sample-qr-data", // Need QR data to show QR code in preview
     isValidated: false,
     validatedAt: null,
     validationCode: null,
     useCount: 0,
     isGoldenTicket: false,
     createdAt: new Date(),
-    recipientName: "Sample User",
+    recipientName: user?.name || "John Doe",
     recipientEmail: user?.email || "user@example.com",
     seatNumber: null,
     ticketType: null,
     transferable: false,
-    status: "pending",
+    status: "sent",
     purchaserEmail: null,
     purchaserIp: null,
     purchasePrice: "0",
@@ -215,13 +215,28 @@ export function EventCreatePage() {
   };
 
   const watchedValues = form.watch();
+  
+  // Format date for preview
+  const formatPreviewDate = (date: string | undefined) => {
+    if (!date) return "2024-01-01";
+    try {
+      return new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return date;
+    }
+  };
+  
   const previewEvent: Event = {
     id: "preview",
-    name: watchedValues.name || "Event Name",
+    name: watchedValues.name || "Your Event Name",
     description: watchedValues.description || null,
-    venue: watchedValues.venue || "Venue",
+    venue: watchedValues.venue || "Event Venue",
     country: null,
-    date: watchedValues.date || "2024-01-01",
+    date: formatPreviewDate(watchedValues.date),
     time: watchedValues.time || "19:00",
     endDate: watchedValues.endDate || null,
     endTime: watchedValues.endTime || null,
@@ -827,12 +842,22 @@ export function EventCreatePage() {
                         
                         {/* Ticket Preview */}
                         <div className="mb-3">
-                          <h6 className="mb-2">Ticket Preview:</h6>
-                          <div className="d-flex justify-content-center p-3 bg-light rounded">
-                            <TicketCard
-                              ticket={sampleTicket}
-                              event={previewEvent}
-                            />
+                          <div className="d-flex align-items-center justify-content-between mb-2">
+                            <h6 className="mb-0">Live Ticket Preview:</h6>
+                            <span className="badge bg-info text-white small">Updates as you type</span>
+                          </div>
+                          <div className="bg-light rounded p-4" style={{ backgroundColor: '#f8f9fa' }}>
+                            <div className="mx-auto" style={{ maxWidth: '600px' }}>
+                              <TicketCard
+                                ticket={sampleTicket}
+                                event={previewEvent}
+                                showQR={true}
+                              />
+                            </div>
+                            <p className="text-center text-muted small mt-3 mb-0">
+                              <i className="bi bi-info-circle me-1"></i>
+                              This is exactly how your ticket will appear to attendees
+                            </p>
                           </div>
                         </div>
                         
