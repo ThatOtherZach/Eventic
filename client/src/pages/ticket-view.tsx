@@ -153,7 +153,6 @@ export default function TicketViewPage(): React.ReactElement {
       startCountdown();
       toast({
         title: "Validation Started",
-        description: "Show the QR code or validation code to the scanner.",
       });
     },
     onError: (error: any) => {
