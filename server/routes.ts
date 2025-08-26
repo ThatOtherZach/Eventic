@@ -571,11 +571,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Events routes
-  app.get("/api/events", async (req, res) => {
+  app.get("/api/events", async (req: AuthenticatedRequest, res) => {
     try {
       const events = await storage.getEvents();
       // Filter out private events from general listing
-      const publicEvents = events.filter(event => !event.isPrivate);
+      let publicEvents = events.filter(event => !event.isPrivate);
+      
+      // Check if user is authenticated and has location preferences
+      if (req.user?.id) {
+        const user = await storage.getUser(req.user.id);
+        if (user && user.locations && user.locations !== "None" && user.locations.trim() !== "") {
+          // Parse user's location countries
+          const userCountries = user.locations.split(',').map(c => c.trim().toLowerCase());
+          
+          // Filter events by countries in user's location field
+          publicEvents = publicEvents.filter(event => {
+            if (!event.venue) return false;
+            
+            // Extract country from venue (assumed to be last part after comma)
+            const venueParts = event.venue.split(',').map(part => part.trim());
+            const eventCountry = venueParts[venueParts.length - 1]?.toLowerCase();
+            
+            // Check if event country matches any user country
+            return eventCountry && userCountries.some(userCountry => 
+              eventCountry.includes(userCountry) || userCountry.includes(eventCountry)
+            );
+          });
+        }
+      }
+      
       res.json(publicEvents);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch events" });
@@ -1669,12 +1693,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Featured Events Routes
-  app.get("/api/featured-events", async (req, res) => {
+  app.get("/api/featured-events", async (req: AuthenticatedRequest, res) => {
     try {
       // Clean up expired featured events first
       await storage.cleanupExpiredFeaturedEvents();
       
-      const featuredEvents = await storage.getFeaturedEventsWithDetails();
+      let featuredEvents = await storage.getFeaturedEventsWithDetails();
+      
+      // Apply location filtering if user is authenticated and has location preferences
+      if (req.user?.id) {
+        const user = await storage.getUser(req.user.id);
+        if (user && user.locations && user.locations !== "None" && user.locations.trim() !== "") {
+          // Parse user's location countries
+          const userCountries = user.locations.split(',').map(c => c.trim().toLowerCase());
+          
+          // Filter featured events by countries in user's location field
+          featuredEvents = featuredEvents.filter(featuredEvent => {
+            const event = featuredEvent.event;
+            if (!event.venue) return false;
+            
+            // Extract country from venue (assumed to be last part after comma)
+            const venueParts = event.venue.split(',').map(part => part.trim());
+            const eventCountry = venueParts[venueParts.length - 1]?.toLowerCase();
+            
+            // Check if event country matches any user country
+            return eventCountry && userCountries.some(userCountry => 
+              eventCountry.includes(userCountry) || userCountry.includes(eventCountry)
+            );
+          });
+        }
+      }
+      
       res.json(featuredEvents);
     } catch (error) {
       await logError(error, "GET /api/featured-events", {
@@ -1684,16 +1733,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/featured-grid", async (req, res) => {
+  app.get("/api/featured-grid", async (req: AuthenticatedRequest, res) => {
     try {
       // Clean up expired featured events first
       await storage.cleanupExpiredFeaturedEvents();
       
       // Get paid boost events (featured events)
-      const featuredEvents = await storage.getFeaturedEventsWithDetails();
+      let featuredEvents = await storage.getFeaturedEventsWithDetails();
       
       // Get all regular events for random selection (exclude private events)
-      const allEvents = (await storage.getEvents()).filter(event => !event.isPrivate);
+      let allEvents = (await storage.getEvents()).filter(event => !event.isPrivate);
+      
+      // Apply location filtering if user is authenticated and has location preferences
+      if (req.user?.id) {
+        const user = await storage.getUser(req.user.id);
+        if (user && user.locations && user.locations !== "None" && user.locations.trim() !== "") {
+          // Parse user's location countries
+          const userCountries = user.locations.split(',').map(c => c.trim().toLowerCase());
+          
+          // Filter events by countries in user's location field
+          const locationFilter = (venue: string | undefined | null) => {
+            if (!venue) return false;
+            const venueParts = venue.split(',').map(part => part.trim());
+            const eventCountry = venueParts[venueParts.length - 1]?.toLowerCase();
+            return eventCountry && userCountries.some(userCountry => 
+              eventCountry.includes(userCountry) || userCountry.includes(eventCountry)
+            );
+          };
+          
+          featuredEvents = featuredEvents.filter(fe => locationFilter(fe.event.venue));
+          allEvents = allEvents.filter(event => locationFilter(event.venue));
+        }
+      }
       
       // Target: 6 events total, with 3/4 (4-5) being paid boosts if available
       const targetTotal = 6;

@@ -91,6 +91,10 @@ Preferred communication style: Simple, everyday language.
 - **Automatic Combination**: The three fields automatically combine into a single venue string for storage (e.g., "123 Main St, New York, United States")
 - **Auto Location Updates**: User location field automatically updates with countries from their latest 3 events (created or attended)
 - **"None" Protection**: If user explicitly sets location to "None", the system won't auto-update their location
+- **Location-Based Event Filtering**: Events on home page are filtered by user's location countries:
+  - If location is "None" or blank: Shows all public events globally
+  - If location has countries: Only shows events in those specific countries
+  - Applies to regular events list, featured events, and featured grid
 
 ## System Architecture
 
