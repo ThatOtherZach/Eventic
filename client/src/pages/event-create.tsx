@@ -23,13 +23,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export function EventCreatePage() {
   const { toast } = useToast();
@@ -561,20 +554,19 @@ export function EventCreatePage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Early Validation</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="form-control w-100" data-testid="select-early-validation" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Allow at Anytime">Allow at Anytime</SelectItem>
-                                <SelectItem value="No Early Validation">No Early Validation</SelectItem>
-                                <SelectItem value="30 Minutes Before">30 Minutes Before</SelectItem>
-                                <SelectItem value="1 Hour Before">1 Hour Before</SelectItem>
-                                <SelectItem value="2 Hours Before">2 Hours Before</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <select 
+                                {...field} 
+                                className="form-control"
+                                data-testid="select-early-validation"
+                              >
+                                <option value="Allow at Anytime">Allow at Anytime</option>
+                                <option value="No Early Validation">No Early Validation</option>
+                                <option value="30 Minutes Before">30 Minutes Before</option>
+                                <option value="1 Hour Before">1 Hour Before</option>
+                                <option value="2 Hours Before">2 Hours Before</option>
+                              </select>
+                            </FormControl>
                             <div className="form-text">When attendees can validate their tickets</div>
                             <FormMessage />
                           </FormItem>
@@ -589,17 +581,16 @@ export function EventCreatePage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Ticket Type</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="form-control w-100" data-testid="select-reentry-type" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="No Reentry (Single Use)">No Reentry (Single Use)</SelectItem>
-                                <SelectItem value="Pass (Multiple Use)">Pass (Multiple Use)</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <select 
+                                {...field} 
+                                className="form-control"
+                                data-testid="select-reentry-type"
+                              >
+                                <option value="No Reentry (Single Use)">No Reentry (Single Use)</option>
+                                <option value="Pass (Multiple Use)">Pass (Multiple Use)</option>
+                              </select>
+                            </FormControl>
                             <div className="form-text">Single use tickets or multi-use passes</div>
                             <FormMessage />
                           </FormItem>
