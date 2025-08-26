@@ -736,10 +736,10 @@ export function EventCreatePage() {
                                 />
                                 <label className="form-check-label" htmlFor="oneTicketPerUser">
                                   <span className="badge bg-info text-white me-2">👤</span>
-                                  Limit to One Ticket Per User
+                                  Limit Ticket Sales
                                 </label>
                               </div>
-                              <div className="form-text">Prevent scalping by restricting users to purchasing only one ticket (tracks by email and IP)</div>
+                              <div className="form-text">Prevent scalping by restricting users to purchasing only one ticket.</div>
                               <FormMessage />
                             </FormItem>
                           )}
