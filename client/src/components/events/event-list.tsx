@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
-import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { countries } from "@/lib/countries";
 import type { Event } from "@shared/schema";
 
 interface EventListProps {
@@ -25,6 +26,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [, setLocation] = useLocation();
+  const [selectedCountry, setSelectedCountry] = useState("All Countries");
   
   // Get first 50 events for initial page
   const { data: initialEvents, isLoading: isLoadingInitial } = useQuery<Event[]>({
@@ -43,52 +45,48 @@ export function EventList({ onGenerateTickets }: EventListProps) {
   });
 
   // Use initial events for page 1, paginated events for other pages
-  const events = currentPage === 1 ? initialEvents?.slice(0, 50) : paginatedData?.events;
+  const allEvents = currentPage === 1 ? initialEvents?.slice(0, 50) : paginatedData?.events;
   const isLoading = currentPage === 1 ? isLoadingInitial : isLoadingPaginated;
   
-  // Calculate pagination info
-  const totalEvents = currentPage === 1 ? (initialEvents?.length || 0) : (paginatedData?.pagination.total || 0);
+  // Filter events by selected country
+  const events = allEvents?.filter(event => {
+    if (selectedCountry === "All Countries") return true;
+    if (!event.venue) return false;
+    
+    // Extract country from venue string (last part after comma)
+    const venueParts = event.venue.split(',').map(part => part.trim());
+    const eventCountry = venueParts[venueParts.length - 1];
+    return eventCountry === selectedCountry;
+  });
+  
+  // Calculate pagination info based on filtered events
+  const totalFilteredEvents = events?.length || 0;
   const eventsPerPage = currentPage === 1 ? 50 : 25;
-  const totalPages = Math.ceil(totalEvents / (currentPage === 1 ? 50 : 25));
+  const totalPages = Math.ceil(totalFilteredEvents / eventsPerPage);
   const hasNext = currentPage < totalPages;
   const hasPrev = currentPage > 1;
 
   const handleFeelinLucky = () => {
-    if (!events || events.length === 0) return;
+    if (!events || events.length === 0) {
+      // No events in selected country - prompt to create one
+      setLocation('/create-event');
+      return;
+    }
     
     // Get IDs of featured events to exclude them
     const featuredEventIds = new Set(
       (featuredEvents || []).map((fe: any) => fe.eventId || fe.event?.id).filter(Boolean)
     );
     
-    // Filter out featured events
+    // Filter out featured events from country-filtered events
     let candidateEvents = events.filter(event => !featuredEventIds.has(event.id));
     
-    // Smart location filtering based on user's locations
-    if ((user as any)?.locations && candidateEvents.length > 1) {
-      const userLocations = (user as any).locations.toLowerCase();
-      const locationPreferredEvents = candidateEvents.filter(event => {
-        const eventVenue = (event.venue || '').toLowerCase();
-        const eventCountry = ((event as any).country || '').toLowerCase();
-        return userLocations.includes(eventCountry) || 
-               userLocations.includes(eventVenue) ||
-               userLocations.split(',').some((loc: string) => 
-                 eventVenue.includes(loc.trim()) || eventCountry.includes(loc.trim())
-               );
-      });
-      
-      // If we found location-matched events, prefer them
-      if (locationPreferredEvents.length > 0) {
-        candidateEvents = locationPreferredEvents;
-      }
-    }
-    
     if (candidateEvents.length === 0) {
-      // If all events are featured, just pick from all events
+      // If all events in this country are featured, just pick from all events in country
       const randomEvent = events[Math.floor(Math.random() * events.length)];
       setLocation(`/events/${randomEvent.id}`);
     } else {
-      // Pick a random event from candidates
+      // Pick a random event from candidates in the selected country
       const randomEvent = candidateEvents[Math.floor(Math.random() * candidateEvents.length)];
       setLocation(`/events/${randomEvent.id}`);
     }
@@ -122,15 +120,51 @@ export function EventList({ onGenerateTickets }: EventListProps) {
   if (!events?.length) {
     return (
       <div className="card">
+        <div className="card-header bg-white">
+          <div className="d-flex justify-content-between align-items-center">
+            <h5 className="card-title mb-0 fw-medium">Available Events</h5>
+            <div className="d-flex gap-2 align-items-center">
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  setSelectedCountry(e.target.value);
+                  setCurrentPage(1); // Reset to first page when filter changes
+                }}
+                className="form-select form-select-sm"
+                style={{ width: "200px" }}
+                data-testid="select-country-filter"
+              >
+                <option value="All Countries">All Countries</option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
         <div className="card-body text-center py-5">
           <div className="text-muted">
             <Ticket className="mx-auto mb-3 opacity-50" size={48} />
-            <h5 className="fw-medium mb-2">No events yet</h5>
-            <p className="small mb-0">
-              {user 
-                ? "Create your first event to get started" 
-                : "Sign in to create events"}
+            <h5 className="fw-medium mb-2">
+              {selectedCountry === "All Countries" ? "No events yet" : `No events in ${selectedCountry}`}
+            </h5>
+            <p className="small mb-3">
+              {selectedCountry === "All Countries" 
+                ? (user ? "Create your first event to get started" : "Sign in to create events")
+                : `Be the first to create an event in ${selectedCountry}`}
             </p>
+            {user && (
+              <Link
+                href="/create-event"
+                className="btn btn-primary"
+                data-testid="button-create-event"
+              >
+                <Plus size={16} className="me-1" />
+                Create Event
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -142,13 +176,32 @@ export function EventList({ onGenerateTickets }: EventListProps) {
       <div className="card-header bg-white">
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="card-title mb-0 fw-medium">Available Events</h5>
-          <button 
-            className="btn btn-outline-primary btn-sm"
-            onClick={handleFeelinLucky}
-            data-testid="button-feelin-lucky"
-          >
-            I'm feelin' lucky
-          </button>
+          <div className="d-flex gap-2 align-items-center">
+            <select
+              value={selectedCountry}
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                setCurrentPage(1); // Reset to first page when filter changes
+              }}
+              className="form-select form-select-sm"
+              style={{ width: "200px" }}
+              data-testid="select-country-filter"
+            >
+              <option value="All Countries">All Countries</option>
+              {countries.map((country) => (
+                <option key={country} value={country}>
+                  {country}
+                </option>
+              ))}
+            </select>
+            <button 
+              className="btn btn-outline-primary btn-sm"
+              onClick={handleFeelinLucky}
+              data-testid="button-feelin-lucky"
+            >
+              I'm feelin' lucky
+            </button>
+          </div>
         </div>
       </div>
       <div className="card-body p-0">
@@ -236,9 +289,9 @@ export function EventList({ onGenerateTickets }: EventListProps) {
         <div className="card-footer bg-white border-top-0">
           <div className="d-flex justify-content-between align-items-center">
             <div className="text-muted small">
-              Showing {events?.length || 0} of {totalEvents} events
-              {currentPage === 1 && totalEvents > 50 && (
-                <span className="ms-2 text-primary">(Showing newest 50 events)</span>
+              Showing {events?.length || 0} events
+              {selectedCountry !== "All Countries" && (
+                <span className="ms-2 text-info">in {selectedCountry}</span>
               )}
             </div>
             <div className="d-flex gap-2">

@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
-import { countries } from "@/lib/countries";
 import type { Ticket as TicketType, Event, RegistryRecord } from "@shared/schema";
 
 export default function AccountPage() {
@@ -16,7 +15,7 @@ export default function AccountPage() {
   const [, setLocation] = useLocation();
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
 
-  const [locationsValue, setLocationsValue] = useState((user as any)?.locations || "All");
+
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   
@@ -56,29 +55,7 @@ export default function AccountPage() {
     enabled: !!user?.id,
   });
 
-  const updateLocationsMutation = useMutation({
-    mutationFn: async (locations: string) => {
-      console.log('Sending mutation with data:', { locations });
-      const response = await apiRequest("PATCH", "/api/user/profile", { locations });
-      return response.json();
-    },
-    onSuccess: (updatedUser) => {
-      toast({
-        title: "Success",
-        description: "Locations updated successfully",
-        variant: "default",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      setIsEditingCity(false);
-    },
-    onError: (error) => {
-      addNotification({
-        type: "error",
-        title: "Error",
-        description: "Failed to update locations",
-      });
-    },
-  });
+
 
 
 
@@ -135,33 +112,7 @@ export default function AccountPage() {
                         </span>
                       </div>
                     )}
-                    <div className="d-flex align-items-center mt-3">
-                      <span className="text-muted small me-3">Location Filter:</span>
-                      <select
-                        value={locationsValue}
-                        onChange={(e) => {
-                          setLocationsValue(e.target.value);
-                          // Auto-save on change
-                          setTimeout(() => {
-                            updateLocationsMutation.mutate(e.target.value);
-                          }, 100);
-                        }}
-                        className="form-select form-select-sm me-2"
-                        style={{ width: "200px" }}
-                        data-testid="select-locations"
-                        disabled={updateLocationsMutation.isPending}
-                      >
-                        <option value="All">All Countries</option>
-                        {countries.map((country) => (
-                          <option key={country} value={country}>
-                            {country}
-                          </option>
-                        ))}
-                      </select>
-                      {updateLocationsMutation.isPending && (
-                        <span className="spinner-border spinner-border-sm text-primary" />
-                      )}
-                    </div>
+
                   </div>
                 </div>
               </div>

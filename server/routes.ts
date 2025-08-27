@@ -301,15 +301,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already exists
       const existingUser = await storage.getUserById(userId);
       if (existingUser) {
-        // Auto-populate locations if not set by user
-        if (!existingUser.locations) {
-          const countries = await storage.getUserEventCountries(userId);
-          if (countries.length > 0) {
-            const autoLocations = countries.join(', ');
-            await storage.updateUserProfile(userId, { locations: autoLocations });
-            existingUser.locations = autoLocations;
-          }
-        }
         return res.json(existingUser);
       }
 
@@ -330,33 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user profile
-  app.patch("/api/user/profile", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
 
-      const { locations } = req.body;
-      
-      // Only update if locations value is provided
-      if (locations !== undefined && locations !== null) {
-        const updatedUser = await storage.updateUserProfile(userId, { locations });
-        if (!updatedUser) {
-          return res.status(404).json({ message: "User not found" });
-        }
-        res.json(updatedUser);
-      } else {
-        res.status(400).json({ message: "No locations value provided" });
-      }
-    } catch (error) {
-      await logError(error, "PATCH /api/user/profile", {
-        request: req,
-        metadata: { locations: req.body.locations }
-      });
-      res.status(500).json({ message: "Failed to update profile" });
-    }
-  });
 
   // Object Storage routes
   app.get("/public-objects/:filePath(*)", async (req, res) => {
@@ -570,26 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter out private events from general listing
       let publicEvents = events.filter(event => !event.isPrivate);
       
-      // Check if user is authenticated and has location preferences
-      if (req.user?.id) {
-        const user = await storage.getUser(req.user.id);
-        if (user && user.locations && user.locations !== "All" && user.locations.trim() !== "") {
-          // Single country filter
-          const userCountry = user.locations.trim().toLowerCase();
-          
-          // Filter events by the selected country
-          publicEvents = publicEvents.filter(event => {
-            if (!event.venue) return false;
-            
-            // Extract country from venue (assumed to be last part after comma)
-            const venueParts = event.venue.split(',').map(part => part.trim());
-            const eventCountry = venueParts[venueParts.length - 1]?.toLowerCase();
-            
-            // Check if event country matches user's selected country
-            return eventCountry && eventCountry.includes(userCountry);
-          });
-        }
-      }
+
       
       // Filter out past events and sort by date (soonest first)
       const now = new Date();
