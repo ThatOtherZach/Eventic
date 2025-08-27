@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -32,6 +32,13 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
     queryKey: ["/api/events", eventId, "boost-info"],
     enabled: open,
   });
+  
+  // When boost info loads and all slots are taken, automatically select bump
+  useEffect(() => {
+    if (boostInfo && boostInfo.allSlotsTaken && useBoostType === "normal") {
+      setUseBoostType("bump");
+    }
+  }, [boostInfo]);
 
   const boostMutation = useMutation({
     mutationFn: async (data: { duration: string; isBump: boolean }) => {
@@ -193,36 +200,38 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                         </div>
                       </div>
                     </div>
-                    <div className="col-12">
-                      <div 
-                        className={`card cursor-pointer ${useBoostType === "bump" ? "border-warning bg-warning bg-opacity-10" : ""}`}
-                        onClick={() => setUseBoostType("bump")}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <div className="card-body p-3">
-                          <div className="d-flex align-items-center">
-                            <input
-                              type="radio"
-                              className="form-check-input me-2"
-                              checked={useBoostType === "bump"}
-                              readOnly
-                            />
-                            <div className="flex-grow-1">
-                              <div className="d-flex justify-content-between align-items-center">
-                                <span className="fw-medium d-flex align-items-center">
-                                  <TrendingUp size={16} className="me-1" />
-                                  Bump to Top
-                                </span>
-                                <span className="text-warning fw-bold">${boostInfo.bumpHourlyRate}/hour</span>
+                    {boostInfo.allSlotsTaken && (
+                      <div className="col-12">
+                        <div 
+                          className={`card cursor-pointer ${useBoostType === "bump" ? "border-warning bg-warning bg-opacity-10" : ""}`}
+                          onClick={() => setUseBoostType("bump")}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <div className="card-body p-3">
+                            <div className="d-flex align-items-center">
+                              <input
+                                type="radio"
+                                className="form-check-input me-2"
+                                checked={useBoostType === "bump"}
+                                readOnly
+                              />
+                              <div className="flex-grow-1">
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <span className="fw-medium d-flex align-items-center">
+                                    <TrendingUp size={16} className="me-1" />
+                                    Bump to Top
+                                  </span>
+                                  <span className="text-warning fw-bold">${boostInfo.bumpHourlyRate}/hour</span>
+                                </div>
+                                <small className="text-muted">
+                                  Jump to position #1 - 2x price for priority placement
+                                </small>
                               </div>
-                              <small className="text-muted">
-                                Jump to position #1 - 2x price for priority placement
-                              </small>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
