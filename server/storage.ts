@@ -1,6 +1,6 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, gt, lt, notInArray, sql, isNotNull } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -1394,18 +1394,28 @@ export class DatabaseStorage implements IStorage {
       return paidEvents.slice(0, 100);
     }
 
-    // Get random events to fill remaining slots (excluding already featured ones)
+    // Get random events to fill remaining slots (excluding already featured ones and past events)
     const featuredEventIds = paidEvents.map(fe => fe.eventId);
     const randomEventsNeeded = 100 - paidEvents.length;
+    
+    // Build where conditions for random events
+    const whereConditions = [];
+    
+    // Exclude already featured events
+    if (featuredEventIds.length > 0) {
+      whereConditions.push(notInArray(events.id, featuredEventIds));
+    }
+    
+    // Exclude past events (events that have already started)
+    whereConditions.push(gte(events.date, new Date().toISOString().split('T')[0]));
+    
+    // Exclude private events
+    whereConditions.push(eq(events.isPrivate, false));
     
     const randomEvents = await db
       .select()
       .from(events)
-      .where(
-        featuredEventIds.length > 0 
-          ? notInArray(events.id, featuredEventIds)
-          : undefined
-      )
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
       .orderBy(sql`RANDOM()`)
       .limit(randomEventsNeeded);
 
@@ -1987,7 +1997,7 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     // If cache exists and is less than 1 hour old, use it
-    if (cached) {
+    if (cached && cached.lastUpdated) {
       const cacheAge = Date.now() - cached.lastUpdated.getTime();
       const oneHour = 60 * 60 * 1000;
       
