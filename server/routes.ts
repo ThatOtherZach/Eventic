@@ -593,7 +593,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json(publicEvents);
+      // Filter out past events and sort by date (soonest first)
+      const now = new Date();
+      const activeEvents = publicEvents.filter(event => {
+        try {
+          const eventDateTime = new Date(`${event.date}T${event.time}`);
+          return eventDateTime > now;
+        } catch (error) {
+          // If date parsing fails, exclude the event
+          return false;
+        }
+      });
+      
+      // Sort events by date and time, prioritizing events in next 24 hours
+      const sortedEvents = activeEvents.sort((a, b) => {
+        try {
+          const dateTimeA = new Date(`${a.date}T${a.time}`);
+          const dateTimeB = new Date(`${b.date}T${b.time}`);
+          
+          const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          
+          // Check if events are within next 24 hours
+          const aIsWithin24h = dateTimeA <= twentyFourHoursFromNow;
+          const bIsWithin24h = dateTimeB <= twentyFourHoursFromNow;
+          
+          // If one is within 24h and other isn't, prioritize the one within 24h
+          if (aIsWithin24h && !bIsWithin24h) return -1;
+          if (!aIsWithin24h && bIsWithin24h) return 1;
+          
+          // If both are in same category (within 24h or not), sort by date/time ascending (soonest first)
+          return dateTimeA.getTime() - dateTimeB.getTime();
+        } catch (error) {
+          // If date parsing fails, sort by name as fallback
+          return a.name.localeCompare(b.name);
+        }
+      });
+      
+      res.json(sortedEvents);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch events" });
     }

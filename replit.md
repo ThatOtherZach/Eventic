@@ -18,6 +18,12 @@ Preferred communication style: Simple, everyday language.
 - **Conditional Validation**: Date validation only applies to new events, not when editing existing ones
 - **Proper Data Handling**: Update operations send only necessary fields to prevent data corruption
 
+### Smart Event Sorting (January 2025)
+- **Active Events Only**: Home page now filters out past events, showing only upcoming events
+- **24-Hour Priority**: Events starting within the next 24 hours are prioritized at the top of the list
+- **Chronological Order**: Within each category (next 24h vs future), events are sorted by date/time ascending (soonest first)
+- **Enhanced UX**: Users see the most relevant and time-sensitive events first
+
 ## Recent Features
 
 ### Simplified Image System (Updated January 2025)
