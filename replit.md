@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Features
 
+### Unified Event Form (January 2025)
+- **Single Form Component**: Event creation and editing now use a single unified form component (`event-form.tsx`)
+- **Intelligent Mode Detection**: Form automatically detects whether to create or update based on URL parameters
+- **Ownership Validation**: Edit mode validates event ownership before allowing modifications
+- **Smart Field Population**: When editing, venue strings are intelligently parsed into address components
+- **Conditional Validation**: Date validation only applies to new events, not when editing existing ones
+- **Proper Data Handling**: Update operations send only necessary fields to prevent data corruption
+
+## Recent Features
+
 ### Simplified Image System (Updated January 2025)
 - **Single Upload**: Events now use only one image upload - the featured image
 - **Dual Purpose**: The featured image serves as both the event display image and ticket background

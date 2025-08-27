@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useParams } from "wouter";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertEventSchema, type InsertEvent, type Event, type Ticket } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -24,12 +24,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-export function EventCreatePage() {
+interface EventWithTicketInfo extends Event {
+  ticketsSold?: number;
+  ticketsAvailable?: number | null;
+}
+
+export default function EventForm() {
+  const { id } = useParams<{ id?: string }>();
   const { toast } = useToast();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [ticketsSold, setTicketsSold] = useState(0);
+  const isEditMode = !!id;
   
   // Address component states
   const [address, setAddress] = useState<string>("");
@@ -44,6 +51,12 @@ export function EventCreatePage() {
   const fiveYearsFromNow = new Date();
   fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
   const maxDate = fiveYearsFromNow.toISOString().split('T')[0];
+  
+  // Load existing event if in edit mode
+  const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
+    queryKey: [`/api/events/${id}`],
+    enabled: isEditMode && !!id,
+  });
 
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
@@ -72,6 +85,66 @@ export function EventCreatePage() {
       raffleEnabled: false,
     },
   });
+  
+  // Load event data into form when in edit mode
+  useEffect(() => {
+    if (event && isEditMode) {
+      // Check ownership
+      if (user && event.userId !== user.id) {
+        toast({
+          title: "Access Denied",
+          description: "You can only edit your own events",
+          variant: "destructive",
+        });
+        setLocation(`/events/${id}`);
+        return;
+      }
+
+      // Parse venue string to populate address fields
+      if (event.venue) {
+        const venueParts = event.venue.split(',').map(part => part.trim());
+        if (venueParts.length === 3) {
+          setAddress(venueParts[0]);
+          setCity(venueParts[1]);
+          setCountry(venueParts[2]);
+        } else if (venueParts.length === 2) {
+          setCity(venueParts[0]);
+          setCountry(venueParts[1]);
+        } else {
+          setAddress(event.venue);
+        }
+      }
+      
+      // Reset form with event data
+      form.reset({
+        name: event.name || "",
+        description: event.description || "",
+        venue: event.venue || "",
+        date: event.date || "",
+        time: event.time || "",
+        endDate: event.endDate || "",
+        endTime: event.endTime || "",
+        ticketPrice: event.ticketPrice || "0",
+        maxTickets: event.maxTickets || 100,
+        imageUrl: event.imageUrl || undefined,
+        ticketBackgroundUrl: event.ticketBackgroundUrl || undefined,
+        earlyValidation: (event.earlyValidation || "Allow at Anytime") as "Allow at Anytime" | "One Hour Before" | "Two Hours Before" | "At Start Time" | undefined,
+        reentryType: (event.reentryType || "No Reentry (Single Use)") as "No Reentry (Single Use)" | "Pass (Multiple Use)" | "No Limit" | undefined,
+        maxUses: event.maxUses || 1,
+        goldenTicketEnabled: event.goldenTicketEnabled || false,
+        goldenTicketCount: event.goldenTicketCount || undefined,
+        specialEffectsEnabled: event.specialEffectsEnabled || false,
+        allowMinting: event.allowMinting || false,
+        isPrivate: event.isPrivate || false,
+        oneTicketPerUser: event.oneTicketPerUser || false,
+        surgePricing: event.surgePricing || false,
+        raffleEnabled: event.raffleEnabled || false,
+      });
+      
+      setImageUrl(event.imageUrl || "");
+      setTicketsSold(event.ticketsSold || 0);
+    }
+  }, [event, isEditMode, user, toast, setLocation, id, form]);
 
   // Update venue field when address components change
   useEffect(() => {
@@ -105,6 +178,29 @@ export function EventCreatePage() {
       });
     },
   });
+  
+  const updateEventMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/events/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      setLocation(`/events/${id}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update event",
+        variant: "destructive",
+      });
+    },
+  });
 
   const onSubmit = (data: InsertEvent) => {
     // Venue is already set by the useEffect hook, just validate it exists
@@ -117,32 +213,35 @@ export function EventCreatePage() {
       return;
     }
     
-    // Validate start date is at least 1 day in the future
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0); // Set to start of day
-    
-    const eventDate = new Date(`${data.date}T${data.time}`);
-    
-    if (eventDate < tomorrow) {
-      form.setError('date', {
-        type: 'manual',
-        message: 'Event must be scheduled at least one day in advance'
-      });
-      return;
-    }
-    
-    // Validate event date is not more than 5 years in the future
-    const fiveYearsFromNow = new Date(now);
-    fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
-    
-    if (eventDate > fiveYearsFromNow) {
-      form.setError('date', {
-        type: 'manual',
-        message: 'Event cannot be scheduled more than 5 years in advance'
-      });
-      return;
+    // Only validate dates for new events (not in edit mode)
+    if (!isEditMode) {
+      // Validate start date is at least 1 day in the future
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0); // Set to start of day
+      
+      const eventDate = new Date(`${data.date}T${data.time}`);
+      
+      if (eventDate < tomorrow) {
+        form.setError('date', {
+          type: 'manual',
+          message: 'Event must be scheduled at least one day in advance'
+        });
+        return;
+      }
+      
+      // Validate event date is not more than 5 years in the future
+      const fiveYearsFromNow = new Date(now);
+      fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
+      
+      if (eventDate > fiveYearsFromNow) {
+        form.setError('date', {
+          type: 'manual',
+          message: 'Event cannot be scheduled more than 5 years in advance'
+        });
+        return;
+      }
     }
     
     // Validate end date/time if both are provided
@@ -179,7 +278,41 @@ export function EventCreatePage() {
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
     };
 
-    createEventMutation.mutate(submitData);
+    // If in edit mode, perform update with proper validation
+    if (isEditMode) {
+      // Validate max tickets against tickets sold
+      if (data.maxTickets && ticketsSold > 0) {
+        const maxTicketValue = data.maxTickets;
+        if (maxTicketValue < ticketsSold) {
+          toast({
+            title: "Invalid ticket limit",
+            description: `Cannot set maximum tickets below ${ticketsSold} (tickets already sold)`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
+      // Prepare update data with only the necessary fields
+      const updateData = {
+        name: data.name,
+        description: data.description || null,
+        venue: data.venue,
+        date: data.date,
+        time: data.time,
+        endDate: data.endDate || null,
+        endTime: data.endTime || null,
+        ticketPrice: data.ticketPrice,
+        raffleEnabled: data.raffleEnabled,
+        maxTickets: data.maxTickets || undefined,
+        imageUrl: imageUrl || undefined,
+        ticketBackgroundUrl: imageUrl || undefined,
+      };
+      
+      updateEventMutation.mutate(updateData);
+    } else {
+      createEventMutation.mutate(submitData);
+    }
   };
 
   const handleImageUpload = async () => {

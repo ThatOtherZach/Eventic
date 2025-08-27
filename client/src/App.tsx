@@ -9,8 +9,7 @@ import { Navigation } from "@/components/layout/navigation";
 import { ErrorBoundary } from "@/components/error-boundary";
 import Events from "@/pages/events";
 import EventDetail from "@/pages/event-detail";
-import EventEdit from "@/pages/event-edit";
-import { EventCreatePage } from "@/pages/event-create";
+import EventForm from "@/pages/event-form";
 import Scanner from "@/pages/scanner";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account-page";
@@ -26,9 +25,9 @@ function Router() {
     <Switch>
       <Route path="/" component={Events} />
       <Route path="/events" component={Events} />
-      <ProtectedRoute path="/events/create" component={EventCreatePage} />
+      <ProtectedRoute path="/events/create" component={EventForm} />
       <Route path="/events/:id">{(params) => <EventDetail />}</Route>
-      <ProtectedRoute path="/events/:id/edit" component={EventEdit} />
+      <ProtectedRoute path="/events/:id/edit" component={EventForm} />
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
