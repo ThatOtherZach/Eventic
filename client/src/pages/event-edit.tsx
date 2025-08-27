@@ -209,12 +209,13 @@ export default function EventEditPage() {
     const updateData: any = {
       name: formData.name,
       description: formData.description || null,
-      venue: formData.venue,
+      venue: venueString,  // Use the combined venue string
       date: formData.date,
       time: formData.time,
       endDate: formData.endDate || null,
       endTime: formData.endTime || null,
       ticketPrice: formData.ticketPrice,
+      raffleEnabled: formData.raffleEnabled,  // Include raffleEnabled field
     };
 
     if (formData.maxTickets) {
