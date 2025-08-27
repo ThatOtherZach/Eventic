@@ -58,10 +58,8 @@ export default function AccountPage() {
 
   const updateLocationsMutation = useMutation({
     mutationFn: async (locations: string) => {
-      const response = await apiRequest("PATCH", "/api/user/profile", {
-        body: JSON.stringify({ locations }),
-        headers: { "Content-Type": "application/json" },
-      });
+      console.log('Sending mutation with data:', { locations });
+      const response = await apiRequest("PATCH", "/api/user/profile", { locations });
       return response.json();
     },
     onSuccess: (updatedUser) => {
@@ -83,6 +81,7 @@ export default function AccountPage() {
   });
 
   const handleSaveLocations = () => {
+    console.log('Saving locations:', locationsValue);
     updateLocationsMutation.mutate(locationsValue);
   };
 
@@ -145,56 +144,44 @@ export default function AccountPage() {
                       </div>
                     )}
                     <div className="d-flex align-items-center mt-2">
-                      {isEditingCity ? (
-                        <div className="d-flex align-items-center gap-2">
-                          <select
-                            value={locationsValue}
-                            onChange={(e) => setLocationsValue(e.target.value)}
-                            className="form-select form-select-sm"
-                            style={{ width: "200px" }}
-                            data-testid="select-locations"
-                          >
-                            <option value="All">All Countries</option>
-                            {countries.map((country) => (
-                              <option key={country} value={country}>
-                                {country}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={handleSaveLocations}
-                            disabled={updateLocationsMutation.isPending}
-                            className="btn btn-sm btn-primary"
-                            data-testid="button-save-locations"
-                          >
-                            {updateLocationsMutation.isPending ? (
-                              <span className="spinner-border spinner-border-sm" />
-                            ) : (
-                              <Save size={14} />
-                            )}
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="btn btn-sm btn-outline-secondary"
-                            data-testid="button-cancel-locations"
-                          >
-                            <X size={14} />
-                          </button>
+                      <div className="mt-3">
+                        <div className="row align-items-center">
+                          <div className="col-md-4">
+                            <label className="form-label text-muted small mb-1">Location Filter</label>
+                            <select
+                              value={locationsValue}
+                              onChange={(e) => setLocationsValue(e.target.value)}
+                              className="form-select form-select-sm"
+                              data-testid="select-locations"
+                            >
+                              <option value="All">All Countries</option>
+                              {countries.map((country) => (
+                                <option key={country} value={country}>
+                                  {country}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="form-text">
+                              Filter events by country on the home page
+                            </div>
+                          </div>
+                          <div className="col-md-3 d-flex align-items-end gap-2">
+                            <button
+                              onClick={handleSaveLocations}
+                              disabled={updateLocationsMutation.isPending}
+                              className="btn btn-sm btn-primary"
+                              data-testid="button-save-locations"
+                            >
+                              {updateLocationsMutation.isPending ? (
+                                <span className="spinner-border spinner-border-sm me-1" />
+                              ) : (
+                                <Save size={14} className="me-1" />
+                              )}
+                              Save
+                            </button>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="d-flex align-items-center">
-                          <span className="text-muted small me-2">
-                            Location Filter: {(user as any).locations || "All Countries"}
-                          </span>
-                          <button
-                            onClick={() => setIsEditingCity(true)}
-                            className="btn btn-sm btn-outline-primary"
-                            data-testid="button-edit-locations"
-                          >
-                            <Edit size={14} />
-                          </button>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
