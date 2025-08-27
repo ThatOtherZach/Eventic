@@ -15,7 +15,7 @@ export default function AccountPage() {
   const { user, signOut } = useAuth();
   const [, setLocation] = useLocation();
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
-  const [isEditingCity, setIsEditingCity] = useState(false);
+
   const [locationsValue, setLocationsValue] = useState((user as any)?.locations || "All");
   const { toast } = useToast();
   const { addNotification } = useNotifications();
@@ -80,15 +80,7 @@ export default function AccountPage() {
     },
   });
 
-  const handleSaveLocations = () => {
-    console.log('Saving locations:', locationsValue);
-    updateLocationsMutation.mutate(locationsValue);
-  };
 
-  const handleCancelEdit = () => {
-    setLocationsValue((user as any)?.locations || "");
-    setIsEditingCity(false);
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -143,45 +135,32 @@ export default function AccountPage() {
                         </span>
                       </div>
                     )}
-                    <div className="d-flex align-items-center mt-2">
-                      <div className="mt-3">
-                        <div className="row align-items-center">
-                          <div className="col-md-4">
-                            <label className="form-label text-muted small mb-1">Location Filter</label>
-                            <select
-                              value={locationsValue}
-                              onChange={(e) => setLocationsValue(e.target.value)}
-                              className="form-select form-select-sm"
-                              data-testid="select-locations"
-                            >
-                              <option value="All">All Countries</option>
-                              {countries.map((country) => (
-                                <option key={country} value={country}>
-                                  {country}
-                                </option>
-                              ))}
-                            </select>
-                            <div className="form-text">
-                              Filter events by country on the home page
-                            </div>
-                          </div>
-                          <div className="col-md-3 d-flex align-items-end gap-2">
-                            <button
-                              onClick={handleSaveLocations}
-                              disabled={updateLocationsMutation.isPending}
-                              className="btn btn-sm btn-primary"
-                              data-testid="button-save-locations"
-                            >
-                              {updateLocationsMutation.isPending ? (
-                                <span className="spinner-border spinner-border-sm me-1" />
-                              ) : (
-                                <Save size={14} className="me-1" />
-                              )}
-                              Save
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="d-flex align-items-center mt-3">
+                      <span className="text-muted small me-3">Location Filter:</span>
+                      <select
+                        value={locationsValue}
+                        onChange={(e) => {
+                          setLocationsValue(e.target.value);
+                          // Auto-save on change
+                          setTimeout(() => {
+                            updateLocationsMutation.mutate(e.target.value);
+                          }, 100);
+                        }}
+                        className="form-select form-select-sm me-2"
+                        style={{ width: "200px" }}
+                        data-testid="select-locations"
+                        disabled={updateLocationsMutation.isPending}
+                      >
+                        <option value="All">All Countries</option>
+                        {countries.map((country) => (
+                          <option key={country} value={country}>
+                            {country}
+                          </option>
+                        ))}
+                      </select>
+                      {updateLocationsMutation.isPending && (
+                        <span className="spinner-border spinner-border-sm text-primary" />
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1799,29 +1799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return true;
       });
       
-      // Apply location filtering if user is authenticated and has location preferences
-      if (req.user?.id) {
-        const user = await storage.getUser(req.user.id);
-        if (user && user.locations && user.locations !== "None" && user.locations.trim() !== "") {
-          // Parse user's location countries
-          const userCountries = user.locations.split(',').map(c => c.trim().toLowerCase());
-          
-          // Filter featured events by countries in user's location field
-          featuredEvents = featuredEvents.filter(featuredEvent => {
-            const event = featuredEvent.event;
-            if (!event.venue) return false;
-            
-            // Extract country from venue (assumed to be last part after comma)
-            const venueParts = event.venue.split(',').map(part => part.trim());
-            const eventCountry = venueParts[venueParts.length - 1]?.toLowerCase();
-            
-            // Check if event country matches any user country
-            return eventCountry && userCountries.some(userCountry => 
-              eventCountry.includes(userCountry) || userCountry.includes(eventCountry)
-            );
-          });
-        }
-      }
+      // Featured events should ALWAYS show regardless of location preferences
       
       res.json(featuredEvents);
     } catch (error) {
@@ -1880,27 +1858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       featuredEvents = featuredEvents.filter(fe => isEventNotPast(fe.event));
       allEvents = allEvents.filter(isEventNotPast);
       
-      // Apply location filtering if user is authenticated and has location preferences
-      if (req.user?.id) {
-        const user = await storage.getUser(req.user.id);
-        if (user && user.locations && user.locations !== "None" && user.locations.trim() !== "") {
-          // Parse user's location countries
-          const userCountries = user.locations.split(',').map(c => c.trim().toLowerCase());
-          
-          // Filter events by countries in user's location field
-          const locationFilter = (venue: string | undefined | null) => {
-            if (!venue) return false;
-            const venueParts = venue.split(',').map(part => part.trim());
-            const eventCountry = venueParts[venueParts.length - 1]?.toLowerCase();
-            return eventCountry && userCountries.some(userCountry => 
-              eventCountry.includes(userCountry) || userCountry.includes(eventCountry)
-            );
-          };
-          
-          featuredEvents = featuredEvents.filter(fe => locationFilter(fe.event.venue));
-          allEvents = allEvents.filter(event => locationFilter(event.venue));
-        }
-      }
+      // Featured grid should ALWAYS show all events regardless of location preferences
       
       // Target: 6 events total, with 3/4 (4-5) being paid boosts if available
       const targetTotal = 6;
