@@ -385,6 +385,34 @@ export default function EventDetailPage() {
       return null;
     }
   })() : null;
+  
+  // Check if event has passed based on either start date or end date
+  const isEventPast = (() => {
+    const now = new Date();
+    
+    // If there's an end date, use it to determine if event is past
+    if (event.endDate) {
+      try {
+        const endDate = new Date(event.endDate);
+        if (!isNaN(endDate.getTime())) {
+          // Set end date to end of day for comparison
+          endDate.setHours(23, 59, 59, 999);
+          return now > endDate;
+        }
+      } catch {
+        // If end date parsing fails, fall back to start date
+      }
+    }
+    
+    // Otherwise use start date to determine if event has started
+    if (eventDate) {
+      // For single-day events, consider them past once they've started
+      return now > eventDate;
+    }
+    
+    return false;
+  })();
+  
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
 
@@ -723,7 +751,7 @@ export default function EventDetailPage() {
               <button
                 className="btn btn-primary w-100 mb-3"
                 onClick={handlePurchase}
-                disabled={isSoldOut || isPurchasing}
+                disabled={isSoldOut || isPurchasing || isEventPast}
                 data-testid="button-purchase"
               >
                 {isPurchasing ? (
@@ -731,6 +759,8 @@ export default function EventDetailPage() {
                     <span className="spinner-border spinner-border-sm me-2" />
                     Processing...
                   </>
+                ) : isEventPast ? (
+                  "Event Has Passed"
                 ) : isSoldOut ? (
                   "Sold Out"
                 ) : (

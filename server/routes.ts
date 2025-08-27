@@ -862,6 +862,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
 
+      // Check if event has already passed
+      const now = new Date();
+      
+      // Check if event has an end date
+      if (event.endDate) {
+        try {
+          const endDate = new Date(event.endDate);
+          if (!isNaN(endDate.getTime())) {
+            // Set end date to end of day for comparison
+            endDate.setHours(23, 59, 59, 999);
+            if (now > endDate) {
+              return res.status(400).json({ 
+                message: "Cannot purchase tickets for past events. This event ended on " + endDate.toLocaleDateString() 
+              });
+            }
+          }
+        } catch {
+          // If date parsing fails, continue with other checks
+        }
+      } else if (event.date) {
+        // No end date, check if event has started (for single-day events)
+        try {
+          const startDate = new Date(event.date);
+          if (!isNaN(startDate.getTime()) && now > startDate) {
+            return res.status(400).json({ 
+              message: "Cannot purchase tickets for past events. This event started on " + startDate.toLocaleDateString() 
+            });
+          }
+        } catch {
+          // If date parsing fails, continue with purchase
+        }
+      }
+
       // Check if event has one ticket per user limit
       if (event.oneTicketPerUser) {
         // Check if user has already purchased a ticket for this event
