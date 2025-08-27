@@ -24,6 +24,13 @@ Preferred communication style: Simple, everyday language.
 - **Chronological Order**: Within each category (next 24h vs future), events are sorted by date/time ascending (soonest first)
 - **Enhanced UX**: Users see the most relevant and time-sensitive events first
 
+### Simplified Location System (January 2025)
+- **Single Country Selection**: User location preference is now a single country dropdown instead of free-text input
+- **"All" Option**: Added "All Countries" option at the top of the dropdown to show all events globally
+- **Manual Control**: Removed automatic location detection from events/tickets - users now have full control
+- **Home Page Filtering**: Location preference only affects the "Available Events" list on the home page
+- **Clean Backend**: Removed complex auto-update logic and simplified filtering to single-country matching
+
 ## Recent Features
 
 ### Simplified Image System (Updated January 2025)

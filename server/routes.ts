@@ -340,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { locations } = req.body;
       
       // Only update if locations value is provided
-      if (locations !== undefined) {
+      if (locations !== undefined && locations !== null) {
         const updatedUser = await storage.updateUserProfile(userId, { locations });
         if (!updatedUser) {
           return res.status(404).json({ message: "User not found" });
@@ -573,11 +573,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user is authenticated and has location preferences
       if (req.user?.id) {
         const user = await storage.getUser(req.user.id);
-        if (user && user.locations && user.locations !== "None" && user.locations.trim() !== "") {
-          // Parse user's location countries
-          const userCountries = user.locations.split(',').map(c => c.trim().toLowerCase());
+        if (user && user.locations && user.locations !== "All" && user.locations.trim() !== "") {
+          // Single country filter
+          const userCountry = user.locations.trim().toLowerCase();
           
-          // Filter events by countries in user's location field
+          // Filter events by the selected country
           publicEvents = publicEvents.filter(event => {
             if (!event.venue) return false;
             
@@ -585,10 +585,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const venueParts = event.venue.split(',').map(part => part.trim());
             const eventCountry = venueParts[venueParts.length - 1]?.toLowerCase();
             
-            // Check if event country matches any user country
-            return eventCountry && userCountries.some(userCountry => 
-              eventCountry.includes(userCountry) || userCountry.includes(eventCountry)
-            );
+            // Check if event country matches user's selected country
+            return eventCountry && eventCountry.includes(userCountry);
           });
         }
       }
@@ -683,11 +681,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...createData,
         userId, // Now we can use the actual userId since user exists in DB
       });
-      
-      // Auto-update user location after creating an event
-      if (userId) {
-        await storage.autoUpdateUserLocation(userId);
-      }
       
       res.status(201).json(event);
     } catch (error) {
@@ -973,11 +966,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         );
-        
-        // Auto-update user location after purchasing a resell ticket
-        if (userId) {
-          await storage.autoUpdateUserLocation(userId);
-        }
+
         
         return res.status(201).json(resellTicket);
       }
@@ -1007,11 +996,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use transactional ticket creation to prevent race conditions
       const ticket = await storage.createTicketWithTransaction(ticketData);
-      
-      // Auto-update user location after purchasing a ticket
-      if (userId) {
-        await storage.autoUpdateUserLocation(userId);
-      }
       
       res.status(201).json(ticket);
     } catch (error) {

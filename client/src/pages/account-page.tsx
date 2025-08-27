@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
+import { countries } from "@/lib/countries";
 import type { Ticket as TicketType, Event, RegistryRecord } from "@shared/schema";
 
 export default function AccountPage() {
@@ -15,7 +16,7 @@ export default function AccountPage() {
   const [, setLocation] = useLocation();
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [isEditingCity, setIsEditingCity] = useState(false);
-  const [locationsValue, setLocationsValue] = useState((user as any)?.locations || "");
+  const [locationsValue, setLocationsValue] = useState((user as any)?.locations || "All");
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   
@@ -146,15 +147,20 @@ export default function AccountPage() {
                     <div className="d-flex align-items-center mt-2">
                       {isEditingCity ? (
                         <div className="d-flex align-items-center gap-2">
-                          <input
-                            type="text"
+                          <select
                             value={locationsValue}
                             onChange={(e) => setLocationsValue(e.target.value)}
-                            placeholder="Enter your preferred locations or search terms"
-                            className="form-control form-control-sm"
-                            style={{ width: "300px" }}
-                            data-testid="input-locations"
-                          />
+                            className="form-select form-select-sm"
+                            style={{ width: "200px" }}
+                            data-testid="select-locations"
+                          >
+                            <option value="All">All Countries</option>
+                            {countries.map((country) => (
+                              <option key={country} value={country}>
+                                {country}
+                              </option>
+                            ))}
+                          </select>
                           <button
                             onClick={handleSaveLocations}
                             disabled={updateLocationsMutation.isPending}
@@ -178,7 +184,7 @@ export default function AccountPage() {
                       ) : (
                         <div className="d-flex align-items-center">
                           <span className="text-muted small me-2">
-                            Locations: {(user as any).locations || "Auto-detected from your events"}
+                            Location Filter: {(user as any).locations || "All Countries"}
                           </span>
                           <button
                             onClick={() => setIsEditingCity(true)}

@@ -267,69 +267,7 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async autoUpdateUserLocation(userId: string): Promise<void> {
-    try {
-      // Get the current user to check if location is "None"
-      const user = await this.getUser(userId);
-      if (!user || user.locations === "None") {
-        return; // Don't update if user explicitly set location to "None"
-      }
 
-      // Get the latest 3 events (created or attended)
-      const createdEvents = await db
-        .select()
-        .from(events)
-        .where(eq(events.userId, userId))
-        .orderBy(desc(events.createdAt))
-        .limit(3);
-
-      const attendedTickets = await db
-        .select({ event: events })
-        .from(tickets)
-        .innerJoin(events, eq(tickets.eventId, events.id))
-        .where(eq(tickets.userId, userId))
-        .orderBy(desc(tickets.createdAt))
-        .limit(3);
-
-      // Combine and sort all events by date
-      const allEvents = [
-        ...createdEvents,
-        ...attendedTickets.map(t => t.event)
-      ].sort((a, b) => {
-        const dateA = new Date(a.createdAt || '').getTime();
-        const dateB = new Date(b.createdAt || '').getTime();
-        return dateB - dateA;
-      }).slice(0, 3);
-
-      if (allEvents.length === 0) {
-        return;
-      }
-
-      // Extract unique countries from venue strings
-      const countries = new Set<string>();
-      for (const event of allEvents) {
-        if (event.venue) {
-          // Parse venue string to extract country (last part after comma)
-          const venueParts = event.venue.split(',').map(part => part.trim());
-          if (venueParts.length > 0) {
-            // Assume country is the last part
-            const lastPart = venueParts[venueParts.length - 1];
-            if (lastPart) {
-              countries.add(lastPart);
-            }
-          }
-        }
-      }
-
-      // Update user location with countries
-      if (countries.size > 0) {
-        const locationsString = Array.from(countries).slice(0, 3).join(', ');
-        await this.updateUserProfile(userId, { locations: locationsString });
-      }
-    } catch (error) {
-      console.error('Failed to auto-update user location:', error);
-    }
-  }
 
   async getUserEventCountries(userId: string): Promise<string[]> {
     // Get all events user has tickets for, ordered by event date (most recent first)
