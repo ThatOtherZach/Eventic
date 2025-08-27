@@ -1744,6 +1744,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let featuredEvents = await storage.getFeaturedEventsWithDetails();
       
+      // Filter out past events
+      const now = new Date();
+      featuredEvents = featuredEvents.filter(featuredEvent => {
+        const event = featuredEvent.event;
+        
+        // Check if event has an end date
+        if (event.endDate) {
+          try {
+            const endDate = new Date(event.endDate);
+            if (!isNaN(endDate.getTime())) {
+              // Set end date to end of day for comparison
+              endDate.setHours(23, 59, 59, 999);
+              // Keep event if it hasn't ended yet
+              return now <= endDate;
+            }
+          } catch {
+            // If date parsing fails, keep the event
+          }
+        } else if (event.date) {
+          // No end date, check if event hasn't started yet (for single-day events)
+          try {
+            const startDate = new Date(event.date);
+            if (!isNaN(startDate.getTime())) {
+              // Keep event if it hasn't started yet
+              return now <= startDate;
+            }
+          } catch {
+            // If date parsing fails, keep the event
+          }
+        }
+        
+        // If no valid dates, keep the event
+        return true;
+      });
+      
       // Apply location filtering if user is authenticated and has location preferences
       if (req.user?.id) {
         const user = await storage.getUser(req.user.id);
@@ -1787,6 +1822,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all regular events for random selection (exclude private events)
       let allEvents = (await storage.getEvents()).filter(event => !event.isPrivate);
+      
+      // Filter out past events from both featured and regular events
+      const now = new Date();
+      const isEventNotPast = (event: any) => {
+        // Check if event has an end date
+        if (event.endDate) {
+          try {
+            const endDate = new Date(event.endDate);
+            if (!isNaN(endDate.getTime())) {
+              // Set end date to end of day for comparison
+              endDate.setHours(23, 59, 59, 999);
+              // Keep event if it hasn't ended yet
+              return now <= endDate;
+            }
+          } catch {
+            // If date parsing fails, keep the event
+          }
+        } else if (event.date) {
+          // No end date, check if event hasn't started yet (for single-day events)
+          try {
+            const startDate = new Date(event.date);
+            if (!isNaN(startDate.getTime())) {
+              // Keep event if it hasn't started yet
+              return now <= startDate;
+            }
+          } catch {
+            // If date parsing fails, keep the event
+          }
+        }
+        
+        // If no valid dates, keep the event
+        return true;
+      };
+      
+      // Apply past event filtering
+      featuredEvents = featuredEvents.filter(fe => isEventNotPast(fe.event));
+      allEvents = allEvents.filter(isEventNotPast);
       
       // Apply location filtering if user is authenticated and has location preferences
       if (req.user?.id) {
@@ -2364,11 +2436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: winnerTicket.userId,
           type: 'raffle_winner',
           title: 'Congratulations! You Won a Raffle!',
-          description: `You won the raffle for "${event.name}"! Please see the event organizer.`,
-          metadata: JSON.stringify({
-            eventId,
-            ticketId: winnerTicket.id
-          })
+          description: `You won the raffle for "${event.name}"! Please see the event organizer.`
         });
       }
       
