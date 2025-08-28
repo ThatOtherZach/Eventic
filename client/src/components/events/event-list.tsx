@@ -133,49 +133,32 @@ export function EventList({ onGenerateTickets }: EventListProps) {
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="card-title mb-0 fw-medium">Available Events</h5>
             <div className="d-flex gap-2 align-items-center">
-              <div style={{ position: "relative", display: "inline-block" }}>
-                <div 
-                  style={{ 
-                    position: "absolute",
-                    left: "0",
-                    top: "0",
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.5em",
-                    pointerEvents: "none",
-                    zIndex: 1,
-                    background: "white"
-                  }}
-                >
-                  {getSelectedDisplay()}
-                </div>
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => {
-                    setSelectedCountry(e.target.value);
-                    setCurrentPage(1); // Reset to first page when filter changes
-                  }}
-                  className="form-select form-select-sm"
-                  style={{ 
-                    width: "60px",
-                    fontSize: "1.5em",
-                    textAlign: "center",
-                    color: "transparent",
-                    cursor: "pointer"
-                  }}
-                  data-testid="select-country-filter"
-                >
-                  <option value="All Countries">🌐 All Countries</option>
-                  {countries.map((country) => (
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  setSelectedCountry(e.target.value);
+                  setCurrentPage(1); // Reset to first page when filter changes
+                }}
+                className="form-select form-select-sm"
+                style={{ 
+                  width: "auto",
+                  minWidth: "50px",
+                  maxWidth: "180px",
+                  paddingRight: "24px"
+                }}
+                data-testid="select-country-filter"
+                title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
+              >
+                <option value="All Countries">🌐 All Countries</option>
+                {countries.map((country) => {
+                  const flag = getCountryFlag(country);
+                  return (
                     <option key={country} value={country}>
-                      {getCountryFlag(country)} {country}
+                      {flag} {country}
                     </option>
-                  ))}
-                </select>
-              </div>
+                  );
+                })}
+              </select>
             </div>
           </div>
         </div>
@@ -221,49 +204,32 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             >
               🎲
             </button>
-            <div style={{ position: "relative", display: "inline-block" }}>
-              <div 
-                style={{ 
-                  position: "absolute",
-                  left: "0",
-                  top: "0",
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.5em",
-                  pointerEvents: "none",
-                  zIndex: 1,
-                  background: "white"
-                }}
-              >
-                {getSelectedDisplay()}
-              </div>
-              <select
-                value={selectedCountry}
-                onChange={(e) => {
-                  setSelectedCountry(e.target.value);
-                  setCurrentPage(1); // Reset to first page when filter changes
-                }}
-                className="form-select form-select-sm"
-                style={{ 
-                  width: "60px",
-                  fontSize: "1.5em",
-                  textAlign: "center",
-                  color: "transparent",
-                  cursor: "pointer"
-                }}
-                data-testid="select-country-filter"
-              >
-                <option value="All Countries">🌐 All Countries</option>
-                {countries.map((country) => (
+            <select
+              value={selectedCountry}
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                setCurrentPage(1); // Reset to first page when filter changes
+              }}
+              className="form-select form-select-sm"
+              style={{ 
+                width: "auto",
+                minWidth: "50px",
+                maxWidth: "180px",
+                paddingRight: "24px"
+              }}
+              data-testid="select-country-filter"
+              title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
+            >
+              <option value="All Countries">🌐 All Countries</option>
+              {countries.map((country) => {
+                const flag = getCountryFlag(country);
+                return (
                   <option key={country} value={country}>
-                    {getCountryFlag(country)} {country}
+                    {flag} {country}
                   </option>
-                ))}
-              </select>
-            </div>
+                );
+              })}
+            </select>
           </div>
         </div>
       </div>
