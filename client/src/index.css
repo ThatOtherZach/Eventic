@@ -1,8 +1,8 @@
 /* Import Bootstrap first for mobile-first responsive design */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Import Windows 98 Theme - Comment out to disable */
+@import './styles/windows98-theme.css';
 
 /* Override Bootstrap variables for mobile-first design */
 :root {
