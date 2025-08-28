@@ -1,19 +1,38 @@
-/* Subtle Windows 98 Theme - Level 5 out of 10 */
+/* Windows 98 Theme - Level 6 out of 10 */
 
-/* Just enough W98 to be nostalgic without being overwhelming */
+/* More W98 character with stronger shadows and classic colors */
 
 :root {
-  --w98-subtle-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 
-                        inset -1px -1px rgba(0, 0, 0, 0.1), 
-                        inset 1px 1px rgba(255, 255, 255, 0.3);
-  --w98-subtle-sunken: inset 1px 1px rgba(0, 0, 0, 0.15), 
-                       inset -1px -1px rgba(255, 255, 255, 0.3);
+  --w98-bg: #d4d0c8;
+  --w98-window: #ece9d8;
+  --w98-blue: #000080;
+  --w98-subtle-shadow: inset -1px -1px #404040,
+                        inset 1px 1px #dfdfdf,
+                        inset -2px -2px #808080,
+                        inset 2px 2px #ffffff;
+  --w98-subtle-sunken: inset 1px 1px #404040,
+                       inset -1px -1px #dfdfdf,
+                       inset 2px 2px #808080,
+                       inset -2px -2px #ffffff;
 }
 
-/* Add subtle 3D effect to buttons */
+/* Background color more like W98 */
+body {
+  background-color: var(--w98-bg) !important;
+  background-image: none !important;
+}
+
+/* Add stronger 3D effect to buttons */
 .btn {
   box-shadow: var(--w98-subtle-shadow);
-  transition: all 0.15s ease;
+  transition: all 0.1s ease;
+  border: 2px solid transparent !important;
+  background-color: var(--w98-window) !important;
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
+}
+
+.btn:hover {
+  background-color: #e8e5d4 !important;
 }
 
 .btn:active {
@@ -21,36 +40,39 @@
   transform: translateY(1px);
 }
 
-/* Make primary buttons more W98-like but keep modern colors */
+/* Make primary buttons more W98-like with classic blue */
 .btn-primary {
-  background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
-  border: 1px solid #1e3a8a;
+  background: linear-gradient(180deg, #1e40af 0%, var(--w98-blue) 100%) !important;
+  border: 2px solid #000060 !important;
+  color: white !important;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(180deg, #2563eb 0%, #0000a0 100%) !important;
 }
 
 .btn-primary:active {
-  background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+  background: linear-gradient(180deg, var(--w98-blue) 0%, #000060 100%) !important;
 }
 
-/* Give cards a subtle 3D raised effect */
+/* Give cards a stronger 3D raised effect */
 .card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 
-              0 1px 2px rgba(0, 0, 0, 0.24),
-              inset 1px 1px rgba(255, 255, 255, 0.1);
-  border: 1px solid #d1d5db;
+  box-shadow: var(--w98-subtle-shadow);
+  border: none !important;
+  background-color: var(--w98-window) !important;
 }
 
-/* Card headers with subtle gradient */
+/* Card headers with classic W98 title bar */
 .card-header {
-  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
-  border-bottom: 2px solid #d1d5db;
-  font-weight: 600;
+  background: linear-gradient(180deg, #0054e3 0%, var(--w98-blue) 100%) !important;
+  color: white !important;
+  border-bottom: none !important;
+  font-weight: bold !important;
+  padding: 4px 8px !important;
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
 
-/* Form inputs with subtle inset effect */
+/* Form inputs with stronger inset effect */
 .form-control,
 .form-select,
 input[type="text"],
@@ -61,8 +83,11 @@ input[type="date"],
 input[type="time"],
 textarea,
 select {
-  border: 1px solid #9ca3af;
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  border: 2px solid #7f787f !important;
+  box-shadow: inset 1px 1px #404040,
+              inset -1px -1px #ffffff !important;
+  background-color: white !important;
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
 
 .form-control:focus,
@@ -70,32 +95,51 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: #2563eb;
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1),
-              0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #7f787f !important;
+  box-shadow: inset 1px 1px #404040,
+              inset -1px -1px #ffffff !important;
+  outline: 1px dotted #000 !important;
+  outline-offset: -4px !important;
 }
 
-/* Navbar with subtle gradient */
+/* Navbar with W98 title bar style */
 .navbar {
-  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-  border-bottom: 2px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(180deg, #0054e3 0%, var(--w98-blue) 100%) !important;
+  border-bottom: none !important;
+  box-shadow: var(--w98-subtle-shadow);
+  padding: 2px 8px !important;
 }
 
-/* Tables with classic borders */
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: white !important;
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
+  font-weight: bold !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.navbar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none !important;
+}
+
+/* Tables with classic W98 borders */
 .table {
-  border: 1px solid #d1d5db;
-  background: white;
+  border: 2px solid #7f787f !important;
+  background: white !important;
+  box-shadow: var(--w98-subtle-sunken);
 }
 
 .table th {
-  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
-  font-weight: 600;
-  border-bottom: 2px solid #d1d5db;
+  background: var(--w98-window) !important;
+  font-weight: bold !important;
+  border: 1px solid #7f787f !important;
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
 
 .table td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #7f787f !important;
+  background: white !important;
 }
 
 /* Progress bars with segments */
@@ -115,18 +159,42 @@ select:focus {
   );
 }
 
-/* Modals with title bar style header */
+/* Modals with W98 title bar style header */
+.modal-content {
+  box-shadow: var(--w98-subtle-shadow);
+  border: 2px solid #7f787f !important;
+  background: var(--w98-window) !important;
+}
+
 .modal-header {
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  padding: 8px 16px;
+  background: linear-gradient(180deg, #0054e3 0%, var(--w98-blue) 100%) !important;
+  color: white !important;
+  padding: 2px 4px !important;
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
+  font-weight: bold !important;
+  border-bottom: none !important;
 }
 
 .modal-header .btn-close {
-  background: white;
-  opacity: 0.9;
-  padding: 2px 6px;
-  font-size: 12px;
+  background: #c0c0c0 !important;
+  opacity: 1 !important;
+  padding: 0 !important;
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 10px !important;
+  box-shadow: var(--w98-subtle-shadow);
+  border: none !important;
+  font-family: "Tahoma", sans-serif !important;
+  font-weight: bold !important;
+  color: #000 !important;
+}
+
+.modal-header .btn-close:hover {
+  background: #e0e0e0 !important;
+}
+
+.modal-header .btn-close:active {
+  box-shadow: var(--w98-subtle-sunken);
 }
 
 /* Dropdown menus with subtle shadow */
@@ -154,26 +222,33 @@ select:focus {
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Alerts with subtle inset */
+/* Alerts with W98 style */
 .alert {
-  border-left: 4px solid;
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.05);
+  border: 2px solid #7f787f !important;
+  box-shadow: var(--w98-subtle-shadow);
+  background: var(--w98-window) !important;
+  color: #000 !important;
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
 
 .alert-primary {
-  border-left-color: #2563eb;
+  border-color: var(--w98-blue) !important;
+  background: #dde5ff !important;
 }
 
 .alert-success {
-  border-left-color: #10b981;
+  border-color: #008000 !important;
+  background: #ccffcc !important;
 }
 
 .alert-danger {
-  border-left-color: #ef4444;
+  border-color: #800000 !important;
+  background: #ffcccc !important;
 }
 
 .alert-warning {
-  border-left-color: #f59e0b;
+  border-color: #808000 !important;
+  background: #ffffcc !important;
 }
 
 /* Badge styling */
@@ -254,7 +329,7 @@ select:focus {
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Keep rounded corners but make them smaller */
+/* Remove all rounded corners for authentic W98 look */
 .btn,
 .card,
 .form-control,
@@ -265,12 +340,19 @@ select:focus {
 .badge,
 .toast,
 .progress,
-.pagination .page-link {
-  border-radius: 4px !important;
+.pagination .page-link,
+.navbar,
+.nav-tabs .nav-link,
+input,
+textarea,
+select {
+  border-radius: 0 !important;
 }
 
-/* Navbar and nav items stay sharp */
-.navbar,
-.nav-tabs .nav-link {
-  border-radius: 0 !important;
+/* Font family for better W98 feel */
+body,
+.form-label,
+label,
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
