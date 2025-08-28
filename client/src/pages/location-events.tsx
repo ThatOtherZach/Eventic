@@ -160,7 +160,7 @@ export function LocationEventsPage() {
             return (
               <div key={event.id} className="col-md-6">
                 <Link href={`/events/${event.id}`}>
-                  <a className="text-decoration-none" style={{ textDecoration: 'none' }} data-testid={`link-event-${event.id}`}>
+                  <a className="text-decoration-none ticket-card-link" style={{ textDecoration: 'none !important' }} data-testid={`link-event-${event.id}`}>
                     {/* Ticket-style card matching TicketCard component */}
                     <div 
                       className="ticket-card position-relative w-100"

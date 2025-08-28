@@ -700,8 +700,19 @@ video {
 .ticket-card-link:hover,
 .ticket-card-link:focus,
 .ticket-card-link:active,
-.ticket-card-link:visited {
+.ticket-card-link:visited,
+.ticket-card a,
+.ticket-card a:hover,
+.ticket-card a:focus,
+.ticket-card a:active,
+.ticket-card a:visited,
+a.ticket-card-link,
+a.ticket-card-link:hover,
+a.ticket-card-link:focus,
+a.ticket-card-link:active,
+a.ticket-card-link:visited {
   text-decoration: none !important;
+  color: inherit !important;
 }
 
 /* Quill Editor Custom Styles */
