@@ -383,6 +383,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Location-based event filtering
+  app.get("/api/events/location/:location", async (req: AuthenticatedRequest, res) => {
+    try {
+      const location = decodeURIComponent(req.params.location).trim().toLowerCase();
+      
+      // Get all public events
+      let events = (await storage.getEvents()).filter(event => !event.isPrivate);
+      
+      // Filter out past events
+      const now = new Date();
+      events = events.filter(event => {
+        if (event.endDate) {
+          try {
+            const endDate = new Date(event.endDate);
+            if (!isNaN(endDate.getTime())) {
+              endDate.setHours(23, 59, 59, 999);
+              return now <= endDate;
+            }
+          } catch {}
+        } else if (event.date) {
+          try {
+            const startDate = new Date(event.date);
+            if (!isNaN(startDate.getTime())) {
+              return now <= startDate;
+            }
+          } catch {}
+        }
+        return true;
+      });
+      
+      // Filter by location (city or country)
+      const filteredEvents = events.filter(event => {
+        if (!event.venue) return false;
+        const venueLower = event.venue.toLowerCase();
+        
+        // Check if the location matches any part of the venue string
+        // This handles both "London" matching "123 Main St, London, United Kingdom"
+        // and "United Kingdom" matching the same
+        const venueParts = venueLower.split(',').map(part => part.trim());
+        return venueParts.some(part => part.includes(location) || location.includes(part));
+      });
+      
+      // Sort by date
+      filteredEvents.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+      });
+      
+      res.json(filteredEvents);
+    } catch (error) {
+      await logError(error, "GET /api/events/location/:location", {
+        request: req,
+        metadata: { location: req.params.location }
+      });
+      res.status(500).json({ message: "Failed to fetch events by location" });
+    }
+  });
+
   // Ticket routes
   app.get("/api/tickets/:ticketId", async (req: AuthenticatedRequest, res) => {
     try {

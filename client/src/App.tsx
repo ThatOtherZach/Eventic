@@ -18,6 +18,7 @@ import TicketViewPage from "@/pages/ticket-view";
 import SpecialEffectsPage from "@/pages/special-effects";
 import MonitoringPage from "@/pages/monitoring";
 import AdminSettings from "@/pages/admin-settings";
+import { LocationEventsPage } from "@/pages/location-events";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/tickets/:ticketId" component={TicketViewPage} />
       <Route path="/special-effects" component={SpecialEffectsPage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/:location">{(params) => <LocationEventsPage />}</Route>
       <Route component={NotFound} />
     </Switch>
   );
