@@ -114,7 +114,7 @@ export function LocationEventsPage() {
             <h5 className="text-muted">No events found in {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h5>
             <p className="text-muted">Check back later or explore events in other locations</p>
             <Link href="/">
-              <a className="btn btn-primary mt-3" data-testid="button-go-home">
+              <a className="btn btn-primary mt-3" style={{ textDecoration: 'none' }} data-testid="button-go-home">
                 Browse All Events
               </a>
             </Link>
@@ -160,7 +160,7 @@ export function LocationEventsPage() {
             return (
               <div key={event.id} className="col-md-6">
                 <Link href={`/events/${event.id}`}>
-                  <a className="text-decoration-none" data-testid={`link-event-${event.id}`}>
+                  <a className="text-decoration-none" style={{ textDecoration: 'none' }} data-testid={`link-event-${event.id}`}>
                     {/* Ticket-style card matching TicketCard component */}
                     <div 
                       className="ticket-card position-relative w-100"
