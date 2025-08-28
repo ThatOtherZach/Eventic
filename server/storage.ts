@@ -1046,7 +1046,25 @@ export class DatabaseStorage implements IStorage {
         eq(delegatedValidators.email, email)
       ));
     
-    return !!validator;
+    if (validator) {
+      return true;
+    }
+
+    // Check if event has P2P validation enabled and user has a ticket for this event
+    if (event?.p2pValidation) {
+      const [userTicket] = await db
+        .select()
+        .from(tickets)
+        .where(and(
+          eq(tickets.eventId, eventId),
+          eq(tickets.userId, userId)
+        ))
+        .limit(1);
+      
+      return !!userTicket;
+    }
+    
+    return false;
   }
 
   async addDelegatedValidator(validator: InsertDelegatedValidator): Promise<DelegatedValidator> {

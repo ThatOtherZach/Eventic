@@ -83,6 +83,7 @@ export default function EventForm() {
       oneTicketPerUser: false,
       surgePricing: false,
       raffleEnabled: false,
+      p2pValidation: false,
     },
   });
   
@@ -139,6 +140,7 @@ export default function EventForm() {
         oneTicketPerUser: event.oneTicketPerUser || false,
         surgePricing: event.surgePricing || false,
         raffleEnabled: event.raffleEnabled || false,
+        p2pValidation: event.p2pValidation || false,
       });
       
       setImageUrl(event.imageUrl || "");
@@ -412,6 +414,7 @@ export default function EventForm() {
     oneTicketPerUser: watchedValues.oneTicketPerUser || false,
     surgePricing: watchedValues.surgePricing || false,
     raffleEnabled: watchedValues.raffleEnabled || false,
+    p2pValidation: watchedValues.p2pValidation || false,
     createdAt: new Date(),
   };
 
@@ -925,6 +928,32 @@ export default function EventForm() {
                                 </label>
                               </div>
                               <div className="form-text">Event organizers can randomly select winning tickets from ticket holders (cannot be disabled once activated, validated tickets only).</div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="p2pValidation"
+                          render={({ field }) => (
+                            <FormItem className="mt-3">
+                              <div className="form-check">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id="p2pValidation"
+                                  checked={field.value || false}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  data-testid="checkbox-p2p-validation"
+                                  disabled={isEditMode} // Disable if editing existing event
+                                />
+                                <label className="form-check-label" htmlFor="p2pValidation">
+                                  <span className="badge bg-primary me-2">🤝</span>
+                                  P2P Validation
+                                </label>
+                              </div>
+                              <div className="form-text">Allow any ticket holder the ability to validate other tickets{isEditMode ? " (This setting is read-only after event creation)" : ""}.</div>
                               <FormMessage />
                             </FormItem>
                           )}
