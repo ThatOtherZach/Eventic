@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ArrowRight, MapPin, Clock } from "lucide-react";
+import { ArrowRight, MapPin, Clock, Shield } from "lucide-react";
 
 interface FeaturedEvent {
   id: string;
@@ -12,6 +12,7 @@ interface FeaturedEvent {
     time: string;
     imageUrl?: string;
     ticketPrice: string;
+    p2pValidation?: boolean;
   };
   isPaid: boolean;
 }
@@ -101,6 +102,15 @@ export function FeaturedGrid() {
                   <h6 className="card-title fw-semibold text-dark mb-2 text-truncate">
                     {featuredEvent.event.name}
                   </h6>
+                  
+                  {featuredEvent.event.p2pValidation && (
+                    <div className="mb-2">
+                      <span className="badge bg-success" style={{ fontSize: "0.7em" }}>
+                        <Shield size={12} className="me-1" style={{ verticalAlign: "middle" }} />
+                        P2P Validation
+                      </span>
+                    </div>
+                  )}
                   
                   <div className="small text-muted mb-1">
                     <MapPin size={14} className="me-1" />

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
-import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight, Plus, Shield } from "lucide-react";
 import { countries } from "@/lib/countries";
 import type { Event } from "@shared/schema";
 
@@ -229,6 +229,12 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                   <div>
                     <div className="d-flex align-items-center">
                       <h6 className="mb-1 fw-semibold me-2">{event.name}</h6>
+                      {event.p2pValidation && (
+                        <span className="badge bg-success me-2" style={{ fontSize: "0.7em" }} title="Peer-to-Peer Validation Event">
+                          <Shield size={12} className="me-1" style={{ verticalAlign: "middle" }} />
+                          P2P
+                        </span>
+                      )}
                       {(event as any).country && (
                         <span className="badge bg-info text-white" style={{ fontSize: "0.7em" }}>
                           {(event as any).country}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award, Gift } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award, Gift, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -483,6 +483,25 @@ export default function EventDetailPage() {
                 className="text-muted"
                 dangerouslySetInnerHTML={{ __html: event.description }}
               />
+            </div>
+          )}
+
+          {/* P2P Validation Notice */}
+          {event.p2pValidation && (
+            <div className="alert alert-info mb-4">
+              <div className="d-flex align-items-start">
+                <Shield size={20} className="me-3 mt-1 flex-shrink-0" />
+                <div>
+                  <h6 className="alert-heading mb-2">Peer-to-Peer Validation Event</h6>
+                  <p className="mb-2">This event uses community-based ticket validation. What this means:</p>
+                  <ul className="mb-0 ps-3">
+                    <li>Tickets are validated by other attendees, not just event staff</li>
+                    <li>Any ticket holder can scan and validate other tickets at the venue</li>
+                    <li>The event organizer(s) may or may not be present at the event</li>
+                    <li>Entry is managed collectively by the attendee community</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
 
