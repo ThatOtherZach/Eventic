@@ -198,8 +198,10 @@ export function EventList({ onGenerateTickets }: EventListProps) {
               className="btn btn-outline-primary btn-sm"
               onClick={handleFeelinLucky}
               data-testid="button-feelin-lucky"
+              title="I'm feelin' lucky - Go to a random event"
+              style={{ fontSize: "1.2em", padding: "0.25rem 0.5rem" }}
             >
-              I'm feelin' lucky
+              🎲
             </button>
           </div>
         </div>
