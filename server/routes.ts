@@ -388,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const location = decodeURIComponent(req.params.location).trim().toLowerCase();
       
-      // Get all public events
+      // Get all public events only - private events must never appear in location listings
       let events = (await storage.getEvents()).filter(event => !event.isPrivate);
       
       // Filter out past events
@@ -413,8 +413,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return true;
       });
       
-      // Filter by location (city or country)
+      // Filter by location (city or country) and ensure no private events slip through
       const filteredEvents = events.filter(event => {
+        // Double-check that event is not private (safety check)
+        if (event.isPrivate) return false;
+        
         if (!event.venue) return false;
         const venueLower = event.venue.toLowerCase();
         
