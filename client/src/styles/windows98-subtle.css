@@ -22,17 +22,18 @@ body {
   background-image: none !important;
 }
 
-/* Add stronger 3D effect to buttons */
+/* Add stronger 3D effect to buttons with W98 gray */
 .btn {
   box-shadow: var(--w98-subtle-shadow);
   transition: all 0.1s ease;
-  border: 1px solid #d1d5db !important;
-  background-color: #f9fafb !important;
+  border: 1px solid #808080 !important;
+  background-color: #c0c0c0 !important;
   font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
+  color: #000000 !important;
 }
 
 .btn:hover {
-  background-color: #f3f4f6 !important;
+  background-color: #d4d0c8 !important;
 }
 
 .btn:active {
@@ -53,6 +54,51 @@ body {
 
 .btn-primary:active {
   background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%) !important;
+}
+
+/* Secondary and outline buttons in W98 gray */
+.btn-secondary,
+.btn-outline-secondary,
+.btn-light {
+  background-color: #c0c0c0 !important;
+  border: 1px solid #808080 !important;
+  color: #000000 !important;
+  box-shadow: var(--w98-subtle-shadow);
+}
+
+.btn-secondary:hover,
+.btn-outline-secondary:hover,
+.btn-light:hover {
+  background-color: #d4d0c8 !important;
+}
+
+.btn-outline-primary {
+  background-color: #c0c0c0 !important;
+  border: 2px solid #3b82f6 !important;
+  color: #3b82f6 !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: #d4d0c8 !important;
+}
+
+/* Danger and success buttons keep their colors */
+.btn-danger {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%) !important;
+  border: 1px solid #b91c1c !important;
+  color: white !important;
+}
+
+.btn-success {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important;
+  border: 1px solid #047857 !important;
+  color: white !important;
+}
+
+.btn-warning {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%) !important;
+  border: 1px solid #b45309 !important;
+  color: white !important;
 }
 
 /* Give cards a stronger 3D raised effect */
