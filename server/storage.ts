@@ -156,11 +156,6 @@ export interface IStorage {
   rateEvent(rating: InsertEventRating): Promise<EventRating | null>;
   hasUserRatedEvent(ticketId: string): Promise<boolean>;
   getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>;
-  
-  // Raffle Management
-  getEligibleRaffleTickets(eventId: string): Promise<Ticket[]>;
-  selectRaffleWinner(ticketId: string): Promise<Ticket | undefined>;
-  clearRaffleWinner(ticketId: string): Promise<Ticket | undefined>;
 }
 
 interface ValidationSession {
@@ -388,12 +383,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateEvent(id: string, updateData: Partial<InsertEvent>): Promise<Event | undefined> {
-    // If raffle is already enabled, prevent it from being disabled
-    const existingEvent = await this.getEvent(id);
-    if (existingEvent?.raffleEnabled && updateData.raffleEnabled === false) {
-      delete updateData.raffleEnabled; // Remove the field to prevent disabling
-    }
-    
     const [event] = await db
       .update(events)
       .set(updateData)
@@ -1963,44 +1952,7 @@ export class DatabaseStorage implements IStorage {
     return this.updateUserReputationCache(userId);
   }
   
-  // Raffle Management
-  async getEligibleRaffleTickets(eventId: string): Promise<Ticket[]> {
-    const result = await db
-      .select()
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.eventId, eventId),
-          eq(tickets.isValidated, true) // Only validated tickets are eligible for raffle
-        )
-      );
-    return result;
-  }
-  
-  async selectRaffleWinner(ticketId: string): Promise<Ticket | undefined> {
-    const [ticket] = await db
-      .update(tickets)
-      .set({ 
-        isRaffleWinner: true,
-        raffleWonAt: new Date()
-      })
-      .where(eq(tickets.id, ticketId))
-      .returning();
-    return ticket;
-  }
-  
-  async clearRaffleWinner(ticketId: string): Promise<Ticket | undefined> {
-    const [ticket] = await db
-      .update(tickets)
-      .set({ 
-        isRaffleWinner: false,
-        raffleWonAt: null
-      })
-      .where(eq(tickets.id, ticketId))
-      .returning();
-    return ticket;
-  }
-  
+
   async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
     const ratings = await db
       .select({

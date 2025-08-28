@@ -105,7 +105,6 @@ export const events = pgTable("events", {
   ticketPurchasesEnabled: boolean("ticket_purchases_enabled").default(true), // Whether new tickets can be purchased
   oneTicketPerUser: boolean("one_ticket_per_user").default(false), // Restrict users to one ticket per event
   surgePricing: boolean("surge_pricing").default(false), // Enable dynamic pricing based on ticket sales
-  raffleEnabled: boolean("raffle_enabled").default(false), // Enable raffle feature (cannot be disabled once enabled)
   p2pValidation: boolean("p2p_validation").default(false), // Allow any ticket holder to validate other tickets for this event
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -132,8 +131,6 @@ export const tickets = pgTable("tickets", {
   purchasePrice: decimal("purchase_price", { precision: 10, scale: 2 }), // Original purchase price (for resale price enforcement)
   resellStatus: text("resell_status").default("not_for_resale"), // not_for_resale, for_resale, sold
   originalOwnerId: varchar("original_owner_id").references(() => users.id), // Original owner for resell tracking
-  isRaffleWinner: boolean("is_raffle_winner").default(false), // Whether this ticket won a raffle
-  raffleWonAt: timestamp("raffle_won_at"), // When the ticket won the raffle
   createdAt: timestamp("created_at").defaultNow(),
 });
 

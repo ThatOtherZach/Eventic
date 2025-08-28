@@ -39,17 +39,14 @@ Preferred communication style: Simple, everyday language.
 - **Removed Complexity**: Eliminated separate ticket background upload to simplify user experience
 - **Automatic Application**: When a featured image is uploaded, it automatically applies to ticket designs
 
-### Raffle System (Added January 2025)
-- **Optional Event Setting**: Raffle is an optional feature that can be enabled during event creation or editing
-- **One-Way Activation**: Once enabled, raffle cannot be disabled to ensure fairness and prevent manipulation
-- **Event Owner Raffle**: Event owners can run raffles to randomly select winners from ticket holders
-- **Winner Selection**: Random selection from all eligible tickets (status = "sent")
-- **Reroll Capability**: Owners can reroll to select a different winner if needed
-- **Winner Notification**: Winners receive notification in their notification center
-- **Ticket Display**: Winning tickets show "🎉 Raffle Winner! 🎉" badge with "Please see the event organizer" message
-- **Database**: Added `raffleEnabled` field to events table and `isRaffleWinner`/`raffleWonAt` fields to tickets table
-- **API Endpoints**: `/api/events/:id/raffle/eligible`, `/api/events/:id/raffle/draw`
-- **UI Integration**: Raffle checkbox in event creation/edit forms, raffle button appears in event owner controls only when enabled
+### P2P Validation System (Added January 2025)
+- **Optional Event Setting**: P2P (Peer-to-Peer) validation allows any ticket holder to validate other tickets for the same event
+- **Event Creation Only**: P2P validation can only be enabled during event creation and becomes read-only after the event is created
+- **Decentralized Validation**: When enabled, any ticket holder for the event can scan and validate other tickets
+- **Security**: System verifies that the validator owns a valid ticket for the event before allowing validation
+- **Database**: Added `p2pValidation` field to events table (boolean, nullable, default false)
+- **API Protection**: Backend validates ticket ownership when P2P validation is enabled
+- **UI Integration**: Checkbox in event creation form that becomes disabled when editing existing events
 
 ### Event Reputation System (Added January 2025)
 - **Event Ratings**: Attendees can rate events with thumbs up/down on the event start date

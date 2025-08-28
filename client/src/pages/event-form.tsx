@@ -82,7 +82,6 @@ export default function EventForm() {
       isPrivate: false,
       oneTicketPerUser: false,
       surgePricing: false,
-      raffleEnabled: false,
       p2pValidation: false,
     },
   });
@@ -139,7 +138,6 @@ export default function EventForm() {
         isPrivate: event.isPrivate || false,
         oneTicketPerUser: event.oneTicketPerUser || false,
         surgePricing: event.surgePricing || false,
-        raffleEnabled: event.raffleEnabled || false,
         p2pValidation: event.p2pValidation || false,
       });
       
@@ -305,7 +303,6 @@ export default function EventForm() {
         endDate: data.endDate || null,
         endTime: data.endTime || null,
         ticketPrice: data.ticketPrice,
-        raffleEnabled: data.raffleEnabled,
         maxTickets: data.maxTickets || undefined,
         imageUrl: imageUrl || undefined,
         ticketBackgroundUrl: imageUrl || undefined,
@@ -364,8 +361,6 @@ export default function EventForm() {
     purchasePrice: "0",
     resellStatus: null,
     originalOwnerId: null,
-    isRaffleWinner: false,
-    raffleWonAt: null,
   };
 
   const watchedValues = form.watch();
@@ -413,7 +408,6 @@ export default function EventForm() {
     ticketPurchasesEnabled: true,
     oneTicketPerUser: watchedValues.oneTicketPerUser || false,
     surgePricing: watchedValues.surgePricing || false,
-    raffleEnabled: watchedValues.raffleEnabled || false,
     p2pValidation: watchedValues.p2pValidation || false,
     createdAt: new Date(),
   };
@@ -908,31 +902,6 @@ export default function EventForm() {
                           )}
                         />
                         
-                        <FormField
-                          control={form.control}
-                          name="raffleEnabled"
-                          render={({ field }) => (
-                            <FormItem className="mt-3">
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id="raffleEnabled"
-                                  checked={field.value || false}
-                                  onChange={(e) => field.onChange(e.target.checked)}
-                                  data-testid="checkbox-raffle-enabled"
-                                />
-                                <label className="form-check-label" htmlFor="raffleEnabled">
-                                  <span className="badge bg-success text-white me-2">🎁</span>
-                                  Enable Raffle
-                                </label>
-                              </div>
-                              <div className="form-text">Event organizers can randomly select winning tickets from ticket holders (cannot be disabled once activated, validated tickets only).</div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
                         <FormField
                           control={form.control}
                           name="p2pValidation"

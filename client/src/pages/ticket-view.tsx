@@ -349,14 +349,6 @@ export default function TicketViewPage(): React.ReactElement {
       <div className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6">
           {/* Ticket Display */}
-          {/* Raffle Winner Notification */}
-          {ticket.isRaffleWinner && (
-            <div className="alert alert-success text-center mb-4">
-              <h3 className="alert-heading mb-2">🎉 Raffle Winner! 🎉</h3>
-              <p className="mb-0">Please see the event organizer.</p>
-            </div>
-          )}
-
           <div className="mb-4">
             <TicketCard 
               ticket={ticket} 
