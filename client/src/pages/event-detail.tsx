@@ -229,6 +229,8 @@ export default function EventDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/user-tickets`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       setIsPurchasing(false);
     },
     onError: (error: any) => {
