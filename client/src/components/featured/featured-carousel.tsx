@@ -171,47 +171,43 @@ export function FeaturedCarousel() {
                 ${currentEvent.event.ticketPrice || '0'}
               </span>
             </div>
+            
+            <div className="d-flex justify-content-end">
+              <button 
+                className="btn btn-light"
+                onClick={() => {
+                  window.location.href = `/events/${currentEvent.event.id}`;
+                }}
+                data-testid="button-view-featured-event"
+              >
+                View
+              </button>
+            </div>
           </div>
         </div>
         
-        {/* Navigation Controls - All in one row, centered */}
-        <div className="d-flex justify-content-center align-items-center gap-3 mt-3">
-          {featuredEvents.length > 1 && (
-            <>
-              <button
-                className="btn btn-secondary rounded-circle"
-                onClick={prevSlide}
-                style={{ width: "40px", height: "40px" }}
-                data-testid="button-carousel-prev"
-              >
-                <ChevronLeft size={20} />
-              </button>
-            </>
-          )}
-          
-          <button 
-            className="btn btn-primary"
-            onClick={() => {
-              window.location.href = `/events/${currentEvent.event.id}`;
-            }}
-            data-testid="button-view-featured-event"
-          >
-            View Event
-          </button>
-          
-          {featuredEvents.length > 1 && (
-            <>
-              <button
-                className="btn btn-secondary rounded-circle"
-                onClick={nextSlide}
-                style={{ width: "40px", height: "40px" }}
-                data-testid="button-carousel-next"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
-        </div>
+        {/* Navigation Controls - Previous and Next buttons centered */}
+        {featuredEvents.length > 1 && (
+          <div className="d-flex justify-content-center align-items-center gap-3 mt-3">
+            <button
+              className="btn btn-secondary rounded-circle"
+              onClick={prevSlide}
+              style={{ width: "40px", height: "40px" }}
+              data-testid="button-carousel-prev"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            
+            <button
+              className="btn btn-secondary rounded-circle"
+              onClick={nextSlide}
+              style={{ width: "40px", height: "40px" }}
+              data-testid="button-carousel-next"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
         
         {/* Slide Indicators */}
         {featuredEvents.length > 1 && (
