@@ -137,12 +137,17 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                 <div 
                   style={{ 
                     position: "absolute",
-                    left: "10px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
+                    left: "0",
+                    top: "0",
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     fontSize: "1.5em",
                     pointerEvents: "none",
-                    zIndex: 1
+                    zIndex: 1,
+                    background: "white"
                   }}
                 >
                   {getSelectedDisplay()}
@@ -155,13 +160,15 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                   }}
                   className="form-select form-select-sm"
                   style={{ 
-                    width: "200px",
-                    paddingLeft: "45px",
-                    fontSize: "1rem"
+                    width: "60px",
+                    fontSize: "1.5em",
+                    textAlign: "center",
+                    color: "transparent",
+                    cursor: "pointer"
                   }}
                   data-testid="select-country-filter"
                 >
-                  <option value="All Countries">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All Countries</option>
+                  <option value="All Countries">🌐 All Countries</option>
                   {countries.map((country) => (
                     <option key={country} value={country}>
                       {getCountryFlag(country)} {country}
@@ -218,12 +225,17 @@ export function EventList({ onGenerateTickets }: EventListProps) {
               <div 
                 style={{ 
                   position: "absolute",
-                  left: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
+                  left: "0",
+                  top: "0",
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   fontSize: "1.5em",
                   pointerEvents: "none",
-                  zIndex: 1
+                  zIndex: 1,
+                  background: "white"
                 }}
               >
                 {getSelectedDisplay()}
@@ -236,13 +248,15 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                 }}
                 className="form-select form-select-sm"
                 style={{ 
-                  width: "200px",
-                  paddingLeft: "45px",
-                  fontSize: "1rem"
+                  width: "60px",
+                  fontSize: "1.5em",
+                  textAlign: "center",
+                  color: "transparent",
+                  cursor: "pointer"
                 }}
                 data-testid="select-country-filter"
               >
-                <option value="All Countries">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All Countries</option>
+                <option value="All Countries">🌐 All Countries</option>
                 {countries.map((country) => (
                   <option key={country} value={country}>
                     {getCountryFlag(country)} {country}
