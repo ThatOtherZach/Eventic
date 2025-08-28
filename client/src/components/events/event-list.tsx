@@ -135,16 +135,17 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             <div className="d-flex gap-2 align-items-center">
               <div className="dropdown">
                 <button
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary btn-sm dropdown-toggle"
                   type="button"
                   data-bs-toggle="dropdown"
+                  data-bs-auto-close="true"
                   aria-expanded="false"
                   style={{ fontSize: "1.2em", padding: "0.25rem 0.5rem" }}
                   title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
                 >
                   {getSelectedDisplay()}
                 </button>
-                <ul className="dropdown-menu" style={{ maxHeight: "300px", overflowY: "auto" }}>
+                <ul className="dropdown-menu dropdown-menu-end" style={{ maxHeight: "300px", overflowY: "auto" }}>
                   <li>
                     <button 
                       className="dropdown-item"
@@ -218,16 +219,17 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             </button>
             <div className="dropdown">
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm dropdown-toggle"
                 type="button"
                 data-bs-toggle="dropdown"
+                data-bs-auto-close="true"
                 aria-expanded="false"
                 style={{ fontSize: "1.2em", padding: "0.25rem 0.5rem" }}
                 title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
               >
                 {getSelectedDisplay()}
               </button>
-              <ul className="dropdown-menu" style={{ maxHeight: "300px", overflowY: "auto" }}>
+              <ul className="dropdown-menu dropdown-menu-end" style={{ maxHeight: "300px", overflowY: "auto" }}>
                 <li>
                   <button 
                     className="dropdown-item"
