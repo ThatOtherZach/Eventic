@@ -177,6 +177,15 @@ export function EventList({ onGenerateTickets }: EventListProps) {
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="card-title mb-0 fw-medium">Available Events</h5>
           <div className="d-flex gap-2 align-items-center">
+            <button 
+              className="btn btn-outline-primary btn-sm"
+              onClick={handleFeelinLucky}
+              data-testid="button-feelin-lucky"
+              title="I'm feelin' lucky - Go to a random event"
+              style={{ fontSize: "1.2em", padding: "0.25rem 0.5rem" }}
+            >
+              🎲
+            </button>
             <select
               value={selectedCountry}
               onChange={(e) => {
@@ -194,15 +203,6 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                 </option>
               ))}
             </select>
-            <button 
-              className="btn btn-outline-primary btn-sm"
-              onClick={handleFeelinLucky}
-              data-testid="button-feelin-lucky"
-              title="I'm feelin' lucky - Go to a random event"
-              style={{ fontSize: "1.2em", padding: "0.25rem 0.5rem" }}
-            >
-              🎲
-            </button>
           </div>
         </div>
       </div>
