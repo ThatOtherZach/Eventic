@@ -1,0 +1,276 @@
+/* Subtle Windows 98 Theme - Level 5 out of 10 */
+
+/* Just enough W98 to be nostalgic without being overwhelming */
+
+:root {
+  --w98-subtle-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 
+                        inset -1px -1px rgba(0, 0, 0, 0.1), 
+                        inset 1px 1px rgba(255, 255, 255, 0.3);
+  --w98-subtle-sunken: inset 1px 1px rgba(0, 0, 0, 0.15), 
+                       inset -1px -1px rgba(255, 255, 255, 0.3);
+}
+
+/* Add subtle 3D effect to buttons */
+.btn {
+  box-shadow: var(--w98-subtle-shadow);
+  transition: all 0.15s ease;
+}
+
+.btn:active {
+  box-shadow: var(--w98-subtle-sunken);
+  transform: translateY(1px);
+}
+
+/* Make primary buttons more W98-like but keep modern colors */
+.btn-primary {
+  background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
+  border: 1px solid #1e3a8a;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.btn-primary:active {
+  background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+}
+
+/* Give cards a subtle 3D raised effect */
+.card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 
+              0 1px 2px rgba(0, 0, 0, 0.24),
+              inset 1px 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid #d1d5db;
+}
+
+/* Card headers with subtle gradient */
+.card-header {
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-bottom: 2px solid #d1d5db;
+  font-weight: 600;
+}
+
+/* Form inputs with subtle inset effect */
+.form-control,
+.form-select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+textarea,
+select {
+  border: 1px solid #9ca3af;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus,
+.form-select:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #2563eb;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1),
+              0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Navbar with subtle gradient */
+.navbar {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  border-bottom: 2px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Tables with classic borders */
+.table {
+  border: 1px solid #d1d5db;
+  background: white;
+}
+
+.table th {
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  font-weight: 600;
+  border-bottom: 2px solid #d1d5db;
+}
+
+.table td {
+  border: 1px solid #e5e7eb;
+}
+
+/* Progress bars with segments */
+.progress {
+  background: #e5e7eb;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.progress-bar {
+  background: repeating-linear-gradient(
+    90deg,
+    #2563eb,
+    #2563eb 10px,
+    #3b82f6 10px,
+    #3b82f6 20px
+  );
+}
+
+/* Modals with title bar style header */
+.modal-header {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 8px 16px;
+}
+
+.modal-header .btn-close {
+  background: white;
+  opacity: 0.9;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+/* Dropdown menus with subtle shadow */
+.dropdown-menu {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
+              inset 1px 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid #d1d5db;
+}
+
+.dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+/* Nav tabs with raised effect */
+.nav-tabs .nav-link {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-bottom: none;
+  margin-right: 2px;
+}
+
+.nav-tabs .nav-link.active {
+  background: white;
+  border-top: 2px solid #2563eb;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Alerts with subtle inset */
+.alert {
+  border-left: 4px solid;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.alert-primary {
+  border-left-color: #2563eb;
+}
+
+.alert-success {
+  border-left-color: #10b981;
+}
+
+.alert-danger {
+  border-left-color: #ef4444;
+}
+
+.alert-warning {
+  border-left-color: #f59e0b;
+}
+
+/* Badge styling */
+.badge {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+}
+
+/* Pagination with button style */
+.pagination .page-link {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d1d5db;
+  margin: 0 2px;
+}
+
+.pagination .page-link:hover {
+  background: #f3f4f6;
+}
+
+.pagination .page-item.active .page-link {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #2563eb;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Subtle hover effects */
+.list-group-item:hover {
+  background: #f9fafb;
+}
+
+/* Custom scrollbar - subtle */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border: 1px solid #6b7280;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+}
+
+/* Toast notifications */
+.toast {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+              inset 1px 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid #d1d5db;
+}
+
+.toast-header {
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Accordion with subtle styling */
+.accordion-button {
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.accordion-button:not(.collapsed) {
+  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Keep rounded corners but make them smaller */
+.btn,
+.card,
+.form-control,
+.form-select,
+.modal-content,
+.dropdown-menu,
+.alert,
+.badge,
+.toast,
+.progress,
+.pagination .page-link {
+  border-radius: 4px !important;
+}
+
+/* Navbar and nav items stay sharp */
+.navbar,
+.nav-tabs .nav-link {
+  border-radius: 0 !important;
+}

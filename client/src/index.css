@@ -1,8 +1,8 @@
 /* Import Bootstrap first for mobile-first responsive design */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* Import Windows 98 Theme - Comment out to disable */
-@import './styles/windows98-theme.css';
+/* Import Subtle Windows 98 Theme - adds nostalgic touches without overwhelming */
+@import './styles/windows98-subtle.css';
 
 /* Override Bootstrap variables for mobile-first design */
 :root {
