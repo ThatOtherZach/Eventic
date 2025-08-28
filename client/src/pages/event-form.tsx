@@ -454,14 +454,14 @@ export default function EventForm() {
                           <Image size={18} className="me-2" />
                           Featured Image
                         </label>
-                        <div className="form-text mb-2">Maximum file size: 5MB. Accepted formats: JPEG, JPG, PNG</div>
+                        <div className="form-text mb-2">Maximum file size: 5MB. Accepted formats: JPEG, JPG, PNG, GIF</div>
                         <ObjectUploader
                           onGetUploadParameters={handleImageUpload}
                           onComplete={(result) => handleImageComplete(result)}
                           buttonClassName="btn btn-outline-primary"
                           currentImageUrl={imageUrl}
                           showPreview={true}
-                          accept="image/jpeg,image/jpg,image/png"
+                          accept="image/jpeg,image/jpg,image/png,image/gif"
                           maxFileSize={5 * 1024 * 1024}
                         >
                           <Image size={18} className="me-2" />

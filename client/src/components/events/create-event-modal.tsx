@@ -727,11 +727,14 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 <Image size={18} className="me-2" />
                 Feature Image
               </label>
+              <div className="form-text mb-2">Maximum file size: 5MB. Accepted formats: JPEG, JPG, PNG, GIF</div>
               <ObjectUploader
                 onGetUploadParameters={handleImageUpload}
                 onComplete={(result) => handleImageComplete(result)}
                 buttonClassName="btn btn-outline-primary"
                 currentImageUrl={imageUrl}
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                maxFileSize={5 * 1024 * 1024}
               >
                 <Image size={18} className="me-2" />
                 Choose Image
@@ -763,6 +766,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 onComplete={(result) => handleTicketBackgroundComplete(result)}
                 buttonClassName="btn btn-outline-primary"
                 currentImageUrl={ticketBackgroundUrl}
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                maxFileSize={5 * 1024 * 1024}
               >
                 <CreditCard size={18} className="me-2" />
                 Upload Background Image
