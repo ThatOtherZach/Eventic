@@ -151,7 +151,7 @@ export default function SpecialEffectsPage() {
           <div className="text-center mt-4">
             <a 
               href="javascript:history.back()" 
-              className="btn btn-outline-primary"
+              className="btn btn-secondary"
               data-testid="button-back"
             >
               ← Back

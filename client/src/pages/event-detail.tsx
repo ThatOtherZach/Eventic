@@ -510,7 +510,7 @@ export default function EventDetailPage() {
               <h6 className="card-title mb-3">Add to Calendar</h6>
               <div className="d-flex gap-2 flex-wrap">
                 <button
-                  className="btn btn-outline-primary"
+                  className="btn btn-secondary"
                   onClick={() => downloadICalendar(event)}
                   data-testid="button-icalendar"
                 >
@@ -552,7 +552,7 @@ export default function EventDetailPage() {
                       </div>
                       <div className="d-flex gap-2">
                         <Link href={`/tickets/${ticket.id}`}>
-                          <a className="btn btn-sm btn-outline-primary" data-testid={`button-view-ticket-${ticket.id}`}>
+                          <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
                             <Eye size={14} className="me-1" />
                             View
                           </a>
@@ -764,7 +764,7 @@ export default function EventDetailPage() {
 
               {isOwner && (
                 <div>
-                  <Link href={`/events/${id}/edit`} className="btn btn-outline-primary w-100 mb-2">
+                  <Link href={`/events/${id}/edit`} className="btn btn-secondary w-100 mb-2">
                     <Edit size={18} className="me-2" />
                     Edit Event
                   </Link>
@@ -797,7 +797,7 @@ export default function EventDetailPage() {
                         disabled={isAddingValidator}
                       />
                       <button
-                        className="btn btn-outline-primary"
+                        className="btn btn-secondary"
                         onClick={() => {
                           if (validatorEmail) {
                             setIsAddingValidator(true);

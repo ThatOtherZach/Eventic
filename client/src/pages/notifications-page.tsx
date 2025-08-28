@@ -99,7 +99,7 @@ export default function NotificationsPage() {
             <div className="btn-group">
               {unreadCount > 0 && (
                 <button
-                  className="btn btn-outline-primary btn-sm"
+                  className="btn btn-secondary btn-sm"
                   onClick={() => markAllAsReadMutation.mutate()}
                   disabled={markAllAsReadMutation.isPending}
                   data-testid="button-mark-all-read"

@@ -122,7 +122,7 @@ export default function AuthPage() {
 
                 <button
                   type="button"
-                  className="btn btn-outline-primary w-100 mb-3"
+                  className="btn btn-secondary w-100 mb-3"
                   onClick={handleResend}
                   disabled={isLoading}
                   data-testid="button-resend"

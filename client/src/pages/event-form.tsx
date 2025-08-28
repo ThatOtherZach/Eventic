@@ -458,7 +458,7 @@ export default function EventForm() {
                         <ObjectUploader
                           onGetUploadParameters={handleImageUpload}
                           onComplete={(result) => handleImageComplete(result)}
-                          buttonClassName="btn btn-outline-primary"
+                          buttonClassName="btn btn-secondary"
                           currentImageUrl={imageUrl}
                           showPreview={true}
                           accept="image/jpeg,image/jpg,image/png,image/gif"

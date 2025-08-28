@@ -114,7 +114,7 @@ export default function Events() {
           ) : (
             <button
               onClick={handleSignIn}
-              className="btn btn-outline-primary w-100 w-md-auto"
+              className="btn btn-secondary w-100 w-md-auto"
               data-testid="button-sign-in-to-create"
             >
               <LogIn className="me-2" size={18} />

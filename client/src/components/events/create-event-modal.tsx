@@ -731,7 +731,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               <ObjectUploader
                 onGetUploadParameters={handleImageUpload}
                 onComplete={(result) => handleImageComplete(result)}
-                buttonClassName="btn btn-outline-primary"
+                buttonClassName="btn btn-secondary"
                 currentImageUrl={imageUrl}
                 accept="image/jpeg,image/jpg,image/png,image/gif"
                 maxFileSize={5 * 1024 * 1024}
@@ -764,7 +764,7 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               <ObjectUploader
                 onGetUploadParameters={handleImageUpload}
                 onComplete={(result) => handleTicketBackgroundComplete(result)}
-                buttonClassName="btn btn-outline-primary"
+                buttonClassName="btn btn-secondary"
                 currentImageUrl={ticketBackgroundUrl}
                 accept="image/jpeg,image/jpg,image/png,image/gif"
                 maxFileSize={5 * 1024 * 1024}

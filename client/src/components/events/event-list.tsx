@@ -178,7 +178,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
           <h5 className="card-title mb-0 fw-medium">Available Events</h5>
           <div className="d-flex gap-2 align-items-center">
             <button 
-              className="btn btn-outline-primary btn-sm"
+              className="btn btn-secondary btn-sm"
               onClick={handleFeelinLucky}
               data-testid="button-feelin-lucky"
               title="I'm feelin' lucky - Go to a random event"
@@ -268,7 +268,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     </Link>
                     <Link
                       href={`/events/${event.id}`}
-                      className="btn btn-sm btn-outline-primary"
+                      className="btn btn-sm btn-secondary"
                       title="Buy Tickets"
                       data-testid={`button-buy-tickets-${event.id}`}
                     >

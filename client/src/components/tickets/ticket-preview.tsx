@@ -41,7 +41,7 @@ export function TicketPreview({ event, ticket }: TicketPreviewProps) {
             />
           ) : (
             <button 
-              className="btn btn-sm btn-outline-primary"
+              className="btn btn-sm btn-secondary"
               onClick={handleGenerateQR}
             >
               <QrCode size={16} className="me-1" />
