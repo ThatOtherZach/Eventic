@@ -108,7 +108,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
       {/* Ticket Content */}
       <div className="position-relative h-100 d-flex">
         {/* Left side - Event Details */}
-        <div className="flex-grow-1 p-3 text-white d-flex flex-column justify-content-between">
+        <div className="flex-grow-1 px-3 pt-3 pb-4 text-white d-flex flex-column justify-content-between">
           <div>
             <h5 className="mb-1 text-truncate fw-bold" style={{ fontSize: '16px' }}>
               {ticket.isGoldenTicket ? (
@@ -159,7 +159,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
               </div>
             </div>
           </div>
-          <div className="mt-2 pb-3">
+          <div className="mt-2">
             <div className="small opacity-75">Ticket #</div>
             <div className="fst-italic" style={{ fontSize: '14px' }}>
               {ticket.ticketNumber}{ticket.isGoldenTicket && ' 🎫'}
