@@ -307,10 +307,10 @@ export function EventList({ onGenerateTickets }: EventListProps) {
               <div className="col-12 col-md-6">
                 <div className="d-flex justify-content-md-end align-items-center mt-3 mt-md-0">
                   <div className="text-md-end me-3">
-                    <p className="mb-0 fw-semibold">{parseFloat(event.ticketPrice) === 0 ? 'Free Entry' : `$${event.ticketPrice}`}</p>
+                    <p className="mb-0 fw-semibold">{parseFloat(event.ticketPrice) === 0 ? 'Free' : `$${event.ticketPrice}`}</p>
                     {parseFloat(event.ticketPrice) !== 0 && <p className="text-muted small mb-0">per ticket</p>}
                   </div>
-                  <div className="btn-group" role="group">
+                  <div className="d-flex flex-column gap-1">
                     <Link 
                       href={`/events/${event.id}`}
                       className="btn btn-sm btn-outline-secondary"
@@ -318,14 +318,6 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                       data-testid={`button-view-${event.id}`}
                     >
                       <Eye size={16} />
-                    </Link>
-                    <Link
-                      href={`/events/${event.id}`}
-                      className="btn btn-sm btn-secondary"
-                      title="Buy Tickets"
-                      data-testid={`button-buy-tickets-${event.id}`}
-                    >
-                      <ShoppingCart size={16} />
                     </Link>
                     {user && event.userId === user.id && (
                       <Link
