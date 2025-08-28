@@ -424,7 +424,7 @@ export default function EventForm() {
             >
               <ArrowLeft size={24} />
             </button>
-            <h1 className="h2 mb-0">Create New Event</h1>
+            <h1 className="h2 mb-0">{isEditMode ? 'Edit Event' : 'Create New Event'}</h1>
           </div>
 
           <div className="card">
@@ -1104,10 +1104,10 @@ export default function EventForm() {
                         <button
                           type="submit"
                           className="btn btn-primary"
-                          disabled={createEventMutation.isPending}
-                          data-testid="button-create-event"
+                          disabled={createEventMutation.isPending || updateEventMutation.isPending}
+                          data-testid="button-save-event"
                         >
-                          {createEventMutation.isPending ? "Creating..." : "Create Event"}
+                          {(createEventMutation.isPending || updateEventMutation.isPending) ? "Saving..." : "Save"}
                         </button>
                         <button
                           type="button"
