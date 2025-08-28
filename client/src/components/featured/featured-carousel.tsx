@@ -172,15 +172,14 @@ export function FeaturedCarousel() {
               </span>
             </div>
             
-            <div className="d-flex justify-content-end align-items-center gap-2">
+            <div className="d-flex justify-content-end align-items-center gap-1">
               {featuredEvents.length > 1 && (
                 <button
-                  className="btn btn-secondary rounded-circle"
+                  className="btn btn-secondary"
                   onClick={prevSlide}
-                  style={{ width: "40px", height: "40px" }}
                   data-testid="button-carousel-prev"
                 >
-                  <ChevronLeft size={20} />
+                  &lt;-
                 </button>
               )}
               
@@ -196,12 +195,11 @@ export function FeaturedCarousel() {
               
               {featuredEvents.length > 1 && (
                 <button
-                  className="btn btn-secondary rounded-circle"
+                  className="btn btn-secondary"
                   onClick={nextSlide}
-                  style={{ width: "40px", height: "40px" }}
                   data-testid="button-carousel-next"
                 >
-                  <ChevronRight size={20} />
+                  -&gt;
                 </button>
               )}
             </div>
