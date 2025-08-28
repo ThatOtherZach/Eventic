@@ -16,9 +16,9 @@
                        inset -2px -2px #ffffff;
 }
 
-/* Background color more like W98 */
+/* Background color - clean white */
 body {
-  background-color: var(--w98-bg) !important;
+  background-color: #ffffff !important;
   background-image: none !important;
 }
 
@@ -26,13 +26,13 @@ body {
 .btn {
   box-shadow: var(--w98-subtle-shadow);
   transition: all 0.1s ease;
-  border: 2px solid transparent !important;
-  background-color: var(--w98-window) !important;
+  border: 1px solid #d1d5db !important;
+  background-color: #f9fafb !important;
   font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
 
 .btn:hover {
-  background-color: #e8e5d4 !important;
+  background-color: #f3f4f6 !important;
 }
 
 .btn:active {
@@ -40,35 +40,35 @@ body {
   transform: translateY(1px);
 }
 
-/* Make primary buttons more W98-like with classic blue */
+/* Keep primary buttons modern but with W98 3D effect */
 .btn-primary {
-  background: linear-gradient(180deg, #1e40af 0%, var(--w98-blue) 100%) !important;
-  border: 2px solid #000060 !important;
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
+  border: 1px solid #1e40af !important;
   color: white !important;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(180deg, #2563eb 0%, #0000a0 100%) !important;
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%) !important;
 }
 
 .btn-primary:active {
-  background: linear-gradient(180deg, var(--w98-blue) 0%, #000060 100%) !important;
+  background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%) !important;
 }
 
 /* Give cards a stronger 3D raised effect */
 .card {
   box-shadow: var(--w98-subtle-shadow);
   border: none !important;
-  background-color: var(--w98-window) !important;
+  background-color: #ffffff !important;
 }
 
-/* Card headers with classic W98 title bar */
+/* Card headers with subtle gradient */
 .card-header {
-  background: linear-gradient(180deg, #0054e3 0%, var(--w98-blue) 100%) !important;
-  color: white !important;
-  border-bottom: none !important;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  color: #1f2937 !important;
+  border-bottom: 2px solid #d1d5db !important;
   font-weight: bold !important;
-  padding: 4px 8px !important;
+  padding: 8px 12px !important;
   font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
 
@@ -102,24 +102,23 @@ select:focus {
   outline-offset: -4px !important;
 }
 
-/* Navbar with W98 title bar style */
+/* Navbar with subtle gradient - keep it clean */
 .navbar {
-  background: linear-gradient(180deg, #0054e3 0%, var(--w98-blue) 100%) !important;
-  border-bottom: none !important;
-  box-shadow: var(--w98-subtle-shadow);
-  padding: 2px 8px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%) !important;
+  border-bottom: 2px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 8px 16px !important;
 }
 
 .navbar .navbar-brand,
 .navbar .nav-link {
-  color: white !important;
+  color: #1f2937 !important;
   font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
-  font-weight: bold !important;
-  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+  font-weight: 600 !important;
 }
 
 .navbar .nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
+  color: #2563eb !important;
   text-decoration: none !important;
 }
 
@@ -159,20 +158,20 @@ select:focus {
   );
 }
 
-/* Modals with W98 title bar style header */
+/* Modals with subtle W98 style */
 .modal-content {
   box-shadow: var(--w98-subtle-shadow);
-  border: 2px solid #7f787f !important;
-  background: var(--w98-window) !important;
+  border: 1px solid #d1d5db !important;
+  background: #ffffff !important;
 }
 
 .modal-header {
-  background: linear-gradient(180deg, #0054e3 0%, var(--w98-blue) 100%) !important;
-  color: white !important;
-  padding: 2px 4px !important;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  color: #1f2937 !important;
+  padding: 12px 16px !important;
   font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
   font-weight: bold !important;
-  border-bottom: none !important;
+  border-bottom: 1px solid #d1d5db !important;
 }
 
 .modal-header .btn-close {
@@ -222,33 +221,33 @@ select:focus {
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Alerts with W98 style */
+/* Alerts with subtle W98 style */
 .alert {
-  border: 2px solid #7f787f !important;
+  border: 1px solid #d1d5db !important;
   box-shadow: var(--w98-subtle-shadow);
-  background: var(--w98-window) !important;
+  background: #ffffff !important;
   color: #000 !important;
   font-family: "Tahoma", "MS Sans Serif", system-ui, sans-serif !important;
 }
 
 .alert-primary {
-  border-color: var(--w98-blue) !important;
-  background: #dde5ff !important;
+  border-left: 4px solid #2563eb !important;
+  background: #eff6ff !important;
 }
 
 .alert-success {
-  border-color: #008000 !important;
-  background: #ccffcc !important;
+  border-left: 4px solid #10b981 !important;
+  background: #f0fdf4 !important;
 }
 
 .alert-danger {
-  border-color: #800000 !important;
-  background: #ffcccc !important;
+  border-left: 4px solid #ef4444 !important;
+  background: #fef2f2 !important;
 }
 
 .alert-warning {
-  border-color: #808000 !important;
-  background: #ffffcc !important;
+  border-left: 4px solid #f59e0b !important;
+  background: #fffbeb !important;
 }
 
 /* Badge styling */
