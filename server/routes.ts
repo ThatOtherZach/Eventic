@@ -383,6 +383,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // RSS feed for location-based events
+  app.get("/api/events/location/:location/rss", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Convert collapsed format (NewYork) to spaced format (New York)
+      let location = decodeURIComponent(req.params.location).trim();
+      
+      // Convert from collapsed format (NewYork) to spaced format (new york) for matching
+      const processedLocation = location
+        .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space between lowercase and uppercase
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2') // Add space between uppercase letters when followed by lowercase
+        .trim()
+        .toLowerCase();
+      
+      // Get all public events only - private events must never appear in RSS feeds
+      let events = (await storage.getEvents()).filter(event => !event.isPrivate);
+      
+      // Filter out past events
+      const now = new Date();
+      events = events.filter(event => {
+        if (event.endDate) {
+          try {
+            const endDate = new Date(event.endDate);
+            if (!isNaN(endDate.getTime())) {
+              endDate.setHours(23, 59, 59, 999);
+              return now <= endDate;
+            }
+          } catch {}
+        } else if (event.date) {
+          try {
+            const startDate = new Date(event.date);
+            if (!isNaN(startDate.getTime())) {
+              return now <= startDate;
+            }
+          } catch {}
+        }
+        return true;
+      });
+      
+      // Filter by location (city or country)
+      const filteredEvents = events.filter(event => {
+        // Double-check that event is not private (safety check)
+        if (event.isPrivate) return false;
+        
+        if (!event.venue) return false;
+        const venueLower = event.venue.toLowerCase();
+        
+        const venueParts = venueLower.split(',').map(part => part.trim());
+        return venueParts.some(part => part.includes(processedLocation) || processedLocation.includes(part));
+      });
+      
+      // Sort by date
+      filteredEvents.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+      });
+      
+      // Generate RSS XML - use the processed location for proper capitalization
+      const capitalizedLocation = processedLocation.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+      
+      const rssItems = filteredEvents.map(event => {
+        const eventDate = new Date(event.date);
+        const pubDate = eventDate.toUTCString();
+        const eventUrl = `${req.protocol}://${req.get('host')}/events/${event.id}`;
+        
+        return `
+    <item>
+      <title>${event.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
+      <link>${eventUrl}</link>
+      <description>${event.description ? event.description.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').substring(0, 200) : `Event at ${event.venue} on ${event.date}`}</description>
+      <pubDate>${pubDate}</pubDate>
+      <guid>${eventUrl}</guid>
+      <category>Events</category>
+      ${event.ticketPrice ? `<price>$${event.ticketPrice}</price>` : ''}
+      <venue>${event.venue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</venue>
+    </item>`;
+      }).join('');
+      
+      const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Events in ${capitalizedLocation}</title>
+    <link>${req.protocol}://${req.get('host')}/${location.replace(/ /g, '')}</link>
+    <description>Upcoming events in ${capitalizedLocation}</description>
+    <language>en-us</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${req.protocol}://${req.get('host')}/api/events/location/${encodeURIComponent(location)}/rss" rel="self" type="application/rss+xml" />
+    ${rssItems}
+  </channel>
+</rss>`;
+      
+      res.set('Content-Type', 'application/rss+xml; charset=utf-8');
+      res.send(rssXml);
+    } catch (error) {
+      await logError(error, "GET /api/events/location/:location/rss", {
+        request: req,
+        metadata: { location: req.params.location }
+      });
+      res.status(500).send('Failed to generate RSS feed');
+    }
+  });
+
   // Location-based event filtering
   app.get("/api/events/location/:location", async (req: AuthenticatedRequest, res) => {
     try {

@@ -24,7 +24,7 @@ The project is configured for seamless development using Vite dev server (with H
 The system includes client-side QR code generation for tickets and server-side validation through QR data lookup, complemented by a web-based QR scanner interface.
 
 ### Key Features & Design Decisions
-- **Location-Based Routing**: Dynamic URL routing for filtering events by city/country (/NewYork, /UnitedStates), with automatic space conversion and visual effects (Golden Ticket, Monthly Colors).
+- **Location-Based Routing**: Dynamic URL routing for filtering events by city/country (/NewYork, /UnitedStates), with automatic space conversion and visual effects (Golden Ticket, Monthly Colors). Includes RSS feed functionality for location-based event subscriptions.
 - **Unified Event Form**: A single `event-form.tsx` for creation and editing, intelligently detecting mode and validating ownership.
 - **Smart Event Sorting**: Home page displays active events only, prioritizing those within the next 24 hours, then chronologically.
 - **Simplified Location & Image Systems**: Single country selection for user preference, and a single featured image for events serving as ticket background.

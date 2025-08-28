@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star } from "lucide-react";
+import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star, Rss } from "lucide-react";
 import { SpecialEffects } from "@/components/tickets/special-effects";
 
 interface Event {
@@ -90,16 +90,33 @@ export function LocationEventsPage() {
     );
   }
 
+  const rssUrl = `/api/events/location/${encodeURIComponent(processedLocation)}/rss`;
+  
   return (
     <div className="container mt-4 pb-5">
       <div className="mb-4">
-        <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
-          <MapPin className="text-primary" size={28} />
-          Events in {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-        </h2>
-        <p className="text-muted">
-          {events.length} {events.length === 1 ? 'event' : 'events'} found
-        </p>
+        <div className="d-flex align-items-start justify-content-between">
+          <div>
+            <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
+              <MapPin className="text-primary" size={28} />
+              Events in {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+            </h2>
+            <p className="text-muted">
+              {events.length} {events.length === 1 ? 'event' : 'events'} found
+            </p>
+          </div>
+          <a 
+            href={rssUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+            title="Subscribe to RSS feed for events in this location"
+            data-testid="link-rss-feed"
+          >
+            <Rss size={16} />
+            RSS Feed
+          </a>
+        </div>
       </div>
 
       {events.length === 0 ? (
