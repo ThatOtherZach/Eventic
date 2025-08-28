@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
 import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight, Plus, Shield } from "lucide-react";
 import { countries } from "@/lib/countries";
+import { getCountryFlag } from "@/lib/country-flags";
 import type { Event } from "@shared/schema";
 
 interface EventListProps {
@@ -27,6 +28,14 @@ export function EventList({ onGenerateTickets }: EventListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [, setLocation] = useLocation();
   const [selectedCountry, setSelectedCountry] = useState("All Countries");
+  
+  // Get display text for selected country (only flag/globe)
+  const getSelectedDisplay = () => {
+    if (selectedCountry === "All Countries") {
+      return "🌐";
+    }
+    return getCountryFlag(selectedCountry) || "🌐";
+  };
   
   // Get first 50 events for initial page
   const { data: initialEvents, isLoading: isLoadingInitial } = useQuery<Event[]>({
@@ -124,23 +133,42 @@ export function EventList({ onGenerateTickets }: EventListProps) {
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="card-title mb-0 fw-medium">Available Events</h5>
             <div className="d-flex gap-2 align-items-center">
-              <select
-                value={selectedCountry}
-                onChange={(e) => {
-                  setSelectedCountry(e.target.value);
-                  setCurrentPage(1); // Reset to first page when filter changes
-                }}
-                className="form-select form-select-sm"
-                style={{ width: "200px" }}
-                data-testid="select-country-filter"
-              >
-                <option value="All Countries">All Countries</option>
-                {countries.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <div 
+                  style={{ 
+                    position: "absolute",
+                    left: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: "1.5em",
+                    pointerEvents: "none",
+                    zIndex: 1
+                  }}
+                >
+                  {getSelectedDisplay()}
+                </div>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => {
+                    setSelectedCountry(e.target.value);
+                    setCurrentPage(1); // Reset to first page when filter changes
+                  }}
+                  className="form-select form-select-sm"
+                  style={{ 
+                    width: "200px",
+                    paddingLeft: "45px",
+                    fontSize: "1rem"
+                  }}
+                  data-testid="select-country-filter"
+                >
+                  <option value="All Countries">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All Countries</option>
+                  {countries.map((country) => (
+                    <option key={country} value={country}>
+                      {getCountryFlag(country)} {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -186,23 +214,42 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             >
               🎲
             </button>
-            <select
-              value={selectedCountry}
-              onChange={(e) => {
-                setSelectedCountry(e.target.value);
-                setCurrentPage(1); // Reset to first page when filter changes
-              }}
-              className="form-select form-select-sm"
-              style={{ width: "200px" }}
-              data-testid="select-country-filter"
-            >
-              <option value="All Countries">All Countries</option>
-              {countries.map((country) => (
-                <option key={country} value={country}>
-                  {country}
-                </option>
-              ))}
-            </select>
+            <div style={{ position: "relative", display: "inline-block" }}>
+              <div 
+                style={{ 
+                  position: "absolute",
+                  left: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: "1.5em",
+                  pointerEvents: "none",
+                  zIndex: 1
+                }}
+              >
+                {getSelectedDisplay()}
+              </div>
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  setSelectedCountry(e.target.value);
+                  setCurrentPage(1); // Reset to first page when filter changes
+                }}
+                className="form-select form-select-sm"
+                style={{ 
+                  width: "200px",
+                  paddingLeft: "45px",
+                  fontSize: "1rem"
+                }}
+                data-testid="select-country-filter"
+              >
+                <option value="All Countries">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;All Countries</option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {getCountryFlag(country)} {country}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
