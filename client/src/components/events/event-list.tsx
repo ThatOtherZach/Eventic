@@ -133,32 +133,44 @@ export function EventList({ onGenerateTickets }: EventListProps) {
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="card-title mb-0 fw-medium">Available Events</h5>
             <div className="d-flex gap-2 align-items-center">
-              <select
-                value={selectedCountry}
-                onChange={(e) => {
-                  setSelectedCountry(e.target.value);
-                  setCurrentPage(1); // Reset to first page when filter changes
-                }}
-                className="form-select form-select-sm"
-                style={{ 
-                  width: "auto",
-                  minWidth: "50px",
-                  maxWidth: "180px",
-                  paddingRight: "24px"
-                }}
-                data-testid="select-country-filter"
-                title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
-              >
-                <option value="All Countries">🌐 All Countries</option>
-                {countries.map((country) => {
-                  const flag = getCountryFlag(country);
-                  return (
-                    <option key={country} value={country}>
-                      {flag} {country}
-                    </option>
-                  );
-                })}
-              </select>
+              <div className="dropdown">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  style={{ fontSize: "1.2em", padding: "0.25rem 0.5rem" }}
+                  title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
+                >
+                  {getSelectedDisplay()}
+                </button>
+                <ul className="dropdown-menu" style={{ maxHeight: "300px", overflowY: "auto" }}>
+                  <li>
+                    <button 
+                      className="dropdown-item"
+                      onClick={() => {
+                        setSelectedCountry("All Countries");
+                        setCurrentPage(1);
+                      }}
+                    >
+                      🌐 All Countries
+                    </button>
+                  </li>
+                  {countries.map((country) => (
+                    <li key={country}>
+                      <button
+                        className="dropdown-item"
+                        onClick={() => {
+                          setSelectedCountry(country);
+                          setCurrentPage(1);
+                        }}
+                      >
+                        {getCountryFlag(country)} {country}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -204,32 +216,44 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             >
               🎲
             </button>
-            <select
-              value={selectedCountry}
-              onChange={(e) => {
-                setSelectedCountry(e.target.value);
-                setCurrentPage(1); // Reset to first page when filter changes
-              }}
-              className="form-select form-select-sm"
-              style={{ 
-                width: "auto",
-                minWidth: "50px",
-                maxWidth: "180px",
-                paddingRight: "24px"
-              }}
-              data-testid="select-country-filter"
-              title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
-            >
-              <option value="All Countries">🌐 All Countries</option>
-              {countries.map((country) => {
-                const flag = getCountryFlag(country);
-                return (
-                  <option key={country} value={country}>
-                    {flag} {country}
-                  </option>
-                );
-              })}
-            </select>
+            <div className="dropdown">
+              <button
+                className="btn btn-secondary btn-sm"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                style={{ fontSize: "1.2em", padding: "0.25rem 0.5rem" }}
+                title={selectedCountry === "All Countries" ? "Filter by country" : selectedCountry}
+              >
+                {getSelectedDisplay()}
+              </button>
+              <ul className="dropdown-menu" style={{ maxHeight: "300px", overflowY: "auto" }}>
+                <li>
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => {
+                      setSelectedCountry("All Countries");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    🌐 All Countries
+                  </button>
+                </li>
+                {countries.map((country) => (
+                  <li key={country}>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        setSelectedCountry(country);
+                        setCurrentPage(1);
+                      }}
+                    >
+                      {getCountryFlag(country)} {country}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
