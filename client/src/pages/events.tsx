@@ -118,7 +118,7 @@ export default function Events() {
               data-testid="button-sign-in-to-create"
             >
               <LogIn className="me-2" size={18} />
-              Sign In to Create Events
+              Sign In
             </button>
           )}
         </div>
