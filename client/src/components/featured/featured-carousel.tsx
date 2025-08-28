@@ -172,7 +172,18 @@ export function FeaturedCarousel() {
               </span>
             </div>
             
-            <div className="d-flex justify-content-end">
+            <div className="d-flex justify-content-end align-items-center gap-2">
+              {featuredEvents.length > 1 && (
+                <button
+                  className="btn btn-secondary rounded-circle"
+                  onClick={prevSlide}
+                  style={{ width: "40px", height: "40px" }}
+                  data-testid="button-carousel-prev"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+              )}
+              
               <button 
                 className="btn btn-light"
                 onClick={() => {
@@ -182,32 +193,20 @@ export function FeaturedCarousel() {
               >
                 View
               </button>
+              
+              {featuredEvents.length > 1 && (
+                <button
+                  className="btn btn-secondary rounded-circle"
+                  onClick={nextSlide}
+                  style={{ width: "40px", height: "40px" }}
+                  data-testid="button-carousel-next"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              )}
             </div>
           </div>
         </div>
-        
-        {/* Navigation Controls - Previous and Next buttons centered */}
-        {featuredEvents.length > 1 && (
-          <div className="d-flex justify-content-center align-items-center gap-3 mt-3">
-            <button
-              className="btn btn-secondary rounded-circle"
-              onClick={prevSlide}
-              style={{ width: "40px", height: "40px" }}
-              data-testid="button-carousel-prev"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            
-            <button
-              className="btn btn-secondary rounded-circle"
-              onClick={nextSlide}
-              style={{ width: "40px", height: "40px" }}
-              data-testid="button-carousel-next"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        )}
         
         {/* Slide Indicators */}
         {featuredEvents.length > 1 && (
