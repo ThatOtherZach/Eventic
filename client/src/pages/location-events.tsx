@@ -20,19 +20,23 @@ interface Event {
 export function LocationEventsPage() {
   const { location } = useParams<{ location: string }>();
   
-  // Decode URL parameter (handle spaces and special characters)
-  const decodedLocation = decodeURIComponent(location || "").trim();
+  // Handle collapsed space format (e.g., "NewYork" -> "New York")
+  const processedLocation = (location || "")
+    .trim()
+    // Add spaces before capital letters that follow lowercase letters
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase();
   
   const { data: events = [], isLoading, error } = useQuery<Event[]>({
-    queryKey: ["/api/events/location", decodedLocation],
+    queryKey: ["/api/events/location", processedLocation],
     queryFn: async () => {
-      const response = await fetch(`/api/events/location/${encodeURIComponent(decodedLocation)}`);
+      const response = await fetch(`/api/events/location/${encodeURIComponent(processedLocation)}`);
       if (!response.ok) {
         throw new Error("Failed to fetch events");
       }
       return response.json();
     },
-    enabled: !!decodedLocation,
+    enabled: !!processedLocation,
   });
 
   // Get current date for special effects
@@ -54,11 +58,11 @@ export function LocationEventsPage() {
   
   const currentMonthColor = monthColors[currentMonth];
 
-  if (!decodedLocation) {
+  if (!processedLocation) {
     return (
       <div className="container mt-4">
         <div className="alert alert-warning">
-          No location specified. Please use a URL like /London or /United States
+          No location specified. Please use a URL like /London or /NewYork
         </div>
       </div>
     );
@@ -80,7 +84,7 @@ export function LocationEventsPage() {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger">
-          Failed to load events for {decodedLocation}
+          Failed to load events for {processedLocation}
         </div>
       </div>
     );
@@ -91,7 +95,7 @@ export function LocationEventsPage() {
       <div className="mb-4">
         <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
           <MapPin className="text-primary" size={28} />
-          Events in {decodedLocation}
+          Events in {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
         </h2>
         <p className="text-muted">
           {events.length} {events.length === 1 ? 'event' : 'events'} found
@@ -102,7 +106,7 @@ export function LocationEventsPage() {
         <div className="card">
           <div className="card-body text-center py-5">
             <MapPin size={48} className="text-muted mb-3" />
-            <h5 className="text-muted">No events found in {decodedLocation}</h5>
+            <h5 className="text-muted">No events found in {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h5>
             <p className="text-muted">Check back later or explore events in other locations</p>
             <Link href="/">
               <a className="btn btn-primary mt-3" data-testid="button-go-home">
