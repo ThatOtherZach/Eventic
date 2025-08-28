@@ -654,6 +654,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // This gives us the true count of tickets sold
       const ticketsSold = await storage.getTotalTicketCountForEvent(req.params.id);
       
+      // Get count of tickets in resale queue
+      const resaleCount = await storage.getResellQueueCount(req.params.id);
+      
       // Available tickets = max tickets - total tickets sold
       // When tickets are resold, they don't create new tickets, just transfer ownership
       // So we don't need to adjust for resale queue
@@ -667,7 +670,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...event,
         ticketsSold,
         ticketsAvailable,
-        currentPrice
+        currentPrice,
+        resaleCount
       });
     } catch (error) {
       await logError(error, "GET /api/events/:id", {

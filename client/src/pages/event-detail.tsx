@@ -16,6 +16,7 @@ interface EventWithStats extends Event {
   ticketsSold: number;
   ticketsAvailable: number | null;
   currentPrice: number;
+  resaleCount?: number;
 }
 
 export default function EventDetailPage() {
@@ -735,7 +736,14 @@ export default function EventDetailPage() {
                       {isSoldOut ? (
                         "This event is sold out"
                       ) : (
-                        `${event.ticketsAvailable} tickets remaining`
+                        <>
+                          {event.ticketsAvailable} tickets remaining
+                          {event.resaleCount && event.resaleCount > 0 && (
+                            <div className="mt-1">
+                              {event.resaleCount} {event.resaleCount === 1 ? 'ticket' : 'tickets'} listed for resale
+                            </div>
+                          )}
+                        </>
                       )}
                     </small>
                   </div>
