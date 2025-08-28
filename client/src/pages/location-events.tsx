@@ -1,7 +1,7 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star } from "lucide-react";
-import { SpecialEffects } from "@/components/tickets/special-effects";
+import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "@/components/tickets/special-effects";
 
 interface Event {
   id: string;
@@ -15,6 +15,7 @@ interface Event {
   ticketPrice: string;
   p2pValidation?: boolean;
   specialEffects?: string;
+  ticketBackgroundUrl?: string;
 }
 
 export function LocationEventsPage() {
@@ -120,111 +121,177 @@ export function LocationEventsPage() {
           </div>
         </div>
       ) : (
-        <div className="row g-4">
+        <div className="row g-3">
           {events.map((event) => {
-            const hasGoldenTicket = event.specialEffects?.includes("Golden Ticket");
-            const hasMonthlyColors = event.specialEffects?.includes("Monthly Colors");
+            // Create a mock ticket object for display purposes
+            const mockTicket = {
+              id: `preview-${event.id}`,
+              ticketNumber: "PREVIEW",
+              isGoldenTicket: event.specialEffects?.includes("Golden Ticket"),
+              qrData: null,
+              isValidated: false
+            };
+
+            // Create a full event object for special effects components
+            const fullEvent = {
+              ...event,
+              description: null,
+              country: null,
+              maxTickets: null,
+              createdAt: new Date().toISOString(),
+              userId: '',
+              stripePaymentIntentId: null,
+              stripePriceId: null,
+              stripeProductId: null,
+              specialEffects: event.specialEffects || null,
+              ticketBackgroundUrl: event.ticketBackgroundUrl || null,
+              organizerName: null,
+              organizerEmail: null,
+              organizerPhone: null,
+              category: null,
+              tags: null,
+              isPrivate: false
+            };
+
+            // Check for special effects
+            const specialEffect = detectSpecialEffect(fullEvent, mockTicket);
+            const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(fullEvent, mockTicket) : null;
             
             return (
-              <div key={event.id} className="col-md-6 col-lg-4">
+              <div key={event.id} className="col-md-6">
                 <Link href={`/events/${event.id}`}>
                   <a className="text-decoration-none" data-testid={`link-event-${event.id}`}>
+                    {/* Ticket-style card matching TicketCard component */}
                     <div 
-                      className={`card h-100 shadow-sm border-0 overflow-hidden position-relative ${
-                        hasGoldenTicket ? 'golden-ticket-card' : ''
-                      }`}
+                      className="ticket-card position-relative w-100"
                       style={{
-                        transition: "all 0.3s ease",
-                        cursor: "pointer",
-                        ...(hasMonthlyColors && {
-                          background: `linear-gradient(135deg, ${currentMonthColor.gradient.replace('from-', '').replace('to-', ',')})`,
-                        })
+                        aspectRatio: '2/1',
+                        maxWidth: '100%',
+                        minHeight: '150px',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        background: event.ticketBackgroundUrl 
+                          ? `url(${event.ticketBackgroundUrl}) center/cover` 
+                          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        cursor: 'pointer',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-5px)";
-                        e.currentTarget.style.boxShadow = hasGoldenTicket 
-                          ? "0 10px 30px rgba(255, 215, 0, 0.4)" 
-                          : hasMonthlyColors
-                          ? `0 10px 30px rgba(var(--bs-${currentMonthColor.glow}-rgb), 0.3)`
-                          : "0 10px 30px rgba(0,0,0,0.15)";
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "";
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
                       }}
                     >
-                      {/* Special Effects Overlay */}
-                      {hasGoldenTicket && (
-                        <>
-                          <div className="golden-shimmer"></div>
-                          <div className="position-absolute top-0 end-0 m-2">
-                            <span className="badge bg-warning text-dark">
-                              <Star size={12} className="me-1" />
-                              Golden Ticket
-                            </span>
-                          </div>
-                        </>
-                      )}
-                      
-                      {hasMonthlyColors && !hasGoldenTicket && (
-                        <div className="position-absolute top-0 end-0 m-2">
-                          <span className="badge bg-light text-dark">
-                            <Sparkles size={12} className="me-1" />
-                            Monthly Theme
-                          </span>
-                        </div>
-                      )}
+                      {/* Semi-transparent overlay for text readability */}
+                      <div 
+                        className="position-absolute w-100 h-100"
+                        style={{
+                          background: event.ticketBackgroundUrl 
+                            ? 'rgba(0, 0, 0, 0.4)' 
+                            : 'rgba(0, 0, 0, 0.2)',
+                          backdropFilter: 'blur(1px)',
+                        }}
+                      />
 
-                      {/* Event Image */}
-                      {event.imageUrl && (
+                      {/* Golden Ticket Glow Overlay */}
+                      {mockTicket.isGoldenTicket && (
                         <div 
-                          className="card-img-top"
+                          className="position-absolute w-100 h-100 pointer-events-none"
                           style={{
-                            height: "200px",
-                            backgroundImage: `url(${event.imageUrl})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            opacity: hasMonthlyColors ? 0.9 : 1,
+                            background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 70%)',
+                            boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.225), inset 0 0 60px rgba(255, 215, 0, 0.075)',
+                            animation: 'goldenGlow 3s ease-in-out infinite',
+                            zIndex: 2,
                           }}
                         />
                       )}
+
+                      {/* Special Event Effects Badge */}
+                      <SpecialEffectBadge event={fullEvent} ticket={mockTicket} />
                       
-                      <div className={`card-body ${hasMonthlyColors ? 'text-white' : ''}`}>
-                        <h5 className={`card-title fw-semibold ${hasGoldenTicket ? 'golden-text' : ''}`}>
-                          {event.name}
-                        </h5>
-                        
-                        {event.p2pValidation && (
-                          <div className="mb-2">
-                            <span className={`badge ${hasMonthlyColors ? 'bg-light text-dark' : 'bg-success'}`}>
-                              <Shield size={12} className="me-1" />
-                              P2P Validation
-                            </span>
+                      {/* Special Effects Overlay (for glows and text) */}
+                      <SpecialEffectOverlay event={fullEvent} ticket={mockTicket} />
+                      
+                      {/* Special Effects Animation (for particles) */}
+                      <SpecialEffects event={fullEvent} ticket={mockTicket} />
+
+                      {/* Ticket Content */}
+                      <div className="position-relative h-100 d-flex">
+                        {/* Event Details */}
+                        <div className="flex-grow-1 p-3 text-white d-flex flex-column justify-content-between">
+                          <div>
+                            <h5 className="mb-2 fw-bold" style={{ fontSize: '18px' }}>
+                              {mockTicket.isGoldenTicket ? (
+                                // Golden ticket takes priority
+                                <span 
+                                  style={{
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    backgroundColor: 'rgba(255, 215, 0, 0.85)',
+                                    color: '#000',
+                                    display: 'inline-block',
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                  }}
+                                >
+                                  {event.name}
+                                </span>
+                              ) : monthlyColor ? (
+                                // Monthly effect badge
+                                <span 
+                                  style={{
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    background: `linear-gradient(135deg, ${monthlyColor.color1}, ${monthlyColor.color2})`,
+                                    color: '#fff',
+                                    display: 'inline-block',
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                                  }}
+                                >
+                                  {event.name}
+                                </span>
+                              ) : (
+                                event.name
+                              )}
+                            </h5>
+                            <div className="small opacity-90">
+                              <div className="d-flex align-items-center mb-1">
+                                <Calendar size={14} className="me-1" />
+                                {event.date}
+                                {event.endDate && event.endDate !== event.date && (
+                                  <span> - {event.endDate}</span>
+                                )}
+                              </div>
+                              <div className="d-flex align-items-center mb-1">
+                                <Clock size={14} className="me-1" />
+                                {event.time}
+                                {event.endTime && (
+                                  <span> - {event.endTime}</span>
+                                )}
+                              </div>
+                              <div className="d-flex align-items-center">
+                                <MapPin size={14} className="me-1" />
+                                <span>{event.venue}</span>
+                              </div>
+                            </div>
                           </div>
-                        )}
-                        
-                        <div className={`small ${hasMonthlyColors ? 'text-white-50' : 'text-muted'}`}>
-                          <div className="d-flex align-items-center mb-1">
-                            <MapPin size={14} className="me-1" />
-                            {event.venue}
-                          </div>
-                          <div className="d-flex align-items-center mb-1">
-                            <Calendar size={14} className="me-1" />
-                            {new Date(event.date).toLocaleDateString()}
-                            {event.endDate && event.endDate !== event.date && (
-                              <span> - {new Date(event.endDate).toLocaleDateString()}</span>
+                          <div className="d-flex justify-content-between align-items-end">
+                            <div>
+                              <div className="small opacity-75">Price</div>
+                              <div className="fw-bold" style={{ fontSize: '16px' }}>
+                                ${event.ticketPrice || '0.00'}
+                              </div>
+                            </div>
+                            {event.p2pValidation && (
+                              <span className="badge bg-success bg-opacity-75">
+                                <Shield size={12} className="me-1" />
+                                P2P Validation
+                              </span>
                             )}
-                          </div>
-                          <div className="d-flex align-items-center mb-1">
-                            <Clock size={14} className="me-1" />
-                            {event.time}
-                            {event.endTime && event.endTime !== event.time && (
-                              <span> - {event.endTime}</span>
-                            )}
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <DollarSign size={14} className="me-1" />
-                            <strong>${event.ticketPrice || '0.00'}</strong>
                           </div>
                         </div>
                       </div>
@@ -237,57 +304,14 @@ export function LocationEventsPage() {
         </div>
       )}
       
-      {/* Add CSS for golden ticket effect */}
+      {/* Add CSS for golden glow animation */}
       <style>{`
-        .golden-ticket-card {
-          background: linear-gradient(
-            135deg,
-            #FFD700,
-            #FFA500,
-            #FFD700,
-            #FFC700
-          );
-          animation: golden-pulse 3s ease-in-out infinite;
-        }
-        
-        .golden-shimmer {
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.6),
-            transparent
-          );
-          animation: shimmer 3s infinite;
-          pointer-events: none;
-        }
-        
-        .golden-text {
-          background: linear-gradient(135deg, #FFD700, #FFA500);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        
-        @keyframes golden-pulse {
+        @keyframes goldenGlow {
           0%, 100% {
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            opacity: 0.8;
           }
           50% {
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.8);
-          }
-        }
-        
-        @keyframes shimmer {
-          0% {
-            left: -100%;
-          }
-          50%, 100% {
-            left: 200%;
+            opacity: 1;
           }
         }
       `}</style>
