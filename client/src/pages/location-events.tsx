@@ -165,9 +165,9 @@ export function LocationEventsPage() {
                     <div 
                       className="ticket-card position-relative w-100"
                       style={{
-                        aspectRatio: '2/1',
+                        aspectRatio: '16/9',
                         maxWidth: '100%',
-                        minHeight: '150px',
+                        minHeight: '200px',
                         borderRadius: '8px',
                         overflow: 'hidden',
                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -222,7 +222,7 @@ export function LocationEventsPage() {
                       {/* Ticket Content */}
                       <div className="position-relative h-100 d-flex">
                         {/* Event Details */}
-                        <div className="flex-grow-1 p-3 text-white d-flex flex-column justify-content-between">
+                        <div className="flex-grow-1 px-3 pt-3 pb-4 text-white d-flex flex-column justify-content-between">
                           <div>
                             <h5 className="mb-2 fw-bold" style={{ fontSize: '18px' }}>
                               {mockTicket.isGoldenTicket ? (
@@ -273,19 +273,18 @@ export function LocationEventsPage() {
                                   <span> - {event.endTime}</span>
                                 )}
                               </div>
-                              <div className="d-flex align-items-center">
+                              <div className="d-flex align-items-center mb-1">
                                 <MapPin size={14} className="me-1" />
                                 <span>{event.venue}</span>
                               </div>
-                            </div>
-                          </div>
-                          <div className="d-flex justify-content-between align-items-end">
-                            <div>
-                              <div className="small opacity-75">Price</div>
                               <div className="fw-bold" style={{ fontSize: '16px' }}>
-                                ${event.ticketPrice || '0.00'}
+                                {event.ticketPrice && parseFloat(event.ticketPrice) > 0 
+                                  ? `$${event.ticketPrice}` 
+                                  : 'Free'}
                               </div>
                             </div>
+                          </div>
+                          <div className="d-flex justify-content-end align-items-end">
                             {event.p2pValidation && (
                               <span className="badge bg-success bg-opacity-75">
                                 <Shield size={12} className="me-1" />
