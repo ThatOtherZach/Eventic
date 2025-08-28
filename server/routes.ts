@@ -650,10 +650,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Get ticket count for the event
+      // Get ticket count for the event (excluding tickets listed for resale)
       const tickets = await storage.getTicketsByEventId(req.params.id);
+      const resellQueueCount = await storage.getResellQueueCount(req.params.id);
+      
+      // Tickets sold = active tickets (not for resale)
       const ticketsSold = tickets.length;
-      const ticketsAvailable = event.maxTickets ? event.maxTickets - ticketsSold : null;
+      
+      // Available tickets = max tickets - sold tickets + tickets in resell queue
+      const ticketsAvailable = event.maxTickets ? 
+        event.maxTickets - ticketsSold + resellQueueCount : null;
       
       // Get current price (handles surge pricing)
       const currentPrice = await storage.getCurrentPrice(req.params.id);

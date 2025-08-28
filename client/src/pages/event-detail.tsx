@@ -551,12 +551,14 @@ export default function EventDetailPage() {
                         )}
                       </div>
                       <div className="d-flex gap-2">
-                        <Link href={`/tickets/${ticket.id}`}>
-                          <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
-                            <Eye size={14} className="me-1" />
-                            View
-                          </a>
-                        </Link>
+                        {(ticket as any).resellStatus !== "for_resale" && (
+                          <Link href={`/tickets/${ticket.id}`}>
+                            <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
+                              <Eye size={14} className="me-1" />
+                              View
+                            </a>
+                          </Link>
+                        )}
                         {canResellTicket(ticket) && (
                           <button
                             className="btn btn-sm btn-outline-warning"
