@@ -152,7 +152,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             </h5>
             <p className="small mb-3">
               {selectedCountry === "All Countries" 
-                ? (user ? "Create your first event to get started" : "Sign in to create events")
+                ? (user ? "Create your first event to get started" : "Sign in")
                 : `Be the first to create an event in ${selectedCountry}`}
             </p>
             {user && (
