@@ -1,4 +1,4 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star } from "lucide-react";
 import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "@/components/tickets/special-effects";
@@ -20,6 +20,7 @@ interface Event {
 
 export function LocationEventsPage() {
   const { location } = useParams<{ location: string }>();
+  const [, setLocation] = useLocation();
   
   // Handle collapsed space format (e.g., "NewYork" -> "New York")
   const processedLocation = (location || "")
@@ -159,11 +160,14 @@ export function LocationEventsPage() {
             
             return (
               <div key={event.id} className="col-md-6">
-                <Link href={`/events/${event.id}`}>
-                  <a className="text-decoration-none ticket-card-link" style={{ textDecoration: 'none !important' }} data-testid={`link-event-${event.id}`}>
-                    {/* Ticket-style card matching TicketCard component */}
-                    <div 
-                      className="ticket-card position-relative w-100"
+                <div 
+                  onClick={() => setLocation(`/events/${event.id}`)}
+                  style={{ cursor: 'pointer' }}
+                  data-testid={`link-event-${event.id}`}
+                >
+                  {/* Ticket-style card matching TicketCard component */}
+                  <div 
+                    className="ticket-card position-relative w-100"
                       style={{
                         aspectRatio: '16/9',
                         maxWidth: '100%',
@@ -295,8 +299,7 @@ export function LocationEventsPage() {
                         </div>
                       </div>
                     </div>
-                  </a>
-                </Link>
+                </div>
               </div>
             );
           })}
