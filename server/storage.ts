@@ -29,6 +29,7 @@ export interface IStorage {
   // Tickets
   getTickets(): Promise<Ticket[]>;
   getTicketsByEventId(eventId: string): Promise<Ticket[]>;
+  getTotalTicketCountForEvent(eventId: string): Promise<number>;
   getTicketsByUserId(userId: string): Promise<Ticket[]>;
   getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]>;
   getTicket(id: string): Promise<Ticket | undefined>;
@@ -419,6 +420,16 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(desc(tickets.createdAt))
       .limit(100);
+  }
+
+  async getTotalTicketCountForEvent(eventId: string): Promise<number> {
+    // Get total count of ALL tickets created for this event (regardless of resale status)
+    const [result] = await db
+      .select({ count: count() })
+      .from(tickets)
+      .where(eq(tickets.eventId, eventId));
+    
+    return result?.count || 0;
   }
 
   async getTicketsByUserId(userId: string): Promise<Ticket[]> {
