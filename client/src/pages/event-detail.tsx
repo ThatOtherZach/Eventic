@@ -354,7 +354,10 @@ export default function EventDetailPage() {
 
   const eventDate = event.date ? (() => {
     try {
-      const date = new Date(event.date);
+      // Parse the date components to avoid timezone issues
+      const [year, month, day] = event.date.split('-').map(Number);
+      // Create date in local timezone by specifying components
+      const date = new Date(year, month - 1, day);
       return isNaN(date.getTime()) ? null : date;
     } catch {
       return null;
@@ -420,7 +423,10 @@ export default function EventDetailPage() {
                 <>
                   {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date} - {event.endDate && event.endDate !== '' ? (() => {
                     try {
-                      const endDate = new Date(event.endDate);
+                      // Parse the date components to avoid timezone issues
+                      const [year, month, day] = event.endDate.split('-').map(Number);
+                      // Create date in local timezone by specifying components
+                      const endDate = new Date(year, month - 1, day);
                       return isNaN(endDate.getTime()) ? 'Invalid end date' : format(endDate, "MMMM d, yyyy");
                     } catch {
                       return 'Invalid end date';
