@@ -115,7 +115,12 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         <div className="flex-grow-1 px-3 pt-3 pb-4 text-white d-flex flex-column justify-content-between">
           <div>
             <h5 className="mb-1 text-truncate fw-bold" style={{ fontSize: '16px' }}>
-              {specialEffect === 'monthly' && monthlyColor ? (
+              {specialEffect === 'rainbow' ? (
+                // Super RGB effect - rainbow animated text
+                <span className="super-rgb-text">
+                  {event.name}
+                </span>
+              ) : specialEffect === 'monthly' && monthlyColor ? (
                 // Monthly effect badge - always show when monthly effect is active
                 <span 
                   style={{

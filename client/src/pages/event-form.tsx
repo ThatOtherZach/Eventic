@@ -59,7 +59,7 @@ export default function EventForm() {
     { type: 'spooky', name: 'Halloween (Oct. 31 Only)' },
     { type: 'pride', name: 'Pride (June + Keywords)' },
     { type: 'nice', name: 'Nice Day (Mar. 10 Only)' },
-    { type: 'rainbow', name: 'Double Golden (Rare)' },
+    { type: 'rainbow', name: 'Super RGB (Rare)' },
   ];
   
   // Calculate min and max dates for event creation

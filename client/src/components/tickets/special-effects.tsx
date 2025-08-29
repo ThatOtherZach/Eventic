@@ -445,16 +445,44 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
     );
   }
   
-  // Rainbow double golden effect (cycles through monthly colors)
+  // Super RGB (rainbow double golden effect)
   if (effectType === 'rainbow') {
     return (
-      <div 
-        className="position-absolute w-100 h-100 pointer-events-none"
-        style={{
-          animation: 'rainbowDoubleGolden 4s ease-in-out infinite',
-          zIndex: 2,
-        }}
-      />
+      <>
+        <div 
+          className="position-absolute w-100 h-100 pointer-events-none"
+          style={{
+            animation: 'rainbowDoubleGolden 4s ease-in-out infinite',
+            zIndex: 2,
+          }}
+        />
+        <style>{`
+          .super-rgb-text {
+            background: linear-gradient(
+              90deg,
+              #ff0000,
+              #ff7f00,
+              #ffff00,
+              #00ff00,
+              #0000ff,
+              #4b0082,
+              #9400d3,
+              #ff0000
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-slide 3s linear infinite;
+            font-weight: bold;
+          }
+          
+          @keyframes rainbow-slide {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+          }
+        `}</style>
+      </>
     );
   }
   
