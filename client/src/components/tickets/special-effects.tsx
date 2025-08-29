@@ -37,8 +37,14 @@ export const MONTHLY_COLORS: { [key: number]: { name: string; color1: string; co
 export function getMonthlyColor(event: Event, ticket?: { id?: string }): { color1: string; color2: string } | null {
   // For preview tickets, use current month; for real tickets use event date
   const isPreview = ticket && ticket.id === 'sample';
-  const dateToUse = isPreview ? new Date() : new Date(event.date);
-  const month = dateToUse.getMonth();
+  let month: number;
+  if (isPreview) {
+    month = new Date().getMonth();
+  } else {
+    // Parse date components to avoid timezone issues
+    const [year, monthNum, day] = event.date.split('-').map(Number);
+    month = monthNum - 1; // JavaScript months are 0-indexed
+  }
   return MONTHLY_COLORS[month] || null;
 }
 
@@ -47,7 +53,9 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   {
     type: 'nice',
     condition: (event) => {
-      const eventDate = new Date(event.date);
+      // Parse date components to avoid timezone issues
+      const [year, month, day] = event.date.split('-').map(Number);
+      const eventDate = new Date(year, month - 1, day);
       return getDayOfYear(eventDate) === 69; // 69th day of the year
     },
     priority: 100 // Highest priority - this overrides everything
@@ -63,24 +71,27 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   {
     type: 'hearts',
     condition: (event) => {
-      const eventDate = new Date(event.date);
-      return eventDate.getMonth() === 1 && eventDate.getDate() === 14; // February 14
+      // Parse date components to avoid timezone issues
+      const [year, month, day] = event.date.split('-').map(Number);
+      return month === 2 && day === 14; // February 14 (month is 2 in YYYY-MM-DD format)
     },
     priority: 80
   },
   {
     type: 'spooky',
     condition: (event) => {
-      const eventDate = new Date(event.date);
-      return eventDate.getMonth() === 9 && eventDate.getDate() === 31; // October 31
+      // Parse date components to avoid timezone issues
+      const [year, month, day] = event.date.split('-').map(Number);
+      return month === 10 && day === 31; // October 31 (month is 10 in YYYY-MM-DD format)
     },
     priority: 80
   },
   {
     type: 'snowflakes',
     condition: (event) => {
-      const eventDate = new Date(event.date);
-      return eventDate.getMonth() === 11 && eventDate.getDate() === 25; // December 25
+      // Parse date components to avoid timezone issues
+      const [year, month, day] = event.date.split('-').map(Number);
+      return month === 12 && day === 25; // December 25 (month is 12 in YYYY-MM-DD format)
     },
     priority: 80
   },
@@ -94,8 +105,9 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   {
     type: 'fireworks',
     condition: (event) => {
-      const eventDate = new Date(event.date);
-      return eventDate.getMonth() === 11 && eventDate.getDate() === 31; // December 31 (New Year's Eve)
+      // Parse date components to avoid timezone issues
+      const [year, month, day] = event.date.split('-').map(Number);
+      return month === 12 && day === 31; // December 31 (month is 12 in YYYY-MM-DD format)
     },
     priority: 80
   },
@@ -380,8 +392,14 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
   if (effectType === 'monthly') {
     // For preview tickets, use current month; for real tickets use event date
     const isPreview = ticket && ticket.id === 'sample';
-    const dateToUse = isPreview ? new Date() : new Date(event.date);
-    const month = dateToUse.getMonth();
+    let month: number;
+    if (isPreview) {
+      month = new Date().getMonth();
+    } else {
+      // Parse date components to avoid timezone issues
+      const [year, monthNum, day] = event.date.split('-').map(Number);
+      month = monthNum - 1; // JavaScript months are 0-indexed
+    }
     const monthColor = MONTHLY_COLORS[month];
     
     return (

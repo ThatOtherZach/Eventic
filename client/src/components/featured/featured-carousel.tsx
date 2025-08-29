@@ -160,7 +160,10 @@ export function FeaturedCarousel() {
               <div className="d-flex align-items-center">
                 <Clock size={16} className="me-1" />
                 <small>
-                  {new Date(currentEvent.event.date).toLocaleDateString()} at {currentEvent.event.time}
+                  {(() => {
+                    const [year, month, day] = currentEvent.event.date.split('-').map(Number);
+                    return new Date(year, month - 1, day).toLocaleDateString();
+                  })()} at {currentEvent.event.time}
                 </small>
               </div>
             </div>

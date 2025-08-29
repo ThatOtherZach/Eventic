@@ -265,7 +265,10 @@ export default function EventDetailPage() {
     if ((ticket as any).resellStatus === "for_resale") return false;
     
     // Check if event start is at least 1 hour in the future
-    const eventStartTime = new Date(`${event.date}T${event.time}:00`);
+    // Parse date components to avoid timezone issues
+    const [year, month, day] = event.date.split('-').map(Number);
+    const [hours, minutes] = event.time.split(':').map(Number);
+    const eventStartTime = new Date(year, month - 1, day, hours, minutes, 0);
     const now = new Date();
     const hoursUntilEvent = (eventStartTime.getTime() - now.getTime()) / (1000 * 60 * 60);
     
@@ -371,7 +374,9 @@ export default function EventDetailPage() {
     // If there's an end date, use it to determine if event is past
     if (event.endDate) {
       try {
-        const endDate = new Date(event.endDate);
+        // Parse date components to avoid timezone issues
+        const [endYear, endMonth, endDay] = event.endDate.split('-').map(Number);
+        const endDate = new Date(endYear, endMonth - 1, endDay);
         if (!isNaN(endDate.getTime())) {
           // Set end date to end of day for comparison
           endDate.setHours(23, 59, 59, 999);
@@ -727,7 +732,10 @@ export default function EventDetailPage() {
                             // Calculate time to event
                             let daysUntilEvent = 0;
                             try {
-                              const eventDateTime = new Date(`${event.date}T${event.time}:00`);
+                              // Parse date components to avoid timezone issues
+                              const [year, month, day] = event.date.split('-').map(Number);
+                              const [hours, minutes] = event.time.split(':').map(Number);
+                              const eventDateTime = new Date(year, month - 1, day, hours, minutes, 0);
                               if (!isNaN(eventDateTime.getTime())) {
                                 const now = new Date();
                                 daysUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);

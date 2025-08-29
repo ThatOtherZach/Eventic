@@ -119,7 +119,10 @@ export function FeaturedGrid() {
                   
                   <div className="small text-muted">
                     <Clock size={14} className="me-1" />
-                    {new Date(featuredEvent.event.date).toLocaleDateString()} at {featuredEvent.event.time}
+                    {(() => {
+                      const [year, month, day] = featuredEvent.event.date.split('-').map(Number);
+                      return new Date(year, month - 1, day).toLocaleDateString();
+                    })()} at {featuredEvent.event.time}
                   </div>
                 </div>
               </div>

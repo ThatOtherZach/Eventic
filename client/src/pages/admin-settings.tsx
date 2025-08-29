@@ -256,8 +256,14 @@ export default function AdminSettings() {
                               <p className="text-sm text-gray-500">{event.venue}</p>
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <Calendar className="h-3 w-3" />
-                                {new Date(event.date).toLocaleDateString()}
-                                {event.endDate && ` - ${new Date(event.endDate).toLocaleDateString()}`}
+                                {(() => {
+                                  const [year, month, day] = event.date.split('-').map(Number);
+                                  return new Date(year, month - 1, day).toLocaleDateString();
+                                })()}
+                                {event.endDate && ` - ${(() => {
+                                  const [endYear, endMonth, endDay] = event.endDate.split('-').map(Number);
+                                  return new Date(endYear, endMonth - 1, endDay).toLocaleDateString();
+                                })()}`}
                               </div>
                             </div>
                             <div className="flex gap-2">
