@@ -491,7 +491,7 @@ export default function EventForm() {
                               />
                             </FormControl>
                             <FormDescription>
-                              email, phone, secret handshake, etc.
+                              Not public, revealed only to ticket holders.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
