@@ -4,12 +4,11 @@ import type { Event } from "@shared/schema";
  * Generate an iCalendar (.ics) file content for an event
  */
 export function generateICalendar(event: Event): string {
-  // Parse the date and time directly without creating Date objects
-  // This ensures no timezone conversion issues
+  // Parse the date and time - these are in the event's local timezone
   const [year, month, day] = event.date.split('-');
   const [hours, minutes] = event.time.split(':');
   
-  // Format start date directly from strings
+  // Format start date for the event's timezone
   const startDateStr = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}T${hours.padStart(2, '0')}${minutes.padStart(2, '0')}00`;
   
   // Calculate end date
@@ -27,23 +26,17 @@ export function generateICalendar(event: Event): string {
     endDateStr = `${year}${month.padStart(2, '0')}${String(endDayNum).padStart(2, '0')}T${String(endHour).padStart(2, '0')}${minutes.padStart(2, '0')}00`;
   }
 
-  // Get timezone string for VTIMEZONE component
+  // Get timezone string
   const timezone = event.timezone || "America/New_York";
   
-  // Build VTIMEZONE component for proper timezone support
-  const vtimezone = [
-    'BEGIN:VTIMEZONE',
-    `TZID:${timezone}`,
-    'END:VTIMEZONE'
-  ].join('\r\n');
-  
+  // For iCal, we use the TZID parameter with the timezone name
+  // This tells calendar apps to interpret the time in that specific timezone
   const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Event Ticket Platform//EN',
     'METHOD:PUBLISH',
     'CALSCALE:GREGORIAN',
-    vtimezone,
     'BEGIN:VEVENT',
     `UID:${event.id}@eventplatform.com`,
     `DTSTART;TZID=${timezone}:${startDateStr}`,
@@ -80,11 +73,11 @@ export function downloadICalendar(event: Event): void {
  * Generate a Google Calendar URL for an event
  */
 export function generateGoogleCalendarUrl(event: Event): string {
-  // Parse the date and time directly without creating Date objects
+  // Parse the date and time - these are in the event's local timezone
   const [year, month, day] = event.date.split('-');
   const [hours, minutes] = event.time.split(':');
   
-  // Format start date directly from strings
+  // Format start date for the event's timezone
   const startDateStr = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}T${hours.padStart(2, '0')}${minutes.padStart(2, '0')}00`;
   
   // Calculate end date
@@ -105,17 +98,13 @@ export function generateGoogleCalendarUrl(event: Event): string {
   // Get timezone for Google Calendar
   const timezone = event.timezone || "America/New_York";
   
-  // Add timezone information to the description
-  const timezoneInfo = timezone !== "America/New_York" ? `\n\nTimezone: ${timezone}` : "";
-  const description = (event.description || `Event at ${event.venue}`) + timezoneInfo;
-  
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.name,
     dates: `${startDateStr}/${endDateStr}`,
-    details: description,
+    details: event.description || `Event at ${event.venue}`,
     location: event.venue,
-    ctz: timezone  // Add timezone parameter for Google Calendar
+    ctz: timezone  // This tells Google Calendar what timezone the dates are in
   });
   
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
