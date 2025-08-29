@@ -171,6 +171,53 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
   const ticketWithPreview = ticket as any;
   const effectType = ticketWithPreview?.previewEffectType || detectSpecialEffect(event, ticket);
   const particlesRef = useRef<HTMLDivElement[]>([]);
+  const stickerParticlesRef = useRef<HTMLImageElement[]>([]);
+  
+  // Check if we should show stickers (from preview or from event)
+  const shouldShowSticker = ticketWithPreview?.previewStickerUrl || 
+                           (event.stickerUrl && (ticket?.isValidated || ticketWithPreview?.previewStickerUrl));
+  const stickerUrl = ticketWithPreview?.previewStickerUrl || event.stickerUrl;
+  
+  // Handle sticker overlay separately from main effects
+  useEffect(() => {
+    if (!shouldShowSticker || !stickerUrl) return;
+    
+    const container = containerRef?.current;
+    if (!container) return;
+    
+    const stickerParticles: HTMLImageElement[] = [];
+    
+    // Create floating stickers
+    for (let i = 0; i < 4; i++) {
+      const sticker = document.createElement('img');
+      sticker.className = 'spooky-ghost'; // Reuse the floating animation
+      // Use the URL directly if it starts with http/https
+      sticker.src = stickerUrl.startsWith('http') ? stickerUrl : 
+                   (stickerUrl.startsWith('/objects/') ? stickerUrl : '/objects/' + stickerUrl.split('/').pop());
+      sticker.style.position = 'absolute';
+      sticker.style.left = Math.random() * 80 + 10 + '%';
+      sticker.style.top = Math.random() * 60 + 20 + '%';
+      sticker.style.animationDelay = Math.random() * 6 + 's';
+      sticker.style.width = Math.random() * 20 + 20 + 'px';
+      sticker.style.height = 'auto';
+      sticker.style.zIndex = '15'; // Higher z-index to overlay on effects
+      sticker.style.pointerEvents = 'none';
+      
+      // Hide if fails to load
+      sticker.onerror = () => {
+        sticker.style.display = 'none';
+      };
+      
+      container.appendChild(sticker);
+      stickerParticles.push(sticker);
+    }
+    
+    stickerParticlesRef.current = stickerParticles;
+    
+    return () => {
+      stickerParticles.forEach(p => p.remove());
+    };
+  }, [shouldShowSticker, stickerUrl, containerRef]);
   
   useEffect(() => {
     if (!effectType || effectType === 'nice' || effectType === 'pride' || effectType === 'monthly' || effectType === 'rainbow') return; // These are handled by overlay
@@ -356,9 +403,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       case 'fireworks':
         cleanup = createFireworks();
         break;
-      case 'sticker':
-        createSticker();
-        break;
+      // Stickers are now handled separately as an overlay
       case 'pride':
       case 'monthly':
         // These are handled by SpecialEffectOverlay component

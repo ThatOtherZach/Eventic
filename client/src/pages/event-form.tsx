@@ -397,8 +397,8 @@ export default function EventForm() {
   
   // Determine what effect to show
   let currentEffect = specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : undefined;
-  // Show golden ticket only when special effects are off and no sticker
-  let isGolden = goldenTicketEnabled && !specialEffectsEnabled && !form.watch('stickerUrl');
+  // Golden ticket shows independently of stickers
+  let isGolden = goldenTicketEnabled && !specialEffectsEnabled;
   let isDoubleGolden = currentEffect === 'rainbow';
   
   const sampleTicket: Ticket & { previewEffectType?: string } = {
@@ -413,7 +413,7 @@ export default function EventForm() {
     useCount: 0,
     isGoldenTicket: isGolden, // Apply golden ticket when enabled and no other effect
     isDoubleGolden: isDoubleGolden, // Show double golden for rainbow effect
-    specialEffect: form.watch('stickerUrl') ? 'sticker' : null,
+    specialEffect: currentEffect || (stickerEnabled && form.watch('stickerUrl') ? 'sticker' : null),
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -428,6 +428,8 @@ export default function EventForm() {
     originalOwnerId: null,
     // Add preview effect type for special effects preview
     previewEffectType: currentEffect,
+    // Add sticker URL for overlay on any effect
+    previewStickerUrl: (stickerEnabled && form.watch('stickerUrl')) ? form.watch('stickerUrl') : undefined,
   };
 
   const watchedValues = form.watch();
