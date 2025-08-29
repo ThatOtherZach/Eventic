@@ -316,7 +316,9 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       for (let i = 0; i < 4; i++) {
         const sticker = document.createElement('img');
         sticker.className = 'spooky-ghost'; // Reuse the floating animation
-        sticker.src = event.stickerUrl.startsWith('/objects/') ? event.stickerUrl : '/objects/' + event.stickerUrl.split('/').pop();
+        // Use the URL directly if it starts with http/https, otherwise treat as object storage path
+        sticker.src = event.stickerUrl.startsWith('http') ? event.stickerUrl : 
+                     (event.stickerUrl.startsWith('/objects/') ? event.stickerUrl : '/objects/' + event.stickerUrl.split('/').pop());
         sticker.style.position = 'absolute';
         sticker.style.left = Math.random() * 80 + 10 + '%';
         sticker.style.top = Math.random() * 60 + 20 + '%';
@@ -325,6 +327,12 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
         sticker.style.height = 'auto';
         sticker.style.zIndex = '10';
         sticker.style.pointerEvents = 'none';
+        
+        // Hide the image if it fails to load
+        sticker.onerror = () => {
+          sticker.style.display = 'none';
+        };
+        
         container.appendChild(sticker);
         particles.push(sticker);
       }
