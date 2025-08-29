@@ -764,7 +764,7 @@ export default function EventDetailPage() {
               <button
                 className="btn btn-primary w-100 mb-3"
                 onClick={handlePurchase}
-                disabled={isSoldOut || isPurchasing || isEventPast}
+                disabled={isSoldOut || isPurchasing || isEventPast || !event?.ticketPurchasesEnabled}
                 data-testid="button-purchase"
               >
                 {isPurchasing ? (
@@ -776,6 +776,8 @@ export default function EventDetailPage() {
                   "Event Has Passed"
                 ) : isSoldOut ? (
                   "Sold Out"
+                ) : !event?.ticketPurchasesEnabled ? (
+                  "Ticket Sales Disabled"
                 ) : (
                   <>
                     <Ticket size={18} className="me-2" />
@@ -783,6 +785,18 @@ export default function EventDetailPage() {
                   </>
                 )}
               </button>
+              
+              {/* Show message if ticket sales are disabled */}
+              {!event?.ticketPurchasesEnabled && !isEventPast && !isSoldOut && (
+                <div className="alert alert-warning mb-3">
+                  <small>
+                    <strong>Ticket sales are currently disabled for this event.</strong><br />
+                    {event.resaleCount && event.resaleCount > 0 && (
+                      <>Resale tickets may still be available - {event.resaleCount} {event.resaleCount === 1 ? 'ticket is' : 'tickets are'} listed for resale.</>
+                    )}
+                  </small>
+                </div>
+              )}
 
               {isOwner && (
                 <div>

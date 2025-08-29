@@ -911,6 +911,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
 
+      // Check if ticket purchases are enabled
+      if (!event.ticketPurchasesEnabled) {
+        return res.status(400).json({ 
+          message: "Ticket sales are currently disabled for this event. Resale tickets may still be available." 
+        });
+      }
+
       // Check if event has already passed
       const now = new Date();
       

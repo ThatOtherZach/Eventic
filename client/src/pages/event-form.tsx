@@ -37,6 +37,7 @@ export default function EventForm() {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
+  const isAdmin = user?.email?.endsWith("@saymservices.com") || false;
   
   // Address component states
   const [address, setAddress] = useState<string>("");
@@ -87,6 +88,7 @@ export default function EventForm() {
       enableVoting: false,
       recurringType: null,
       recurringEndDate: null,
+      ticketPurchasesEnabled: true,
     },
   });
   
@@ -147,6 +149,7 @@ export default function EventForm() {
         enableVoting: event.enableVoting || false,
         recurringType: (event.recurringType as "weekly" | "monthly" | "annual" | null) || null,
         recurringEndDate: event.recurringEndDate || null,
+        ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
       });
       
       setImageUrl(event.imageUrl || "");
@@ -1105,6 +1108,34 @@ export default function EventForm() {
                                   </label>
                                 </div>
                                 <div className="form-text">Tickets can collect votes! The most voted ticket becomes golden. Use the validator to vote/validate someones ticket.</div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                        
+                        {/* Admin-only Disable Ticket Sales checkbox */}
+                        {isAdmin && (
+                          <FormField
+                            control={form.control}
+                            name="ticketPurchasesEnabled"
+                            render={({ field }) => (
+                              <FormItem className="mt-3">
+                                <div className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="ticketPurchasesEnabled"
+                                    checked={!field.value}
+                                    onChange={(e) => field.onChange(!e.target.checked)}
+                                    data-testid="checkbox-disable-ticket-sales"
+                                  />
+                                  <label className="form-check-label" htmlFor="ticketPurchasesEnabled">
+                                    <span className="badge bg-danger me-2">🚫</span>
+                                    Disable Ticket Sales
+                                  </label>
+                                </div>
+                                <div className="form-text">Stop new ticket purchases while still allowing resales and refunds. Only administrators can toggle this setting.</div>
                                 <FormMessage />
                               </FormItem>
                             )}
