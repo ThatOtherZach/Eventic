@@ -100,6 +100,8 @@ export const events = pgTable("events", {
   goldenTicketEnabled: boolean("golden_ticket_enabled").default(false),
   goldenTicketCount: integer("golden_ticket_count"),
   specialEffectsEnabled: boolean("special_effects_enabled").default(false), // Enable special visual effects on validated tickets
+  stickerUrl: text("sticker_url"),
+  stickerOdds: integer("sticker_odds").default(25), // Percentage chance (1-100)
   allowMinting: boolean("allow_minting").default(false), // Allow attendees to mint tickets as NFTs
   isPrivate: boolean("is_private").default(false), // Private events are excluded from searches and boosts
   isEnabled: boolean("is_enabled").default(true), // Whether event is publicly visible

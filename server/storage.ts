@@ -846,6 +846,16 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    // Check for custom sticker effect
+    if (!specialEffect && event.stickerUrl && event.stickerOdds) {
+      const random = Math.random();
+      const odds = event.stickerOdds / 100; // Convert percentage to decimal
+      if (random < odds) {
+        specialEffect = 'sticker';
+        console.log(`🎯 Custom sticker effect assigned to ticket ${id} (${event.stickerOdds}% chance)`);
+      }
+    }
+    
     // Check for golden ticket on first validation
     let isGoldenTicket = currentTicket.isGoldenTicket || false;
     if (!currentTicket.isValidated && event.goldenTicketEnabled && event.goldenTicketCount !== null) {
@@ -1741,8 +1751,8 @@ export class DatabaseStorage implements IStorage {
     // Create the new event
     const newEvent: InsertEvent = {
       name: originalEvent.name,
-      description: originalEvent.description || undefined,
-      contactDetails: originalEvent.contactDetails || undefined,
+      description: originalEvent.description || null,
+      contactDetails: originalEvent.contactDetails || null,
       venue: originalEvent.venue,
       country: originalEvent.country || undefined,
       date: nextDate.toISOString().split('T')[0],

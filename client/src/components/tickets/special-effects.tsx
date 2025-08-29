@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Event } from "@shared/schema";
 
-type EffectType = 'snowflakes' | 'confetti' | 'fireworks' | 'hearts' | 'spooky' | 'pride' | 'nice' | 'monthly' | 'rainbow';
+type EffectType = 'snowflakes' | 'confetti' | 'fireworks' | 'hearts' | 'spooky' | 'pride' | 'nice' | 'monthly' | 'rainbow' | 'sticker';
 
 interface SpecialEffectConfig {
   type: EffectType;
@@ -309,6 +309,27 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       return () => clearInterval(interval);
     };
     
+    const createSticker = () => {
+      // Create floating custom sticker images
+      if (!event.stickerUrl) return;
+      
+      for (let i = 0; i < 4; i++) {
+        const sticker = document.createElement('img');
+        sticker.className = 'spooky-ghost'; // Reuse the floating animation
+        sticker.src = event.stickerUrl.startsWith('/objects/') ? event.stickerUrl : '/objects/' + event.stickerUrl.split('/').pop();
+        sticker.style.position = 'absolute';
+        sticker.style.left = Math.random() * 80 + 10 + '%';
+        sticker.style.top = Math.random() * 60 + 20 + '%';
+        sticker.style.animationDelay = Math.random() * 6 + 's';
+        sticker.style.width = Math.random() * 20 + 20 + 'px';
+        sticker.style.height = 'auto';
+        sticker.style.zIndex = '10';
+        sticker.style.pointerEvents = 'none';
+        container.appendChild(sticker);
+        particles.push(sticker);
+      }
+    };
+    
     let cleanup: (() => void) | undefined;
     
     switch (effectType) {
@@ -326,6 +347,9 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
         break;
       case 'fireworks':
         cleanup = createFireworks();
+        break;
+      case 'sticker':
+        createSticker();
         break;
       case 'pride':
       case 'monthly':

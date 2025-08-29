@@ -35,6 +35,7 @@ export default function EventForm() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [stickerUrl, setStickerUrl] = useState<string>("");
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = user?.email?.endsWith("@saymservices.com") || false;
@@ -98,6 +99,7 @@ export default function EventForm() {
       goldenTicketEnabled: false,
       goldenTicketCount: undefined,
       specialEffectsEnabled: false,
+      stickerOdds: 25,
       allowMinting: false,
       isPrivate: false,
       oneTicketPerUser: false,
@@ -160,6 +162,7 @@ export default function EventForm() {
         goldenTicketEnabled: event.goldenTicketEnabled || false,
         goldenTicketCount: event.goldenTicketCount || undefined,
         specialEffectsEnabled: event.specialEffectsEnabled || false,
+        stickerOdds: event.stickerOdds || 25,
         allowMinting: event.allowMinting || false,
         isPrivate: event.isPrivate || false,
         oneTicketPerUser: event.oneTicketPerUser || false,
@@ -173,6 +176,7 @@ export default function EventForm() {
       });
       
       setImageUrl(event.imageUrl || "");
+      setStickerUrl(event.stickerUrl || "");
       setTicketsSold(event.ticketsSold || 0);
     }
   }, [event, isEditMode, user, toast, setLocation, id, form]);
@@ -317,6 +321,8 @@ export default function EventForm() {
       maxTickets: data.maxTickets || 100,
       imageUrl: imageUrl || undefined,
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
+      stickerUrl: stickerUrl || undefined,
+      stickerOdds: data.stickerOdds || undefined,
       timezone: data.timezone || "America/New_York",
     };
 
@@ -349,6 +355,8 @@ export default function EventForm() {
         maxTickets: data.maxTickets || undefined,
         imageUrl: imageUrl || undefined,
         ticketBackgroundUrl: imageUrl || undefined,
+        stickerUrl: stickerUrl || undefined,
+        stickerOdds: data.stickerOdds || undefined,
         timezone: data.timezone || "America/New_York",
       };
       
@@ -378,6 +386,22 @@ export default function EventForm() {
     }
   };
 
+  const handleStickerUpload = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload", {});
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleStickerComplete = (result: any) => {
+    const uploadedUrl = result.successful?.[0]?.uploadURL;
+    if (uploadedUrl) {
+      setStickerUrl(uploadedUrl);
+    }
+  };
+
 
 
   // Create a sample ticket for preview
@@ -402,6 +426,7 @@ export default function EventForm() {
     useCount: 0,
     isGoldenTicket: isGolden, // Apply golden ticket when enabled and no other effect
     isDoubleGolden: isDoubleGolden, // Show double golden for rainbow effect
+    specialEffect: null,
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -458,6 +483,8 @@ export default function EventForm() {
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
     goldenTicketCount: watchedValues.goldenTicketCount || null,
     specialEffectsEnabled: watchedValues.specialEffectsEnabled || false,
+    stickerUrl: stickerUrl || null,
+    stickerOdds: watchedValues.stickerOdds || 25,
     allowMinting: watchedValues.allowMinting || false,
     isPrivate: watchedValues.isPrivate || false,
     isEnabled: true,
@@ -1418,6 +1445,82 @@ export default function EventForm() {
                             </FormItem>
                           )}
                         />
+
+                        {/* Custom Sticker Upload - only shows once saved, cannot be removed */}
+                        {(stickerUrl || !isEditMode) && (
+                          <div className="mt-4 p-3 border rounded bg-light">
+                            <h6 className="mb-3">
+                              <span className="badge bg-success me-2">🎯</span>
+                              Custom Sticker
+                            </h6>
+                            
+                            {isEditMode && stickerUrl && (
+                              <div className="alert alert-info mb-3">
+                                <small>✓ Sticker uploaded. This feature cannot be removed once added.</small>
+                              </div>
+                            )}
+                            
+                            {!stickerUrl && (
+                              <>
+                                <p className="text-muted small mb-3">
+                                  Upload a custom sticker (PNG or GIF) that will float on lucky tickets. 
+                                  Maximum file size: 500KB. Transparent PNGs work best!
+                                </p>
+                                
+                                <ObjectUploader
+                                  onGetUploadParameters={handleStickerUpload}
+                                  onComplete={handleStickerComplete}
+                                  buttonClassName="btn btn-sm btn-outline-success"
+                                  currentImageUrl={stickerUrl}
+                                  showPreview={true}
+                                  accept="image/png,image/gif"
+                                  maxFileSize={500 * 1024} // 500KB
+                                >
+                                  <span>📎 Upload Sticker</span>
+                                </ObjectUploader>
+                              </>
+                            )}
+                            
+                            {stickerUrl && (
+                              <div className="d-flex align-items-center gap-3 mb-3">
+                                <img 
+                                  src={stickerUrl.startsWith('/objects/') ? stickerUrl : '/objects/' + stickerUrl.split('/').pop()} 
+                                  alt="Sticker preview" 
+                                  style={{ maxHeight: '60px', maxWidth: '60px' }}
+                                />
+                                <span className="text-success small">✓ Sticker uploaded</span>
+                              </div>
+                            )}
+                            
+                            <FormField
+                              control={form.control}
+                              name="stickerOdds"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Sticker Odds</FormLabel>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <input
+                                      type="range"
+                                      className="form-range flex-grow-1"
+                                      min="1"
+                                      max="100"
+                                      value={field.value || 25}
+                                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                      disabled={!stickerUrl}
+                                    />
+                                    <span className="badge bg-secondary" style={{ minWidth: '50px' }}>
+                                      {field.value || 25}%
+                                    </span>
+                                  </div>
+                                  <div className="form-text">
+                                    Percentage of validated tickets that will display the custom sticker
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
                         
                         {/* Allow Minting - moved to bottom */}
                         <FormField

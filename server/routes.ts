@@ -694,6 +694,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (createData.ticketBackgroundUrl && createData.ticketBackgroundUrl.startsWith("https://storage.googleapis.com/")) {
         createData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(createData.ticketBackgroundUrl);
       }
+      if (createData.stickerUrl && createData.stickerUrl.startsWith("https://storage.googleapis.com/")) {
+        createData.stickerUrl = objectStorageService.normalizeObjectEntityPath(createData.stickerUrl);
+      }
       
       // If ticket purchases are disabled, automatically set event to private
       if (createData.ticketPurchasesEnabled === false) {
@@ -768,6 +771,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (updateData.ticketBackgroundUrl && updateData.ticketBackgroundUrl.startsWith("https://storage.googleapis.com/")) {
         updateData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(updateData.ticketBackgroundUrl);
       }
+      if (updateData.stickerUrl && updateData.stickerUrl.startsWith("https://storage.googleapis.com/")) {
+        updateData.stickerUrl = objectStorageService.normalizeObjectEntityPath(updateData.stickerUrl);
+      }
       
       // Validate the update data - create a new partial schema from the base event schema
       const baseEventSchema = z.object({
@@ -791,6 +797,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         goldenTicketEnabled: z.boolean().optional(),
         goldenTicketCount: z.number().optional(),
         specialEffectsEnabled: z.boolean().optional(),
+        stickerUrl: z.string().optional(),
+        stickerOdds: z.number().optional(),
         allowMinting: z.boolean().optional(),
         isPrivate: z.boolean().optional(),
         isEnabled: z.boolean().optional(),
