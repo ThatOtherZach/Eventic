@@ -107,6 +107,7 @@ export const events = pgTable("events", {
   oneTicketPerUser: boolean("one_ticket_per_user").default(false), // Restrict users to one ticket per event
   surgePricing: boolean("surge_pricing").default(false), // Enable dynamic pricing based on ticket sales
   p2pValidation: boolean("p2p_validation").default(false), // Allow any ticket holder to validate other tickets for this event
+  enableVoting: boolean("enable_voting").default(false), // Allow tickets to collect votes when P2P validation is enabled
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -385,6 +386,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
   isPrivate: z.boolean().optional().default(false),
   oneTicketPerUser: z.boolean().optional().default(false),
   surgePricing: z.boolean().optional().default(false),
+  p2pValidation: z.boolean().optional().default(false),
+  enableVoting: z.boolean().optional().default(false),
 }).superRefine((data, ctx) => {
   // Validate that end date/time is after start date/time
   if (data.endDate && data.endTime) {
@@ -434,6 +437,15 @@ export const insertEventSchema = createInsertSchema(events).omit({
       code: z.ZodIssueCode.custom,
       message: "Base price must be at least $1.00 when surge pricing is enabled",
       path: ["ticketPrice"],
+    });
+  }
+
+  // Validate that enableVoting requires p2pValidation
+  if (data.enableVoting && !data.p2pValidation) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "P2P Validation must be enabled to use voting feature",
+      path: ["enableVoting"],
     });
   }
 });

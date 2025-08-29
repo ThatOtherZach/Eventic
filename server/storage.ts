@@ -36,6 +36,7 @@ export interface IStorage {
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
+  reassignGoldenTicketByVotes(eventId: string): Promise<void>;
   resellTicket(ticketId: string, userId: string): Promise<boolean>;
   getResellQueueCount(eventId: string): Promise<number>;
   getNextResellTicket(eventId: string): Promise<{ ticket: Ticket; resellEntry: ResellQueue } | null>;
@@ -808,42 +809,45 @@ export class DatabaseStorage implements IStorage {
     // Check for golden ticket on first validation
     let isGoldenTicket = currentTicket.isGoldenTicket || false;
     if (!currentTicket.isValidated && event.goldenTicketEnabled && event.goldenTicketCount !== null) {
-      // Count how many golden tickets have already been awarded for this event
-      const goldenTicketCount = await db
-        .select({ count: sql`count(*)` })
-        .from(tickets)
-        .where(and(eq(tickets.eventId, event.id), eq(tickets.isGoldenTicket, true)))
-        .then(rows => Number(rows[0]?.count || 0));
-      
-      // Count how many unvalidated tickets remain for this event
-      const unvalidatedCount = await db
-        .select({ count: sql`count(*)` })
-        .from(tickets)
-        .where(and(eq(tickets.eventId, event.id), eq(tickets.isValidated, false)))
-        .then(rows => Number(rows[0]?.count || 0));
-      
-      // Calculate remaining golden tickets to award
-      const remainingGoldenTickets = event.goldenTicketCount - goldenTicketCount;
-      
-      // If we haven't reached the limit and there are tickets left to validate
-      if (remainingGoldenTickets > 0 && unvalidatedCount > 0) {
-        // Calculate probability: (remaining golden tickets / remaining unvalidated tickets) / 2
-        // Dividing by 2 makes golden tickets rarer and more special
-        const baseProbability = remainingGoldenTickets / unvalidatedCount;
-        const probability = baseProbability / 2;
+      // Skip random golden ticket assignment if voting is enabled
+      if (!event.enableVoting) {
+        // Count how many golden tickets have already been awarded for this event
+        const goldenTicketCount = await db
+          .select({ count: sql`count(*)` })
+          .from(tickets)
+          .where(and(eq(tickets.eventId, event.id), eq(tickets.isGoldenTicket, true)))
+          .then(rows => Number(rows[0]?.count || 0));
         
-        // Generate random number between 0 and 1
-        const timestamp = Date.now();
-        const seed = timestamp % 10000;
-        const random = (seed * 9301 + 49297) % 233280;
-        const randomValue = random / 233280; // 0 to 1
+        // Count how many unvalidated tickets remain for this event
+        const unvalidatedCount = await db
+          .select({ count: sql`count(*)` })
+          .from(tickets)
+          .where(and(eq(tickets.eventId, event.id), eq(tickets.isValidated, false)))
+          .then(rows => Number(rows[0]?.count || 0));
         
-        // Check if this ticket wins based on calculated probability
-        if (randomValue < probability) {
-          isGoldenTicket = true;
-          console.log(`🎫 GOLDEN TICKET WINNER! Ticket ${id} is golden ticket #${goldenTicketCount + 1} of ${event.goldenTicketCount}`);
-          console.log(`   Probability was ${(probability * 100).toFixed(2)}% (base: ${(baseProbability * 100).toFixed(2)}% halved for rarity)`);
-          console.log(`   ${remainingGoldenTickets} golden remaining / ${unvalidatedCount} unvalidated tickets`);
+        // Calculate remaining golden tickets to award
+        const remainingGoldenTickets = event.goldenTicketCount - goldenTicketCount;
+        
+        // If we haven't reached the limit and there are tickets left to validate
+        if (remainingGoldenTickets > 0 && unvalidatedCount > 0) {
+          // Calculate probability: (remaining golden tickets / remaining unvalidated tickets) / 2
+          // Dividing by 2 makes golden tickets rarer and more special
+          const baseProbability = remainingGoldenTickets / unvalidatedCount;
+          const probability = baseProbability / 2;
+          
+          // Generate random number between 0 and 1
+          const timestamp = Date.now();
+          const seed = timestamp % 10000;
+          const random = (seed * 9301 + 49297) % 233280;
+          const randomValue = random / 233280; // 0 to 1
+          
+          // Check if this ticket wins based on calculated probability
+          if (randomValue < probability) {
+            isGoldenTicket = true;
+            console.log(`🎫 GOLDEN TICKET WINNER! Ticket ${id} is golden ticket #${goldenTicketCount + 1} of ${event.goldenTicketCount}`);
+            console.log(`   Probability was ${(probability * 100).toFixed(2)}% (base: ${(baseProbability * 100).toFixed(2)}% halved for rarity)`);
+            console.log(`   ${remainingGoldenTickets} golden remaining / ${unvalidatedCount} unvalidated tickets`);
+          }
         }
       }
     }
@@ -860,7 +864,58 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(tickets.id, id))
       .returning();
+    
+    // For voting-enabled events, reassign golden ticket based on vote counts
+    if (event.enableVoting && event.goldenTicketEnabled) {
+      await this.reassignGoldenTicketByVotes(event.id);
+    }
+    
     return ticket || undefined;
+  }
+
+  // Reassign golden tickets based on vote counts for voting-enabled events
+  async reassignGoldenTicketByVotes(eventId: string): Promise<void> {
+    // Get the event to check if voting is enabled
+    const event = await this.getEvent(eventId);
+    if (!event || !event.enableVoting || !event.goldenTicketEnabled) {
+      return; // Nothing to do if voting or golden tickets are not enabled
+    }
+
+    // Find the ticket with the highest vote count (useCount) for this event
+    const eventTickets = await db
+      .select()
+      .from(tickets)
+      .where(eq(tickets.eventId, eventId))
+      .orderBy(desc(tickets.useCount));
+
+    if (eventTickets.length === 0) {
+      return; // No tickets for this event
+    }
+
+    const topTicket = eventTickets[0];
+    const currentGoldenTickets = eventTickets.filter((t: Ticket) => t.isGoldenTicket);
+
+    // Only proceed if there's a clear winner with votes and it's not already golden
+    if ((topTicket.useCount || 0) > 0 && !topTicket.isGoldenTicket) {
+      // Remove golden status from all other tickets for this event
+      if (currentGoldenTickets.length > 0) {
+        await db
+          .update(tickets)
+          .set({ isGoldenTicket: false })
+          .where(and(
+            eq(tickets.eventId, eventId),
+            eq(tickets.isGoldenTicket, true)
+          ));
+      }
+
+      // Assign golden status to the most voted ticket
+      await db
+        .update(tickets)
+        .set({ isGoldenTicket: true })
+        .where(eq(tickets.id, topTicket.id));
+      
+      console.log(`🗳️ GOLDEN TICKET REASSIGNED! Ticket ${topTicket.id} now golden with ${topTicket.useCount} votes`);
+    }
   }
 
   // Validation Sessions (in-memory for temporary tokens)

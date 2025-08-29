@@ -84,6 +84,7 @@ export default function EventForm() {
       oneTicketPerUser: false,
       surgePricing: false,
       p2pValidation: false,
+      enableVoting: false,
     },
   });
   
@@ -413,6 +414,7 @@ export default function EventForm() {
     oneTicketPerUser: watchedValues.oneTicketPerUser || false,
     surgePricing: watchedValues.surgePricing || false,
     p2pValidation: watchedValues.p2pValidation || false,
+    enableVoting: watchedValues.enableVoting || false,
     createdAt: new Date(),
   };
 
@@ -956,6 +958,35 @@ export default function EventForm() {
                             </FormItem>
                           )}
                         />
+
+                        {/* Nested Enable Voting setting - only shown when P2P Validation is enabled */}
+                        {form.watch("p2pValidation") && (
+                          <FormField
+                            control={form.control}
+                            name="enableVoting"
+                            render={({ field }) => (
+                              <FormItem className="mt-3 ms-4">
+                                <div className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="enableVoting"
+                                    checked={field.value || false}
+                                    onChange={(e) => field.onChange(e.target.checked)}
+                                    data-testid="checkbox-enable-voting"
+                                    disabled={isEditMode} // Disable if editing existing event
+                                  />
+                                  <label className="form-check-label" htmlFor="enableVoting">
+                                    <span className="badge bg-warning text-dark me-2">🗳️</span>
+                                    Enable Voting
+                                  </label>
+                                </div>
+                                <div className="form-text">Tickets can collect votes! The most voted ticket becomes golden. Use the validator to vote/validate someones ticket.</div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
                       </div>
                     </div>
 
