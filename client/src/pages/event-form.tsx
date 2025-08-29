@@ -47,6 +47,7 @@ export default function EventForm() {
   // State for cycling through special effects preview
   const [previewEffectIndex, setPreviewEffectIndex] = useState(0);
   const availableEffects: Array<{type: string, name: string}> = [
+    { type: 'none', name: 'No Effect' },
     { type: 'monthly', name: 'Monthly Color' },
     { type: 'snowflakes', name: 'Snowflakes' },
     { type: 'confetti', name: 'Confetti' },
@@ -379,6 +380,12 @@ export default function EventForm() {
   // Create a sample ticket for preview
   const goldenTicketEnabled = form.watch('goldenTicketEnabled');
   const specialEffectsEnabled = form.watch('specialEffectsEnabled');
+  
+  // Determine what effect to show
+  let currentEffect = specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : 'none';
+  let isGolden = goldenTicketEnabled && !specialEffectsEnabled; // Only show golden when effects are off
+  let isDoubleGolden = currentEffect === 'rainbow';
+  
   const sampleTicket: Ticket & { previewEffectType?: string } = {
     id: "sample",
     eventId: "sample",
@@ -389,8 +396,8 @@ export default function EventForm() {
     validatedAt: null,
     validationCode: null,
     useCount: 0,
-    isGoldenTicket: goldenTicketEnabled === true, // Apply golden ticket effect when enabled
-    isDoubleGolden: availableEffects[previewEffectIndex]?.type === 'rainbow', // Show double golden for rainbow effect
+    isGoldenTicket: isGolden, // Only apply golden ticket when special effects are off
+    isDoubleGolden: isDoubleGolden, // Show double golden for rainbow effect
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -404,7 +411,7 @@ export default function EventForm() {
     resellStatus: null,
     originalOwnerId: null,
     // Add preview effect type for special effects preview
-    previewEffectType: specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : undefined,
+    previewEffectType: currentEffect !== 'none' ? currentEffect : undefined,
   };
 
   const watchedValues = form.watch();
@@ -1270,17 +1277,20 @@ export default function EventForm() {
                                   className="btn btn-sm btn-outline-secondary"
                                   onClick={() => setPreviewEffectIndex((prev) => (prev - 1 + availableEffects.length) % availableEffects.length)}
                                   data-testid="button-prev-effect"
+                                  title="Previous effect"
                                 >
                                   <ArrowLeft size={16} />
                                 </button>
-                                <span className="text-muted small">
-                                  <strong>{availableEffects[previewEffectIndex]?.name}</strong> Effect
+                                <span className="text-muted small text-center" style={{ minWidth: '150px' }}>
+                                  <strong>{availableEffects[previewEffectIndex]?.name}</strong>
+                                  {availableEffects[previewEffectIndex]?.type !== 'none' && ' Effect'}
                                 </span>
                                 <button
                                   type="button"
                                   className="btn btn-sm btn-outline-secondary"
                                   onClick={() => setPreviewEffectIndex((prev) => (prev + 1) % availableEffects.length)}
                                   data-testid="button-next-effect"
+                                  title="Next effect"
                                 >
                                   <ArrowRight size={16} />
                                 </button>

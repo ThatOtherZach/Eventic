@@ -185,7 +185,9 @@ interface SpecialEffectsProps {
 }
 
 export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsProps) {
-  const effectType = detectSpecialEffect(event, ticket);
+  // Check for preview effect type first
+  const ticketWithPreview = ticket as any;
+  const effectType = ticketWithPreview?.previewEffectType || detectSpecialEffect(event, ticket);
   const particlesRef = useRef<HTMLDivElement[]>([]);
   
   useEffect(() => {
@@ -341,7 +343,9 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
 
 // Overlay component for glow effects
 export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?: { isValidated: boolean | null; id?: string; [key: string]: any } }) {
-  const effectType = detectSpecialEffect(event, ticket);
+  // Check for preview effect type first
+  const ticketWithPreview = ticket as any;
+  const effectType = ticketWithPreview?.previewEffectType || detectSpecialEffect(event, ticket);
   
   if (!effectType) return null;
   
