@@ -810,6 +810,42 @@ export class DatabaseStorage implements IStorage {
     // Append suffix to validation code for backend uniqueness
     const fullValidationCode = validationCode ? validationCode + codeSuffix : null;
     
+    // Determine special effect on first validation (only if special effects are enabled)
+    let specialEffect: string | null = currentTicket.specialEffect || null;
+    if (!currentTicket.isValidated && event.specialEffectsEnabled && !specialEffect) {
+      // Parse event date to check for holiday effects
+      const [year, month, day] = event.date.split('-').map(Number);
+      const eventDate = new Date(year, month - 1, day);
+      const dayOfYear = Math.floor((eventDate.getTime() - new Date(eventDate.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Check conditions and apply probability
+      const random = Math.random();
+      
+      // Priority order (highest to lowest)
+      if (dayOfYear === 69) { // Nice day (March 10)
+        if (random < 1/69) specialEffect = 'nice';
+      } else if (event.name.toLowerCase().includes('pride') || event.name.toLowerCase().includes('gay')) {
+        if (random < 1/100) specialEffect = 'pride';
+      } else if (month === 2 && day === 14) { // Valentine's Day
+        if (random < 1/14) specialEffect = 'hearts';
+      } else if (month === 10 && day === 31) { // Halloween
+        if (random < 1/88) specialEffect = 'spooky';
+      } else if (month === 12 && day === 25) { // Christmas
+        if (random < 1/25) specialEffect = 'snowflakes';
+      } else if (month === 12 && day === 31) { // New Year's Eve
+        if (random < 1/365) specialEffect = 'fireworks';
+      } else if (event.name.toLowerCase().includes('party')) {
+        if (random < 1/100) specialEffect = 'confetti';
+      } else {
+        // Monthly color effect (lowest priority)
+        if (random < 1/30) specialEffect = 'monthly';
+      }
+      
+      if (specialEffect) {
+        console.log(`✨ Special effect assigned to ticket ${id}: ${specialEffect}`);
+      }
+    }
+    
     // Check for golden ticket on first validation
     let isGoldenTicket = currentTicket.isGoldenTicket || false;
     if (!currentTicket.isValidated && event.goldenTicketEnabled && event.goldenTicketCount !== null) {
@@ -856,7 +892,7 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Update ticket with incremented use count and golden ticket status
+    // Update ticket with incremented use count, golden ticket status, and special effect
     const [ticket] = await db
       .update(tickets)
       .set({ 
@@ -864,13 +900,15 @@ export class DatabaseStorage implements IStorage {
         validatedAt: new Date(),
         validationCode: fullValidationCode,
         useCount: (currentTicket.useCount || 0) + 1,
-        isGoldenTicket: isGoldenTicket
+        isGoldenTicket: isGoldenTicket,
+        specialEffect: specialEffect
       })
       .where(eq(tickets.id, id))
       .returning();
     
     // For voting-enabled events, reassign golden ticket based on vote counts
-    if (event.enableVoting && event.goldenTicketEnabled) {
+    // Voting always uses golden tickets to identify the winner
+    if (event.enableVoting) {
       await this.reassignGoldenTicketByVotes(event.id);
     }
     
@@ -881,8 +919,8 @@ export class DatabaseStorage implements IStorage {
   async reassignGoldenTicketByVotes(eventId: string): Promise<void> {
     // Get the event to check if voting is enabled
     const event = await this.getEvent(eventId);
-    if (!event || !event.enableVoting || !event.goldenTicketEnabled) {
-      return; // Nothing to do if voting or golden tickets are not enabled
+    if (!event || !event.enableVoting) {
+      return; // Nothing to do if voting is not enabled
     }
 
     // Find the ticket with the highest vote count (useCount) for this event

@@ -120,8 +120,22 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
                 <span className="super-rgb-text">
                   {event.name}
                 </span>
+              ) : ticket.isGoldenTicket ? (
+                // Golden ticket badge takes priority over monthly
+                <span 
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(255, 215, 0, 0.85)',
+                    color: '#000',
+                    display: 'inline-block',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                  }}
+                >
+                  {event.name}
+                </span>
               ) : specialEffect === 'monthly' && monthlyColor ? (
-                // Monthly effect badge - always show when monthly effect is active
+                // Monthly effect badge - only if not golden
                 <span 
                   style={{
                     padding: '2px 8px',
@@ -131,20 +145,6 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
                     display: 'inline-block',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                     textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-                  }}
-                >
-                  {event.name}
-                </span>
-              ) : ticket.isGoldenTicket ? (
-                // Golden ticket only if no monthly effect
-                <span 
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: 'rgba(255, 215, 0, 0.85)',
-                    color: '#000',
-                    display: 'inline-block',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                   }}
                 >
                   {event.name}

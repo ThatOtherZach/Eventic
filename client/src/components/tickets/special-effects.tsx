@@ -118,10 +118,15 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   }
 ];
 
-export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean | null; isDoubleGolden?: boolean; id?: string; [key: string]: any }): EffectType | null {
+export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean | null; isDoubleGolden?: boolean; specialEffect?: string | null; id?: string; [key: string]: any }): EffectType | null {
   // Priority 1: Double golden tickets get rainbow effect (highest priority)
   if (ticket?.isDoubleGolden) {
     return 'rainbow';
+  }
+  
+  // Priority 2: If ticket has a saved special effect from validation, use it
+  if (ticket?.specialEffect) {
+    return ticket.specialEffect as EffectType;
   }
   
   // Only apply effects if the event has special effects enabled
@@ -137,45 +142,19 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
     return null;
   }
   
-  // Sort by priority (highest first) and find the first matching effect
+  // For preview mode ONLY (no saved effects), determine effect for testing
+  // Real validated tickets should have their effect saved from validation
+  if (!isPreview) {
+    return null; // Non-preview tickets should have saved effects
+  }
+  
+  // Preview mode: show effects without random chance for testing
   const sortedEffects = [...SPECIAL_EFFECTS].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   
   for (const effect of sortedEffects) {
     if (effect.condition(event)) {
       // For preview, always show the effect
-      if (isPreview) {
-        return effect.type;
-      }
-      
-      // Apply realistic odds based on effect type for real tickets
-      const random = Math.random();
-      
-      switch (effect.type) {
-        case 'nice':
-          // 1 in 69 chance for the 69th day of the year
-          return random < (1/69) ? effect.type : null;
-        case 'hearts':
-          // Valentine's Day: 1 in 14 chance
-          return random < (1/14) ? effect.type : null;
-        case 'spooky':
-          // Halloween: 1 in 88 chance  
-          return random < (1/88) ? effect.type : null;
-        case 'snowflakes':
-          // Christmas: 1 in 25 chance
-          return random < (1/25) ? effect.type : null;
-        case 'fireworks':
-          // New Year's Eve: 1 in 365 chance of effect being applied
-          return random < (1/365) ? effect.type : null;
-        case 'monthly':
-          // 1 in 30 chance for monthly color effects
-          return random < (1/30) ? effect.type : null;
-        case 'pride':
-        case 'confetti':
-          // These remain based on event name/content, 1 in 100 chance
-          return random < (1/100) ? effect.type : null;
-        default:
-          return effect.type;
-      }
+      return effect.type;
     }
   }
   return null;
