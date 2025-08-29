@@ -299,6 +299,7 @@ export default function EventForm() {
       maxTickets: data.maxTickets || 100,
       imageUrl: imageUrl || undefined,
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
+      timezone: data.timezone || "America/New_York",
     };
 
     // If in edit mode, perform update with proper validation
@@ -330,6 +331,7 @@ export default function EventForm() {
         maxTickets: data.maxTickets || undefined,
         imageUrl: imageUrl || undefined,
         ticketBackgroundUrl: imageUrl || undefined,
+        timezone: data.timezone || "America/New_York",
       };
       
       updateEventMutation.mutate(updateData);
