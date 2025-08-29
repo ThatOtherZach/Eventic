@@ -48,7 +48,6 @@ export default function EventForm() {
   const [previewEffectIndex, setPreviewEffectIndex] = useState(0);
   
   const availableEffects: Array<{type: string, name: string}> = [
-    { type: 'none', name: 'No Effect / Golden' },
     { type: 'monthly', name: 'Monthly Color' },
     { type: 'snowflakes', name: 'Snowflakes' },
     { type: 'confetti', name: 'Confetti' },
@@ -383,9 +382,9 @@ export default function EventForm() {
   const specialEffectsEnabled = form.watch('specialEffectsEnabled');
   
   // Determine what effect to show
-  let currentEffect = specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : 'none';
-  // Show golden ticket when enabled AND either effects are off OR "No Effect" is selected  
-  let isGolden = goldenTicketEnabled && (!specialEffectsEnabled || currentEffect === 'none');
+  let currentEffect = specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : undefined;
+  // Show golden ticket only when special effects are off
+  let isGolden = goldenTicketEnabled && !specialEffectsEnabled;
   let isDoubleGolden = currentEffect === 'rainbow';
   
   const sampleTicket: Ticket & { previewEffectType?: string } = {
@@ -412,8 +411,8 @@ export default function EventForm() {
     purchasePrice: "0",
     resellStatus: null,
     originalOwnerId: null,
-    // Add preview effect type for special effects preview (skip 'none' to let golden show through)
-    previewEffectType: currentEffect !== 'none' ? currentEffect : undefined,
+    // Add preview effect type for special effects preview
+    previewEffectType: currentEffect,
   };
 
   const watchedValues = form.watch();
@@ -1284,12 +1283,7 @@ export default function EventForm() {
                                   <ArrowLeft size={16} />
                                 </button>
                                 <span className="text-muted small text-center" style={{ minWidth: '150px' }}>
-                                  <strong>
-                                    {availableEffects[previewEffectIndex]?.type === 'none' 
-                                      ? (goldenTicketEnabled ? 'Golden Ticket' : 'No Effect')
-                                      : availableEffects[previewEffectIndex]?.name}
-                                  </strong>
-                                  {availableEffects[previewEffectIndex]?.type !== 'none' && ' Effect'}
+                                  <strong>{availableEffects[previewEffectIndex]?.name}</strong> Effect
                                 </span>
                                 <button
                                   type="button"
