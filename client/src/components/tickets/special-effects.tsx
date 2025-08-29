@@ -393,7 +393,7 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
             transform: 'translateY(-50%)',
             zIndex: 10,
             fontSize: '36px',
-            fontFamily: 'Comic Sans MS, cursive',
+            fontFamily: '"Comic Sans MS", "Comic Sans", "Chalkboard SE", "Marker Felt", cursive',
             fontWeight: 'bold',
             color: '#fff',
             textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000',
