@@ -166,6 +166,16 @@ export default function EventForm() {
     form.setValue('venue', venueString || '', { shouldValidate: true });
   }, [address, city, country, form]);
 
+  // When ticket sales are disabled, automatically set event to private
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'ticketPurchasesEnabled' && value.ticketPurchasesEnabled === false) {
+        form.setValue('isPrivate', true);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const createEventMutation = useMutation({
     mutationFn: async (data: InsertEvent) => {
       const response = await apiRequest("POST", "/api/events", data);
@@ -1021,6 +1031,7 @@ export default function EventForm() {
                                   id="isPrivate"
                                   checked={field.value}
                                   onChange={(e) => field.onChange(e.target.checked)}
+                                  disabled={!form.watch("ticketPurchasesEnabled")}
                                   data-testid="checkbox-is-private"
                                 />
                                 <label className="form-check-label" htmlFor="isPrivate">
@@ -1028,7 +1039,12 @@ export default function EventForm() {
                                   Private Event
                                 </label>
                               </div>
-                              <div className="form-text">Private events won't appear in search results or be featured. Only accessible via direct link.</div>
+                              <div className="form-text">
+                                Private events won't appear in search results or be featured. Only accessible via direct link.
+                                {!form.watch("ticketPurchasesEnabled") && (
+                                  <span className="text-warning"> <strong>Automatically enabled when ticket sales are disabled.</strong></span>
+                                )}
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
