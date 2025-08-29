@@ -47,16 +47,19 @@ export default function EventForm() {
   // State for cycling through special effects preview
   const [previewEffectIndex, setPreviewEffectIndex] = useState(0);
   
+  // Get current month name for monthly effect
+  const currentMonthName = new Date().toLocaleDateString('en-US', { month: 'long' });
+  
   const availableEffects: Array<{type: string, name: string}> = [
-    { type: 'monthly', name: 'Monthly Color' },
-    { type: 'snowflakes', name: 'Snowflakes' },
-    { type: 'confetti', name: 'Confetti' },
-    { type: 'fireworks', name: 'Fireworks' },
-    { type: 'hearts', name: 'Hearts' },
-    { type: 'spooky', name: 'Spooky' },
-    { type: 'pride', name: 'Pride Rainbow' },
-    { type: 'nice', name: 'Nice ;)' },
-    { type: 'rainbow', name: 'Double Golden' },
+    { type: 'monthly', name: currentMonthName + ' Color' },
+    { type: 'snowflakes', name: 'Christmas (Dec. 25 Only)' },
+    { type: 'confetti', name: 'Confetti (Party Events)' },
+    { type: 'fireworks', name: 'New Year\'s (Dec. 31 Only)' },
+    { type: 'hearts', name: 'Valentine\'s (Feb. 14 Only)' },
+    { type: 'spooky', name: 'Halloween (Oct. 31 Only)' },
+    { type: 'pride', name: 'Pride (June + Keywords)' },
+    { type: 'nice', name: 'Nice Day (Mar. 10 Only)' },
+    { type: 'rainbow', name: 'Double Golden (Rare)' },
   ];
   
   // Calculate min and max dates for event creation
@@ -1282,8 +1285,8 @@ export default function EventForm() {
                                 >
                                   <ArrowLeft size={16} />
                                 </button>
-                                <span className="text-muted small text-center" style={{ minWidth: '150px' }}>
-                                  <strong>{availableEffects[previewEffectIndex]?.name}</strong> Effect
+                                <span className="text-muted small text-center" style={{ minWidth: '180px' }}>
+                                  <strong>{availableEffects[previewEffectIndex]?.name}</strong>
                                 </span>
                                 <button
                                   type="button"
