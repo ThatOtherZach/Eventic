@@ -315,16 +315,16 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
         container.appendChild(burst);
         particles.push(burst);
         
-        // Remove burst after animation
+        // Remove burst after animation (faster)
         setTimeout(() => {
           burst.remove();
           const index = particles.indexOf(burst);
           if (index > -1) particles.splice(index, 1);
-        }, 1500);
+        }, 800);
       };
       
-      // Create bursts periodically
-      const interval = setInterval(createBurst, 1000);
+      // Create bursts more frequently
+      const interval = setInterval(createBurst, 400);
       
       // Store interval cleanup
       return () => clearInterval(interval);
