@@ -412,8 +412,8 @@ export default function EventForm() {
   
   // Determine what effect to show
   let currentEffect = specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : undefined;
-  // Show golden ticket only when special effects are off
-  let isGolden = goldenTicketEnabled && !specialEffectsEnabled;
+  // Show golden ticket only when special effects are off and no sticker
+  let isGolden = goldenTicketEnabled && !specialEffectsEnabled && !stickerUrl;
   let isDoubleGolden = currentEffect === 'rainbow';
   
   const sampleTicket: Ticket & { previewEffectType?: string } = {
@@ -422,13 +422,13 @@ export default function EventForm() {
     userId: user?.id || "",
     ticketNumber: "PREVIEW-001",
     qrData: "sample-qr-data", // Need QR data to show QR code in preview
-    isValidated: specialEffectsEnabled || false, // Mark as validated for preview when special effects enabled
+    isValidated: specialEffectsEnabled || stickerEnabled, // Mark as validated for preview when special effects or sticker enabled
     validatedAt: null,
     validationCode: null,
     useCount: 0,
     isGoldenTicket: isGolden, // Apply golden ticket when enabled and no other effect
     isDoubleGolden: isDoubleGolden, // Show double golden for rainbow effect
-    specialEffect: null,
+    specialEffect: stickerUrl ? 'sticker' : null,
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -485,7 +485,7 @@ export default function EventForm() {
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
     goldenTicketCount: watchedValues.goldenTicketCount || null,
     specialEffectsEnabled: watchedValues.specialEffectsEnabled || false,
-    stickerUrl: stickerUrl || null,
+    stickerUrl: (stickerEnabled && stickerUrl) ? stickerUrl : null,
     stickerOdds: watchedValues.stickerOdds || 25,
     allowMinting: watchedValues.allowMinting || false,
     isPrivate: watchedValues.isPrivate || false,
