@@ -36,6 +36,7 @@ export default function EventForm() {
   const [, setLocation] = useLocation();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [stickerUrl, setStickerUrl] = useState<string>("");
+  const [stickerEnabled, setStickerEnabled] = useState(false);
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = user?.email?.endsWith("@saymservices.com") || false;
@@ -177,6 +178,7 @@ export default function EventForm() {
       
       setImageUrl(event.imageUrl || "");
       setStickerUrl(event.stickerUrl || "");
+      setStickerEnabled(!!event.stickerUrl);
       setTicketsSold(event.ticketsSold || 0);
     }
   }, [event, isEditMode, user, toast, setLocation, id, form]);
@@ -321,8 +323,8 @@ export default function EventForm() {
       maxTickets: data.maxTickets || 100,
       imageUrl: imageUrl || undefined,
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
-      stickerUrl: stickerUrl || undefined,
-      stickerOdds: data.stickerOdds || undefined,
+      stickerUrl: (stickerEnabled && stickerUrl) ? stickerUrl : undefined,
+      stickerOdds: (stickerEnabled && stickerUrl) ? (data.stickerOdds || 25) : undefined,
       timezone: data.timezone || "America/New_York",
     };
 
@@ -355,8 +357,8 @@ export default function EventForm() {
         maxTickets: data.maxTickets || undefined,
         imageUrl: imageUrl || undefined,
         ticketBackgroundUrl: imageUrl || undefined,
-        stickerUrl: stickerUrl || undefined,
-        stickerOdds: data.stickerOdds || undefined,
+        stickerUrl: (stickerEnabled && stickerUrl) ? stickerUrl : event?.stickerUrl || undefined,
+        stickerOdds: (stickerEnabled && stickerUrl) ? (data.stickerOdds || 25) : event?.stickerOdds || undefined,
         timezone: data.timezone || "America/New_York",
       };
       
@@ -1446,20 +1448,38 @@ export default function EventForm() {
                           )}
                         />
 
-                        {/* Custom Sticker Upload - only shows once saved, cannot be removed */}
-                        {(stickerUrl || !isEditMode) && (
-                          <div className="mt-4 p-3 border rounded bg-light">
-                            <h6 className="mb-3">
-                              <span className="badge bg-success me-2">🎯</span>
-                              Custom Sticker
-                            </h6>
-                            
-                            {isEditMode && stickerUrl && (
-                              <div className="alert alert-info mb-3">
-                                <small>✓ Sticker uploaded. This feature cannot be removed once added.</small>
-                              </div>
-                            )}
-                            
+                        {/* Custom Sticker Checkbox */}
+                        <div className="form-check mt-3">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="stickerEnabled"
+                            checked={stickerEnabled || !!stickerUrl}
+                            onChange={(e) => {
+                              if (!stickerUrl) {
+                                setStickerEnabled(e.target.checked);
+                              }
+                            }}
+                            disabled={!!stickerUrl}
+                            data-testid="checkbox-sticker-enabled"
+                          />
+                          <label className="form-check-label" htmlFor="stickerEnabled">
+                            <span className="badge bg-success me-2">🎯</span>
+                            Enable Custom Sticker
+                          </label>
+                        </div>
+                        {stickerUrl && (
+                          <div className="form-text text-info">
+                            <small>✓ Sticker uploaded. This feature cannot be removed once added.</small>
+                          </div>
+                        )}
+                        {!stickerUrl && stickerEnabled && (
+                          <div className="form-text">Upload a custom sticker that will float on lucky tickets</div>
+                        )}
+
+                        {/* Custom Sticker Upload - shows when checkbox is checked */}
+                        {(stickerEnabled || stickerUrl) && (
+                          <div className="mt-3 p-3 border rounded bg-light">
                             {!stickerUrl && (
                               <>
                                 <p className="text-muted small mb-3">
@@ -1472,7 +1492,6 @@ export default function EventForm() {
                                   onComplete={handleStickerComplete}
                                   buttonClassName="btn btn-sm btn-outline-success"
                                   currentImageUrl={stickerUrl}
-                                  showPreview={true}
                                   accept="image/png,image/gif"
                                   maxFileSize={500 * 1024} // 500KB
                                 >
@@ -1497,23 +1516,28 @@ export default function EventForm() {
                               name="stickerOdds"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Sticker Odds</FormLabel>
-                                  <div className="d-flex align-items-center gap-2">
+                                  <FormLabel>Sticker Odds (%)</FormLabel>
+                                  <div className="d-flex align-items-center gap-3">
                                     <input
-                                      type="range"
-                                      className="form-range flex-grow-1"
+                                      type="number"
+                                      className="form-control"
+                                      style={{ width: '100px' }}
                                       min="1"
                                       max="100"
                                       value={field.value || 25}
-                                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        if (val >= 1 && val <= 100) {
+                                          field.onChange(val);
+                                        }
+                                      }}
                                       disabled={!stickerUrl}
+                                      data-testid="input-sticker-odds"
                                     />
-                                    <span className="badge bg-secondary" style={{ minWidth: '50px' }}>
-                                      {field.value || 25}%
-                                    </span>
+                                    <span className="text-muted">%</span>
                                   </div>
                                   <div className="form-text">
-                                    Percentage of validated tickets that will display the custom sticker
+                                    Percentage of validated tickets that will display the custom sticker (1-100)
                                   </div>
                                   <FormMessage />
                                 </FormItem>
