@@ -344,7 +344,6 @@ export default function TicketViewPage(): React.ReactElement {
           {event.contactDetails && (
             <p className="text-muted fst-italic">{event.contactDetails}</p>
           )}
-          <p className="text-muted">View and validate your ticket</p>
         </div>
       </div>
 
