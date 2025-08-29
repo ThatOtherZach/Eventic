@@ -35,7 +35,6 @@ export default function EventForm() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [imageUrl, setImageUrl] = useState<string>("");
-  const [stickerUrl, setStickerUrl] = useState<string>("");
   const [stickerEnabled, setStickerEnabled] = useState(false);
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
@@ -100,6 +99,7 @@ export default function EventForm() {
       goldenTicketEnabled: false,
       goldenTicketCount: undefined,
       specialEffectsEnabled: false,
+      stickerUrl: "",
       stickerOdds: 25,
       allowMinting: false,
       isPrivate: false,
@@ -163,6 +163,7 @@ export default function EventForm() {
         goldenTicketEnabled: event.goldenTicketEnabled || false,
         goldenTicketCount: event.goldenTicketCount || undefined,
         specialEffectsEnabled: event.specialEffectsEnabled || false,
+        stickerUrl: event.stickerUrl || "",
         stickerOdds: event.stickerOdds || 25,
         allowMinting: event.allowMinting || false,
         isPrivate: event.isPrivate || false,
@@ -177,7 +178,6 @@ export default function EventForm() {
       });
       
       setImageUrl(event.imageUrl || "");
-      setStickerUrl(event.stickerUrl || "");
       setStickerEnabled(!!event.stickerUrl);
       setTicketsSold(event.ticketsSold || 0);
     }
@@ -323,8 +323,8 @@ export default function EventForm() {
       maxTickets: data.maxTickets || 100,
       imageUrl: imageUrl || undefined,
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
-      stickerUrl: (stickerEnabled && stickerUrl) ? stickerUrl : undefined,
-      stickerOdds: (stickerEnabled && stickerUrl) ? (data.stickerOdds || 25) : undefined,
+      stickerUrl: (stickerEnabled && data.stickerUrl) ? data.stickerUrl : undefined,
+      stickerOdds: (stickerEnabled && data.stickerUrl) ? (data.stickerOdds || 25) : undefined,
       timezone: data.timezone || "America/New_York",
     };
 
@@ -357,8 +357,8 @@ export default function EventForm() {
         maxTickets: data.maxTickets || undefined,
         imageUrl: imageUrl || undefined,
         ticketBackgroundUrl: imageUrl || undefined,
-        stickerUrl: (stickerEnabled && stickerUrl) ? stickerUrl : event?.stickerUrl || undefined,
-        stickerOdds: (stickerEnabled && stickerUrl) ? (data.stickerOdds || 25) : event?.stickerOdds || undefined,
+        stickerUrl: (stickerEnabled && data.stickerUrl) ? data.stickerUrl : event?.stickerUrl || undefined,
+        stickerOdds: (stickerEnabled && data.stickerUrl) ? (data.stickerOdds || 25) : event?.stickerOdds || undefined,
         timezone: data.timezone || "America/New_York",
       };
       
@@ -388,21 +388,6 @@ export default function EventForm() {
     }
   };
 
-  const handleStickerUpload = async () => {
-    const response = await apiRequest("POST", "/api/objects/upload", {});
-    const data = await response.json();
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-    };
-  };
-
-  const handleStickerComplete = (result: any) => {
-    const uploadedUrl = result.successful?.[0]?.uploadURL;
-    if (uploadedUrl) {
-      setStickerUrl(uploadedUrl);
-    }
-  };
 
 
 
@@ -413,7 +398,7 @@ export default function EventForm() {
   // Determine what effect to show
   let currentEffect = specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : undefined;
   // Show golden ticket only when special effects are off and no sticker
-  let isGolden = goldenTicketEnabled && !specialEffectsEnabled && !stickerUrl;
+  let isGolden = goldenTicketEnabled && !specialEffectsEnabled && !form.watch('stickerUrl');
   let isDoubleGolden = currentEffect === 'rainbow';
   
   const sampleTicket: Ticket & { previewEffectType?: string } = {
@@ -422,13 +407,13 @@ export default function EventForm() {
     userId: user?.id || "",
     ticketNumber: "PREVIEW-001",
     qrData: "sample-qr-data", // Need QR data to show QR code in preview
-    isValidated: specialEffectsEnabled || stickerEnabled, // Mark as validated for preview when special effects or sticker enabled
+    isValidated: specialEffectsEnabled || (stickerEnabled && !!form.watch('stickerUrl')), // Mark as validated for preview when special effects or sticker enabled
     validatedAt: null,
     validationCode: null,
     useCount: 0,
     isGoldenTicket: isGolden, // Apply golden ticket when enabled and no other effect
     isDoubleGolden: isDoubleGolden, // Show double golden for rainbow effect
-    specialEffect: stickerUrl ? 'sticker' : null,
+    specialEffect: form.watch('stickerUrl') ? 'sticker' : null,
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -485,7 +470,7 @@ export default function EventForm() {
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
     goldenTicketCount: watchedValues.goldenTicketCount || null,
     specialEffectsEnabled: watchedValues.specialEffectsEnabled || false,
-    stickerUrl: (stickerEnabled && stickerUrl) ? stickerUrl : null,
+    stickerUrl: (stickerEnabled && form.watch('stickerUrl')) ? (form.watch('stickerUrl') || null) : null,
     stickerOdds: watchedValues.stickerOdds || 25,
     allowMinting: watchedValues.allowMinting || false,
     isPrivate: watchedValues.isPrivate || false,
@@ -1454,13 +1439,13 @@ export default function EventForm() {
                             type="checkbox"
                             className="form-check-input"
                             id="stickerEnabled"
-                            checked={stickerEnabled || !!stickerUrl}
+                            checked={stickerEnabled || !!form.watch('stickerUrl')}
                             onChange={(e) => {
-                              if (!stickerUrl) {
+                              if (!form.watch('stickerUrl')) {
                                 setStickerEnabled(e.target.checked);
                               }
                             }}
-                            disabled={!!stickerUrl}
+                            disabled={isEditMode && !!event?.stickerUrl}
                             data-testid="checkbox-sticker-enabled"
                           />
                           <label className="form-check-label" htmlFor="stickerEnabled">
@@ -1468,46 +1453,54 @@ export default function EventForm() {
                             Enable Custom Sticker
                           </label>
                         </div>
-                        {stickerUrl && (
+                        {isEditMode && event?.stickerUrl && (
                           <div className="form-text text-info">
-                            <small>✓ Sticker uploaded. This feature cannot be removed once added.</small>
+                            <small>✓ Sticker configured. This feature cannot be removed once added.</small>
                           </div>
                         )}
-                        {!stickerUrl && stickerEnabled && (
-                          <div className="form-text">Upload a custom sticker that will float on lucky tickets</div>
+                        {!form.watch('stickerUrl') && stickerEnabled && (
+                          <div className="form-text">Enter a URL for a custom sticker that will float on lucky tickets</div>
                         )}
 
-                        {/* Custom Sticker Upload - shows when checkbox is checked */}
-                        {(stickerEnabled || stickerUrl) && (
+                        {/* Custom Sticker URL - shows when checkbox is checked */}
+                        {(stickerEnabled || form.watch('stickerUrl')) && (
                           <div className="mt-3 p-3 border rounded bg-light">
-                            {!stickerUrl && (
-                              <>
-                                <p className="text-muted small mb-3">
-                                  Upload a custom sticker (PNG or GIF) that will float on lucky tickets. 
-                                  Maximum file size: 500KB. Transparent PNGs work best!
-                                </p>
-                                
-                                <ObjectUploader
-                                  onGetUploadParameters={handleStickerUpload}
-                                  onComplete={handleStickerComplete}
-                                  buttonClassName="btn btn-sm btn-outline-success"
-                                  currentImageUrl={stickerUrl}
-                                  accept="image/png,image/gif"
-                                  maxFileSize={500 * 1024} // 500KB
-                                >
-                                  <span>📎 Upload Sticker</span>
-                                </ObjectUploader>
-                              </>
-                            )}
+                            <FormField
+                              control={form.control}
+                              name="stickerUrl"
+                              render={({ field }) => (
+                                <FormItem className="mb-3">
+                                  <FormLabel>Sticker URL</FormLabel>
+                                  <FormControl>
+                                    <input
+                                      type="url"
+                                      className="form-control"
+                                      placeholder="https://example.com/sticker.png"
+                                      {...field}
+                                      value={field.value || ''}
+                                      disabled={isEditMode && !!event?.stickerUrl}
+                                      data-testid="input-sticker-url"
+                                    />
+                                  </FormControl>
+                                  <div className="form-text">
+                                    Enter a direct URL to a PNG or GIF image (transparent PNGs work best)
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                             
-                            {stickerUrl && (
+                            {form.watch('stickerUrl') && (
                               <div className="d-flex align-items-center gap-3 mb-3">
                                 <img 
-                                  src={stickerUrl.startsWith('/objects/') ? stickerUrl : '/objects/' + stickerUrl.split('/').pop()} 
+                                  src={form.watch('stickerUrl') || ''} 
                                   alt="Sticker preview" 
                                   style={{ maxHeight: '60px', maxWidth: '60px' }}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
                                 />
-                                <span className="text-success small">✓ Sticker uploaded</span>
+                                <span className="text-success small">✓ Sticker URL configured</span>
                               </div>
                             )}
                             
@@ -1531,7 +1524,7 @@ export default function EventForm() {
                                           field.onChange(val);
                                         }
                                       }}
-                                      disabled={!stickerUrl}
+                                      disabled={!form.watch('stickerUrl')}
                                       data-testid="input-sticker-odds"
                                     />
                                     <span className="text-muted">%</span>
