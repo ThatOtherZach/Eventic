@@ -359,6 +359,31 @@ export default function TicketViewPage(): React.ReactElement {
             />
           </div>
 
+          {/* Purchase Details */}
+          <div className="card mb-4">
+            <div className="card-body">
+              <h6 className="card-title mb-3">Purchase Details</h6>
+              <div className="d-flex justify-content-between">
+                <div>
+                  <span className="text-muted">Purchase Date:</span>
+                  <p className="mb-0 fw-bold">
+                    {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    }) : 'Unknown'}
+                  </p>
+                </div>
+                <div className="text-end">
+                  <span className="text-muted">Purchase Price:</span>
+                  <p className="mb-0 fw-bold">
+                    ${ticket.purchasePrice || event.ticketPrice || '0.00'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Validation Section */}
           <div className="card">
             <div className="card-body">

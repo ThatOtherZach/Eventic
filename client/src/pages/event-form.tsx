@@ -89,6 +89,7 @@ export default function EventForm() {
       recurringType: null,
       recurringEndDate: null,
       ticketPurchasesEnabled: true,
+      timezone: "America/New_York",
     },
   });
   
@@ -150,6 +151,7 @@ export default function EventForm() {
         recurringType: (event.recurringType as "weekly" | "monthly" | "annual" | null) || null,
         recurringEndDate: event.recurringEndDate || null,
         ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
+        timezone: event.timezone || "America/New_York",
       });
       
       setImageUrl(event.imageUrl || "");
@@ -438,6 +440,7 @@ export default function EventForm() {
     recurringEndDate: watchedValues.recurringEndDate || null,
     parentEventId: null,
     lastRecurrenceCreated: null,
+    timezone: watchedValues.timezone || "America/New_York",
     createdAt: new Date(),
   };
 
@@ -673,6 +676,60 @@ export default function EventForm() {
                               <Input {...field} value={field.value || ''} type="time" className="form-control" data-testid="input-end-time" />
                             </FormControl>
                             <div className="form-text">When the event ends</div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="col-md-6">
+                      <FormField
+                        control={form.control}
+                        name="timezone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Timezone</FormLabel>
+                            <FormControl>
+                              <select 
+                                className="form-select" 
+                                data-testid="select-timezone"
+                                value={field.value || "America/New_York"}
+                                onChange={(e) => field.onChange(e.target.value)}
+                              >
+                                <optgroup label="US & Canada">
+                                  <option value="America/New_York">Eastern Time (ET)</option>
+                                  <option value="America/Chicago">Central Time (CT)</option>
+                                  <option value="America/Denver">Mountain Time (MT)</option>
+                                  <option value="America/Phoenix">Arizona Time (MST)</option>
+                                  <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                  <option value="America/Anchorage">Alaska Time (AKT)</option>
+                                  <option value="Pacific/Honolulu">Hawaii Time (HST)</option>
+                                </optgroup>
+                                <optgroup label="Europe">
+                                  <option value="Europe/London">London (GMT/BST)</option>
+                                  <option value="Europe/Paris">Paris (CET)</option>
+                                  <option value="Europe/Berlin">Berlin (CET)</option>
+                                  <option value="Europe/Moscow">Moscow (MSK)</option>
+                                </optgroup>
+                                <optgroup label="Asia">
+                                  <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                  <option value="Asia/Shanghai">Shanghai (CST)</option>
+                                  <option value="Asia/Hong_Kong">Hong Kong (HKT)</option>
+                                  <option value="Asia/Singapore">Singapore (SGT)</option>
+                                  <option value="Asia/Dubai">Dubai (GST)</option>
+                                  <option value="Asia/Kolkata">India (IST)</option>
+                                </optgroup>
+                                <optgroup label="Australia & Pacific">
+                                  <option value="Australia/Sydney">Sydney (AEDT)</option>
+                                  <option value="Australia/Melbourne">Melbourne (AEDT)</option>
+                                  <option value="Pacific/Auckland">Auckland (NZDT)</option>
+                                </optgroup>
+                                <optgroup label="Other">
+                                  <option value="UTC">UTC</option>
+                                </optgroup>
+                              </select>
+                            </FormControl>
+                            <div className="form-text">Event times will be displayed in this timezone</div>
                             <FormMessage />
                           </FormItem>
                         )}

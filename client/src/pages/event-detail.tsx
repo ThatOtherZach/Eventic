@@ -440,6 +440,36 @@ export default function EventDetailPage() {
               ) : (
                 event.time
               )}
+              {event.timezone && (
+                <span className="ms-1">
+                  ({(() => {
+                    const tzMap: Record<string, string> = {
+                      "America/New_York": "ET",
+                      "America/Chicago": "CT",
+                      "America/Denver": "MT",
+                      "America/Phoenix": "MST",
+                      "America/Los_Angeles": "PT",
+                      "America/Anchorage": "AKT",
+                      "Pacific/Honolulu": "HST",
+                      "Europe/London": "GMT/BST",
+                      "Europe/Paris": "CET",
+                      "Europe/Berlin": "CET",
+                      "Europe/Moscow": "MSK",
+                      "Asia/Tokyo": "JST",
+                      "Asia/Shanghai": "CST",
+                      "Asia/Hong_Kong": "HKT",
+                      "Asia/Singapore": "SGT",
+                      "Asia/Dubai": "GST",
+                      "Asia/Kolkata": "IST",
+                      "Australia/Sydney": "AEDT",
+                      "Australia/Melbourne": "AEDT",
+                      "Pacific/Auckland": "NZDT",
+                      "UTC": "UTC"
+                    };
+                    return tzMap[event.timezone] || event.timezone.split('/').pop()?.replace(/_/g, ' ');
+                  })()})
+                </span>
+              )}
             </div>
             <div className="d-flex align-items-center text-muted">
               <MapPin size={18} className="me-2" />

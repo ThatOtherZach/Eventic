@@ -113,6 +113,8 @@ export const events = pgTable("events", {
   recurringEndDate: text("recurring_end_date"), // When to stop creating recurring events
   parentEventId: varchar("parent_event_id"), // Reference to the original event if this is a recurring instance
   lastRecurrenceCreated: timestamp("last_recurrence_created"), // Track when we last created a recurrence
+  // Timezone field
+  timezone: text("timezone").default("America/New_York"), // Timezone for the event (IANA timezone format)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

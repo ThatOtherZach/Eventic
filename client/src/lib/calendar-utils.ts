@@ -31,16 +31,28 @@ export function generateICalendar(event: Event): string {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   };
+
+  // Get timezone string for VTIMEZONE component
+  const timezone = event.timezone || "America/New_York";
+  
+  // Build VTIMEZONE component for proper timezone support
+  const vtimezone = [
+    'BEGIN:VTIMEZONE',
+    `TZID:${timezone}`,
+    'END:VTIMEZONE'
+  ].join('\r\n');
   
   const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Event Ticket Platform//EN',
     'METHOD:PUBLISH',
+    'CALSCALE:GREGORIAN',
+    vtimezone,
     'BEGIN:VEVENT',
     `UID:${event.id}@eventplatform.com`,
-    `DTSTART:${formatDate(startDateTime)}`,
-    `DTEND:${formatDate(endDateTime)}`,
+    `DTSTART;TZID=${timezone}:${formatDate(startDateTime)}`,
+    `DTEND;TZID=${timezone}:${formatDate(endDateTime)}`,
     `SUMMARY:${event.name}`,
     `DESCRIPTION:${event.description || `Event at ${event.venue}`}`,
     `LOCATION:${event.venue}`,
@@ -101,12 +113,20 @@ export function generateGoogleCalendarUrl(event: Event): string {
     return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   };
   
+  // Get timezone for Google Calendar
+  const timezone = event.timezone || "America/New_York";
+  
+  // Add timezone information to the description
+  const timezoneInfo = timezone !== "America/New_York" ? `\n\nTimezone: ${timezone}` : "";
+  const description = (event.description || `Event at ${event.venue}`) + timezoneInfo;
+  
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.name,
     dates: `${formatDate(startDateTime)}/${formatDate(endDateTime)}`,
-    details: event.description || `Event at ${event.venue}`,
-    location: event.venue
+    details: description,
+    location: event.venue,
+    ctz: timezone  // Add timezone parameter for Google Calendar
   });
   
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
