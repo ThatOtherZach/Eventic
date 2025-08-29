@@ -23,6 +23,16 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   const specialEffect = ticketWithPreview.previewEffectType || detectSpecialEffect(event, ticket);
   const hasSpecialEffects = ticket.isGoldenTicket || specialEffect !== null;
   const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event, ticket) : null;
+  
+  // Debug logging for preview tickets
+  if (ticket.id === 'sample') {
+    console.log('Preview ticket debug:', {
+      isGoldenTicket: ticket.isGoldenTicket,
+      specialEffect,
+      monthlyColor,
+      previewEffectType: ticketWithPreview.previewEffectType
+    });
+  }
 
   useEffect(() => {
     if (showQR && qrCanvasRef.current && ticket.qrData) {
