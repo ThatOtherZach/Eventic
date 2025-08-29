@@ -23,16 +23,6 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   const specialEffect = ticketWithPreview.previewEffectType || detectSpecialEffect(event, ticket);
   const hasSpecialEffects = ticket.isGoldenTicket || specialEffect !== null;
   const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event, ticket) : null;
-  
-  // Debug logging for preview tickets
-  if (ticket.id === 'sample') {
-    console.log('Preview ticket debug:', {
-      isGoldenTicket: ticket.isGoldenTicket,
-      specialEffect,
-      monthlyColor,
-      previewEffectType: ticketWithPreview.previewEffectType
-    });
-  }
 
   useEffect(() => {
     if (showQR && qrCanvasRef.current && ticket.qrData) {
@@ -125,22 +115,8 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         <div className="flex-grow-1 px-3 pt-3 pb-4 text-white d-flex flex-column justify-content-between">
           <div>
             <h5 className="mb-1 text-truncate fw-bold" style={{ fontSize: '16px' }}>
-              {ticket.isGoldenTicket ? (
-                // Golden ticket takes priority
-                <span 
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    backgroundColor: 'rgba(255, 215, 0, 0.85)',
-                    color: '#000',
-                    display: 'inline-block',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                  }}
-                >
-                  {event.name}
-                </span>
-              ) : monthlyColor ? (
-                // Monthly effect badge
+              {monthlyColor ? (
+                // Monthly effect badge takes priority for preview
                 <span 
                   style={{
                     padding: '2px 8px',
@@ -150,6 +126,20 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
                     display: 'inline-block',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                     textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                  }}
+                >
+                  {event.name}
+                </span>
+              ) : ticket.isGoldenTicket ? (
+                // Golden ticket only if no monthly color
+                <span 
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'rgba(255, 215, 0, 0.85)',
+                    color: '#000',
+                    display: 'inline-block',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
                   }}
                 >
                   {event.name}
