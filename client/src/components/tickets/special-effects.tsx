@@ -435,8 +435,50 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
   return null;
 }
 
-// Badge component to show the special effect type (now hidden per user request)
+// Badge component to show the special effect type
 export function SpecialEffectBadge({ event, ticket }: { event: Event; ticket?: { isValidated: boolean | null; isDoubleGolden?: boolean; id?: string; [key: string]: any } }) {
-  // Don't show color badges anymore per user request
+  // Check for preview effect type first
+  const ticketWithPreview = ticket as any;
+  const effectType = ticketWithPreview?.previewEffectType || detectSpecialEffect(event, ticket);
+  
+  // Only show badge for monthly effect
+  if (effectType === 'monthly') {
+    // For preview tickets, use current month; for real tickets use event date
+    const isPreview = ticket && ticket.id === 'sample';
+    let month: number;
+    if (isPreview) {
+      month = new Date().getMonth();
+    } else {
+      // Parse date from various formats
+      const dateStr = event.date;
+      const monthNum = parseInt(dateStr.split('-')[1], 10);
+      month = monthNum - 1; // JavaScript months are 0-indexed
+    }
+    
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthColor = MONTHLY_COLORS[month];
+    
+    return (
+      <div 
+        className="position-absolute"
+        style={{
+          top: '10px',
+          right: '10px',
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `linear-gradient(135deg, ${monthColor.color1}, ${monthColor.color2})`,
+          color: 'white',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+          zIndex: 10,
+        }}
+      >
+        {monthNames[month]}
+      </div>
+    );
+  }
+  
   return null;
 }
