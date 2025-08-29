@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { ArrowLeft, CreditCard, Image } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, Image } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { countries } from "@/lib/countries";
@@ -43,6 +43,20 @@ export default function EventForm() {
   const [address, setAddress] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [country, setCountry] = useState<string>("");
+  
+  // State for cycling through special effects preview
+  const [previewEffectIndex, setPreviewEffectIndex] = useState(0);
+  const availableEffects: Array<{type: string, name: string}> = [
+    { type: 'monthly', name: 'Monthly Color' },
+    { type: 'snowflakes', name: 'Snowflakes' },
+    { type: 'confetti', name: 'Confetti' },
+    { type: 'fireworks', name: 'Fireworks' },
+    { type: 'hearts', name: 'Hearts' },
+    { type: 'spooky', name: 'Spooky' },
+    { type: 'pride', name: 'Pride Rainbow' },
+    { type: 'nice', name: 'Nice ;)' },
+    { type: 'rainbow', name: 'Double Golden' },
+  ];
   
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
@@ -364,18 +378,19 @@ export default function EventForm() {
 
   // Create a sample ticket for preview
   const goldenTicketEnabled = form.watch('goldenTicketEnabled');
-  const sampleTicket: Ticket = {
+  const specialEffectsEnabled = form.watch('specialEffectsEnabled');
+  const sampleTicket: Ticket & { previewEffectType?: string } = {
     id: "sample",
     eventId: "sample",
     userId: user?.id || "",
     ticketNumber: "PREVIEW-001",
     qrData: "sample-qr-data", // Need QR data to show QR code in preview
-    isValidated: form.watch('specialEffectsEnabled') || false, // Mark as validated for preview when special effects enabled
+    isValidated: specialEffectsEnabled || false, // Mark as validated for preview when special effects enabled
     validatedAt: null,
     validationCode: null,
     useCount: 0,
     isGoldenTicket: goldenTicketEnabled === true, // Apply golden ticket effect when enabled
-    isDoubleGolden: false,
+    isDoubleGolden: availableEffects[previewEffectIndex]?.type === 'rainbow', // Show double golden for rainbow effect
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -388,6 +403,8 @@ export default function EventForm() {
     purchasePrice: "0",
     resellStatus: null,
     originalOwnerId: null,
+    // Add preview effect type for special effects preview
+    previewEffectType: specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : undefined,
   };
 
   const watchedValues = form.watch();
@@ -1245,6 +1262,30 @@ export default function EventForm() {
                                 showQR={false}
                               />
                             </div>
+                            {/* Special Effects Preview Controls */}
+                            {specialEffectsEnabled && (
+                              <div className="d-flex justify-content-center align-items-center mt-3 gap-3">
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-secondary"
+                                  onClick={() => setPreviewEffectIndex((prev) => (prev - 1 + availableEffects.length) % availableEffects.length)}
+                                  data-testid="button-prev-effect"
+                                >
+                                  <ArrowLeft size={16} />
+                                </button>
+                                <span className="text-muted small">
+                                  <strong>{availableEffects[previewEffectIndex]?.name}</strong> Effect
+                                </span>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-secondary"
+                                  onClick={() => setPreviewEffectIndex((prev) => (prev + 1) % availableEffects.length)}
+                                  data-testid="button-next-effect"
+                                >
+                                  <ArrowRight size={16} />
+                                </button>
+                              </div>
+                            )}
                             <p className="text-center text-muted small mt-3 mb-0">
                               <i className="bi bi-info-circle me-1"></i>
                               {imageUrl ? "Your featured image is being used as the ticket background" : "Upload a featured image to customize the ticket background"}

@@ -17,7 +17,9 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   
   // Check if this ticket has any special effects
-  const specialEffect = detectSpecialEffect(event, ticket);
+  // For preview tickets with previewEffectType, use that directly
+  const ticketWithPreview = ticket as any;
+  const specialEffect = ticketWithPreview.previewEffectType || detectSpecialEffect(event, ticket);
   const hasSpecialEffects = ticket.isGoldenTicket || specialEffect !== null;
   const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event, ticket) : null;
 
