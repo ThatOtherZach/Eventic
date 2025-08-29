@@ -85,6 +85,8 @@ export default function EventForm() {
       surgePricing: false,
       p2pValidation: false,
       enableVoting: false,
+      recurringType: null,
+      recurringEndDate: null,
     },
   });
   
@@ -142,6 +144,9 @@ export default function EventForm() {
         oneTicketPerUser: event.oneTicketPerUser || false,
         surgePricing: event.surgePricing || false,
         p2pValidation: event.p2pValidation || false,
+        enableVoting: event.enableVoting || false,
+        recurringType: (event.recurringType as "weekly" | "monthly" | "annual" | null) || null,
+        recurringEndDate: event.recurringEndDate || null,
       });
       
       setImageUrl(event.imageUrl || "");
@@ -353,6 +358,7 @@ export default function EventForm() {
     validationCode: null,
     useCount: 0,
     isGoldenTicket: goldenTicketEnabled === true, // Apply golden ticket effect when enabled
+    isDoubleGolden: false,
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -415,6 +421,10 @@ export default function EventForm() {
     surgePricing: watchedValues.surgePricing || false,
     p2pValidation: watchedValues.p2pValidation || false,
     enableVoting: watchedValues.enableVoting || false,
+    recurringType: watchedValues.recurringType || null,
+    recurringEndDate: watchedValues.recurringEndDate || null,
+    parentEventId: null,
+    lastRecurrenceCreated: null,
     createdAt: new Date(),
   };
 
@@ -874,6 +884,119 @@ export default function EventForm() {
                             </FormItem>
                           )}
                         />
+                      </div>
+                    )}
+
+                    {/* Repeat Section - Admin Only */}
+                    {user?.email?.endsWith("@saymservices.com") && (
+                      <div className="col-12">
+                        <div className="border rounded p-3 bg-light">
+                          <h6 className="mb-3">Repeat</h6>
+                          <FormField
+                            control={form.control}
+                            name="recurringType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="d-flex gap-3">
+                                  <div className="form-check">
+                                    <input
+                                      type="radio"
+                                      className="form-check-input"
+                                      id="recurring-none"
+                                      name="recurringType"
+                                      checked={!field.value}
+                                      onChange={() => field.onChange(null)}
+                                      data-testid="radio-recurring-none"
+                                    />
+                                    <label className="form-check-label" htmlFor="recurring-none">
+                                      None
+                                    </label>
+                                  </div>
+                                  <div className="form-check">
+                                    <input
+                                      type="radio"
+                                      className="form-check-input"
+                                      id="recurring-weekly"
+                                      name="recurringType"
+                                      value="weekly"
+                                      checked={field.value === "weekly"}
+                                      onChange={() => field.onChange("weekly")}
+                                      data-testid="radio-recurring-weekly"
+                                    />
+                                    <label className="form-check-label" htmlFor="recurring-weekly">
+                                      Weekly
+                                    </label>
+                                  </div>
+                                  <div className="form-check">
+                                    <input
+                                      type="radio"
+                                      className="form-check-input"
+                                      id="recurring-monthly"
+                                      name="recurringType"
+                                      value="monthly"
+                                      checked={field.value === "monthly"}
+                                      onChange={() => field.onChange("monthly")}
+                                      data-testid="radio-recurring-monthly"
+                                    />
+                                    <label className="form-check-label" htmlFor="recurring-monthly">
+                                      Monthly
+                                    </label>
+                                  </div>
+                                  <div className="form-check">
+                                    <input
+                                      type="radio"
+                                      className="form-check-input"
+                                      id="recurring-annual"
+                                      name="recurringType"
+                                      value="annual"
+                                      checked={field.value === "annual"}
+                                      onChange={() => field.onChange("annual")}
+                                      data-testid="radio-recurring-annual"
+                                    />
+                                    <label className="form-check-label" htmlFor="recurring-annual">
+                                      Annual
+                                    </label>
+                                  </div>
+                                </div>
+                                <div className="form-text mt-2">
+                                  When enabled, the event will automatically recreate after it has passed (minimum 7 days after start date).
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          {form.watch("recurringType") && (
+                            <FormField
+                              control={form.control}
+                              name="recurringEndDate"
+                              render={({ field }) => (
+                                <FormItem className="mt-3">
+                                  <FormLabel>Repeat Until</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      {...field} 
+                                      type="date" 
+                                      className="form-control" 
+                                      min={minDate}
+                                      max={(() => {
+                                        const twoYearsFromNow = new Date();
+                                        twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+                                        return twoYearsFromNow.toISOString().split('T')[0];
+                                      })()}
+                                      value={field.value || ""}
+                                      data-testid="input-recurring-end-date"
+                                    />
+                                  </FormControl>
+                                  <div className="form-text">
+                                    The date to stop creating recurring events (maximum 2 years from event start date).
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                        </div>
                       </div>
                     )}
 

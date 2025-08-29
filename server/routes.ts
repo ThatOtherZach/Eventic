@@ -1373,6 +1373,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recurring Events Processing
+  app.post("/api/admin/process-recurring-events", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get events that need recurrence
+      const eventsNeedingRecurrence = await storage.getEventsNeedingRecurrence();
+      
+      const results = [];
+      for (const event of eventsNeedingRecurrence) {
+        try {
+          const newEvent = await storage.createRecurringEvent(event);
+          if (newEvent) {
+            results.push({
+              originalEventId: event.id,
+              originalEventName: event.name,
+              newEventId: newEvent.id,
+              newEventDate: newEvent.date,
+              success: true,
+              error: null
+            });
+            
+            await logInfo(
+              `Recurring event created`,
+              "POST /api/admin/process-recurring-events",
+              {
+                eventId: newEvent.id,
+                metadata: {
+                  originalEventId: event.id,
+                  recurringType: event.recurringType,
+                  newEventDate: newEvent.date
+                }
+              }
+            );
+          }
+        } catch (error) {
+          results.push({
+            originalEventId: event.id,
+            originalEventName: event.name,
+            newEventId: null,
+            newEventDate: null,
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error"
+          });
+          
+          await logError(error, "POST /api/admin/process-recurring-events", {
+            eventId: event.id,
+            metadata: {
+              eventName: event.name
+            }
+          });
+        }
+      }
+
+      res.json({
+        message: `Processed ${results.length} recurring events. ${results.filter(r => r.success).length} created successfully.`,
+        results
+      });
+    } catch (error) {
+      await logError(error, "POST /api/admin/process-recurring-events", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to process recurring events" });
+    }
+  });
+
   // Delegated Validators routes
   app.get("/api/events/:eventId/validators", async (req: AuthenticatedRequest, res) => {
     try {
