@@ -115,8 +115,8 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         <div className="flex-grow-1 px-3 pt-3 pb-4 text-white d-flex flex-column justify-content-between">
           <div>
             <h5 className="mb-1 text-truncate fw-bold" style={{ fontSize: '16px' }}>
-              {monthlyColor ? (
-                // Monthly effect badge takes priority for preview
+              {specialEffect === 'monthly' && monthlyColor ? (
+                // Monthly effect badge - always show when monthly effect is active
                 <span 
                   style={{
                     padding: '2px 8px',
@@ -131,7 +131,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
                   {event.name}
                 </span>
               ) : ticket.isGoldenTicket ? (
-                // Golden ticket only if no monthly color
+                // Golden ticket only if no monthly effect
                 <span 
                   style={{
                     padding: '2px 8px',
