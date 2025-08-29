@@ -828,11 +828,11 @@ export default function EventForm() {
                                         data-testid="checkbox-disable-ticket-sales"
                                       />
                                       <label className="form-check-label" htmlFor="ticketPurchasesEnabled">
-                                        <span className="badge bg-danger me-2">🚫</span>
-                                        Disable Ticket Sales
+                                        <span className="badge bg-danger me-2">⚠️</span>
+                                        Suspend Event
                                       </label>
                                     </div>
-                                    <div className="form-text">Stop new ticket purchases while still allowing resales and refunds. Only administrators can toggle this setting.</div>
+                                    <div className="form-text">Suspend this event from public view and stop new ticket sales. Existing ticket holders can still access and resell tickets. Admin moderation tool.</div>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -1074,7 +1074,7 @@ export default function EventForm() {
                               <div className="form-text">
                                 Private events won't appear in search results or be featured. Only accessible via direct link.
                                 {!form.watch("ticketPurchasesEnabled") && (
-                                  <span className="text-warning"> <strong>Automatically enabled when ticket sales are disabled.</strong></span>
+                                  <span className="text-warning"> <strong>Automatically enabled when event is suspended.</strong></span>
                                 )}
                               </div>
                               <FormMessage />

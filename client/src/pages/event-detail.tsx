@@ -777,7 +777,7 @@ export default function EventDetailPage() {
                 ) : isSoldOut ? (
                   "Sold Out"
                 ) : !event?.ticketPurchasesEnabled ? (
-                  "Ticket Sales Disabled"
+                  "Event Suspended"
                 ) : (
                   <>
                     <Ticket size={18} className="me-2" />
@@ -790,9 +790,9 @@ export default function EventDetailPage() {
               {!event?.ticketPurchasesEnabled && !isEventPast && !isSoldOut && (
                 <div className="alert alert-warning mb-3">
                   <small>
-                    <strong>Ticket sales are currently disabled for this event.</strong><br />
+                    <strong>This event has been suspended by administrators.</strong><br />
                     {event.resaleCount && event.resaleCount > 0 && (
-                      <>Resale tickets may still be available - {event.resaleCount} {event.resaleCount === 1 ? 'ticket is' : 'tickets are'} listed for resale.</>
+                      <>Existing ticket holders can still resell - {event.resaleCount} {event.resaleCount === 1 ? 'ticket is' : 'tickets are'} available for resale.</>
                     )}
                   </small>
                 </div>
