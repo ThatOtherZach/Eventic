@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Event } from "@shared/schema";
 
-type EffectType = 'snowflakes' | 'confetti' | 'fireworks' | 'hearts' | 'spooky' | 'pride' | 'nice' | 'monthly';
+type EffectType = 'snowflakes' | 'confetti' | 'fireworks' | 'hearts' | 'spooky' | 'pride' | 'nice' | 'monthly' | 'rainbow';
 
 interface SpecialEffectConfig {
   type: EffectType;
@@ -105,7 +105,12 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   }
 ];
 
-export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean | null; id?: string; [key: string]: any }): EffectType | null {
+export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolean | null; isDoubleGolden?: boolean; id?: string; [key: string]: any }): EffectType | null {
+  // Priority 1: Double golden tickets get rainbow effect (highest priority)
+  if (ticket?.isDoubleGolden) {
+    return 'rainbow';
+  }
+  
   // Only apply effects if the event has special effects enabled
   if (!event.specialEffectsEnabled) {
     return null;
@@ -391,11 +396,24 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
     );
   }
   
+  // Rainbow double golden effect (cycles through monthly colors)
+  if (effectType === 'rainbow') {
+    return (
+      <div 
+        className="position-absolute w-100 h-100 pointer-events-none"
+        style={{
+          animation: 'rainbowDoubleGolden 4s ease-in-out infinite',
+          zIndex: 2,
+        }}
+      />
+    );
+  }
+  
   return null;
 }
 
 // Badge component to show the special effect type (now hidden per user request)
-export function SpecialEffectBadge({ event, ticket }: { event: Event; ticket?: { isValidated: boolean | null; id?: string; [key: string]: any } }) {
+export function SpecialEffectBadge({ event, ticket }: { event: Event; ticket?: { isValidated: boolean | null; isDoubleGolden?: boolean; id?: string; [key: string]: any } }) {
   // Don't show color badges anymore per user request
   return null;
 }

@@ -897,24 +897,66 @@ export class DatabaseStorage implements IStorage {
 
     // Only proceed if there's a clear winner with votes and it's not already golden
     if ((topTicket.useCount || 0) > 0 && !topTicket.isGoldenTicket) {
+      // Check if this ticket would also have been randomly selected (double golden detection)
+      let isDoubleGolden = false;
+      
+      // Simulate the random golden ticket selection for this ticket
+      const goldenTicketCount = await db
+        .select({ count: sql`count(*)` })
+        .from(tickets)
+        .where(and(eq(tickets.eventId, eventId), eq(tickets.isGoldenTicket, true)))
+        .then(rows => Number(rows[0]?.count || 0));
+      
+      const unvalidatedCount = await db
+        .select({ count: sql`count(*)` })
+        .from(tickets)
+        .where(and(eq(tickets.eventId, eventId), eq(tickets.isValidated, false)))
+        .then(rows => Number(rows[0]?.count || 0));
+      
+      const remainingGoldenTickets = (event.goldenTicketCount || 0) - goldenTicketCount;
+      
+      if (remainingGoldenTickets > 0 && unvalidatedCount > 0) {
+        // Use the same probability calculation as the random system
+        const baseProbability = remainingGoldenTickets / unvalidatedCount;
+        const probability = baseProbability / 2;
+        
+        // Use ticket ID as seed for consistent random check
+        const ticketSeed = parseInt(topTicket.id.slice(-8), 16) % 10000;
+        const random = (ticketSeed * 9301 + 49297) % 233280;
+        const randomValue = random / 233280;
+        
+        // Check if this ticket would have won randomly too
+        if (randomValue < probability) {
+          isDoubleGolden = true;
+          console.log(`🌈 DOUBLE GOLDEN DETECTED! Ticket ${topTicket.id} is both most voted AND would have won randomly!`);
+        }
+      }
+
       // Remove golden status from all other tickets for this event
       if (currentGoldenTickets.length > 0) {
         await db
           .update(tickets)
-          .set({ isGoldenTicket: false })
+          .set({ isGoldenTicket: false, isDoubleGolden: false })
           .where(and(
             eq(tickets.eventId, eventId),
             eq(tickets.isGoldenTicket, true)
           ));
       }
 
-      // Assign golden status to the most voted ticket
+      // Assign golden status (and double golden if applicable) to the most voted ticket
       await db
         .update(tickets)
-        .set({ isGoldenTicket: true })
+        .set({ 
+          isGoldenTicket: true,
+          isDoubleGolden: isDoubleGolden
+        })
         .where(eq(tickets.id, topTicket.id));
       
-      console.log(`🗳️ GOLDEN TICKET REASSIGNED! Ticket ${topTicket.id} now golden with ${topTicket.useCount} votes`);
+      if (isDoubleGolden) {
+        console.log(`🌈 DOUBLE GOLDEN TICKET! Ticket ${topTicket.id} has ${topTicket.useCount} votes and won the random lottery too!`);
+      } else {
+        console.log(`🗳️ GOLDEN TICKET REASSIGNED! Ticket ${topTicket.id} now golden with ${topTicket.useCount} votes`);
+      }
     }
   }
 
