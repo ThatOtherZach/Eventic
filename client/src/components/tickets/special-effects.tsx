@@ -55,7 +55,8 @@ const SPECIAL_EFFECTS: SpecialEffectConfig[] = [
   {
     type: 'pride',
     condition: (event) => {
-      return event.name.toLowerCase().includes('pride');
+      const eventName = event.name.toLowerCase();
+      return eventName.includes('pride') || eventName.includes('gay');
     },
     priority: 90
   },
@@ -368,7 +369,7 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
       <div 
         className="position-absolute w-100 h-100 pointer-events-none"
         style={{
-          animation: 'rainbowGlow 4s ease-in-out infinite',
+          animation: 'rainbowDoubleGolden 4s ease-in-out infinite',
           zIndex: 2,
         }}
       />
