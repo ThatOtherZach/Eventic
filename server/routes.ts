@@ -797,6 +797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketPurchasesEnabled: z.boolean().optional(),
         oneTicketPerUser: z.boolean().optional(),
         surgePricing: z.boolean().optional(),
+        timezone: z.string().optional(),
       });
       const validatedData = baseEventSchema.parse(updateData);
       
