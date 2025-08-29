@@ -773,7 +773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const baseEventSchema = z.object({
         name: z.string().optional(),
         description: z.string().optional(),
-        contactDetails: z.string().optional(),
+        contactDetails: z.string().nullable().optional(),
         venue: z.string().optional(),
         country: z.string().optional(),
         date: z.string().optional(),

@@ -4,33 +4,28 @@ import type { Event } from "@shared/schema";
  * Generate an iCalendar (.ics) file content for an event
  */
 export function generateICalendar(event: Event): string {
-  // Parse the date and time exactly as provided (local time)
-  const [year, month, day] = event.date.split('-').map(Number);
-  const [hours, minutes] = event.time.split(':').map(Number);
+  // Parse the date and time directly without creating Date objects
+  // This ensures no timezone conversion issues
+  const [year, month, day] = event.date.split('-');
+  const [hours, minutes] = event.time.split(':');
   
-  // Create date in local time
-  const startDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+  // Format start date directly from strings
+  const startDateStr = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}T${hours.padStart(2, '0')}${minutes.padStart(2, '0')}00`;
   
-  // Use endDate/endTime if provided, otherwise default to 2 hours duration
-  let endDateTime: Date;
+  // Calculate end date
+  let endDateStr: string;
   if (event.endDate && event.endTime) {
-    const [endYear, endMonth, endDay] = event.endDate.split('-').map(Number);
-    const [endHours, endMinutes] = event.endTime.split(':').map(Number);
-    endDateTime = new Date(endYear, endMonth - 1, endDay, endHours, endMinutes, 0);
+    const [endYear, endMonth, endDay] = event.endDate.split('-');
+    const [endHours, endMinutes] = event.endTime.split(':');
+    endDateStr = `${endYear}${endMonth.padStart(2, '0')}${endDay.padStart(2, '0')}T${endHours.padStart(2, '0')}${endMinutes.padStart(2, '0')}00`;
   } else {
-    endDateTime = new Date(startDateTime.getTime() + 2 * 60 * 60 * 1000);
+    // Default to 2 hours duration
+    const startHour = parseInt(hours);
+    const endHour = (startHour + 2) % 24;
+    const isNextDay = startHour + 2 >= 24;
+    const endDayNum = parseInt(day) + (isNextDay ? 1 : 0);
+    endDateStr = `${year}${month.padStart(2, '0')}${String(endDayNum).padStart(2, '0')}T${String(endHour).padStart(2, '0')}${minutes.padStart(2, '0')}00`;
   }
-  
-  // Format dates to iCalendar format (YYYYMMDDTHHMMSS) in local time
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${year}${month}${day}T${hours}${minutes}${seconds}`;
-  };
 
   // Get timezone string for VTIMEZONE component
   const timezone = event.timezone || "America/New_York";
@@ -51,8 +46,8 @@ export function generateICalendar(event: Event): string {
     vtimezone,
     'BEGIN:VEVENT',
     `UID:${event.id}@eventplatform.com`,
-    `DTSTART;TZID=${timezone}:${formatDate(startDateTime)}`,
-    `DTEND;TZID=${timezone}:${formatDate(endDateTime)}`,
+    `DTSTART;TZID=${timezone}:${startDateStr}`,
+    `DTEND;TZID=${timezone}:${endDateStr}`,
     `SUMMARY:${event.name}`,
     `DESCRIPTION:${event.description || `Event at ${event.venue}`}`,
     `LOCATION:${event.venue}`,
@@ -85,33 +80,27 @@ export function downloadICalendar(event: Event): void {
  * Generate a Google Calendar URL for an event
  */
 export function generateGoogleCalendarUrl(event: Event): string {
-  // Parse the date and time exactly as provided (local time)
-  const [year, month, day] = event.date.split('-').map(Number);
-  const [hours, minutes] = event.time.split(':').map(Number);
+  // Parse the date and time directly without creating Date objects
+  const [year, month, day] = event.date.split('-');
+  const [hours, minutes] = event.time.split(':');
   
-  // Create date in local time
-  const startDateTime = new Date(year, month - 1, day, hours, minutes, 0);
+  // Format start date directly from strings
+  const startDateStr = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}T${hours.padStart(2, '0')}${minutes.padStart(2, '0')}00`;
   
-  // Use endDate/endTime if provided, otherwise default to 2 hours duration
-  let endDateTime: Date;
+  // Calculate end date
+  let endDateStr: string;
   if (event.endDate && event.endTime) {
-    const [endYear, endMonth, endDay] = event.endDate.split('-').map(Number);
-    const [endHours, endMinutes] = event.endTime.split(':').map(Number);
-    endDateTime = new Date(endYear, endMonth - 1, endDay, endHours, endMinutes, 0);
+    const [endYear, endMonth, endDay] = event.endDate.split('-');
+    const [endHours, endMinutes] = event.endTime.split(':');
+    endDateStr = `${endYear}${endMonth.padStart(2, '0')}${endDay.padStart(2, '0')}T${endHours.padStart(2, '0')}${endMinutes.padStart(2, '0')}00`;
   } else {
-    endDateTime = new Date(startDateTime.getTime() + 2 * 60 * 60 * 1000);
+    // Default to 2 hours duration
+    const startHour = parseInt(hours);
+    const endHour = (startHour + 2) % 24;
+    const isNextDay = startHour + 2 >= 24;
+    const endDayNum = parseInt(day) + (isNextDay ? 1 : 0);
+    endDateStr = `${year}${month.padStart(2, '0')}${String(endDayNum).padStart(2, '0')}T${String(endHour).padStart(2, '0')}${minutes.padStart(2, '0')}00`;
   }
-  
-  // Format dates for Google Calendar (YYYYMMDDTHHMMSS) in local time
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${year}${month}${day}T${hours}${minutes}${seconds}`;
-  };
   
   // Get timezone for Google Calendar
   const timezone = event.timezone || "America/New_York";
@@ -123,7 +112,7 @@ export function generateGoogleCalendarUrl(event: Event): string {
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.name,
-    dates: `${formatDate(startDateTime)}/${formatDate(endDateTime)}`,
+    dates: `${startDateStr}/${endDateStr}`,
     details: description,
     location: event.venue,
     ctz: timezone  // Add timezone parameter for Google Calendar
