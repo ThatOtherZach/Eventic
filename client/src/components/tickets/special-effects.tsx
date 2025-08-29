@@ -201,19 +201,21 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
     const particles: HTMLDivElement[] = [];
     
     const createSnowflakes = () => {
-      for (let i = 0; i < 30; i++) {
-        const snowflake = document.createElement('div');
-        snowflake.className = 'snowflake';
-        snowflake.innerHTML = '❄';
-        snowflake.style.position = 'absolute';
-        snowflake.style.left = Math.random() * 100 + '%';
-        snowflake.style.animationDuration = Math.random() * 3 + 5 + 's';
-        snowflake.style.animationDelay = Math.random() * 3 + 's';
-        snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
-        snowflake.style.zIndex = '10';
-        snowflake.style.pointerEvents = 'none';
-        container.appendChild(snowflake);
-        particles.push(snowflake);
+      // Create floating Christmas emojis like Halloween
+      const christmasEmojis = ['🎄', '🎅', '⛄', '🎁', '❄️', '🔔', '⭐'];
+      for (let i = 0; i < 8; i++) {
+        const emoji = document.createElement('div');
+        emoji.className = 'spooky-ghost'; // Reuse the floating animation
+        emoji.innerHTML = christmasEmojis[Math.floor(Math.random() * christmasEmojis.length)];
+        emoji.style.position = 'absolute';
+        emoji.style.left = Math.random() * 80 + 10 + '%';
+        emoji.style.top = Math.random() * 60 + 20 + '%';
+        emoji.style.animationDelay = Math.random() * 6 + 's';
+        emoji.style.fontSize = Math.random() * 15 + 15 + 'px';
+        emoji.style.zIndex = '10';
+        emoji.style.pointerEvents = 'none';
+        container.appendChild(emoji);
+        particles.push(emoji);
       }
     };
     
@@ -235,19 +237,21 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
     };
     
     const createHearts = () => {
-      for (let i = 0; i < 25; i++) {
-        const heart = document.createElement('div');
-        heart.className = 'falling-heart';
-        heart.innerHTML = '❤';
-        heart.style.position = 'absolute';
-        heart.style.left = Math.random() * 100 + '%';
-        heart.style.animationDuration = Math.random() * 3 + 4 + 's';
-        heart.style.animationDelay = Math.random() * 3 + 's';
-        heart.style.fontSize = Math.random() * 15 + 10 + 'px';
-        heart.style.zIndex = '10';
-        heart.style.pointerEvents = 'none';
-        container.appendChild(heart);
-        particles.push(heart);
+      // Create floating Valentine's emojis like Halloween
+      const valentineEmojis = ['❤️', '💕', '💖', '💗', '💝', '💘', '😍', '🌹'];
+      for (let i = 0; i < 8; i++) {
+        const emoji = document.createElement('div');
+        emoji.className = 'spooky-ghost'; // Reuse the floating animation
+        emoji.innerHTML = valentineEmojis[Math.floor(Math.random() * valentineEmojis.length)];
+        emoji.style.position = 'absolute';
+        emoji.style.left = Math.random() * 80 + 10 + '%';
+        emoji.style.top = Math.random() * 60 + 20 + '%';
+        emoji.style.animationDelay = Math.random() * 6 + 's';
+        emoji.style.fontSize = Math.random() * 15 + 15 + 'px';
+        emoji.style.zIndex = '10';
+        emoji.style.pointerEvents = 'none';
+        container.appendChild(emoji);
+        particles.push(emoji);
       }
     };
     
