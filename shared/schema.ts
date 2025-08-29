@@ -82,6 +82,7 @@ export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
+  contactDetails: text("contact_details"), // Contact info revealed to ticket holders only
   venue: text("venue").notNull(), // Now expects full address
   country: text("country"), // Extracted country from venue address
   date: text("date").notNull(),
@@ -330,6 +331,10 @@ export const insertEventSchema = createInsertSchema(events).omit({
     .regex(/^[a-zA-Z0-9\s\-_&.,!'"()]+$/, "Event name contains invalid characters"),
   description: z.string()
     .max(1000, "Description must be less than 1000 characters")
+    .optional()
+    .transform(val => val?.trim()),
+  contactDetails: z.string()
+    .max(150, "Contact details must be less than 150 characters")
     .optional()
     .transform(val => val?.trim()),
   venue: z.string()

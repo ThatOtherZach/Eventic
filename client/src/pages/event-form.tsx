@@ -63,6 +63,7 @@ export default function EventForm() {
     defaultValues: {
       name: "",
       description: "",
+      contactDetails: "",
       venue: "",
       date: "",
       time: "",
@@ -119,6 +120,7 @@ export default function EventForm() {
       form.reset({
         name: event.name || "",
         description: event.description || "",
+        contactDetails: event.contactDetails || "",
         venue: event.venue || "",
         date: event.date || "",
         time: event.time || "",
@@ -297,6 +299,7 @@ export default function EventForm() {
       const updateData = {
         name: data.name,
         description: data.description || null,
+        contactDetails: data.contactDetails || null,
         venue: data.venue,
         date: data.date,
         time: data.time,
@@ -385,6 +388,7 @@ export default function EventForm() {
     id: "preview",
     name: watchedValues.name || "Your Event Name",
     description: watchedValues.description || null,
+    contactDetails: watchedValues.contactDetails || null,
     venue: watchedValues.venue || "Event Venue",
     country: null,
     date: formatPreviewDate(watchedValues.date),
@@ -468,6 +472,31 @@ export default function EventForm() {
                           Choose Image
                         </ObjectUploader>
                       </div>
+                    </div>
+
+                    <div className="col-12">
+                      <FormField
+                        control={form.control}
+                        name="contactDetails"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contact Details</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                placeholder="email, phone, secret handshake, etc."
+                                className="form-control" 
+                                maxLength={150}
+                                data-testid="input-contact-details"
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              email, phone, secret handshake, etc.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
                     <div className="col-12">

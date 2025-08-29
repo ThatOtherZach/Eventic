@@ -479,6 +479,16 @@ export default function EventDetailPage() {
             </div>
           )}
 
+          {/* Contact Details - Only shown to ticket holders */}
+          {event.contactDetails && userTickets && userTickets.length > 0 && (
+            <div className="mb-4">
+              <h5>Contact Details</h5>
+              <div className="text-muted">
+                {event.contactDetails}
+              </div>
+            </div>
+          )}
+
           {event.description && (
             <div className="mb-4">
               <h5>About This Event</h5>
