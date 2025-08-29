@@ -203,7 +203,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
     const createSnowflakes = () => {
       // Create floating Christmas emojis like Halloween
       const christmasEmojis = ['🎄', '🎅', '⛄', '🎁', '❄️', '🔔', '⭐'];
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 4; i++) {
         const emoji = document.createElement('div');
         emoji.className = 'spooky-ghost'; // Reuse the floating animation
         emoji.innerHTML = christmasEmojis[Math.floor(Math.random() * christmasEmojis.length)];
@@ -239,7 +239,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
     const createHearts = () => {
       // Create floating Valentine's emojis like Halloween
       const valentineEmojis = ['❤️', '💕', '💖', '💗', '💝', '💘', '😍', '🌹'];
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 4; i++) {
         const emoji = document.createElement('div');
         emoji.className = 'spooky-ghost'; // Reuse the floating animation
         emoji.innerHTML = valentineEmojis[Math.floor(Math.random() * valentineEmojis.length)];
@@ -258,7 +258,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
     const createSpooky = () => {
       // Create floating ghosts that stay within ticket bounds
       const ghosts = ['👻', '💀', '🎃', '🦇'];
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 4; i++) {
         const ghost = document.createElement('div');
         ghost.className = 'spooky-ghost';
         ghost.innerHTML = ghosts[Math.floor(Math.random() * ghosts.length)];
