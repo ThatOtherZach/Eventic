@@ -392,10 +392,11 @@ export function SpecialEffectOverlay({ event, ticket }: { event: Event; ticket?:
             top: '50%',
             transform: 'translateY(-50%)',
             zIndex: 10,
-            fontSize: '24px',
+            fontSize: '48px',
+            fontFamily: 'Impact, sans-serif',
             fontWeight: 'bold',
-            color: '#000',
-            textShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
+            color: '#fff',
+            textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000',
           }}
         >
           Nice ;)
