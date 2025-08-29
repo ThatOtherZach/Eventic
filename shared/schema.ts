@@ -341,11 +341,13 @@ export const insertEventSchema = createInsertSchema(events).omit({
   description: z.string()
     .max(1000, "Description must be less than 1000 characters")
     .optional()
-    .transform(val => val?.trim()),
+    .nullable()
+    .transform(val => val?.trim() || null),
   contactDetails: z.string()
     .max(150, "Contact details must be less than 150 characters")
     .optional()
-    .transform(val => val?.trim()),
+    .nullable()
+    .transform(val => val?.trim() || null),
   venue: z.string()
     .min(1, "A venue name is required. City and Country are optional.")
     .max(200, "Venue must be less than 200 characters")
