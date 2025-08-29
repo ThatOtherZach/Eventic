@@ -129,13 +129,11 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
     return null;
   }
   
-  // Special case: for preview tickets (id = "sample"), always show monthly effect
-  if (ticket && ticket.id === 'sample' && event.specialEffectsEnabled) {
-    return 'monthly';
-  }
+  // Special case: for preview tickets (id = "sample"), don't use random chance
+  const isPreview = ticket && ticket.id === 'sample';
   
-  // Only apply effects to validated tickets
-  if (!ticket?.isValidated) {
+  // Only apply effects to validated tickets (or preview)
+  if (!ticket?.isValidated && !isPreview) {
     return null;
   }
   
@@ -144,7 +142,12 @@ export function detectSpecialEffect(event: Event, ticket?: { isValidated: boolea
   
   for (const effect of sortedEffects) {
     if (effect.condition(event)) {
-      // Apply realistic odds based on effect type
+      // For preview, always show the effect
+      if (isPreview) {
+        return effect.type;
+      }
+      
+      // Apply realistic odds based on effect type for real tickets
       const random = Math.random();
       
       switch (effect.type) {
@@ -191,9 +194,10 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
   const particlesRef = useRef<HTMLDivElement[]>([]);
   
   useEffect(() => {
-    if (!effectType || effectType === 'nice') return; // Nice effect is handled differently
+    if (!effectType || effectType === 'nice' || effectType === 'pride' || effectType === 'monthly' || effectType === 'rainbow') return; // These are handled by overlay
     
-    const container = containerRef?.current || document.body;
+    const container = containerRef?.current;
+    if (!container) return;
     const particles: HTMLDivElement[] = [];
     
     const createSnowflakes = () => {
@@ -201,10 +205,13 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
         const snowflake = document.createElement('div');
         snowflake.className = 'snowflake';
         snowflake.innerHTML = '❄';
+        snowflake.style.position = 'absolute';
         snowflake.style.left = Math.random() * 100 + '%';
         snowflake.style.animationDuration = Math.random() * 3 + 5 + 's';
         snowflake.style.animationDelay = Math.random() * 3 + 's';
         snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
+        snowflake.style.zIndex = '10';
+        snowflake.style.pointerEvents = 'none';
         container.appendChild(snowflake);
         particles.push(snowflake);
       }
@@ -215,10 +222,13 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       for (let i = 0; i < 50; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
+        confetti.style.position = 'absolute';
         confetti.style.left = Math.random() * 100 + '%';
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
         confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
         confetti.style.animationDelay = Math.random() * 2 + 's';
+        confetti.style.zIndex = '10';
+        confetti.style.pointerEvents = 'none';
         container.appendChild(confetti);
         particles.push(confetti);
       }
@@ -229,25 +239,31 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
         const heart = document.createElement('div');
         heart.className = 'falling-heart';
         heart.innerHTML = '❤';
+        heart.style.position = 'absolute';
         heart.style.left = Math.random() * 100 + '%';
         heart.style.animationDuration = Math.random() * 3 + 4 + 's';
         heart.style.animationDelay = Math.random() * 3 + 's';
         heart.style.fontSize = Math.random() * 15 + 10 + 'px';
+        heart.style.zIndex = '10';
+        heart.style.pointerEvents = 'none';
         container.appendChild(heart);
         particles.push(heart);
       }
     };
     
     const createSpooky = () => {
-      // Create floating ghosts
+      // Create floating ghosts that stay within ticket bounds
       const ghosts = ['👻', '💀', '🎃', '🦇'];
       for (let i = 0; i < 8; i++) {
         const ghost = document.createElement('div');
         ghost.className = 'spooky-ghost';
         ghost.innerHTML = ghosts[Math.floor(Math.random() * ghosts.length)];
-        ghost.style.left = Math.random() * 90 + 5 + '%';
-        ghost.style.top = Math.random() * 70 + 10 + '%';
+        ghost.style.position = 'absolute';
+        ghost.style.left = Math.random() * 80 + 10 + '%';
+        ghost.style.top = Math.random() * 60 + 20 + '%';
         ghost.style.animationDelay = Math.random() * 6 + 's';
+        ghost.style.zIndex = '10';
+        ghost.style.pointerEvents = 'none';
         container.appendChild(ghost);
         particles.push(ghost);
       }
@@ -255,6 +271,9 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       // Create fog layer
       const fog = document.createElement('div');
       fog.className = 'spooky-fog';
+      fog.style.position = 'absolute';
+      fog.style.inset = '0';
+      fog.style.pointerEvents = 'none';
       container.appendChild(fog);
       particles.push(fog);
     };
@@ -266,8 +285,10 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
         
         const burst = document.createElement('div');
         burst.className = 'firework-burst';
+        burst.style.position = 'absolute';
         burst.style.left = x + 'px';
         burst.style.top = y + 'px';
+        burst.style.pointerEvents = 'none';
         
         const colors = ['#ff0000', '#ffa500', '#ffff00', '#00ff00', '#0000ff', '#ff00ff'];
         const color = colors[Math.floor(Math.random() * colors.length)];

@@ -15,6 +15,7 @@ interface TicketCardProps {
 
 export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValidating = false }: TicketCardProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  const ticketContainerRef = useRef<HTMLDivElement>(null);
   
   // Check if this ticket has any special effects
   // For preview tickets with previewEffectType, use that directly
@@ -47,6 +48,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   // For screen display: maintain aspect ratio but allow width to be responsive
   return (
     <div 
+      ref={ticketContainerRef}
       className="ticket-card position-relative w-100"
       style={{
         aspectRatio: showQR || isValidating ? '7/4' : '16/9',
@@ -105,7 +107,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
       <SpecialEffectOverlay event={event} ticket={ticket} />
       
       {/* Special Effects Animation (for particles) */}
-      <SpecialEffects event={event} ticket={ticket} />
+      <SpecialEffects event={event} ticket={ticket} containerRef={ticketContainerRef} />
 
       {/* Ticket Content */}
       <div className="position-relative h-100 d-flex">
