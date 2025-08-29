@@ -695,6 +695,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createData.ticketBackgroundUrl = objectStorageService.normalizeObjectEntityPath(createData.ticketBackgroundUrl);
       }
       
+      // If ticket purchases are disabled, automatically set event to private
+      if (createData.ticketPurchasesEnabled === false) {
+        createData.isPrivate = true;
+      }
+      
       // Body is already validated by middleware
       const event = await storage.createEvent({
         ...createData,
@@ -794,6 +799,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         surgePricing: z.boolean().optional(),
       });
       const validatedData = baseEventSchema.parse(updateData);
+      
+      // If ticket purchases are disabled, automatically set event to private
+      if (validatedData.ticketPurchasesEnabled === false) {
+        validatedData.isPrivate = true;
+      }
+      
       const updatedEvent = await storage.updateEvent(req.params.id, validatedData);
       
       // Send notifications to all ticket holders

@@ -808,6 +808,38 @@ export default function EventForm() {
                             />
                           </div>
                         </div>
+                        
+                        {/* Admin-only Disable Ticket Sales checkbox */}
+                        {isAdmin && (
+                          <div className="row mt-3">
+                            <div className="col-12">
+                              <FormField
+                                control={form.control}
+                                name="ticketPurchasesEnabled"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <div className="form-check">
+                                      <input
+                                        type="checkbox"
+                                        className="form-check-input"
+                                        id="ticketPurchasesEnabled"
+                                        checked={!field.value}
+                                        onChange={(e) => field.onChange(!e.target.checked)}
+                                        data-testid="checkbox-disable-ticket-sales"
+                                      />
+                                      <label className="form-check-label" htmlFor="ticketPurchasesEnabled">
+                                        <span className="badge bg-danger me-2">🚫</span>
+                                        Disable Ticket Sales
+                                      </label>
+                                    </div>
+                                    <div className="form-text">Stop new ticket purchases while still allowing resales and refunds. Only administrators can toggle this setting.</div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1130,33 +1162,6 @@ export default function EventForm() {
                           />
                         )}
                         
-                        {/* Admin-only Disable Ticket Sales checkbox */}
-                        {isAdmin && (
-                          <FormField
-                            control={form.control}
-                            name="ticketPurchasesEnabled"
-                            render={({ field }) => (
-                              <FormItem className="mt-3">
-                                <div className="form-check">
-                                  <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="ticketPurchasesEnabled"
-                                    checked={!field.value}
-                                    onChange={(e) => field.onChange(!e.target.checked)}
-                                    data-testid="checkbox-disable-ticket-sales"
-                                  />
-                                  <label className="form-check-label" htmlFor="ticketPurchasesEnabled">
-                                    <span className="badge bg-danger me-2">🚫</span>
-                                    Disable Ticket Sales
-                                  </label>
-                                </div>
-                                <div className="form-text">Stop new ticket purchases while still allowing resales and refunds. Only administrators can toggle this setting.</div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
                       </div>
                     </div>
 
