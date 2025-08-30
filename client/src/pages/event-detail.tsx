@@ -446,13 +446,6 @@ export default function EventDetailPage() {
                   Surge Pricing
                 </span>
               )}
-              {event.recurringType && (
-                <span className="badge" style={{ backgroundColor: '#059669', color: '#fff' }}>
-                  {event.recurringType === 'weekly' && 'Weekly Recurring'}
-                  {event.recurringType === 'monthly' && 'Monthly Recurring'}
-                  {event.recurringType === 'annually' && 'Annual Recurring'}
-                </span>
-              )}
               {event.stickerUrl && (
                 <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff' }}>
                   Custom Stickers ({event.stickerOdds || 50}%)
@@ -461,6 +454,13 @@ export default function EventDetailPage() {
               {event.p2pValidation && (
                 <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
                   P2P Validation
+                </span>
+              )}
+              {event.recurringType && (
+                <span className="badge" style={{ backgroundColor: '#059669', color: '#fff' }}>
+                  {event.recurringType === 'weekly' && 'Weekly Recurring'}
+                  {event.recurringType === 'monthly' && 'Monthly Recurring'}
+                  {event.recurringType === 'annually' && 'Annual Recurring'}
                 </span>
               )}
             </div>
