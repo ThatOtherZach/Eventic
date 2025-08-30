@@ -1,6 +1,5 @@
-import { useRef, useState, useEffect, useCallback } from "react";
-import QrScanner from "qr-scanner";
-import { Camera, CheckCircle, XCircle, Play, Square, AlertCircle, RotateCcw, Keyboard } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle, XCircle, RotateCcw, Keyboard } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -28,29 +27,14 @@ interface ValidationHistory {
 export function QrScannerImplementation() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
-  const [isScanning, setIsScanning] = useState(false);
-  const [hasCamera, setHasCamera] = useState<boolean | null>(null);
-  const [cameraError, setCameraError] = useState<string>("");
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  const [selectedCamera, setSelectedCamera] = useState<string>('environment');
-  const [availableCameras, setAvailableCameras] = useState<{ id: string; label: string }[]>([]);
   const [manualCode, setManualCode] = useState<string>("");
-  const [showManualEntry, setShowManualEntry] = useState(true); // Show by default
-  
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const scannerRef = useRef<QrScanner | null>(null);
-
-  const addDebugInfo = (message: string) => {
-    console.log("QR Scanner:", message);
-    setDebugInfo(prev => [message, ...prev.slice(0, 4)]);
-  };
 
   const validateTicketMutation = useMutation({
-    mutationFn: async (qrData: string) => {
-      const response = await apiRequest("POST", "/api/validate", { qrData });
+    mutationFn: async (code: string) => {
+      const response = await apiRequest("POST", "/api/validate", { qrData: code });
       return response.json();
     },
     onSuccess: (result: any) => {
@@ -115,185 +99,8 @@ export function QrScannerImplementation() {
     },
   });
 
-  const onScanSuccess = useCallback((result: QrScanner.ScanResult) => {
-    addDebugInfo(`✅ QR Code detected: ${result.data.substring(0, 50)}...`);
-    
-    // Stop scanning temporarily to prevent multiple scans
-    if (scannerRef.current) {
-      scannerRef.current.stop();
-      setIsScanning(false);
-    }
-    
-    // Validate the ticket
-    validateTicketMutation.mutate(result.data);
-  }, [validateTicketMutation]);
-
-  const onScanError = useCallback((error: string | Error) => {
-    // Ignore "No QR code found" errors as they're normal during scanning
-    if (typeof error === 'string' && error.includes('No QR code found')) {
-      return;
-    }
-    addDebugInfo(`❌ Scan error: ${error}`);
-  }, []);
-
-  const checkCameraSupport = async () => {
-    try {
-      addDebugInfo("Checking camera support...");
-      
-      // First check if we're on HTTPS (required for camera on mobile)
-      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-        addDebugInfo("⚠️ Not on HTTPS - camera may not work");
-      }
-      
-      // Check for camera availability
-      const hasSupport = await QrScanner.hasCamera();
-      setHasCamera(hasSupport);
-      
-      if (!hasSupport) {
-        setCameraError("No camera found on this device");
-        addDebugInfo("❌ No camera found");
-      } else {
-        addDebugInfo("✅ Camera available");
-        
-        // List available cameras for debugging
-        try {
-          const cameras = await QrScanner.listCameras(true);
-          addDebugInfo(`📷 Found ${cameras.length} camera(s)`);
-          cameras.forEach((camera, index) => {
-            addDebugInfo(`  ${index + 1}. ${camera.label || camera.id}`);
-          });
-        } catch (e) {
-          addDebugInfo("Could not list cameras");
-        }
-      }
-      
-      return hasSupport;
-    } catch (error: any) {
-      const errorMsg = error?.message || String(error);
-      addDebugInfo(`❌ Camera check failed: ${errorMsg}`);
-      setHasCamera(false);
-      setCameraError("Camera support check failed");
-      return false;
-    }
-  };
-
-  const startScanner = async () => {
-    try {
-      addDebugInfo("🚀 Starting scanner...");
-      
-      // Reset states
-      setCameraError("");
-      setValidationResult(null);
-      
-      if (!videoRef.current) {
-        addDebugInfo("❌ No video element");
-        return;
-      }
-      
-      // Destroy existing scanner if any
-      if (scannerRef.current) {
-        try {
-          scannerRef.current.destroy();
-        } catch (e) {
-          // Ignore destroy errors
-        }
-        scannerRef.current = null;
-      }
-      
-      // Create QR scanner instance with mobile-optimized settings
-      scannerRef.current = new QrScanner(
-        videoRef.current,
-        onScanSuccess,
-        {
-          onDecodeError: onScanError,
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-          preferredCamera: selectedCamera, // Use selected camera
-          calculateScanRegion: (video) => {
-            // Make scan region larger on mobile for better detection
-            const smallestDimension = Math.min(video.videoWidth, video.videoHeight);
-            const scanRegionSize = Math.round(0.75 * smallestDimension);
-            return {
-              x: Math.round((video.videoWidth - scanRegionSize) / 2),
-              y: Math.round((video.videoHeight - scanRegionSize) / 2),
-              width: scanRegionSize,
-              height: scanRegionSize,
-            };
-          },
-        }
-      );
-      
-      // Start scanning with better error details
-      await scannerRef.current.start();
-      setIsScanning(true);
-      addDebugInfo("✅ Scanner started successfully");
-      
-      toast({
-        title: "📷 Scanner Active",
-        description: "Point the camera at a QR code to scan",
-      });
-    } catch (error: any) {
-      const errorMsg = error?.message || error?.name || String(error) || "Unknown error";
-      addDebugInfo(`❌ Failed to start scanner: ${errorMsg}`);
-      setIsScanning(false);
-      
-      let errorMessage = "Failed to start scanner";
-      if (error?.name === "NotAllowedError" || errorMsg.includes("NotAllowed")) {
-        errorMessage = "Camera permission denied. Please allow camera access in your browser settings.";
-      } else if (error?.name === "NotFoundError" || errorMsg.includes("NotFound")) {
-        errorMessage = "No camera found on this device";
-      } else if (error?.name === "NotReadableError" || errorMsg.includes("NotReadable")) {
-        errorMessage = "Camera is already in use by another app. Please close other camera apps and try again.";
-      } else if (error?.name === "OverconstrainedError" || errorMsg.includes("Overconstrained")) {
-        errorMessage = "Camera settings not supported. Try using manual code entry instead.";
-        setShowManualEntry(true);
-      } else {
-        errorMessage = `Camera error: ${errorMsg}. Try manual code entry if camera doesn't work.`;
-        setShowManualEntry(true);
-      }
-      
-      setCameraError(errorMessage);
-      toast({
-        title: "❌ Scanner Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const stopScanner = () => {
-    try {
-      addDebugInfo("🛑 Stopping scanner...");
-      
-      if (scannerRef.current) {
-        scannerRef.current.stop();
-        setIsScanning(false);
-        addDebugInfo("✅ Scanner stopped");
-      }
-      
-      setValidationResult(null);
-      setCameraError("");
-    } catch (error: any) {
-      addDebugInfo(`❌ Error stopping scanner: ${error?.message || String(error)}`);
-    }
-  };
-
   const resetValidation = () => {
     setValidationResult(null);
-    if (scannerRef.current && !isScanning) {
-      startScanner();
-    }
-  };
-
-  const clearDebugInfo = () => {
-    setDebugInfo([]);
-  };
-
-  const testScan = () => {
-    addDebugInfo("🧪 Simulating QR scan for testing...");
-    // Test with a fake validation token
-    const testToken = "VAL-test-" + Date.now();
-    validateTicketMutation.mutate(testToken);
   };
 
   const handleManualCodeSubmit = () => {
@@ -306,29 +113,13 @@ export function QrScannerImplementation() {
       return;
     }
     
-    addDebugInfo(`🕹️ Manual code entered: ${manualCode}`);
     validateTicketMutation.mutate(manualCode);
     setManualCode("");
   };
 
-  useEffect(() => {
-    // Camera functionality disabled - only manual entry available
-    setHasCamera(false);
-    
-    // Cleanup on unmount
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.destroy();
-        scannerRef.current = null;
-      }
-    };
-  }, []);
-
   return (
     <div className="animate-fade-in">
-
-      
-      {/* Manual Code Entry - Primary option for mobile */}
+      {/* Manual Code Entry */}
       <div className="card mb-3 border-primary">
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-3">
@@ -389,8 +180,6 @@ export function QrScannerImplementation() {
           )}
         </div>
       </div>
-
-
 
       {/* Validation Result */}
       {validationResult && (
@@ -464,7 +253,7 @@ export function QrScannerImplementation() {
               data-testid="button-scan-another"
             >
               <RotateCcw className="me-2" size={18} />
-              Scan Another Ticket
+              Validate Another Ticket
             </button>
           </div>
         </div>
