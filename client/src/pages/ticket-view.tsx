@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Shield, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown } from "lucide-react";
+import { ArrowLeft, Shield, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -656,6 +656,18 @@ export default function TicketViewPage(): React.ReactElement {
                       Click the button below to generate a time-limited validation session. 
                       The QR code and manual entry code will be valid for 3 minutes.
                     </p>
+                  )}
+                  {/* Geofencing Warning */}
+                  {event.geofence && (
+                    <div className="alert alert-warning mb-3">
+                      <div className="d-flex align-items-center">
+                        <MapPin size={20} className="me-2" />
+                        <div>
+                          <h6 className="mb-1">Location Verification Required</h6>
+                          <p className="mb-0 small">Validation must occur within 690 meters of the event venue</p>
+                        </div>
+                      </div>
+                    </div>
                   )}
                   <button
                     className="btn btn-primary w-100"
