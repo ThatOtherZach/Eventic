@@ -109,6 +109,9 @@ export default function AccountPage() {
                   </div>
                   <div>
                     <h5 className="card-title mb-1">Account Details</h5>
+                    {user.displayName && (
+                      <p className="mb-1 fw-semibold">{user.displayName}</p>
+                    )}
                     <p className="text-muted mb-0">{user.email}</p>
                     {reputation && reputation.percentage !== null && (
                       <div className="d-flex align-items-center mt-2">

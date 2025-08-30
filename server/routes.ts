@@ -8,6 +8,7 @@ import { logError, logWarning, logInfo } from "./logger";
 import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
+import { generateUniqueDisplayName } from "./utils/display-name-generator";
 
 // Rate limiter configuration for ticket purchases
 const purchaseRateLimiter = rateLimit({
@@ -304,10 +305,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(existingUser);
       }
 
+      // Get all existing display names to ensure uniqueness
+      const allUsers = await storage.getAllUsers();
+      const existingDisplayNames = allUsers
+        .map(u => u.displayName)
+        .filter(Boolean) as string[];
+
+      // Generate unique display name
+      const displayName = generateUniqueDisplayName(existingDisplayNames, new Date());
+
       // Create new user in local database
       const newUser = await storage.createUser({
         id: userId,
         email: email || `user_${userId}@placeholder.com`,
+        displayName,
       });
       
       res.json(newUser);
