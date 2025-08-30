@@ -104,8 +104,8 @@ export default function AccountPage() {
             <div className="card-body">
               <div className="d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center">
-                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                    <User className="text-primary" size={24} />
+                  <div className="me-3">
+                    <img src="/key-icon.png" alt="" style={{ width: '48px', height: '48px' }} />
                   </div>
                   <div>
                     <h5 className="card-title mb-1">Account Details</h5>
