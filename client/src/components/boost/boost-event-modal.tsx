@@ -237,23 +237,17 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
 
                 {/* Duration Selection */}
                 <div className="mb-4">
-                  <label className="form-label fw-medium">Featured Duration</label>
-                  <div className="row g-2">
-                    {(["1hour", "6hours", "12hours", "24hours"] as const).map((duration) => (
-                      <div key={duration} className="col-6">
-                        <div 
-                          className={`card cursor-pointer ${selectedDuration === duration ? "border-primary bg-primary bg-opacity-10" : ""}`}
-                          onClick={() => setSelectedDuration(duration)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <div className="card-body p-3 text-center">
-                            <Clock size={20} className="text-primary mb-1" />
-                            <div className="fw-medium">{getDurationLabel(duration)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <label className="form-label fw-medium">Duration</label>
+                  <select 
+                    className="form-select"
+                    value={selectedDuration}
+                    onChange={(e) => setSelectedDuration(e.target.value as "1hour" | "6hours" | "12hours" | "24hours")}
+                  >
+                    <option value="1hour">1 Hour</option>
+                    <option value="6hours">6 Hours</option>
+                    <option value="12hours">12 Hours</option>
+                    <option value="24hours">24 Hours</option>
+                  </select>
                 </div>
 
                 {/* Pricing Info */}
