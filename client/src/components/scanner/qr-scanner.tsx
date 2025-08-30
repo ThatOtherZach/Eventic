@@ -75,12 +75,7 @@ export function QrScanner() {
       };
       setRecentValidations((prev) => [validation, ...prev.slice(0, 99)]);
 
-      if (isSuccessfullyValidated) {
-        toast({
-          title: "✅ Ticket Validated",
-          description: `Ticket for ${result.event?.name} has been marked as validated`,
-        });
-      } else if (isAuthenticButUnauthorized) {
+      if (isAuthenticButUnauthorized) {
         toast({
           title: "🔒 Valid Ticket (View Only)",
           description:
