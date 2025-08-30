@@ -488,8 +488,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const event = await storage.getEvent(ticket.eventId);
-      res.json({ ticket, event });
+      const eventWithCreator = await storage.getEventWithCreator(ticket.eventId);
+      if (!eventWithCreator) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Check if creator is an admin (has @saymservices.com email)
+      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
+      
+      // Remove creatorEmail from response for privacy
+      const { creatorEmail, ...event } = eventWithCreator;
+      
+      res.json({ 
+        ticket, 
+        event: {
+          ...event,
+          isAdminCreated
+        }
+      });
     } catch (error) {
       await logError(error, "GET /api/tickets/:ticketId", {
         request: req,
