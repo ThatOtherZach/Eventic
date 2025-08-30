@@ -1393,23 +1393,12 @@ export class DatabaseStorage implements IStorage {
       const event = await this.getEvent(eventId);
       if (!event || !event.userId) return false;
 
-      // Double-check: Don't archive recurring events
-      if (event.recurringType) {
-        console.log(`Skipping archive for recurring event ${eventId}`);
-        return false;
-      }
-
       // Get all tickets for this event
       const eventTickets = await this.getTicketsByEventId(eventId);
       
-      // Double-check: Don't archive if any tickets are minted as NFTs
-      for (const ticket of eventTickets) {
-        const registryRecord = await this.getRegistryRecordByTicket(ticket.id);
-        if (registryRecord) {
-          console.log(`Skipping archive for event ${eventId} - has NFT-minted tickets`);
-          return false;
-        }
-      }
+      // Note: NFT-minted tickets are already preserved in the Registry table
+      // The Registry contains all the ticket metadata flattened into its own record
+      // So we can safely archive/delete the original event and tickets
       
       // Calculate total tickets sold and revenue
       const totalTicketsSold = eventTickets.length;
@@ -1542,11 +1531,6 @@ export class DatabaseStorage implements IStorage {
     const eventsToArchive = [];
     
     for (const event of allEvents) {
-      // Skip recurring events - they should never be auto-archived
-      if (event.recurringType) {
-        continue;
-      }
-      
       // Use end date if available, otherwise use start date
       const eventDateStr = event.endDate || event.date;
       const eventDate = new Date(eventDateStr);
@@ -1557,22 +1541,30 @@ export class DatabaseStorage implements IStorage {
         continue;
       }
       
-      // Check if any tickets for this event have been minted as NFTs
-      const eventTickets = await this.getTicketsByEventId(event.id);
-      let hasNFTTickets = false;
-      
-      for (const ticket of eventTickets) {
-        const registryRecord = await this.getRegistryRecordByTicket(ticket.id);
-        if (registryRecord) {
-          hasNFTTickets = true;
-          break;
+      // For recurring events, ensure next occurrence is created before archiving
+      if (event.recurringType && event.recurringEndDate) {
+        // Check if recurring end date has not been reached
+        const recurringEndDate = new Date(event.recurringEndDate);
+        if (recurringEndDate > now) {
+          // Create the next occurrence before archiving this one
+          try {
+            const newEvent = await this.createRecurringEvent(event);
+            if (newEvent) {
+              console.log(`[ARCHIVE] Created next occurrence for recurring event: ${event.name} - Next date: ${newEvent.date}`);
+            } else {
+              console.log(`[ARCHIVE] No more occurrences needed for recurring event: ${event.name} (end date reached)`);
+            }
+          } catch (error) {
+            console.error(`[ARCHIVE] Failed to create next occurrence for ${event.name}:`, error);
+            // Don't archive if we couldn't create the next occurrence
+            continue;
+          }
         }
       }
       
-      // Skip events with NFT-minted tickets
-      if (hasNFTTickets) {
-        continue;
-      }
+      // Events with NFT-minted tickets can be archived
+      // The Registry table already preserves the ticket metadata permanently
+      // No need to check for NFTs - they're already preserved in Registry
       
       // This event is eligible for archiving
       eventsToArchive.push(event);

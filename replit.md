@@ -37,7 +37,7 @@ The system includes client-side QR code generation for tickets and server-side v
 - **Production Readiness**: Robust date handling, resilient authentication (JWKS), schema optimization, rate limiting on key actions, and Zod validation.
 - **Venue Address System**: Separate fields for Street, City, Country, with a country dropdown. Intelligent parsing for existing events and automatic combination for storage. User location preference updates automatically based on event activity.
 - **Event Creation Rules**: Events must be scheduled at least 3 hours in advance, with real-time validation feedback showing hours until event start.
-- **Data Retention Policy**: Events and tickets are automatically archived 69 days after the event ends (or start date if no end date). Exceptions: recurring events and tickets minted as NFTs (stored in Registry table) are never auto-archived. Archived data is preserved in CSV format for historical records.
+- **Data Retention Policy**: Events and tickets are automatically archived 69 days after the event ends (or start date if no end date). For recurring events, the system creates the next occurrence before archiving the old instance. NFT-minted tickets have their metadata permanently preserved in the Registry table, allowing the original event and ticket records to be safely archived. Archived data is preserved in CSV format for historical records.
 
 ## External Dependencies
 
