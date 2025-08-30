@@ -150,6 +150,26 @@ export default function EventDetailPage() {
     };
   }, [event]);
 
+  // Initialize Bootstrap tooltips
+  useEffect(() => {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => {
+      if (window.bootstrap && window.bootstrap.Tooltip) {
+        return new window.bootstrap.Tooltip(tooltipTriggerEl);
+      }
+      return null;
+    });
+
+    // Cleanup tooltips on unmount
+    return () => {
+      tooltipList.forEach(tooltip => {
+        if (tooltip && tooltip.dispose) {
+          tooltip.dispose();
+        }
+      });
+    };
+  }, [event]); // Re-initialize when event data changes
+
   const addValidatorMutation = useMutation({
     mutationFn: async (email: string) => {
       return apiRequest("POST", `/api/events/${id}/validators`, { email });
@@ -852,8 +872,10 @@ export default function EventDetailPage() {
                                 <span className="fw-bold">{event.ticketsAvailable}</span>&nbsp;Remaining
                                 <HelpCircle 
                                   className="ms-1 text-muted" 
-                                  size={12} 
-                                  title="Number of tickets still available for purchase directly from the event"
+                                  size={12}
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  data-bs-title="Number of tickets still available for purchase directly from the event"
                                   style={{ cursor: 'help' }}
                                 />
                               </div>
@@ -861,8 +883,10 @@ export default function EventDetailPage() {
                                 <span className="fw-bold">{event.resaleCount || 0}</span>&nbsp;Available
                                 <HelpCircle 
                                   className="ms-1 text-muted" 
-                                  size={12} 
-                                  title="Number of tickets being resold by other attendees at original price"
+                                  size={12}
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  data-bs-title="Number of tickets being resold by other attendees at original price"
                                   style={{ cursor: 'help' }}
                                 />
                               </div>
