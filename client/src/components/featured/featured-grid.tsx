@@ -137,7 +137,7 @@ export function FeaturedGrid() {
                       )}
                       {featuredEvent.event.surgePricing && (
                         <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: "0.7em" }}>
-                          Surge Pricing
+                          Surge
                         </span>
                       )}
                       {featuredEvent.event.stickerUrl && (
@@ -151,7 +151,7 @@ export function FeaturedGrid() {
                         </span>
                       )}
                       {featuredEvent.event.allowMinting && (
-                        <span className="badge" style={{ backgroundColor: '#10B981', color: '#fff', fontSize: "0.7em" }}>
+                        <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff', fontSize: "0.7em" }}>
                           Collectable
                         </span>
                       )}
@@ -161,7 +161,7 @@ export function FeaturedGrid() {
                         </span>
                       )}
                       {featuredEvent.event.enableVoting && (
-                        <span className="badge" style={{ backgroundColor: '#8B5CF6', color: '#fff', fontSize: "0.7em" }}>
+                        <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', fontSize: "0.7em" }}>
                           Vote
                         </span>
                       )}

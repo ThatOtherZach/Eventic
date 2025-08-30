@@ -472,7 +472,7 @@ export default function EventDetailPage() {
               )}
               {event.surgePricing && (
                 <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
-                  Surge Pricing
+                  Surge
                 </span>
               )}
               {event.stickerUrl && (
@@ -486,7 +486,7 @@ export default function EventDetailPage() {
                 </span>
               )}
               {event.allowMinting && (
-                <span className="badge" style={{ backgroundColor: '#10B981', color: '#fff' }}>
+                <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
                   Collectable
                 </span>
               )}
@@ -496,7 +496,7 @@ export default function EventDetailPage() {
                 </span>
               )}
               {event.enableVoting && (
-                <span className="badge" style={{ backgroundColor: '#8B5CF6', color: '#fff' }}>
+                <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff' }}>
                   Vote
                 </span>
               )}
