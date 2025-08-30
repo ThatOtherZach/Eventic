@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import customIcon from "@assets/image_1756530485392.png";
+import errorIcon from "@assets/image_1756530597104.png";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -85,8 +86,8 @@ export function QrScannerImplementation() {
       } else {
         // Invalid ticket
         toast({
-          title: "❌ Invalid Ticket",
-          description: result.message,
+          title: "404",
+          description: "Invalid ticket",
           variant: "destructive",
         });
       }
@@ -201,21 +202,13 @@ export function QrScannerImplementation() {
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">
               <div
-                className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
-                  validationResult.canValidate && validationResult.valid
-                    ? "bg-success"
-                    : validationResult.outsideValidTime
-                      ? "bg-warning"
-                      : validationResult.isAuthentic
-                        ? "bg-info"
-                        : "bg-danger"
-                }`}
+                className="me-3 d-flex align-items-center justify-content-center"
                 style={{ width: "40px", height: "40px" }}
               >
                 {validationResult.valid ? (
-                  <CheckCircle className="text-white" size={20} />
+                  <CheckCircle className="text-success" size={20} />
                 ) : (
-                  <XCircle className="text-white" size={20} />
+                  <img src={errorIcon} alt="Error" style={{ width: '20px', height: '20px' }} />
                 )}
               </div>
               <div className="flex-grow-1">
@@ -228,10 +221,10 @@ export function QrScannerImplementation() {
                         ? "✔️ Authentic Ticket"
                         : validationResult.alreadyValidated
                           ? "⚠️ Already Validated"
-                          : "❌ Invalid Ticket"}
+                          : "404"}
                 </h6>
                 <p className="text-muted small mb-0">
-                  {validationResult.message || "Ticket status checked"}
+                  {validationResult.valid ? (validationResult.message || "Ticket status checked") : "Invalid ticket"}
                 </p>
               </div>
             </div>
