@@ -212,17 +212,11 @@ export function FeaturedEventsPage() {
                       {/* Special Effects Animation (for particles) */}
                       <SpecialEffects event={fullEvent} ticket={mockTicket} />
 
-                      {/* Badges for featured/admin/NFT events */}
+                      {/* Badges for admin/NFT events */}
                       <div className="position-absolute top-0 start-0 p-2" style={{ zIndex: 10 }}>
                         {event.isAdminCreated && (
                           <span className="badge me-2" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
                             Mission
-                          </span>
-                        )}
-                        {featuredData.some(f => f.event.id === event.id) && (
-                          <span className="badge bg-warning text-dark me-2">
-                            <Star size={12} className="me-1" />
-                            Featured
                           </span>
                         )}
                         {event.allowMinting && (
