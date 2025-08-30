@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
