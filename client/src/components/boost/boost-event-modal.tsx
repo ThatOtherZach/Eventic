@@ -299,8 +299,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                   </>
                 ) : (
                   <>
-                    <Star className="me-2" size={16} />
-                    Boost Event (${getPrice()})
+                    ${getPrice()} Buy Boost
                   </>
                 )}
               </button>
