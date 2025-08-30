@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Star, Clock, MapPin } from "lucide-react";
+import { Star, Clock, MapPin } from "lucide-react";
 import type { FeaturedEvent, Event } from "@shared/schema";
 
 interface FeaturedEventsResponse {
@@ -52,24 +52,17 @@ export function FeaturedCarousel() {
     }
   }, [currentSlide, featuredEvents, preloadImage]);
 
-  // Auto-rotate slides every 30 seconds
+  // Auto-rotate slides every 1.25 seconds
   useEffect(() => {
     if (featuredEvents.length === 0) return;
     
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % featuredEvents.length);
-    }, 30 * 1000); // 30 seconds
+    }, 1.25 * 1000); // 1.25 seconds
 
     return () => clearInterval(interval);
   }, [featuredEvents.length]);
 
-  const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % featuredEvents.length);
-  }, [featuredEvents.length]);
-
-  const prevSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev - 1 + featuredEvents.length) % featuredEvents.length);
-  }, [featuredEvents.length]);
 
   if (isLoading) {
     return (
@@ -178,16 +171,6 @@ export function FeaturedCarousel() {
             </div>
             
             <div className="d-flex justify-content-end align-items-center gap-1">
-              {featuredEvents.length > 1 && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={prevSlide}
-                  data-testid="button-carousel-prev"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-              )}
-              
               <button 
                 className="btn btn-light"
                 onClick={() => {
@@ -197,16 +180,6 @@ export function FeaturedCarousel() {
               >
                 View
               </button>
-              
-              {featuredEvents.length > 1 && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={nextSlide}
-                  data-testid="button-carousel-next"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              )}
             </div>
           </div>
         </div>
