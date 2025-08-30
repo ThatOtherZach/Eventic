@@ -119,24 +119,24 @@ export function QrScannerImplementation() {
 
   return (
     <div className="animate-fade-in">
-      {/* Manual Code Entry - Retro Style */}
-      <div className="retro-validation-card mb-3">
-        <div className="retro-card-body">
-          <div className="retro-header mb-3">
-            <h6 className="retro-title">
+      {/* Manual Code Entry */}
+      <div className="card mb-3 border-primary">
+        <div className="card-body">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6 className="card-title mb-0 text-primary">
               <Keyboard className="me-2" size={18} />
               Ticket Code Validation
             </h6>
           </div>
           
-          <div className="retro-info-panel mb-3">
+          <div className="alert alert-info small mb-3">
             Ask the ticket holder for the <strong>4-digit code</strong> shown on their ticket screen.
           </div>
           
-          <div className="retro-input-section mb-2">
+          <div className="input-group input-group-lg mb-2">
             <input
               type="text"
-              className="retro-code-input"
+              className="form-control text-center font-monospace fw-bold fs-3"
               placeholder="0000"
               value={manualCode}
               onChange={(e) => {
@@ -155,27 +155,28 @@ export function QrScannerImplementation() {
               autoFocus
               disabled={validateTicketMutation.isPending}
               data-testid="input-manual-code"
+              style={{ letterSpacing: '0.5rem' }}
             />
             <button
-              className="retro-validate-btn"
+              className="btn btn-primary btn-lg"
               onClick={handleManualCodeSubmit}
               disabled={validateTicketMutation.isPending || manualCode.length !== 4}
               data-testid="button-submit-code"
             >
               {validateTicketMutation.isPending ? (
-                <span className="retro-spinner"></span>
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               ) : (
                 "Validate"
               )}
             </button>
           </div>
           
-          <p className="retro-help-text mb-3">
+          <p className="small text-muted mb-3">
             Enter here and click "Validate".
           </p>
           
           {manualCode.length > 0 && manualCode.length < 4 && (
-            <small className="retro-counter">Enter {4 - manualCode.length} more digit{4 - manualCode.length !== 1 ? 's' : ''}</small>
+            <small className="text-muted">Enter {4 - manualCode.length} more digit{4 - manualCode.length !== 1 ? 's' : ''}</small>
           )}
         </div>
       </div>
