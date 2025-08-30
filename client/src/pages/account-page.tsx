@@ -123,7 +123,7 @@ export default function AccountPage() {
                     )}
                     {validatedCount && (
                       <div className="d-flex align-items-center mt-2">
-                        <CheckCircle size={16} className="text-success me-2" />
+                        <img src="/validation-icon.png" alt="" style={{ width: '16px', height: '16px', marginRight: '8px' }} />
                         <span className="text-muted small">
                           Total Validated: <strong>{validatedCount.validatedCount}</strong> tickets
                         </span>
