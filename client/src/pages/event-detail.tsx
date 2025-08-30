@@ -729,7 +729,12 @@ export default function EventDetailPage() {
                       )}
                     </div>
                     <div className="d-flex align-items-center mt-1">
-                      <Star size={16} className="text-warning me-2" />
+                      <img 
+                        src="/globe-icon.png" 
+                        alt="Organizer" 
+                        className="me-2"
+                        style={{ width: '16px', height: '16px' }}
+                      />
                       {badge ? (
                         <span className="badge bg-secondary">{badge}</span>
                       ) : showPercentage ? (
