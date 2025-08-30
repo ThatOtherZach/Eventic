@@ -292,7 +292,7 @@ export default function AccountPage() {
       <div className="row">
         <div className="col-12">
           <h4 className="h5 fw-semibold mb-3">
-            <Calendar className="me-2" size={20} />
+            <img src="/events-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'text-bottom' }} />
             My Events
           </h4>
           
