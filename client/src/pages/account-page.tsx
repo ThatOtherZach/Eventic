@@ -108,9 +108,8 @@ export default function AccountPage() {
                     <img src="/key-icon.png" alt="" style={{ width: '48px', height: '48px' }} />
                   </div>
                   <div>
-                    <h5 className="card-title mb-1">Account Details</h5>
                     {user.displayName && (
-                      <p className="mb-1 fw-semibold">{user.displayName}</p>
+                      <h5 className="card-title mb-1">{user.displayName}</h5>
                     )}
                     <p className="text-muted mb-0">{user.email}</p>
                     {reputation && reputation.percentage !== null && (
