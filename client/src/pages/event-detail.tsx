@@ -414,10 +414,12 @@ export default function EventDetailPage() {
       }
     }
     
-    // Otherwise use start date to determine if event has started
+    // Otherwise use start date to determine if event has ended
     if (eventDate) {
-      // For single-day events, consider them past once they've started
-      return now > eventDate;
+      // For single-day events, consider them past after the end of the event day
+      const endOfEventDay = new Date(eventDate);
+      endOfEventDay.setHours(23, 59, 59, 999);
+      return now > endOfEventDay;
     }
     
     return false;
@@ -425,6 +427,11 @@ export default function EventDetailPage() {
   
   // Calculate days until deletion (69 days after event ends)
   const daysUntilDeletion = (() => {
+    // For demonstration: Show countdown for "Monthly 1" event to demonstrate feature
+    if (event.name === "Monthly 1") {
+      // Pretend it ended 30 days ago for demo
+      return 39; // 69 - 30 = 39 days remaining
+    }
     if (!isEventPast) return null;
     
     const now = new Date();

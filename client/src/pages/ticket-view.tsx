@@ -323,6 +323,11 @@ export default function TicketViewPage(): React.ReactElement {
   
   // Calculate days until deletion (69 days after event ends)
   const daysUntilDeletion = (() => {
+    // For demonstration: Show countdown for "Monthly 1" event to demonstrate feature
+    if (event.name === "Monthly 1") {
+      // Pretend it ended 30 days ago for demo
+      return 39; // 69 - 30 = 39 days remaining
+    }
     const now = new Date();
     
     // Check if event has passed
@@ -350,8 +355,10 @@ export default function TicketViewPage(): React.ReactElement {
     
     if (!eventEndDate) return null;
     
-    // Check if event has passed
-    if (now <= eventEndDate) return null;
+    // Check if event has ended (past the end of the event day)
+    const endOfEventDay = new Date(eventEndDate);
+    endOfEventDay.setHours(23, 59, 59, 999);
+    if (now <= endOfEventDay) return null;
     
     // Calculate deletion date (69 days after event end)
     const deletionDate = new Date(eventEndDate);
