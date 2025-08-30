@@ -876,7 +876,7 @@ export default function EventDetailPage() {
                 ) : (
                   <>
                     <Ticket size={18} className="me-2" />
-                    Purchase Ticket
+                    Buy Ticket
                   </>
                 )}
               </button>
