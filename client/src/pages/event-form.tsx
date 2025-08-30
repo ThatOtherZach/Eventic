@@ -1149,17 +1149,14 @@ export default function EventForm() {
                                 <option value="Allow at Anytime">
                                   Allow at Anytime
                                 </option>
-                                <option value="No Early Validation">
-                                  No Early Validation
+                                <option value="At Start Time">
+                                  At Start Time
                                 </option>
-                                <option value="30 Minutes Before">
-                                  30 Minutes Before
+                                <option value="One Hour Before">
+                                  One Hour Before
                                 </option>
-                                <option value="1 Hour Before">
-                                  1 Hour Before
-                                </option>
-                                <option value="2 Hours Before">
-                                  2 Hours Before
+                                <option value="Two Hours Before">
+                                  Two Hours Before
                                 </option>
                               </select>
                             </FormControl>
