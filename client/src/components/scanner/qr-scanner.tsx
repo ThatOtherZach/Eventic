@@ -3,7 +3,16 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
-import { Camera, CheckCircle, XCircle, AlertCircle, RotateCcw, Play, Square, Eye } from "lucide-react";
+import {
+  Camera,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  RotateCcw,
+  Play,
+  Square,
+  Eye,
+} from "lucide-react";
 import type { Event, Ticket } from "@shared/schema";
 
 interface ValidationResult {
@@ -30,16 +39,19 @@ export function QrScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [hasCamera, setHasCamera] = useState<boolean | null>(null);
   const [cameraError, setCameraError] = useState<string>("");
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
+  const [recentValidations, setRecentValidations] = useState<
+    ValidationHistory[]
+  >([]);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const addDebugInfo = (message: string) => {
     console.log("QR Scanner:", message);
-    setDebugInfo(prev => [message, ...prev.slice(0, 4)]);
+    setDebugInfo((prev) => [message, ...prev.slice(0, 4)]);
   };
 
   const validateTicketMutation = useMutation({
@@ -49,19 +61,20 @@ export function QrScanner() {
     },
     onSuccess: (result: ValidationResult) => {
       setValidationResult(result);
-      
+
       // Check if ticket is authentic but user can't validate
-      const isAuthenticButUnauthorized = result.isAuthentic && !result.canValidate;
+      const isAuthenticButUnauthorized =
+        result.isAuthentic && !result.canValidate;
       const isSuccessfullyValidated = !!(result.valid && result.canValidate);
-      
+
       const validation: ValidationHistory = {
         eventName: result.event?.name || "Unknown Event",
         ticketNumber: result.ticket?.ticketNumber || "Unknown",
         timestamp: new Date().toLocaleTimeString(),
         valid: isSuccessfullyValidated,
       };
-      setRecentValidations(prev => [validation, ...prev.slice(0, 99)]);
-      
+      setRecentValidations((prev) => [validation, ...prev.slice(0, 99)]);
+
       if (isSuccessfullyValidated) {
         toast({
           title: "✅ Ticket Validated",
@@ -70,7 +83,8 @@ export function QrScanner() {
       } else if (isAuthenticButUnauthorized) {
         toast({
           title: "🔒 Valid Ticket (View Only)",
-          description: "This ticket is authentic but you don't have permission to validate it",
+          description:
+            "This ticket is authentic but you don't have permission to validate it",
         });
       } else if (result.alreadyValidated) {
         toast({
@@ -102,7 +116,7 @@ export function QrScanner() {
   const checkCameraSupport = async () => {
     try {
       addDebugInfo("Checking camera support...");
-      
+
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         addDebugInfo("❌ No mediaDevices support");
         setHasCamera(false);
@@ -111,11 +125,15 @@ export function QrScanner() {
       }
 
       const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      const videoDevices = devices.filter(
+        (device) => device.kind === "videoinput",
+      );
       const cameraAvailable = videoDevices.length > 0;
-      
-      addDebugInfo(`${cameraAvailable ? "✅" : "❌"} Found ${videoDevices.length} camera(s)`);
-      
+
+      addDebugInfo(
+        `${cameraAvailable ? "✅" : "❌"} Found ${videoDevices.length} camera(s)`,
+      );
+
       setHasCamera(cameraAvailable);
       if (!cameraAvailable) {
         setCameraError("No camera found on this device");
@@ -131,7 +149,7 @@ export function QrScanner() {
 
   const handleStartClick = () => {
     addDebugInfo("🔵 Start button clicked!");
-    
+
     if (isScanning) {
       addDebugInfo("❌ Already scanning, ignoring click");
       return;
@@ -148,15 +166,15 @@ export function QrScanner() {
   const startScanner = async () => {
     try {
       addDebugInfo("🚀 Starting scanner...");
-      
+
       // Reset states
       setCameraError("");
       setValidationResult(null);
-      
+
       // Stop any existing stream
       if (stream) {
         addDebugInfo("🛑 Stopping existing stream");
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
         setStream(null);
       }
 
@@ -168,22 +186,22 @@ export function QrScanner() {
       }
 
       addDebugInfo("📷 Requesting camera access...");
-      
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
+        video: {
           facingMode: { ideal: "environment" },
           width: { ideal: 640 },
-          height: { ideal: 480 }
-        }
+          height: { ideal: 480 },
+        },
       });
 
       addDebugInfo("✅ Camera access granted!");
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         addDebugInfo("✅ Video stream set");
       }
-      
+
       setStream(mediaStream);
       setIsScanning(true);
 
@@ -191,18 +209,18 @@ export function QrScanner() {
         title: "📷 Camera Started",
         description: "Camera is now active",
       });
-
     } catch (error: any) {
       addDebugInfo(`❌ Camera start failed: ${error.name} - ${error.message}`);
-      
+
       // Reset states on error
       setIsScanning(false);
       setStream(null);
-      
+
       let errorMessage = "Failed to access camera";
-      
+
       if (error.name === "NotAllowedError") {
-        errorMessage = "Camera permission denied. Please allow camera access and try again.";
+        errorMessage =
+          "Camera permission denied. Please allow camera access and try again.";
       } else if (error.name === "NotFoundError") {
         errorMessage = "No camera found on this device";
       } else if (error.name === "NotSupportedError") {
@@ -210,7 +228,7 @@ export function QrScanner() {
       } else if (error.name === "NotReadableError") {
         errorMessage = "Camera is already in use by another application";
       }
-      
+
       setCameraError(errorMessage);
       toast({
         title: "❌ Camera Error",
@@ -228,29 +246,28 @@ export function QrScanner() {
   const stopScanner = () => {
     try {
       addDebugInfo("🛑 Stopping scanner...");
-      
+
       // Stop media stream
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
         setStream(null);
         addDebugInfo("✅ Stream stopped");
       }
-      
+
       // Clear video element
       if (videoRef.current) {
         videoRef.current.srcObject = null;
         addDebugInfo("✅ Video cleared");
       }
-      
+
       setIsScanning(false);
       setValidationResult(null);
       setCameraError("");
-      
+
       toast({
         title: "📷 Camera Stopped",
         description: "Scanner has been stopped",
       });
-
     } catch (error: any) {
       addDebugInfo(`❌ Error stopping scanner: ${error.message}`);
       // Force reset states even if cleanup fails
@@ -297,32 +314,78 @@ export function QrScanner() {
             muted
             className="w-100 h-100 object-fit-cover"
             data-testid="video-scanner"
-            style={{ 
+            style={{
               transform: "scaleX(-1)",
-              display: isScanning ? "block" : "none"
+              display: isScanning ? "block" : "none",
             }}
           />
-          
+
           {isScanning && (
             <>
               {/* QR Code Targeting Overlay */}
-              <div className="position-absolute top-50 start-50 translate-middle" 
-                   style={{ width: "250px", height: "250px", zIndex: 10 }}>
+              <div
+                className="position-absolute top-50 start-50 translate-middle"
+                style={{ width: "250px", height: "250px", zIndex: 10 }}
+              >
                 <div className="position-relative w-100 h-100">
                   {/* Corner brackets */}
-                  <div className="position-absolute" style={{ top: "0", left: "0", width: "30px", height: "30px" }}>
-                    <div className="border-top border-start border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
+                  <div
+                    className="position-absolute"
+                    style={{
+                      top: "0",
+                      left: "0",
+                      width: "30px",
+                      height: "30px",
+                    }}
+                  >
+                    <div
+                      className="border-top border-start border-3 border-white w-100 h-100"
+                      style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}
+                    ></div>
                   </div>
-                  <div className="position-absolute" style={{ top: "0", right: "0", width: "30px", height: "30px" }}>
-                    <div className="border-top border-end border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
+                  <div
+                    className="position-absolute"
+                    style={{
+                      top: "0",
+                      right: "0",
+                      width: "30px",
+                      height: "30px",
+                    }}
+                  >
+                    <div
+                      className="border-top border-end border-3 border-white w-100 h-100"
+                      style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}
+                    ></div>
                   </div>
-                  <div className="position-absolute" style={{ bottom: "0", left: "0", width: "30px", height: "30px" }}>
-                    <div className="border-bottom border-start border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
+                  <div
+                    className="position-absolute"
+                    style={{
+                      bottom: "0",
+                      left: "0",
+                      width: "30px",
+                      height: "30px",
+                    }}
+                  >
+                    <div
+                      className="border-bottom border-start border-3 border-white w-100 h-100"
+                      style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}
+                    ></div>
                   </div>
-                  <div className="position-absolute" style={{ bottom: "0", right: "0", width: "30px", height: "30px" }}>
-                    <div className="border-bottom border-end border-3 border-white w-100 h-100" style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}></div>
+                  <div
+                    className="position-absolute"
+                    style={{
+                      bottom: "0",
+                      right: "0",
+                      width: "30px",
+                      height: "30px",
+                    }}
+                  >
+                    <div
+                      className="border-bottom border-end border-3 border-white w-100 h-100"
+                      style={{ boxShadow: "0 0 0 1px rgba(0,0,0,0.3)" }}
+                    ></div>
                   </div>
-                  
+
                   {/* Center guidance text */}
                   <div className="position-absolute top-50 start-50 translate-middle text-center">
                     <div className="bg-dark bg-opacity-75 text-white px-3 py-2 rounded">
@@ -335,13 +398,19 @@ export function QrScanner() {
           )}
 
           {!isScanning && (
-            <div className="scanner-placeholder d-flex flex-column align-items-center justify-content-center" data-testid="camera-placeholder">
+            <div
+              className="scanner-placeholder d-flex flex-column align-items-center justify-content-center"
+              data-testid="camera-placeholder"
+            >
               {hasCamera === false ? (
                 <>
                   <AlertCircle className="text-danger mb-3" size={48} />
-                  <p className="fw-medium text-danger mb-2">No Camera Available</p>
+                  <p className="fw-medium text-danger mb-2">
+                    No Camera Available
+                  </p>
                   <p className="small text-muted text-center mb-0">
-                    {cameraError || "This device doesn't have a camera or camera access is not available"}
+                    {cameraError ||
+                      "This device doesn't have a camera or camera access is not available"}
                   </p>
                 </>
               ) : (
@@ -397,23 +466,52 @@ export function QrScanner() {
       <div className="card mb-4">
         <div className="card-header bg-light d-flex justify-content-between align-items-center">
           <h6 className="card-title mb-0">Debug Info</h6>
-          <button onClick={clearDebugInfo} className="btn btn-sm btn-outline-secondary">Clear</button>
+          <button
+            onClick={clearDebugInfo}
+            className="btn btn-sm btn-outline-secondary"
+          >
+            Clear
+          </button>
         </div>
         <div className="card-body">
           <div className="small">
-            <p className="mb-1"><strong>Has Camera:</strong> {hasCamera === null ? "Checking..." : hasCamera ? "✅ Yes" : "❌ No"}</p>
-            <p className="mb-1"><strong>Is Scanning:</strong> {isScanning ? "✅ Yes" : "❌ No"}</p>
-            <p className="mb-1"><strong>Stream Active:</strong> {stream ? "✅ Yes" : "❌ No"}</p>
-            {cameraError && <p className="mb-2 text-danger"><strong>Error:</strong> {cameraError}</p>}
-            
+            <p className="mb-1">
+              <strong>Has Camera:</strong>{" "}
+              {hasCamera === null
+                ? "Checking..."
+                : hasCamera
+                  ? "✅ Yes"
+                  : "❌ No"}
+            </p>
+            <p className="mb-1">
+              <strong>Is Scanning:</strong> {isScanning ? "✅ Yes" : "❌ No"}
+            </p>
+            <p className="mb-1">
+              <strong>Stream Active:</strong> {stream ? "✅ Yes" : "❌ No"}
+            </p>
+            {cameraError && (
+              <p className="mb-2 text-danger">
+                <strong>Error:</strong> {cameraError}
+              </p>
+            )}
+
             <div className="mt-2">
               <strong>Debug Log:</strong>
-              <div className="bg-dark text-light p-2 rounded mt-1" style={{ fontSize: "0.75rem", maxHeight: "150px", overflowY: "auto" }}>
+              <div
+                className="bg-dark text-light p-2 rounded mt-1"
+                style={{
+                  fontSize: "0.75rem",
+                  maxHeight: "150px",
+                  overflowY: "auto",
+                }}
+              >
                 {debugInfo.length === 0 ? (
                   <div className="text-muted">No debug info yet...</div>
                 ) : (
                   debugInfo.map((info, index) => (
-                    <div key={index} className="mb-1">{info}</div>
+                    <div key={index} className="mb-1">
+                      {info}
+                    </div>
                   ))
                 )}
               </div>
@@ -427,10 +525,16 @@ export function QrScanner() {
         <div className="card mb-4" data-testid="scan-result">
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">
-              <div className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
-                validationResult.valid && validationResult.canValidate ? "bg-success" : 
-                validationResult.isAuthentic ? "bg-warning" : "bg-danger"
-              }`} style={{ width: "40px", height: "40px" }}>
+              <div
+                className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
+                  validationResult.valid && validationResult.canValidate
+                    ? "bg-success"
+                    : validationResult.isAuthentic
+                      ? "bg-warning"
+                      : "bg-danger"
+                }`}
+                style={{ width: "40px", height: "40px" }}
+              >
                 {validationResult.valid && validationResult.canValidate ? (
                   <CheckCircle className="text-white" size={20} />
                 ) : validationResult.isAuthentic ? (
@@ -441,54 +545,81 @@ export function QrScanner() {
               </div>
               <div className="flex-grow-1">
                 <h6 className="fw-semibold mb-1">
-                  {validationResult.valid && validationResult.canValidate ? "✅ Ticket Validated" : 
-                   validationResult.isAuthentic && !validationResult.canValidate ? "🔒 Valid Ticket (View Only)" :
-                   validationResult.alreadyValidated ? "ℹ️ Already Validated" :
-                   "❌ Invalid Ticket"}
+                  {validationResult.valid && validationResult.canValidate
+                    ? "✅ Ticket Validated"
+                    : validationResult.isAuthentic &&
+                        !validationResult.canValidate
+                      ? "🔒 Valid Ticket (View Only)"
+                      : validationResult.alreadyValidated
+                        ? "ℹ️ Already Validated"
+                        : "❌ Invalid Ticket"}
                 </h6>
                 <p className="text-muted small mb-0">
-                  {validationResult.valid && validationResult.canValidate ? "Ticket has been marked as validated" : 
-                   validationResult.isAuthentic && !validationResult.canValidate ? "This ticket is authentic but you don't have permission to validate it" :
-                   validationResult.alreadyValidated ? "This ticket has already been validated" :
-                   validationResult.message || "This ticket is not valid"}
+                  {validationResult.valid && validationResult.canValidate
+                    ? "Ticket has been marked as validated"
+                    : validationResult.isAuthentic &&
+                        !validationResult.canValidate
+                      ? "This ticket is authentic but you don't have permission to validate it"
+                      : validationResult.alreadyValidated
+                        ? "This ticket has already been validated"
+                        : validationResult.message ||
+                          "This ticket is not valid"}
                 </p>
               </div>
             </div>
 
-            {((validationResult.valid && validationResult.canValidate) || validationResult.isAuthentic) && validationResult.event && validationResult.ticket && (
-              <div className="bg-light rounded p-3 mb-3">
-                <div className="row">
-                  <div className="col-6 mb-2">
-                    <span className="text-muted small">Event:</span>
-                    <p className="fw-medium mb-0 small">{validationResult.event.name}</p>
-                  </div>
-                  <div className="col-6 mb-2">
-                    <span className="text-muted small">Venue:</span>
-                    <p className="fw-medium mb-0 small">{validationResult.event.venue}</p>
-                  </div>
-                  <div className="col-6 mb-2">
-                    <span className="text-muted small">Ticket ID:</span>
-                    <p className="fw-medium mb-0 small font-monospace">{validationResult.ticket.ticketNumber}</p>
-                  </div>
-                  <div className="col-6 mb-2">
-                    <span className="text-muted small">Date & Time:</span>
-                    <p className="fw-medium mb-0 small">{validationResult.event.date} {validationResult.event.time}</p>
-                  </div>
-                  {validationResult.ticket.isValidated && (
-                    <div className="col-12">
-                      <span className="text-muted small">Status:</span>
-                      <p className="fw-medium mb-0 small text-success">Already Validated ✓</p>
+            {((validationResult.valid && validationResult.canValidate) ||
+              validationResult.isAuthentic) &&
+              validationResult.event &&
+              validationResult.ticket && (
+                <div className="bg-light rounded p-3 mb-3">
+                  <div className="row">
+                    <div className="col-6 mb-2">
+                      <span className="text-muted small">Event:</span>
+                      <p className="fw-medium mb-0 small">
+                        {validationResult.event.name}
+                      </p>
                     </div>
-                  )}
-                  {validationResult.isAuthentic && !validationResult.canValidate && (
-                    <div className="col-12">
-                      <span className="text-muted small">Note:</span>
-                      <p className="fw-medium mb-0 small text-warning">View-only mode - You cannot validate tickets for this event</p>
+                    <div className="col-6 mb-2">
+                      <span className="text-muted small">Venue:</span>
+                      <p className="fw-medium mb-0 small">
+                        {validationResult.event.venue}
+                      </p>
                     </div>
-                  )}
+                    <div className="col-6 mb-2">
+                      <span className="text-muted small">Ticket ID:</span>
+                      <p className="fw-medium mb-0 small font-monospace">
+                        {validationResult.ticket.ticketNumber}
+                      </p>
+                    </div>
+                    <div className="col-6 mb-2">
+                      <span className="text-muted small">Date & Time:</span>
+                      <p className="fw-medium mb-0 small">
+                        {validationResult.event.date}{" "}
+                        {validationResult.event.time}
+                      </p>
+                    </div>
+                    {validationResult.ticket.isValidated && (
+                      <div className="col-12">
+                        <span className="text-muted small">Status:</span>
+                        <p className="fw-medium mb-0 small text-success">
+                          Already Validated ✓
+                        </p>
+                      </div>
+                    )}
+                    {validationResult.isAuthentic &&
+                      !validationResult.canValidate && (
+                        <div className="col-12">
+                          <span className="text-muted small">Note:</span>
+                          <p className="fw-medium mb-0 small text-warning">
+                            View-only mode - You cannot validate tickets for
+                            this event :(
+                          </p>
+                        </div>
+                      )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <button
               onClick={resetValidation}
@@ -507,32 +638,48 @@ export function QrScanner() {
         <div className="card-header bg-white border-bottom">
           <h6 className="card-title mb-0 fw-medium">Recent Validations</h6>
         </div>
-        <div className="card-body p-0" style={{ maxHeight: "300px", overflowY: "auto" }}>
+        <div
+          className="card-body p-0"
+          style={{ maxHeight: "300px", overflowY: "auto" }}
+        >
           {recentValidations.length === 0 ? (
             <div className="p-4 text-center text-muted">
-              <p className="small mb-0">No validations yet - use the "Test" button to try validation</p>
+              <p className="small mb-0">
+                No validations yet - use the "Test" button to try validation
+              </p>
             </div>
           ) : (
             recentValidations.map((validation, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="d-flex align-items-center justify-content-between p-3 border-bottom"
                 data-testid={`validation-${index}`}
               >
                 <div className="d-flex align-items-center flex-grow-1">
-                  <div className={`rounded-circle me-3 ${
-                    validation.valid ? "bg-success" : "bg-danger"
-                  }`} style={{ width: "8px", height: "8px" }}></div>
+                  <div
+                    className={`rounded-circle me-3 ${
+                      validation.valid ? "bg-success" : "bg-danger"
+                    }`}
+                    style={{ width: "8px", height: "8px" }}
+                  ></div>
                   <div className="flex-grow-1">
-                    <p className="fw-medium mb-1 small">{validation.eventName}</p>
-                    <p className="text-muted mb-0" style={{ fontSize: "0.75rem" }}>
+                    <p className="fw-medium mb-1 small">
+                      {validation.eventName}
+                    </p>
+                    <p
+                      className="text-muted mb-0"
+                      style={{ fontSize: "0.75rem" }}
+                    >
                       {validation.ticketNumber} • {validation.timestamp}
                     </p>
                   </div>
                 </div>
-                <span className={`badge ${
-                  validation.valid ? "bg-success" : "bg-danger"
-                } fw-medium`} style={{ fontSize: "0.65rem" }}>
+                <span
+                  className={`badge ${
+                    validation.valid ? "bg-success" : "bg-danger"
+                  } fw-medium`}
+                  style={{ fontSize: "0.65rem" }}
+                >
                   {validation.valid ? "Valid" : "Invalid"}
                 </span>
               </div>

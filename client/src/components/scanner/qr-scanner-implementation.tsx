@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { CheckCircle, XCircle, RotateCcw, Keyboard } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import customIcon from "@assets/image_1756530388373.png";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -27,27 +28,32 @@ interface ValidationHistory {
 export function QrScannerImplementation() {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [recentValidations, setRecentValidations] = useState<ValidationHistory[]>([]);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
+  const [recentValidations, setRecentValidations] = useState<
+    ValidationHistory[]
+  >([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [manualCode, setManualCode] = useState<string>("");
 
   const validateTicketMutation = useMutation({
     mutationFn: async (code: string) => {
-      const response = await apiRequest("POST", "/api/validate", { qrData: code });
+      const response = await apiRequest("POST", "/api/validate", {
+        qrData: code,
+      });
       return response.json();
     },
     onSuccess: (result: any) => {
       setValidationResult(result);
-      
+
       const validation: ValidationHistory = {
         eventName: result.event?.name || "Unknown Event",
         ticketNumber: result.ticket?.ticketNumber || "Unknown",
         timestamp: new Date().toLocaleTimeString(),
         valid: result.valid && result.canValidate,
       };
-      setRecentValidations(prev => [validation, ...prev.slice(0, 99)]);
-      
+      setRecentValidations((prev) => [validation, ...prev.slice(0, 99)]);
+
       if (result.valid && result.canValidate) {
         // Check if this is a golden ticket winner!
         if (result.ticket?.isGoldenTicket) {
@@ -112,7 +118,7 @@ export function QrScannerImplementation() {
       });
       return;
     }
-    
+
     validateTicketMutation.mutate(manualCode);
     setManualCode("");
   };
@@ -124,15 +130,16 @@ export function QrScannerImplementation() {
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h6 className="card-title mb-0 text-primary">
-              <Keyboard className="me-2" size={18} />
+              <img src={customIcon} alt="Validation" className="me-2" style={{ width: '18px', height: '18px' }} />
               Ticket Code Validation
             </h6>
           </div>
-          
+
           <div className="alert alert-info small mb-3">
-            Ask the ticket holder for the <strong>4-digit code</strong> shown on their ticket screen.
+            Ask the ticket holder for the <strong>4-digit code</strong> shown on
+            their ticket screen.
           </div>
-          
+
           <div className="input-group input-group-lg mb-2">
             <input
               type="text"
@@ -140,11 +147,11 @@ export function QrScannerImplementation() {
               placeholder="0000"
               value={manualCode}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                const value = e.target.value.replace(/\D/g, "").slice(0, 4);
                 setManualCode(value);
               }}
               onKeyPress={(e) => {
-                if (e.key === 'Enter' && manualCode.length === 4) {
+                if (e.key === "Enter" && manualCode.length === 4) {
                   handleManualCodeSubmit();
                 }
               }}
@@ -155,28 +162,35 @@ export function QrScannerImplementation() {
               autoFocus
               disabled={validateTicketMutation.isPending}
               data-testid="input-manual-code"
-              style={{ letterSpacing: '0.5rem' }}
+              style={{ letterSpacing: "0.5rem" }}
             />
             <button
               className="btn btn-primary btn-lg"
               onClick={handleManualCodeSubmit}
-              disabled={validateTicketMutation.isPending || manualCode.length !== 4}
+              disabled={
+                validateTicketMutation.isPending || manualCode.length !== 4
+              }
               data-testid="button-submit-code"
             >
               {validateTicketMutation.isPending ? (
-                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span
+                  className="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
               ) : (
                 "Validate"
               )}
             </button>
           </div>
-          
-          <p className="small text-muted mb-3">
-            Enter here and click "Validate".
-          </p>
-          
+
+          <p className="small text-muted mb-3">Four digit codes only.</p>
+
           {manualCode.length > 0 && manualCode.length < 4 && (
-            <small className="text-muted">Enter {4 - manualCode.length} more digit{4 - manualCode.length !== 1 ? 's' : ''}</small>
+            <small className="text-muted">
+              Enter {4 - manualCode.length} more digit
+              {4 - manualCode.length !== 1 ? "s" : ""}
+            </small>
           )}
         </div>
       </div>
@@ -186,11 +200,18 @@ export function QrScannerImplementation() {
         <div className="card mb-4" data-testid="scan-result">
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">
-              <div className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
-                validationResult.canValidate && validationResult.valid ? "bg-success" : 
-                validationResult.outsideValidTime ? "bg-warning" :
-                validationResult.isAuthentic ? "bg-info" : "bg-danger"
-              }`} style={{ width: "40px", height: "40px" }}>
+              <div
+                className={`rounded-circle p-2 me-3 d-flex align-items-center justify-content-center ${
+                  validationResult.canValidate && validationResult.valid
+                    ? "bg-success"
+                    : validationResult.outsideValidTime
+                      ? "bg-warning"
+                      : validationResult.isAuthentic
+                        ? "bg-info"
+                        : "bg-danger"
+                }`}
+                style={{ width: "40px", height: "40px" }}
+              >
                 {validationResult.valid ? (
                   <CheckCircle className="text-white" size={20} />
                 ) : (
@@ -199,10 +220,15 @@ export function QrScannerImplementation() {
               </div>
               <div className="flex-grow-1">
                 <h6 className="fw-semibold mb-1">
-                  {validationResult.canValidate && validationResult.valid ? "✅ Ticket Validated" : 
-                   validationResult.outsideValidTime ? "⏰ Outside Valid Time" :
-                   validationResult.isAuthentic ? "✔️ Authentic Ticket" :
-                   validationResult.alreadyValidated ? "⚠️ Already Validated" : "❌ Invalid Ticket"}
+                  {validationResult.canValidate && validationResult.valid
+                    ? "✅ Ticket Validated"
+                    : validationResult.outsideValidTime
+                      ? "⏰ Outside Valid Time"
+                      : validationResult.isAuthentic
+                        ? "✔️ Authentic Ticket"
+                        : validationResult.alreadyValidated
+                          ? "⚠️ Already Validated"
+                          : "❌ Invalid Ticket"}
                 </h6>
                 <p className="text-muted small mb-0">
                   {validationResult.message || "Ticket status checked"}
@@ -215,35 +241,53 @@ export function QrScannerImplementation() {
                 <div className="row">
                   <div className="col-6 mb-2">
                     <span className="text-muted small">Event:</span>
-                    <p className="fw-medium mb-0 small">{validationResult.event.name}</p>
+                    <p className="fw-medium mb-0 small">
+                      {validationResult.event.name}
+                    </p>
                   </div>
                   <div className="col-6 mb-2">
                     <span className="text-muted small">Venue:</span>
-                    <p className="fw-medium mb-0 small">{validationResult.event.venue}</p>
+                    <p className="fw-medium mb-0 small">
+                      {validationResult.event.venue}
+                    </p>
                   </div>
                   <div className="col-6 mb-2">
                     <span className="text-muted small">Ticket ID:</span>
-                    <p className="fw-medium mb-0 small font-monospace">{validationResult.ticket.ticketNumber}</p>
+                    <p className="fw-medium mb-0 small font-monospace">
+                      {validationResult.ticket.ticketNumber}
+                    </p>
                   </div>
                   <div className="col-6 mb-2">
                     <span className="text-muted small">Date & Time:</span>
-                    <p className="fw-medium mb-0 small">{validationResult.event.date} {validationResult.event.time}</p>
+                    <p className="fw-medium mb-0 small">
+                      {validationResult.event.date}{" "}
+                      {validationResult.event.time}
+                    </p>
                   </div>
                   {validationResult.ticket.isValidated && (
                     <div className="col-12 mt-2">
-                      <span className="badge bg-secondary">Already Validated</span>
+                      <span className="badge bg-secondary">
+                        Already Validated
+                      </span>
                     </div>
                   )}
                 </div>
-                
-                {!validationResult.canValidate && validationResult.isAuthentic && (
-                  <div className="alert alert-info mt-3 mb-0">
-                    <small>
-                      <strong>Note:</strong> Only the event owner or delegated validators can mark tickets as validated. 
-                      <a href={`/events/${validationResult.event.id}`} className="alert-link ms-1">View Event Details →</a>
-                    </small>
-                  </div>
-                )}
+
+                {!validationResult.canValidate &&
+                  validationResult.isAuthentic && (
+                    <div className="alert alert-info mt-3 mb-0">
+                      <small>
+                        <strong>Note:</strong> Only the event owner or delegated
+                        validators can mark tickets as validated.
+                        <a
+                          href={`/events/${validationResult.event.id}`}
+                          className="alert-link ms-1"
+                        >
+                          View Event Details →
+                        </a>
+                      </small>
+                    </div>
+                  )}
               </div>
             )}
 
@@ -253,7 +297,7 @@ export function QrScannerImplementation() {
               data-testid="button-scan-another"
             >
               <RotateCcw className="me-2" size={18} />
-              Validate Another Ticket
+              Validate Another?
             </button>
           </div>
         </div>
@@ -262,9 +306,12 @@ export function QrScannerImplementation() {
       {/* Recent Validations */}
       <div className="card">
         <div className="card-header bg-white border-bottom">
-          <h6 className="card-title mb-0 fw-medium">Recent Validations</h6>
+          <h6 className="card-title mb-0 fw-medium">Recent</h6>
         </div>
-        <div className="card-body p-0" style={{ maxHeight: "300px", overflowY: "auto" }}>
+        <div
+          className="card-body p-0"
+          style={{ maxHeight: "300px", overflowY: "auto" }}
+        >
           {recentValidations.length === 0 ? (
             <div className="p-4 text-center text-muted">
               <p className="small mb-0">No validations yet :)</p>
@@ -272,32 +319,51 @@ export function QrScannerImplementation() {
           ) : (
             <>
               <ul className="list-group list-group-flush">
-                {recentValidations.slice(currentPage * 25, (currentPage + 1) * 25).map((validation, index) => (
-                  <li key={currentPage * 25 + index} className="list-group-item py-2">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div className="d-flex align-items-center">
-                        {validation.valid ? (
-                          <CheckCircle className="text-success me-2" size={16} />
-                        ) : (
-                          <XCircle className="text-danger me-2" size={16} />
-                        )}
-                        <div>
-                          <p className="mb-0 small fw-medium">{validation.eventName}</p>
-                          <p className="mb-0 small text-muted">{validation.ticketNumber}</p>
+                {recentValidations
+                  .slice(currentPage * 25, (currentPage + 1) * 25)
+                  .map((validation, index) => (
+                    <li
+                      key={currentPage * 25 + index}
+                      className="list-group-item py-2"
+                    >
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex align-items-center">
+                          {validation.valid ? (
+                            <CheckCircle
+                              className="text-success me-2"
+                              size={16}
+                            />
+                          ) : (
+                            <XCircle className="text-danger me-2" size={16} />
+                          )}
+                          <div>
+                            <p className="mb-0 small fw-medium">
+                              {validation.eventName}
+                            </p>
+                            <p className="mb-0 small text-muted">
+                              {validation.ticketNumber}
+                            </p>
+                          </div>
                         </div>
+                        <small className="text-muted">
+                          {validation.timestamp}
+                        </small>
                       </div>
-                      <small className="text-muted">{validation.timestamp}</small>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  ))}
               </ul>
-              
+
               {/* Pagination Controls */}
               {recentValidations.length > 25 && (
                 <div className="p-3 border-top bg-light">
                   <div className="d-flex justify-content-between align-items-center">
                     <small className="text-muted">
-                      Showing {currentPage * 25 + 1} - {Math.min((currentPage + 1) * 25, recentValidations.length)} of {recentValidations.length}
+                      Showing {currentPage * 25 + 1} -{" "}
+                      {Math.min(
+                        (currentPage + 1) * 25,
+                        recentValidations.length,
+                      )}{" "}
+                      of {recentValidations.length}
                     </small>
                     <div className="btn-group" role="group">
                       <button
@@ -309,19 +375,22 @@ export function QrScannerImplementation() {
                       </button>
                       <button
                         className="btn btn-sm btn-outline-secondary"
-                        disabled={(currentPage + 1) * 25 >= recentValidations.length}
+                        disabled={
+                          (currentPage + 1) * 25 >= recentValidations.length
+                        }
                         onClick={() => setCurrentPage(currentPage + 1)}
                       >
                         Next
                       </button>
                     </div>
                   </div>
-                  
+
                   {recentValidations.length >= 100 && (
                     <div className="alert alert-info mt-2 mb-0">
                       <small>
-                        <strong>Note:</strong> For complete validation history, visit the event page. 
-                        Event owners can see all validated tickets there.
+                        <strong>Note:</strong> For complete validation history,
+                        visit the event page. Event owners can see all validated
+                        tickets there.
                       </small>
                     </div>
                   )}
