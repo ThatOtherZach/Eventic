@@ -49,7 +49,7 @@ function isTicketWithinValidTime(event: Event | undefined): { valid: boolean; me
       
       return {
         valid: false,
-        message: `Ticket validation begins ${timeDescription}`
+        message: `Validation begins ${timeDescription}`
       };
     }
   }
@@ -523,7 +523,7 @@ export default function TicketViewPage(): React.ReactElement {
                         ) : !timeValidation.valid ? (
                           <>
                             <Clock size={18} className="me-2" />
-                            {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Re-validation Expired'}
+                            {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Expired'}
                           </>
                         ) : (
                           <>
@@ -589,7 +589,7 @@ export default function TicketViewPage(): React.ReactElement {
                       <div className="d-flex align-items-center">
                         <Clock size={20} className="me-2" />
                         <div>
-                          <h6 className="mb-1">Ticket Validation Unavailable</h6>
+                          <h6 className="mb-1">Validation Unavailable</h6>
                           <p className="mb-0 small">{timeValidation.message}</p>
                         </div>
                       </div>
@@ -614,7 +614,7 @@ export default function TicketViewPage(): React.ReactElement {
                     ) : !timeValidation.valid ? (
                       <>
                         <Clock size={18} className="me-2" />
-                        {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Validation Expired'}
+                        {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Expired'}
                       </>
                     ) : (
                       <>
