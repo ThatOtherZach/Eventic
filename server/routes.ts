@@ -733,12 +733,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      // Check if user owns the event
+      // Check if user owns the event or is an admin
       const event = await storage.getEvent(req.params.id);
       if (!event) {
         return res.status(404).json({ message: "Event not found" });
       }
-      if (event.userId !== userId) {
+      
+      // Check if user is admin (has @saymservices.com email)
+      const isAdmin = req.user?.email?.endsWith("@saymservices.com");
+      
+      // Allow editing if user owns the event OR is an admin
+      if (event.userId !== userId && !isAdmin) {
         return res.status(403).json({ message: "You can only edit your own events" });
       }
       

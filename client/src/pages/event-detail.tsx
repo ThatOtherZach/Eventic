@@ -399,6 +399,8 @@ export default function EventDetailPage() {
   
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
+  const isAdmin = user?.email?.endsWith("@saymservices.com");
+  const canEdit = isOwner || isAdmin;
 
   return (
     <div className="container py-5">
@@ -893,7 +895,7 @@ export default function EventDetailPage() {
                 </div>
               )}
 
-              {isOwner && (
+              {canEdit && (
                 <div>
                   <Link href={`/events/${id}/edit`} className="btn btn-secondary w-100 mb-2">
                     <Edit size={18} className="me-2" />
@@ -908,7 +910,7 @@ export default function EventDetailPage() {
                     Boost to Featured
                   </button>
                   <div className="alert alert-info mt-3">
-                    <small>You own this event</small>
+                    <small>{isOwner ? "You own this event" : "Admin: You can edit this event"}</small>
                   </div>
                   
                   {/* Delegated Validators Section */}
