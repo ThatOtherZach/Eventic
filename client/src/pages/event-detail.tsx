@@ -14,6 +14,7 @@ import ticketIcon from "@assets/image_1756532232153.png";
 import ownerIcon from "@assets/image_1756532723922.png";
 import calendarIcon from "@assets/image_1756578631464.png";
 import googleCalendarIcon from "@assets/calendar-3_1756578696542.png";
+import globeIcon from "@assets/image_1756578828379.png";
 import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
@@ -588,6 +589,17 @@ export default function EventDetailPage() {
               >
                 <img src={googleCalendarIcon} alt="" style={{ width: '14px', height: '14px', marginRight: '4px' }} />
                 Google Calendar
+              </button>
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => {
+                  const searchQuery = encodeURIComponent(event.venue);
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${searchQuery}`, '_blank');
+                }}
+                data-testid="button-search-location"
+              >
+                <img src={globeIcon} alt="" style={{ width: '14px', height: '14px', marginRight: '4px' }} />
+                Find Location
               </button>
             </div>
           </div>
