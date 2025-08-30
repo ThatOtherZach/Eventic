@@ -844,7 +844,7 @@ export default function EventDetailPage() {
                         "This event is sold out"
                       ) : (
                         <>
-                          {event.ticketsAvailable} tickets remaining
+                          {event.ticketsAvailable} {event.ticketsAvailable === 1 ? 'ticket' : 'tickets'} remaining
                           {event.resaleCount && event.resaleCount > 0 && (
                             <div className="mt-1">
                               {event.resaleCount} {event.resaleCount === 1 ? 'ticket' : 'tickets'} listed for resale
