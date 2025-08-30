@@ -11,6 +11,7 @@ import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
 import { BoostEventModal } from "@/components/boost/boost-event-modal";
 import { ValidatedTicketsList } from "@/components/validated-tickets-list";
 import ticketIcon from "@assets/image_1756532232153.png";
+import ownerIcon from "@assets/image_1756532723922.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -957,7 +958,10 @@ export default function EventDetailPage() {
                     Edit Event
                   </Link>
                   <div className="alert alert-info mt-3">
-                    <small>{isOwner ? "You own this event" : "Admin: You can edit this event"}</small>
+                    <small className="d-flex align-items-center">
+                      <img src={ownerIcon} alt="" style={{ width: '32px', height: '32px', marginRight: '8px' }} />
+                      {isOwner ? "You own this event" : "Admin: You can edit this event"}
+                    </small>
                   </div>
                   
                   {/* Delegated Validators Section */}
