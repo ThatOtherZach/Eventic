@@ -575,7 +575,7 @@ export default function EventDetailPage() {
           <div className="mb-4">
             <div className="d-flex gap-2 flex-wrap">
               <button
-                className="btn btn-sm btn-secondary"
+                className="btn btn-sm btn-outline-danger"
                 onClick={() => downloadICalendar(event)}
                 data-testid="button-icalendar"
               >
@@ -591,7 +591,7 @@ export default function EventDetailPage() {
                 Google Calendar
               </button>
               <button
-                className="btn btn-sm btn-outline-primary"
+                className="btn btn-sm btn-outline-danger"
                 onClick={() => {
                   const searchQuery = encodeURIComponent(event.venue);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${searchQuery}`, '_blank');
