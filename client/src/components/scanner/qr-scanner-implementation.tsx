@@ -208,7 +208,7 @@ export function QrScannerImplementation() {
                 {validationResult.valid ? (
                   <CheckCircle className="text-success" size={20} />
                 ) : (
-                  <img src={errorIcon} alt="Error" style={{ width: '10px', height: '10px' }} />
+                  <img src={errorIcon} alt="Error" style={{ width: '30px', height: '30px' }} />
                 )}
               </div>
               <div className="flex-grow-1">
