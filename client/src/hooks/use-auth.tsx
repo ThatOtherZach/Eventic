@@ -165,8 +165,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setUser(session?.user ?? null);
       
-      // Redirect on successful sign-ins, no notification spam
-      if (event === 'SIGNED_IN' && session?.user) {
+      // Only redirect on initial sign-in from auth page, not on session refresh
+      // This prevents redirecting when switching tabs or on page reload
+      if (event === 'SIGNED_IN' && session?.user && window.location.pathname === '/auth') {
         setLocation('/');
       }
     });
