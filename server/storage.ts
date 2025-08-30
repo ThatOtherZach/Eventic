@@ -660,13 +660,34 @@ export class DatabaseStorage implements IStorage {
         const platformFee = ticketPrice === 0 ? 0 : Math.round(ticketPrice * 0.02 * 100) / 100; // 2% fee only for paid tickets
         const sellerAmount = Math.round((ticketPrice - platformFee) * 100) / 100; // Amount to seller
         
-        // Transfer ticket to new buyer
+        // Get the new buyer's display name
+        let displayName = 'Guest';
+        const [user] = await tx
+          .select({ displayName: users.displayName })
+          .from(users)
+          .where(eq(users.id, newBuyerId));
+        if (user?.displayName) {
+          displayName = user.displayName;
+        }
+        
+        // Extract the ticket sequence number from the current ticket number
+        // Format is: eventId-username-000001
+        const ticketParts = ticket.ticketNumber.split('-');
+        const sequenceNumber = ticketParts[ticketParts.length - 1]; // Get the last part (000001)
+        const eventIdPart = ticketParts[0]; // Get the event ID part
+        
+        // Generate new ticket number with new owner's username
+        const newTicketNumber = `${eventIdPart}-${displayName}-${sequenceNumber}`;
+        
+        // Transfer ticket to new buyer with updated ticket number
         const [updatedTicket] = await tx.update(tickets)
           .set({
             userId: newBuyerId,
             purchaserEmail: buyerEmail,
             purchaserIp: buyerIp,
             resellStatus: "sold",
+            ticketNumber: newTicketNumber,
+            qrData: newTicketNumber, // Update QR data to match new ticket number
           })
           .where(eq(tickets.id, ticket.id))
           .returning();
@@ -2519,6 +2540,18 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Event not found');
       }
       
+      // Get the user's display name if userId is provided
+      let displayName = 'Guest';
+      if (ticket.userId) {
+        const [user] = await tx
+          .select({ displayName: users.displayName })
+          .from(users)
+          .where(eq(users.id, ticket.userId));
+        if (user?.displayName) {
+          displayName = user.displayName;
+        }
+      }
+      
       // Count existing tickets
       const [ticketCount] = await tx
         .select({ count: count() })
@@ -2532,8 +2565,8 @@ export class DatabaseStorage implements IStorage {
         throw new Error('No tickets available');
       }
       
-      // Generate unique ticket number atomically
-      const ticketNumber = `${event.id.slice(0, 8)}-${(currentCount + 1).toString().padStart(6, '0')}`;
+      // Generate unique ticket number with username
+      const ticketNumber = `${event.id.slice(0, 8)}-${displayName}-${(currentCount + 1).toString().padStart(6, '0')}`;
       
       // Create the ticket
       const [newTicket] = await tx
