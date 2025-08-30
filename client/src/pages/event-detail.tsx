@@ -568,6 +568,28 @@ export default function EventDetailPage() {
             </div>
           )}
 
+          {/* Calendar Buttons */}
+          <div className="mb-4">
+            <div className="d-flex gap-2 flex-wrap">
+              <button
+                className="btn btn-secondary"
+                onClick={() => downloadICalendar(event)}
+                data-testid="button-icalendar"
+              >
+                <Download size={18} className="me-2" />
+                iCalendar (.ics)
+              </button>
+              <button
+                className="btn btn-outline-danger"
+                onClick={() => addToGoogleCalendar(event)}
+                data-testid="button-google-calendar"
+              >
+                <CalendarPlus size={18} className="me-2" />
+                Google Calendar
+              </button>
+            </div>
+          </div>
+
           {event.description && (
             <div className="mb-4">
               <h5>About This Event</h5>
@@ -643,32 +665,6 @@ export default function EventDetailPage() {
           )}
 
 
-          <div className="card bg-light mb-4">
-            <div className="card-body">
-              <h6 className="card-title mb-3">Add to Calendar</h6>
-              <div className="d-flex gap-2 flex-wrap">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => downloadICalendar(event)}
-                  data-testid="button-icalendar"
-                >
-                  <Download size={18} className="me-2" />
-                  iCalendar (.ics)
-                </button>
-                <button
-                  className="btn btn-outline-danger"
-                  onClick={() => addToGoogleCalendar(event)}
-                  data-testid="button-google-calendar"
-                >
-                  <CalendarPlus size={18} className="me-2" />
-                  Google Calendar
-                </button>
-              </div>
-              <small className="text-muted d-block mt-2">
-                Download for Apple Calendar, Outlook, or add to Google Calendar
-              </small>
-            </div>
-          </div>
 
           {/* User's tickets for this event */}
           {userTickets && userTickets.length > 0 && (
