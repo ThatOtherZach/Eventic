@@ -323,7 +323,11 @@ export default function AccountPage() {
                   >
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <h6 className="mb-1">{event.name}</h6>
+                        <h6 className="mb-1">
+                          <Link href={`/events/${event.id}`} className="text-decoration-none text-dark">
+                            {event.name}
+                          </Link>
+                        </h6>
                         <p className="text-muted small mb-0">
                           {event.date} • {event.time} • {event.venue}
                         </p>
