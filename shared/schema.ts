@@ -322,6 +322,16 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Validation actions table to track who performed each validation
+export const validationActions = pgTable("validation_actions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  validatorId: varchar("validator_id").references(() => users.id).notNull(), // Who performed the validation
+  ticketId: varchar("ticket_id").references(() => tickets.id).notNull(), // Which ticket was validated
+  eventId: varchar("event_id").references(() => events.id).notNull(), // Which event
+  validationCode: text("validation_code"), // The 4-digit code or token used
+  validatedAt: timestamp("validated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,

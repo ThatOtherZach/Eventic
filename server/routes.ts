@@ -1224,7 +1224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (canValidate) {
           // User is authorized - perform actual validation
-          const validation = await storage.validateDynamicToken(qrData);
+          const validation = await storage.validateDynamicToken(qrData, userId);
           if (validation.valid) {
             return res.json({ 
               message: "Ticket validated successfully", 
