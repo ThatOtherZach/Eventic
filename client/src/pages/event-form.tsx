@@ -248,8 +248,7 @@ export default function EventForm() {
       await addNotification({
         type: "success",
         title: "Event Created!",
-        message: `Your event "${event.name}" has been created successfully.`,
-        relatedEventId: event.id,
+        description: `Your event "${event.name}" has been created successfully.`,
       });
       // Redirect to the event page
       setLocation(`/events/${event.id}`);
@@ -482,10 +481,6 @@ export default function EventForm() {
     // Add preview effect type for special effects preview
     previewEffectType: currentEffect,
     // Add sticker URL for overlay on any effect
-    previewStickerUrl:
-      stickerEnabled && form.watch("stickerUrl")
-        ? form.watch("stickerUrl")
-        : undefined,
   };
 
   const watchedValues = form.watch();
@@ -511,6 +506,8 @@ export default function EventForm() {
     contactDetails: watchedValues.contactDetails || null,
     venue: watchedValues.venue || "Event Venue",
     country: null,
+    latitude: latitude ? latitude.toString() : null,
+    longitude: longitude ? longitude.toString() : null,
     date: formatPreviewDate(watchedValues.date),
     time: watchedValues.time || "19:00",
     endDate: watchedValues.endDate || null,
@@ -631,6 +628,7 @@ export default function EventForm() {
                             <FormControl>
                               <Input
                                 {...field}
+                                value={field.value || ""}
                                 placeholder="email, phone, secret handshake, etc."
                                 className="form-control"
                                 maxLength={150}

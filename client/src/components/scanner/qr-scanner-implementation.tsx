@@ -6,7 +6,7 @@ import successIcon from "@assets/image_1756530807933.png";
 import warningIcon from "@assets/image_1756530837845.png";
 import spiderIcon from "@assets/image_1756530947341.png";
 import lockIcon from "@assets/image_1756530985990.png";
-import geofenceIcon from "@assets/geofence-icon.png";
+import geofenceIcon from "@assets/image_1756530519825.png";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
