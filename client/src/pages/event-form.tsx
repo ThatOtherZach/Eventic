@@ -695,7 +695,7 @@ export default function EventForm() {
                         name="endDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Ends on <span className="text-danger">*</span></FormLabel>
+                            <FormLabel>Ends on</FormLabel>
                             <FormControl>
                               <Input 
                                 {...field}
@@ -720,7 +720,7 @@ export default function EventForm() {
                         name="endTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>End Time <span className="text-danger">*</span></FormLabel>
+                            <FormLabel>End Time</FormLabel>
                             <FormControl>
                               <Input {...field} value={field.value || ''} type="time" className="form-control" data-testid="input-end-time" />
                             </FormControl>
