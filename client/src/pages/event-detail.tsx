@@ -844,9 +844,9 @@ export default function EventDetailPage() {
                         "This event is sold out"
                       ) : (
                         <>
-                          <div>{event.ticketsAvailable} {event.ticketsAvailable === 1 ? 'ticket' : 'tickets'} remaining</div>
+                          <div>{event.ticketsAvailable} remaining</div>
                           <div className="mt-1">
-                            {event.resaleCount || 0} {(event.resaleCount || 0) === 1 ? 'ticket' : 'tickets'} available
+                            {event.resaleCount || 0} available
                           </div>
                         </>
                       )}
