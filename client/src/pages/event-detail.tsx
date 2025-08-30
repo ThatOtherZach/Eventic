@@ -755,7 +755,7 @@ export default function EventDetailPage() {
                     <span className="badge bg-danger text-white">Sold Out</span>
                   ) : (
                     <strong>
-                      {event.currentPrice === 0 ? 'Free Entry' : `$${event.currentPrice.toFixed(2)}`}
+                      {event.currentPrice === 0 ? 'Free' : `$${event.currentPrice.toFixed(2)}`}
                       {event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
                         <small className="text-muted ms-2">(was ${parseFloat(event.ticketPrice).toFixed(2)})</small>
                       )}
