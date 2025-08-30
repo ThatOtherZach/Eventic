@@ -156,7 +156,7 @@ export function FeaturedCarousel() {
               {currentEvent.event.name}
             </h4>
             
-            <div className="d-flex flex-wrap gap-3 mb-2">
+            <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
               <div className="d-flex align-items-center">
                 <MapPin size={16} className="me-1" />
                 <small>{currentEvent.event.venue}</small>
@@ -170,13 +170,11 @@ export function FeaturedCarousel() {
                   })()} at {currentEvent.event.time}
                 </small>
               </div>
-            </div>
-            
-            <div className="mb-3">
-              <br />
-              <span className="h5 text-white fw-bold">
-                ${currentEvent.event.ticketPrice || '0'}
-              </span>
+              <div>
+                <span className="h5 text-white fw-bold">
+                  {parseFloat(currentEvent.event.ticketPrice || '0') === 0 ? 'Free!' : `$${currentEvent.event.ticketPrice || '0'}`}
+                </span>
+              </div>
             </div>
             
             <div className="d-flex justify-content-end align-items-center gap-1">
@@ -186,7 +184,7 @@ export function FeaturedCarousel() {
                   onClick={prevSlide}
                   data-testid="button-carousel-prev"
                 >
-                  &lt;-
+                  <ChevronLeft size={20} />
                 </button>
               )}
               
@@ -206,7 +204,7 @@ export function FeaturedCarousel() {
                   onClick={nextSlide}
                   data-testid="button-carousel-next"
                 >
-                  -&gt;
+                  <ChevronRight size={20} />
                 </button>
               )}
             </div>
