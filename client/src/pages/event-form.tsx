@@ -507,6 +507,9 @@ export default function EventForm() {
 
           <div className="card">
             <div className="card-body">
+              <div className="text-muted small mb-3">
+                <span className="text-danger">*</span> Required fields
+              </div>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                   <div className="row g-3">
@@ -516,7 +519,7 @@ export default function EventForm() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Event Name</FormLabel>
+                            <FormLabel>Event Name <span className="text-danger">*</span></FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Enter event name" className="form-control" data-testid="input-event-name" />
                             </FormControl>
@@ -602,7 +605,7 @@ export default function EventForm() {
                         name="venue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-dark">Venue Location</FormLabel>
+                            <FormLabel className="text-dark">Venue Location <span className="text-danger">*</span></FormLabel>
                             <input type="hidden" {...field} />
                             <div className="row g-2">
                               <div className="col-12">
@@ -653,7 +656,7 @@ export default function EventForm() {
                         name="date"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Starts on</FormLabel>
+                            <FormLabel>Starts on <span className="text-danger">*</span></FormLabel>
                             <FormControl>
                               <Input 
                                 {...field} 
@@ -676,7 +679,7 @@ export default function EventForm() {
                         name="time"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Start Time</FormLabel>
+                            <FormLabel>Start Time <span className="text-danger">*</span></FormLabel>
                             <FormControl>
                               <Input {...field} type="time" className="form-control" data-testid="input-time" />
                             </FormControl>
@@ -692,7 +695,7 @@ export default function EventForm() {
                         name="endDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Ends on</FormLabel>
+                            <FormLabel>Ends on <span className="text-danger">*</span></FormLabel>
                             <FormControl>
                               <Input 
                                 {...field}
@@ -717,7 +720,7 @@ export default function EventForm() {
                         name="endTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>End Time</FormLabel>
+                            <FormLabel>End Time <span className="text-danger">*</span></FormLabel>
                             <FormControl>
                               <Input {...field} value={field.value || ''} type="time" className="form-control" data-testid="input-end-time" />
                             </FormControl>
