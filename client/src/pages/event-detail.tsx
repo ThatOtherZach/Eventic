@@ -636,7 +636,7 @@ export default function EventDetailPage() {
           {/* Venue Location Map */}
           {event.latitude && event.longitude && (
             <div className="mb-4">
-              <h5>Venue Location</h5>
+              <h5>Map</h5>
               <LocationPicker
                 latitude={Number(event.latitude)}
                 longitude={Number(event.longitude)}
