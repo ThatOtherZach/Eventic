@@ -42,7 +42,7 @@ export function generateICalendar(event: Event): string {
     `DTSTART;TZID=${timezone}:${startDateStr}`,
     `DTEND;TZID=${timezone}:${endDateStr}`,
     `SUMMARY:${event.name}`,
-    `DESCRIPTION:${event.description || `Event at ${event.venue}`}`,
+    `DESCRIPTION:${event.description || `Event at ${event.venue}`}\n\nView event details: ${window.location.origin}/events/${event.id}`,
     `LOCATION:${event.venue}`,
     'STATUS:CONFIRMED',
     'END:VEVENT',
@@ -102,7 +102,7 @@ export function generateGoogleCalendarUrl(event: Event): string {
     action: 'TEMPLATE',
     text: event.name,
     dates: `${startDateStr}/${endDateStr}`,
-    details: event.description || `Event at ${event.venue}`,
+    details: `${event.description || `Event at ${event.venue}`}\n\nView event details: ${window.location.origin}/events/${event.id}`,
     location: event.venue,
     ctz: timezone  // This tells Google Calendar what timezone the dates are in
   });
