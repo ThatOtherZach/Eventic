@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Check, Ticket, User, LogOut, LogIn, Bell, Settings, Scroll } from "lucide-react";
+import { Calendar, Check, User, LogOut, LogIn, Bell, Settings, Scroll } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import type { Notification } from "@shared/schema";
@@ -22,7 +22,7 @@ export function Navigation() {
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm" role="navigation" aria-label="Main navigation">
       <div className="container-fluid px-3 px-md-4">
         <Link href="/events" className="navbar-brand d-flex align-items-center">
-          <Ticket className="text-primary me-2" size={28} />
+          <img src="/eventic-logo.png" alt="Eventic" style={{ width: '28px', height: '28px', marginRight: '8px' }} />
           <span className="fw-bold">Eventic</span>
         </Link>
         

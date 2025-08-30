@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Ticket, Mail, CheckCircle } from "lucide-react";
+import { Mail, CheckCircle } from "lucide-react";
 
 export default function AuthPage() {
   const { user, signUp } = useAuth();
@@ -52,7 +52,7 @@ export default function AuthPage() {
           <div className="w-100" style={{ maxWidth: "400px" }}>
             <div className="text-center mb-5">
               <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
-                <Ticket className="text-primary" size={32} />
+                <img src="/eventic-logo.png" alt="Eventic" style={{ width: '32px', height: '32px' }} />
               </div>
               <h2 className="h3 fw-bold">Welcome to Eventic</h2>
               <p className="text-muted">Enter your email to sign in</p>
