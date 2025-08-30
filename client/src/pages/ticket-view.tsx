@@ -503,6 +503,38 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           </div>
 
+          {/* Vote Count Display - Only for voting-enabled events */}
+          {event.enableVoting && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <h6 className="card-title mb-3">
+                  <ThumbsUp size={18} className="me-2" />
+                  Vote Count
+                </h6>
+                <div className="text-center">
+                  <div className="display-4 fw-bold text-primary">
+                    {ticket.useCount || 0}
+                  </div>
+                  <p className="text-muted mb-0">
+                    {ticket.useCount === 1 ? 'vote' : 'votes'} received
+                  </p>
+                  {ticket.isGoldenTicket && (
+                    <p className="text-warning fw-bold mt-2">
+                      🏆 Currently winning!
+                    </p>
+                  )}
+                </div>
+                {event.p2pValidation && (
+                  <div className="alert alert-info mt-3 mb-0">
+                    <small>
+                      Votes are collected when other attendees validate this ticket using P2P validation.
+                    </small>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Validation Section */}
           <div className="card">
             <div className="card-body">

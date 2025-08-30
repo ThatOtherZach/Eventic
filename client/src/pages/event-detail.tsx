@@ -842,7 +842,8 @@ export default function EventDetailPage() {
             <div className="card-body">
               <ValidatedTicketsList 
                 eventId={id!} 
-                isEventOwner={!!isOwner} 
+                isEventOwner={!!isOwner}
+                enableVoting={event.enableVoting}
               />
             </div>
           </div>

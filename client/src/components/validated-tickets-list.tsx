@@ -17,9 +17,10 @@ interface ValidatedTicket {
 interface ValidatedTicketsListProps {
   eventId: string;
   isEventOwner: boolean;
+  enableVoting?: boolean;
 }
 
-export function ValidatedTicketsList({ eventId, isEventOwner }: ValidatedTicketsListProps) {
+export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: ValidatedTicketsListProps) {
   const { user } = useAuth();
 
   const { data: validatedTickets, isLoading, error } = useQuery<ValidatedTicket[]>({
@@ -96,8 +97,16 @@ export function ValidatedTicketsList({ eventId, isEventOwner }: ValidatedTickets
                 {ticket.ticketType === "Pass" && (
                   <span className="badge bg-info">Pass</span>
                 )}
-                {ticket.useCount > 1 && (
-                  <span className="badge bg-dark">Used {ticket.useCount}x</span>
+                {enableVoting ? (
+                  ticket.useCount > 0 && (
+                    <span className="badge bg-success">
+                      {ticket.useCount} {ticket.useCount === 1 ? 'vote' : 'votes'}
+                    </span>
+                  )
+                ) : (
+                  ticket.useCount > 1 && (
+                    <span className="badge bg-dark">Used {ticket.useCount}x</span>
+                  )
                 )}
               </div>
               <div className="text-muted small">
