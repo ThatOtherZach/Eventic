@@ -163,40 +163,10 @@ export default function AuthPage() {
             <p className="lead text-muted mb-4">
               Create events, generate tickets with QR codes, and validate them seamlessly.
             </p>
-            <div className="row g-4 text-start">
-              <div className="col-12">
-                <div className="d-flex align-items-start">
-                  <div className="bg-primary bg-opacity-25 rounded-circle p-2 me-3">
-                    <div className="text-primary" style={{ width: "24px", height: "24px" }}>✓</div>
-                  </div>
-                  <div>
-                    <h6 className="fw-semibold mb-1">Create Events</h6>
-                    <p className="text-muted small mb-0">Set up your events with custom pricing and capacity</p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-12">
-                <div className="d-flex align-items-start">
-                  <div className="bg-primary bg-opacity-25 rounded-circle p-2 me-3">
-                    <div className="text-primary" style={{ width: "24px", height: "24px" }}>✓</div>
-                  </div>
-                  <div>
-                    <h6 className="fw-semibold mb-1">Generate Tickets</h6>
-                    <p className="text-muted small mb-0">Create secure tickets with unique QR codes</p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-12">
-                <div className="d-flex align-items-start">
-                  <div className="bg-primary bg-opacity-25 rounded-circle p-2 me-3">
-                    <div className="text-primary" style={{ width: "24px", height: "24px" }}>✓</div>
-                  </div>
-                  <div>
-                    <h6 className="fw-semibold mb-1">Validate Instantly</h6>
-                    <p className="text-muted small mb-0">Scan QR codes to verify ticket authenticity</p>
-                  </div>
-                </div>
-              </div>
+            <div className="mt-5">
+              <p className="text-muted">
+                Please read the manifesto to understand our mission and values.
+              </p>
             </div>
           </div>
         </div>
