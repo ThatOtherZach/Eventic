@@ -362,13 +362,29 @@ export const insertEventSchema = createInsertSchema(events).omit({
     .min(1, "Time is required")
     .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Time must be in HH:MM format (24-hour)"),
   endDate: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format")
+    .transform(val => val === '' ? null : val)
+    .nullable()
     .optional()
-    .nullable(),
+    .superRefine((val, ctx) => {
+      if (val && val !== null && !/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End date must be in YYYY-MM-DD format",
+        });
+      }
+    }),
   endTime: z.string()
-    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "End time must be in HH:MM format (24-hour)")
+    .transform(val => val === '' ? null : val)
+    .nullable()
     .optional()
-    .nullable(),
+    .superRefine((val, ctx) => {
+      if (val && val !== null && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End time must be in HH:MM format (24-hour)",
+        });
+      }
+    }),
   ticketPrice: z.string()
     .regex(/^\d+(\.\d{0,2})?$/, "Price must be a valid number with up to 2 decimal places")
     .transform(val => val)
