@@ -889,8 +889,9 @@ export default function EventDetailPage() {
                   onClick={() => setIsBoostModalOpen(true)}
                   className="btn btn-warning w-100 mb-3"
                   data-testid="button-boost-event"
+                  style={{ padding: '0.375rem 0.75rem', fontSize: '1rem', lineHeight: '1.5' }}
                 >
-                  <img src="/boost-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
+                  <img src="/boost-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px', verticalAlign: 'text-bottom' }} />
                   Boost
                 </button>
               )}
