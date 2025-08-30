@@ -427,8 +427,8 @@ export default function EventDetailPage() {
             event.recurringType || event.stickerUrl || event.p2pValidation) && (
             <div className="d-flex flex-wrap gap-2 mb-3">
               {event.isAdminCreated && (
-                <span className="badge" style={{ backgroundColor: '#059669', color: '#fff' }}>
-                  Missions
+                <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
+                  Mission
                 </span>
               )}
               {event.goldenTicketEnabled && (
