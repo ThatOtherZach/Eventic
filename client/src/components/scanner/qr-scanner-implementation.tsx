@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import customIcon from "@assets/image_1756530485392.png";
 import errorIcon from "@assets/image_1756530597104.png";
+import successIcon from "@assets/image_1756530807933.png";
+import warningIcon from "@assets/image_1756530837845.png";
+import spiderIcon from "@assets/image_1756530947341.png";
+import lockIcon from "@assets/image_1756530985990.png";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -205,8 +209,16 @@ export function QrScannerImplementation() {
                 className="me-3 d-flex align-items-center justify-content-center"
                 style={{ width: "40px", height: "40px" }}
               >
-                {validationResult.valid ? (
-                  <CheckCircle className="text-success" size={20} />
+                {validationResult.canValidate && validationResult.valid ? (
+                  validationResult.ticket?.isGoldenTicket ? (
+                    <img src={spiderIcon} alt="Golden Ticket" style={{ width: '30px', height: '30px' }} />
+                  ) : (
+                    <img src={successIcon} alt="Success" style={{ width: '30px', height: '30px' }} />
+                  )
+                ) : validationResult.outsideValidTime || validationResult.alreadyValidated ? (
+                  <img src={warningIcon} alt="Warning" style={{ width: '30px', height: '30px' }} />
+                ) : validationResult.isAuthentic ? (
+                  <img src={lockIcon} alt="Authentic" style={{ width: '30px', height: '30px' }} />
                 ) : (
                   <img src={errorIcon} alt="Error" style={{ width: '30px', height: '30px' }} />
                 )}
