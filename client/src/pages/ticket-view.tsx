@@ -661,9 +661,9 @@ export default function TicketViewPage(): React.ReactElement {
                   {event.geofence && (
                     <div className="alert alert-warning mb-3">
                       <div className="d-flex align-items-center">
-                        <MapPin size={20} className="me-2" />
+                        <img src="/location-icon.png" alt="" width="20" height="20" className="me-2" style={{ flexShrink: 0 }} />
                         <div>
-                          <h6 className="mb-1">Location Verification Required</h6>
+                          <h6 className="mb-1">Location Required</h6>
                           <p className="mb-0 small">Validation must occur within 690 meters of the event venue</p>
                         </div>
                       </div>
