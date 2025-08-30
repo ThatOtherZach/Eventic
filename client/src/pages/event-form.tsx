@@ -114,6 +114,7 @@ export default function EventForm() {
       surgePricing: false,
       p2pValidation: false,
       enableVoting: false,
+      geofence: false,
       recurringType: null,
       recurringEndDate: null,
       ticketPurchasesEnabled: true,
@@ -184,6 +185,7 @@ export default function EventForm() {
         surgePricing: event.surgePricing || false,
         p2pValidation: event.p2pValidation || false,
         enableVoting: event.enableVoting || false,
+        geofence: event.geofence || false,
         recurringType: (event.recurringType as "weekly" | "monthly" | "annual" | null) || null,
         recurringEndDate: event.recurringEndDate || null,
         ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
@@ -346,6 +348,7 @@ export default function EventForm() {
       timezone: data.timezone || "America/New_York",
       latitude: latitude ? String(latitude) : undefined,
       longitude: longitude ? String(longitude) : undefined,
+      geofence: watchedValues.geofence || false,
     };
 
     // If in edit mode, perform update with proper validation
@@ -382,6 +385,7 @@ export default function EventForm() {
         timezone: data.timezone || "America/New_York",
         latitude: latitude ? String(latitude) : undefined,
         longitude: longitude ? String(longitude) : undefined,
+        geofence: watchedValues.geofence || false,
       };
       
       updateEventMutation.mutate(updateData);
@@ -504,6 +508,7 @@ export default function EventForm() {
     surgePricing: watchedValues.surgePricing || false,
     p2pValidation: watchedValues.p2pValidation || false,
     enableVoting: watchedValues.enableVoting || false,
+    geofence: watchedValues.geofence || false,
     recurringType: watchedValues.recurringType || null,
     recurringEndDate: watchedValues.recurringEndDate || null,
     parentEventId: null,
@@ -1307,6 +1312,34 @@ export default function EventForm() {
                                   </label>
                                 </div>
                                 <div className="form-text">Tickets can collect votes! The most voted ticket becomes golden. Use the validator to vote/validate someones ticket.</div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                        
+                        {/* Geofence setting - only shown when GPS coordinates are set */}
+                        {latitude && longitude && (
+                          <FormField
+                            control={form.control}
+                            name="geofence"
+                            render={({ field }) => (
+                              <FormItem className="mt-3">
+                                <div className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="geofence"
+                                    checked={field.value || false}
+                                    onChange={(e) => field.onChange(e.target.checked)}
+                                    data-testid="checkbox-geofence"
+                                  />
+                                  <label className="form-check-label" htmlFor="geofence">
+                                    <span className="badge bg-success me-2">📍</span>
+                                    Geofence
+                                  </label>
+                                </div>
+                                <div className="form-text">Tickets can only be validated within 690 meters of the GPS coordinates set on the map.</div>
                                 <FormMessage />
                               </FormItem>
                             )}

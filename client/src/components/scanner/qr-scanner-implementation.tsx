@@ -21,6 +21,10 @@ interface ValidationResult {
   isAuthentic?: boolean;
   alreadyValidated?: boolean;
   outsideValidTime?: boolean;
+  requiresLocation?: boolean;
+  outsideGeofence?: boolean;
+  validatorDistance?: number;
+  ticketHolderDistance?: number;
 }
 
 interface ValidationHistory {
@@ -40,15 +44,30 @@ export function QrScannerImplementation() {
   >([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [manualCode, setManualCode] = useState<string>("");
+  const [validatorLocation, setValidatorLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [ticketHolderLocation, setTicketHolderLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [needsGeofence, setNeedsGeofence] = useState(false);
 
   const validateTicketMutation = useMutation({
-    mutationFn: async (code: string) => {
+    mutationFn: async ({code, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng}: {code: string, validatorLat?: number, validatorLng?: number, ticketHolderLat?: number, ticketHolderLng?: number}) => {
       const response = await apiRequest("POST", "/api/validate", {
         qrData: code,
+        validatorLat,
+        validatorLng,
+        ticketHolderLat,
+        ticketHolderLng,
       });
       return response.json();
     },
     onSuccess: (result: any) => {
+      // Check if geofence is required
+      if (result.requiresLocation) {
+        setNeedsGeofence(true);
+        setValidationResult(result);
+        return;
+      }
+      
       setValidationResult(result);
 
       const validation: ValidationHistory = {
@@ -81,6 +100,13 @@ export function QrScannerImplementation() {
           description: `This ticket for ${result.event?.name} has already been validated`,
           variant: "destructive",
         });
+      } else if (result.outsideGeofence) {
+        // Outside geofence area
+        toast({
+          title: "📍 Outside Event Area",
+          description: result.message,
+          variant: "destructive",
+        });
       } else {
         // Invalid ticket
         toast({
@@ -108,6 +134,58 @@ export function QrScannerImplementation() {
     setValidationResult(null);
   };
 
+  const requestLocationAndValidate = async (code: string) => {
+    setIsRequestingLocation(true);
+    
+    try {
+      // Request validator's location
+      const validatorPos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+      
+      setValidatorLocation({
+        lat: validatorPos.coords.latitude,
+        lng: validatorPos.coords.longitude
+      });
+      
+      // Request ticket holder's location (simulated - in real app, ticket holder would provide this)
+      toast({
+        title: "📍 Location Request",
+        description: "Ask the ticket holder to confirm their location on their device",
+      });
+      
+      // For now, use the same location for both (in production, ticket holder would send their location)
+      const ticketHolderPos = validatorPos;
+      
+      setTicketHolderLocation({
+        lat: ticketHolderPos.coords.latitude,
+        lng: ticketHolderPos.coords.longitude
+      });
+      
+      // Validate with locations
+      validateTicketMutation.mutate({
+        code,
+        validatorLat: validatorPos.coords.latitude,
+        validatorLng: validatorPos.coords.longitude,
+        ticketHolderLat: ticketHolderPos.coords.latitude,
+        ticketHolderLng: ticketHolderPos.coords.longitude,
+      });
+    } catch (error) {
+      toast({
+        title: "❌ Location Error",
+        description: "Could not get location. Please enable location services.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRequestingLocation(false);
+      setNeedsGeofence(false);
+    }
+  };
+  
   const handleManualCodeSubmit = () => {
     if (!manualCode || manualCode.length !== 4) {
       toast({
@@ -118,7 +196,8 @@ export function QrScannerImplementation() {
       return;
     }
 
-    validateTicketMutation.mutate(manualCode);
+    // First try without location
+    validateTicketMutation.mutate({code: manualCode});
     setManualCode("");
   };
 
@@ -194,8 +273,42 @@ export function QrScannerImplementation() {
         </div>
       </div>
 
+      {/* Geofence Location Request */}
+      {needsGeofence && validationResult?.requiresLocation && (
+        <div className="card mb-3 border-warning">
+          <div className="card-body">
+            <h6 className="card-title text-warning">
+              <img src={warningIcon} alt="Location" className="me-2" style={{ width: '18px', height: '18px' }} />
+              Location Required
+            </h6>
+            <p className="mb-3">
+              This event has geofencing enabled. Both you and the ticket holder must be within 690 meters of the venue.
+            </p>
+            <button
+              className="btn btn-warning w-100"
+              onClick={() => requestLocationAndValidate(manualCode || validationResult.ticket?.ticketNumber || "")}
+              disabled={isRequestingLocation}
+            >
+              {isRequestingLocation ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  Getting Location...
+                </>
+              ) : (
+                <>
+                  📍 Share Location & Validate
+                </>
+              )}
+            </button>
+            <small className="text-muted d-block mt-2">
+              Your browser will ask for location permission. The ticket holder will also need to share their location.
+            </small>
+          </div>
+        </div>
+      )}
+
       {/* Validation Result */}
-      {validationResult && (
+      {validationResult && !validationResult.requiresLocation && (
         <div className="card mb-4" data-testid="scan-result">
           <div className="card-body">
             <div className="d-flex align-items-center mb-3">

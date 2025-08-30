@@ -1175,10 +1175,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to calculate distance between two GPS coordinates in meters
+  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371000; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
+  }
+
   // Validation routes
   app.post("/api/validate", validationRateLimiter, async (req: AuthenticatedRequest, res) => {
     try {
-      const { qrData } = req.body;
+      const { qrData, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng } = req.body;
       if (!qrData) {
         return res.status(400).json({ message: "QR data is required" });
       }
@@ -1203,6 +1219,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: "Event not found", 
             valid: false 
           });
+        }
+        
+        // Check geofence if enabled
+        if (event.geofence && event.latitude && event.longitude) {
+          // Check if location data was provided
+          if (!validatorLat || !validatorLng || !ticketHolderLat || !ticketHolderLng) {
+            return res.status(400).json({
+              message: "Location required for this event",
+              valid: false,
+              requiresLocation: true,
+              event
+            });
+          }
+          
+          // Check validator's distance from event
+          const validatorDistance = calculateDistance(
+            Number(event.latitude),
+            Number(event.longitude),
+            validatorLat,
+            validatorLng
+          );
+          
+          // Check ticket holder's distance from event
+          const ticketHolderDistance = calculateDistance(
+            Number(event.latitude),
+            Number(event.longitude),
+            ticketHolderLat,
+            ticketHolderLng
+          );
+          
+          // Both must be within 690 meters
+          if (validatorDistance > 690 || ticketHolderDistance > 690) {
+            return res.status(400).json({
+              message: `Must be within 690 meters of venue to validate. Validator: ${Math.round(validatorDistance)}m away, Ticket holder: ${Math.round(ticketHolderDistance)}m away`,
+              valid: false,
+              outsideGeofence: true,
+              validatorDistance: Math.round(validatorDistance),
+              ticketHolderDistance: Math.round(ticketHolderDistance),
+              event
+            });
+          }
         }
         
         // Check if ticket is within valid time window
@@ -1262,6 +1319,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Event not found", 
           valid: false 
         });
+      }
+      
+      // Check geofence if enabled
+      if (event.geofence && event.latitude && event.longitude) {
+        // Check if location data was provided
+        if (!validatorLat || !validatorLng || !ticketHolderLat || !ticketHolderLng) {
+          return res.status(400).json({
+            message: "Location required for this event",
+            valid: false,
+            requiresLocation: true,
+            event
+          });
+        }
+        
+        // Check validator's distance from event
+        const validatorDistance = calculateDistance(
+          Number(event.latitude),
+          Number(event.longitude),
+          validatorLat,
+          validatorLng
+        );
+        
+        // Check ticket holder's distance from event
+        const ticketHolderDistance = calculateDistance(
+          Number(event.latitude),
+          Number(event.longitude),
+          ticketHolderLat,
+          ticketHolderLng
+        );
+        
+        // Both must be within 690 meters
+        if (validatorDistance > 690 || ticketHolderDistance > 690) {
+          return res.status(400).json({
+            message: `Must be within 690 meters of venue to validate. Validator: ${Math.round(validatorDistance)}m away, Ticket holder: ${Math.round(ticketHolderDistance)}m away`,
+            valid: false,
+            outsideGeofence: true,
+            validatorDistance: Math.round(validatorDistance),
+            ticketHolderDistance: Math.round(ticketHolderDistance),
+            event
+          });
+        }
       }
       
       // Check if ticket is within valid time window

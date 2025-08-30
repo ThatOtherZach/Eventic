@@ -114,6 +114,7 @@ export const events = pgTable("events", {
   // GPS location fields for venue
   latitude: decimal("latitude", { precision: 10, scale: 7 }), // Latitude coordinate
   longitude: decimal("longitude", { precision: 10, scale: 7 }), // Longitude coordinate
+  geofence: boolean("geofence").default(false), // Restrict validation to within 690 meters of GPS coordinates
   // Recurring event fields
   recurringType: text("recurring_type"), // "weekly", "monthly", "annual", or null for non-recurring
   recurringEndDate: text("recurring_end_date"), // When to stop creating recurring events
