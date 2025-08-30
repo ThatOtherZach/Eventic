@@ -846,7 +846,7 @@ export default function EventDetailPage() {
                       ) : (
                         <>
                           <div className="d-flex align-items-center">
-                            <img src={ticketIcon} alt="" style={{ width: '16px', height: '16px', marginRight: '6px' }} />
+                            <img src={ticketIcon} alt="" style={{ width: '32px', height: '32px', marginRight: '6px' }} />
                             <div>
                               <div>{event.ticketsAvailable} remaining</div>
                               <div className="mt-1">{event.resaleCount || 0} available</div>
