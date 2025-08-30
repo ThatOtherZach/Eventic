@@ -572,19 +572,19 @@ export default function EventDetailPage() {
           <div className="mb-4">
             <div className="d-flex gap-2 flex-wrap">
               <button
-                className="btn btn-secondary"
+                className="btn btn-sm btn-secondary"
                 onClick={() => downloadICalendar(event)}
                 data-testid="button-icalendar"
               >
-                <Download size={18} className="me-2" />
+                <Download size={14} className="me-1" />
                 iCalendar (.ics)
               </button>
               <button
-                className="btn btn-outline-danger"
+                className="btn btn-sm btn-outline-danger"
                 onClick={() => addToGoogleCalendar(event)}
                 data-testid="button-google-calendar"
               >
-                <CalendarPlus size={18} className="me-2" />
+                <CalendarPlus size={14} className="me-1" />
                 Google Calendar
               </button>
             </div>
