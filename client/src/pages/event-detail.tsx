@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award, Gift, Shield, HelpCircle } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award, Gift, Shield, HelpCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -423,6 +423,40 @@ export default function EventDetailPage() {
     return false;
   })();
   
+  // Calculate days until deletion (69 days after event ends)
+  const daysUntilDeletion = (() => {
+    if (!isEventPast) return null;
+    
+    const now = new Date();
+    let eventEndDate: Date | null = null;
+    
+    // Use end date if available, otherwise use start date
+    if (event.endDate) {
+      try {
+        const [endYear, endMonth, endDay] = event.endDate.split('-').map(Number);
+        eventEndDate = new Date(endYear, endMonth - 1, endDay);
+      } catch {
+        // Fall back to start date
+      }
+    }
+    
+    if (!eventEndDate && eventDate) {
+      eventEndDate = eventDate;
+    }
+    
+    if (!eventEndDate) return null;
+    
+    // Calculate deletion date (69 days after event end)
+    const deletionDate = new Date(eventEndDate);
+    deletionDate.setDate(deletionDate.getDate() + 69);
+    
+    // Calculate days remaining
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysRemaining = Math.ceil((deletionDate.getTime() - now.getTime()) / msPerDay);
+    
+    return daysRemaining > 0 ? daysRemaining : 0;
+  })();
+  
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
   const isAdmin = user?.email?.endsWith("@saymservices.com");
@@ -576,6 +610,19 @@ export default function EventDetailPage() {
               {event.venue}
             </div>
           </div>
+
+          {/* Deletion countdown - Only shown for past events */}
+          {daysUntilDeletion !== null && (
+            <div className="alert alert-warning d-flex align-items-center mb-4" role="alert">
+              <AlertTriangle size={20} className="me-2" />
+              <div>
+                <strong>{daysUntilDeletion} days until deletion.</strong>
+                {daysUntilDeletion <= 7 && (
+                  <span className="ms-2">Event data will be permanently removed soon.</span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Contact Details - Only shown to ticket holders */}
           {event.contactDetails && userTickets && userTickets.length > 0 && (

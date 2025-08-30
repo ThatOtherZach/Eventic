@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -320,6 +320,49 @@ export default function TicketViewPage(): React.ReactElement {
 
   const { ticket, event } = ticketData;
   const timeValidation = isTicketWithinValidTime(event);
+  
+  // Calculate days until deletion (69 days after event ends)
+  const daysUntilDeletion = (() => {
+    const now = new Date();
+    
+    // Check if event has passed
+    let eventEndDate: Date | null = null;
+    
+    // Use end date if available, otherwise use start date
+    if (event.endDate) {
+      try {
+        const [endYear, endMonth, endDay] = event.endDate.split('-').map(Number);
+        eventEndDate = new Date(endYear, endMonth - 1, endDay);
+        eventEndDate.setHours(23, 59, 59, 999);
+      } catch {
+        // Fall back to start date
+      }
+    }
+    
+    if (!eventEndDate && event.date) {
+      try {
+        const [year, month, day] = event.date.split('-').map(Number);
+        eventEndDate = new Date(year, month - 1, day);
+      } catch {
+        return null;
+      }
+    }
+    
+    if (!eventEndDate) return null;
+    
+    // Check if event has passed
+    if (now <= eventEndDate) return null;
+    
+    // Calculate deletion date (69 days after event end)
+    const deletionDate = new Date(eventEndDate);
+    deletionDate.setDate(deletionDate.getDate() + 69);
+    
+    // Calculate days remaining
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysRemaining = Math.ceil((deletionDate.getTime() - now.getTime()) / msPerDay);
+    
+    return daysRemaining > 0 ? daysRemaining : 0;
+  })();
 
   return (
     <div className="container py-5">
@@ -346,6 +389,23 @@ export default function TicketViewPage(): React.ReactElement {
           )}
         </div>
       </div>
+
+      {/* Deletion countdown - Only shown for past events */}
+      {daysUntilDeletion !== null && (
+        <div className="row justify-content-center mb-4">
+          <div className="col-12 col-md-8 col-lg-6">
+            <div className="alert alert-warning d-flex align-items-center" role="alert">
+              <AlertTriangle size={20} className="me-2" />
+              <div>
+                <strong>{daysUntilDeletion} days until deletion.</strong>
+                {daysUntilDeletion <= 7 && (
+                  <span className="ms-2">Ticket data will be permanently removed soon.</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ticket and Validation Section */}
       <div className="row justify-content-center">
