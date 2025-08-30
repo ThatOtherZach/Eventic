@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Star, Clock, MapPin, Shield } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Clock, MapPin } from "lucide-react";
 import type { FeaturedEvent, Event } from "@shared/schema";
 
 interface FeaturedEventsResponse {
@@ -134,10 +134,14 @@ export function FeaturedCarousel() {
                   ⚡ Bumped
                 </span>
               )}
+              {currentEvent.event.isAdminCreated && (
+                <span className="badge me-2" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
+                  Mission
+                </span>
+              )}
               {currentEvent.event.p2pValidation && (
                 <span className="badge bg-success me-2">
-                  <Shield size={12} className="me-1" />
-                  P2P Validation
+                  P2P
                 </span>
               )}
               {currentEvent.isPaid && (
