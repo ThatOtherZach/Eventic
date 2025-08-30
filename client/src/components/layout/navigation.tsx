@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Check, Ticket, User, LogOut, LogIn, Bell, Settings } from "lucide-react";
+import { Calendar, Check, Ticket, User, LogOut, LogIn, Bell, Settings, Scroll } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import type { Notification } from "@shared/schema";
@@ -11,6 +11,7 @@ export function Navigation() {
   const navItems = [
     { path: "/events", label: "Events", icon: Calendar, ariaLabel: "View all events" },
     { path: "/scanner", label: "Validate", icon: Check, ariaLabel: "Validate tickets" },
+    { path: "/manifesto", label: "Manifesto", icon: Scroll, ariaLabel: "Event manifesto and guide" },
   ];
 
   const handleSignOut = async () => {
