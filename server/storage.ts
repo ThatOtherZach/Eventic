@@ -11,6 +11,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLoginTime(id: string): Promise<User | undefined>;
+  updateUserDisplayName(id: string, displayName: string): Promise<User | undefined>;
 
   getUserEventCountries(userId: string): Promise<string[]>;
   
@@ -261,6 +262,15 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserDisplayName(id: string, displayName: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ displayName })
       .where(eq(users.id, id))
       .returning();
     return user || undefined;

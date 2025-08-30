@@ -302,6 +302,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already exists
       const existingUser = await storage.getUserById(userId);
       if (existingUser) {
+        // If user exists but doesn't have a display name, generate one
+        if (!existingUser.displayName) {
+          // Get all existing display names to ensure uniqueness
+          const allUsers = await storage.getAllUsers();
+          const existingDisplayNames = allUsers
+            .map(u => u.displayName)
+            .filter(Boolean) as string[];
+
+          // Generate unique display name
+          const displayName = generateUniqueDisplayName(existingDisplayNames, existingUser.createdAt || new Date());
+
+          // Update user with display name
+          const updatedUser = await storage.updateUserDisplayName(userId, displayName);
+          return res.json(updatedUser);
+        }
         return res.json(existingUser);
       }
 
