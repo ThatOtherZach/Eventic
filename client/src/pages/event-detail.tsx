@@ -12,6 +12,7 @@ import { BoostEventModal } from "@/components/boost/boost-event-modal";
 import { ValidatedTicketsList } from "@/components/validated-tickets-list";
 import ticketIcon from "@assets/image_1756532232153.png";
 import ownerIcon from "@assets/image_1756532723922.png";
+import calendarIcon from "@assets/image_1756578631464.png";
 import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
@@ -576,7 +577,7 @@ export default function EventDetailPage() {
                 onClick={() => downloadICalendar(event)}
                 data-testid="button-icalendar"
               >
-                <Download size={14} className="me-1" />
+                <img src={calendarIcon} alt="" style={{ width: '14px', height: '14px', marginRight: '4px' }} />
                 iCalendar (.ics)
               </button>
               <button
