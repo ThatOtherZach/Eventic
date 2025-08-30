@@ -675,7 +675,7 @@ export default function EventForm() {
                     {/* Interactive Map for Location Selection */}
                     <div className="col-12 mt-3">
                       <div className="mb-2">
-                        <label className="form-label">Click on the map to set venue location (optional)</label>
+                        <label className="form-label">Map</label>
                       </div>
                       <LocationPicker
                         latitude={latitude}
