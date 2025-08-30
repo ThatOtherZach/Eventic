@@ -513,10 +513,10 @@ export default function TicketViewPage(): React.ReactElement {
                 </h6>
                 <div className="text-center">
                   <div className="display-4 fw-bold text-primary">
-                    {ticket.useCount || 0}
+                    {ticket.voteCount || 0}
                   </div>
                   <p className="text-muted mb-0">
-                    {ticket.useCount === 1 ? 'vote' : 'votes'} received
+                    {ticket.voteCount === 1 ? 'vote' : 'votes'} received
                   </p>
                   {ticket.isGoldenTicket && (
                     <p className="text-warning fw-bold mt-2">

@@ -972,17 +972,25 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    // Update ticket with incremented use count, golden ticket status, and special effect
-    const [ticket] = await db
-      .update(tickets)
-      .set({ 
+    // Update ticket with incremented use count/vote count, golden ticket status, and special effect
+    // For voting-enabled events: increment voteCount if this is P2P validation, otherwise increment useCount
+    const updateData: any = {
         isValidated: true, 
         validatedAt: new Date(),
         validationCode: fullValidationCode,
-        useCount: (currentTicket.useCount || 0) + 1,
+        useCount: (currentTicket.useCount || 0) + 1, // Always increment use count for passes
         isGoldenTicket: isGoldenTicket,
         specialEffect: specialEffect
-      })
+    };
+    
+    // If this is a voting-enabled event and being validated by another ticket holder (P2P), increment vote count
+    if (event.enableVoting && validatorId && validatorId !== currentTicket.userId) {
+      updateData.voteCount = (currentTicket.voteCount || 0) + 1;
+    }
+    
+    const [ticket] = await db
+      .update(tickets)
+      .set(updateData)
       .where(eq(tickets.id, id))
       .returning();
     
@@ -1008,12 +1016,12 @@ export class DatabaseStorage implements IStorage {
       return; // Nothing to do if voting is not enabled
     }
 
-    // Find the ticket with the highest vote count (useCount) for this event
+    // Find the ticket with the highest vote count (voteCount) for this event
     const eventTickets = await db
       .select()
       .from(tickets)
       .where(eq(tickets.eventId, eventId))
-      .orderBy(desc(tickets.useCount));
+      .orderBy(desc(tickets.voteCount));
 
     if (eventTickets.length === 0) {
       return; // No tickets for this event
@@ -1023,7 +1031,7 @@ export class DatabaseStorage implements IStorage {
     const currentGoldenTickets = eventTickets.filter((t: Ticket) => t.isGoldenTicket);
 
     // Only proceed if there's a clear winner with votes and it's not already golden
-    if ((topTicket.useCount || 0) > 0 && !topTicket.isGoldenTicket) {
+    if ((topTicket.voteCount || 0) > 0 && !topTicket.isGoldenTicket) {
       // Check if this ticket would also have been randomly selected (double golden detection)
       let isDoubleGolden = false;
       
@@ -1080,9 +1088,9 @@ export class DatabaseStorage implements IStorage {
         .where(eq(tickets.id, topTicket.id));
       
       if (isDoubleGolden) {
-        console.log(`🌈 DOUBLE GOLDEN TICKET! Ticket ${topTicket.id} has ${topTicket.useCount} votes and won the random lottery too!`);
+        console.log(`🌈 DOUBLE GOLDEN TICKET! Ticket ${topTicket.id} has ${topTicket.voteCount} votes and won the random lottery too!`);
       } else {
-        console.log(`🗳️ GOLDEN TICKET REASSIGNED! Ticket ${topTicket.id} now golden with ${topTicket.useCount} votes`);
+        console.log(`🗳️ GOLDEN TICKET REASSIGNED! Ticket ${topTicket.id} now golden with ${topTicket.voteCount} votes`);
       }
     }
   }

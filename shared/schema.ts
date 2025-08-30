@@ -135,6 +135,7 @@ export const tickets = pgTable("tickets", {
   validatedAt: timestamp("validated_at"),
   validationCode: text("validation_code"), // The unique 4-digit code used when ticket was validated
   useCount: integer("use_count").default(0), // Number of times this ticket has been used
+  voteCount: integer("vote_count").default(0), // Number of votes received (for voting-enabled events)
   isGoldenTicket: boolean("is_golden_ticket").default(false), // Whether this ticket won the golden ticket contest
   isDoubleGolden: boolean("is_double_golden").default(false), // Whether this ticket is both random golden AND most voted (rainbow effect)
   specialEffect: text("special_effect"), // Locked special effect type (snowflakes, hearts, spooky, etc.) determined at validation

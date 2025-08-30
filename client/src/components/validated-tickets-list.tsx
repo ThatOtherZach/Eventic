@@ -9,6 +9,7 @@ interface ValidatedTicket {
   ticketNumber: string;
   validatedAt: string;
   useCount: number;
+  voteCount: number;
   isGoldenTicket: boolean;
   userEmail: string;
   ticketType: string;
@@ -98,9 +99,9 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
                   <span className="badge bg-info">Pass</span>
                 )}
                 {enableVoting ? (
-                  ticket.useCount > 0 && (
+                  ticket.voteCount > 0 && (
                     <span className="badge bg-success">
-                      {ticket.useCount} {ticket.useCount === 1 ? 'vote' : 'votes'}
+                      {ticket.voteCount} {ticket.voteCount === 1 ? 'vote' : 'votes'}
                     </span>
                   )
                 ) : (
