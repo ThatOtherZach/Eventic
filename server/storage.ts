@@ -1,6 +1,6 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -693,9 +693,11 @@ export class DatabaseStorage implements IStorage {
         const ticketsByUserId = await db
           .select()
           .from(tickets)
+          .leftJoin(resellQueue, eq(tickets.id, resellQueue.ticketId))
           .where(and(
             eq(tickets.eventId, eventId),
-            eq(tickets.userId, userId)
+            eq(tickets.userId, userId),
+            isNull(resellQueue.id) // Exclude tickets that are in resell queue
           ))
           .limit(1);
         
@@ -709,9 +711,11 @@ export class DatabaseStorage implements IStorage {
         const ticketsByEmail = await db
           .select()
           .from(tickets)
+          .leftJoin(resellQueue, eq(tickets.id, resellQueue.ticketId))
           .where(and(
             eq(tickets.eventId, eventId),
-            eq(tickets.purchaserEmail, email)
+            eq(tickets.purchaserEmail, email),
+            isNull(resellQueue.id) // Exclude tickets that are in resell queue
           ))
           .limit(1);
         
@@ -725,9 +729,11 @@ export class DatabaseStorage implements IStorage {
         const ticketsByIp = await db
           .select()
           .from(tickets)
+          .leftJoin(resellQueue, eq(tickets.id, resellQueue.ticketId))
           .where(and(
             eq(tickets.eventId, eventId),
-            eq(tickets.purchaserIp, ip)
+            eq(tickets.purchaserIp, ip),
+            isNull(resellQueue.id) // Exclude tickets that are in resell queue
           ))
           .limit(1);
         
