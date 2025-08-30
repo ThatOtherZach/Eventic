@@ -883,8 +883,8 @@ export default function EventDetailPage() {
                 )}
               </button>
               
-              {/* Boost Button for event owners and ticket holders */}
-              {(isOwner || (userTickets && userTickets.length > 0)) && (
+              {/* Boost Button for event owners and ticket holders - not shown for private events */}
+              {!event.isPrivate && (isOwner || (userTickets && userTickets.length > 0)) && (
                 <button 
                   onClick={() => setIsBoostModalOpen(true)}
                   className="btn btn-warning w-100 mb-3"
@@ -997,8 +997,8 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {/* Boost Event Modal */}
-      {(isOwner || (userTickets && userTickets.length > 0)) && (
+      {/* Boost Event Modal - not shown for private events */}
+      {!event.isPrivate && (isOwner || (userTickets && userTickets.length > 0)) && (
         <>
           <BoostEventModal 
             eventId={id!}
