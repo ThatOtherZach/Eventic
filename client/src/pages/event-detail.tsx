@@ -533,6 +533,26 @@ export default function EventDetailPage() {
             </div>
           </div>
 
+          {/* Contact Details - Only shown to ticket holders */}
+          {event.contactDetails && userTickets && userTickets.length > 0 && (
+            <div className="mb-4">
+              <h5>Contact Details</h5>
+              <div className="text-muted">
+                {event.contactDetails}
+              </div>
+            </div>
+          )}
+
+          {event.description && (
+            <div className="mb-4">
+              <h5>About This Event</h5>
+              <div 
+                className="text-muted"
+                dangerouslySetInnerHTML={{ __html: event.description }}
+              />
+            </div>
+          )}
+
           {/* Event Creator Reputation */}
           {organizerReputation && (
             <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
@@ -562,26 +582,6 @@ export default function EventDetailPage() {
                   </span>
                 )}
               </div>
-            </div>
-          )}
-
-          {/* Contact Details - Only shown to ticket holders */}
-          {event.contactDetails && userTickets && userTickets.length > 0 && (
-            <div className="mb-4">
-              <h5>Contact Details</h5>
-              <div className="text-muted">
-                {event.contactDetails}
-              </div>
-            </div>
-          )}
-
-          {event.description && (
-            <div className="mb-4">
-              <h5>About This Event</h5>
-              <div 
-                className="text-muted"
-                dangerouslySetInnerHTML={{ __html: event.description }}
-              />
             </div>
           )}
 
