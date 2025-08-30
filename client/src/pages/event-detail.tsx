@@ -787,6 +787,16 @@ export default function EventDetailPage() {
               </div>
             </div>
           )}
+          
+          {/* Validated Tickets Section - moved here from right column */}
+          <div className="card mb-4">
+            <div className="card-body">
+              <ValidatedTicketsList 
+                eventId={id!} 
+                isEventOwner={!!isOwner} 
+              />
+            </div>
+          </div>
         </div>
 
         <div className="col-lg-4">
@@ -1080,14 +1090,6 @@ export default function EventDetailPage() {
                         No delegated validators added yet
                       </div>
                     )}
-                  </div>
-                  
-                  {/* Validated Tickets Section */}
-                  <div className="mt-4">
-                    <ValidatedTicketsList 
-                      eventId={id!} 
-                      isEventOwner={!!isOwner} 
-                    />
                   </div>
                 </div>
               )}
