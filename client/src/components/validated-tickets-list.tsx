@@ -86,7 +86,6 @@ export function ValidatedTicketsList({ eventId, isEventOwner }: ValidatedTickets
                   <span className="badge bg-warning text-dark">Golden</span>
                 )}
                 <span className="badge bg-success">Validated</span>
-                <span className="badge bg-secondary">{ticket.userEmail}</span>
                 {ticket.ticketType === "Pass" && (
                   <span className="badge bg-info">Pass</span>
                 )}
