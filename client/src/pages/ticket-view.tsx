@@ -366,6 +366,11 @@ export default function TicketViewPage(): React.ReactElement {
               
               {/* Event Feature Badges */}
               <div className="d-flex flex-wrap gap-1 mb-3">
+                {event.isAdminCreated && (
+                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
+                    Mission
+                  </span>
+                )}
                 {event.enableVoting && (
                   <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', fontSize: '0.8em' }}>
                     Vote
@@ -411,11 +416,6 @@ export default function TicketViewPage(): React.ReactElement {
                     {event.recurringType === 'weekly' && 'Weekly'}
                     {event.recurringType === 'monthly' && 'Monthly'}
                     {event.recurringType === 'annually' && 'Annual'}
-                  </span>
-                )}
-                {event.isAdminCreated && (
-                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
-                    Mission
                   </span>
                 )}
               </div>
