@@ -75,7 +75,7 @@ export function FeaturedCarousel() {
     return (
       <div className="mb-5">
         <h3 className="h4 fw-semibold text-dark mb-3">
-          <Star className="me-2 text-warning" size={20} />
+          <img src="/boost-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'text-bottom' }} />
           Featured Events
         </h3>
         <div className="bg-light rounded-3 p-4" style={{ height: "300px" }}>
@@ -98,7 +98,7 @@ export function FeaturedCarousel() {
   return (
     <div className="mb-5">
       <h3 className="h4 fw-semibold text-dark mb-3">
-        <Star className="me-2 text-warning" size={20} />
+        <img src="/boost-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'text-bottom' }} />
         Featured
       </h3>
       
