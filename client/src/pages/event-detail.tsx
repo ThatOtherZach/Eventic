@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award, Gift, Shield } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, Edit, ArrowLeft, CalendarPlus, Download, Eye, UserPlus, X, Star, RotateCcw, Award, Gift, Shield, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -848,8 +848,24 @@ export default function EventDetailPage() {
                           <div className="d-flex align-items-center">
                             <img src={ticketIcon} alt="" style={{ width: '32px', height: '32px', marginRight: '8px' }} />
                             <div>
-                              <div><span className="fw-bold">{event.ticketsAvailable}</span> remaining</div>
-                              <div className="mt-1"><span className="fw-bold">{event.resaleCount || 0}</span> available</div>
+                              <div className="d-flex align-items-center">
+                                <span className="fw-bold">{event.ticketsAvailable}</span>&nbsp;Remaining
+                                <HelpCircle 
+                                  className="ms-1 text-muted" 
+                                  size={12} 
+                                  title="Number of tickets still available for purchase directly from the event"
+                                  style={{ cursor: 'help' }}
+                                />
+                              </div>
+                              <div className="mt-1 d-flex align-items-center">
+                                <span className="fw-bold">{event.resaleCount || 0}</span>&nbsp;Available
+                                <HelpCircle 
+                                  className="ms-1 text-muted" 
+                                  size={12} 
+                                  title="Number of tickets being resold by other attendees at original price"
+                                  style={{ cursor: 'help' }}
+                                />
+                              </div>
                             </div>
                           </div>
                         </>
