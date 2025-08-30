@@ -359,10 +359,10 @@ export default function TicketViewPage(): React.ReactElement {
             />
           </div>
 
-          {/* Purchase Details */}
+          {/* Ticket Details */}
           <div className="card mb-4">
             <div className="card-body">
-              <h6 className="card-title mb-3">Purchase Details</h6>
+              <h6 className="card-title mb-3">Ticket Details</h6>
               <div className="d-flex justify-content-between">
                 <div>
                   <span className="text-muted">Purchase Date:</span>
