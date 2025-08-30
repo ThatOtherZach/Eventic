@@ -87,7 +87,7 @@ export function FeaturedEventsPage() {
         <div className="d-flex align-items-start justify-content-between">
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
-              <Star className="text-warning" size={28} />
+              <img src="/world-star-icon.png" alt="" style={{ width: '28px', height: '28px' }} />
               Featured & Special Events
             </h2>
             <p className="text-muted">
