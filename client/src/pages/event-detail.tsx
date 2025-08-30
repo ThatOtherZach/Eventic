@@ -13,6 +13,7 @@ import { ValidatedTicketsList } from "@/components/validated-tickets-list";
 import ticketIcon from "@assets/image_1756532232153.png";
 import ownerIcon from "@assets/image_1756532723922.png";
 import calendarIcon from "@assets/image_1756578631464.png";
+import googleCalendarIcon from "@assets/calendar-3_1756578696542.png";
 import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
@@ -585,7 +586,7 @@ export default function EventDetailPage() {
                 onClick={() => addToGoogleCalendar(event)}
                 data-testid="button-google-calendar"
               >
-                <CalendarPlus size={14} className="me-1" />
+                <img src={googleCalendarIcon} alt="" style={{ width: '14px', height: '14px', marginRight: '4px' }} />
                 Google Calendar
               </button>
             </div>
