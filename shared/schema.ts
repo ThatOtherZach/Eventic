@@ -111,6 +111,9 @@ export const events = pgTable("events", {
   surgePricing: boolean("surge_pricing").default(false), // Enable dynamic pricing based on ticket sales
   p2pValidation: boolean("p2p_validation").default(false), // Allow any ticket holder to validate other tickets for this event
   enableVoting: boolean("enable_voting").default(false), // Allow tickets to collect votes when P2P validation is enabled
+  // GPS location fields for venue
+  latitude: decimal("latitude", { precision: 10, scale: 7 }), // Latitude coordinate
+  longitude: decimal("longitude", { precision: 10, scale: 7 }), // Longitude coordinate
   // Recurring event fields
   recurringType: text("recurring_type"), // "weekly", "monthly", "annual", or null for non-recurring
   recurringEndDate: text("recurring_end_date"), // When to stop creating recurring events

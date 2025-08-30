@@ -14,6 +14,7 @@ import { ArrowLeft, ArrowRight, CreditCard, Image } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { countries } from "@/lib/countries";
+import { LocationPicker } from "@/components/location-picker";
 import {
   Form,
   FormControl,
@@ -46,6 +47,10 @@ export default function EventForm() {
   const [address, setAddress] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [country, setCountry] = useState<string>("");
+  
+  // GPS coordinates states
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   
   // State for cycling through special effects preview
   const [previewEffectIndex, setPreviewEffectIndex] = useState(0);
@@ -143,6 +148,12 @@ export default function EventForm() {
         } else {
           setAddress(event.venue);
         }
+      }
+      
+      // Load GPS coordinates if they exist
+      if (event.latitude && event.longitude) {
+        setLatitude(Number(event.latitude));
+        setLongitude(Number(event.longitude));
       }
       
       // Reset form with event data
@@ -333,6 +344,8 @@ export default function EventForm() {
       stickerUrl: (stickerEnabled && data.stickerUrl) ? data.stickerUrl : undefined,
       stickerOdds: (stickerEnabled && data.stickerUrl) ? (data.stickerOdds || 25) : undefined,
       timezone: data.timezone || "America/New_York",
+      latitude: latitude ? String(latitude) : undefined,
+      longitude: longitude ? String(longitude) : undefined,
     };
 
     // If in edit mode, perform update with proper validation
@@ -367,6 +380,8 @@ export default function EventForm() {
         stickerUrl: (stickerEnabled && data.stickerUrl) ? data.stickerUrl : event?.stickerUrl || undefined,
         stickerOdds: (stickerEnabled && data.stickerUrl) ? (data.stickerOdds || 25) : event?.stickerOdds || undefined,
         timezone: data.timezone || "America/New_York",
+        latitude: latitude ? String(latitude) : undefined,
+        longitude: longitude ? String(longitude) : undefined,
       };
       
       updateEventMutation.mutate(updateData);
@@ -655,6 +670,29 @@ export default function EventForm() {
                           </FormItem>
                         )}
                       />
+                    </div>
+
+                    {/* Interactive Map for Location Selection */}
+                    <div className="col-12 mt-3">
+                      <div className="mb-2">
+                        <label className="form-label">Click on the map to set venue location (optional)</label>
+                      </div>
+                      <LocationPicker
+                        latitude={latitude}
+                        longitude={longitude}
+                        onLocationSelect={(lat, lng) => {
+                          setLatitude(lat);
+                          setLongitude(lng);
+                        }}
+                        height="300px"
+                      />
+                      {latitude && longitude && (
+                        <div className="mt-2">
+                          <small className="text-muted">
+                            Location set: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                          </small>
+                        </div>
+                      )}
                     </div>
 
                     <div className="col-md-6">

@@ -12,6 +12,7 @@ import { BoostEventModal } from "@/components/boost/boost-event-modal";
 import { ValidatedTicketsList } from "@/components/validated-tickets-list";
 import ticketIcon from "@assets/image_1756532232153.png";
 import ownerIcon from "@assets/image_1756532723922.png";
+import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -573,6 +574,19 @@ export default function EventDetailPage() {
               <div 
                 className="text-muted"
                 dangerouslySetInnerHTML={{ __html: event.description }}
+              />
+            </div>
+          )}
+
+          {/* Venue Location Map */}
+          {event.latitude && event.longitude && (
+            <div className="mb-4">
+              <h5>Venue Location</h5>
+              <LocationPicker
+                latitude={Number(event.latitude)}
+                longitude={Number(event.longitude)}
+                readOnly={true}
+                height="300px"
               />
             </div>
           )}
