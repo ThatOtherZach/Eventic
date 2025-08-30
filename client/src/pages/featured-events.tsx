@@ -17,6 +17,7 @@ interface Event {
   specialEffects?: string;
   ticketBackgroundUrl?: string;
   isAdminCreated?: boolean;
+  allowMinting?: boolean;
 }
 
 interface FeaturedEvent {
@@ -33,23 +34,23 @@ export function FeaturedEventsPage() {
     queryKey: ["/api/featured-events"],
   });
 
-  // Fetch admin-created events
-  const { data: adminEvents = [], isLoading: loadingAdmin } = useQuery<Event[]>({
-    queryKey: ["/api/events/admin-created"],
+  // Fetch admin-created events and NFT-enabled events
+  const { data: specialEvents = [], isLoading: loadingSpecial } = useQuery<Event[]>({
+    queryKey: ["/api/events/special"],
     queryFn: async () => {
       const response = await fetch("/api/events");
       if (!response.ok) {
         throw new Error("Failed to fetch events");
       }
       const allEvents = await response.json();
-      // Filter for admin-created events
-      return allEvents.filter((event: Event) => event.isAdminCreated);
+      // Filter for admin-created events and NFT-enabled events
+      return allEvents.filter((event: Event) => event.isAdminCreated || event.allowMinting);
     },
   });
 
-  const isLoading = loadingFeatured || loadingAdmin;
+  const isLoading = loadingFeatured || loadingSpecial;
 
-  // Combine featured events and admin events, removing duplicates
+  // Combine featured events, admin events, and NFT events, removing duplicates
   const combinedEvents = (() => {
     const eventMap = new Map<string, Event>();
     
@@ -58,8 +59,8 @@ export function FeaturedEventsPage() {
       eventMap.set(featured.event.id, featured.event);
     });
     
-    // Add admin events (won't duplicate if already featured)
-    adminEvents.forEach(event => {
+    // Add admin events and NFT events (won't duplicate if already featured)
+    specialEvents.forEach(event => {
       if (!eventMap.has(event.id)) {
         eventMap.set(event.id, event);
       }
@@ -90,7 +91,7 @@ export function FeaturedEventsPage() {
               Featured & Special Events
             </h2>
             <p className="text-muted">
-              {combinedEvents.length} {combinedEvents.length === 1 ? 'event' : 'events'} • Boosted events and admin missions
+              {combinedEvents.length} {combinedEvents.length === 1 ? 'event' : 'events'} • Boosted events, admin missions, and NFT collectibles
             </p>
           </div>
         </div>
@@ -211,7 +212,7 @@ export function FeaturedEventsPage() {
                       {/* Special Effects Animation (for particles) */}
                       <SpecialEffects event={fullEvent} ticket={mockTicket} />
 
-                      {/* Badges for featured/admin events */}
+                      {/* Badges for featured/admin/NFT events */}
                       <div className="position-absolute top-0 start-0 p-2" style={{ zIndex: 10 }}>
                         {event.isAdminCreated && (
                           <span className="badge me-2" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
@@ -219,9 +220,15 @@ export function FeaturedEventsPage() {
                           </span>
                         )}
                         {featuredData.some(f => f.event.id === event.id) && (
-                          <span className="badge bg-warning text-dark">
+                          <span className="badge bg-warning text-dark me-2">
                             <Star size={12} className="me-1" />
                             Featured
+                          </span>
+                        )}
+                        {event.allowMinting && (
+                          <span className="badge bg-info text-white">
+                            <Sparkles size={12} className="me-1" />
+                            NFT
                           </span>
                         )}
                       </div>
