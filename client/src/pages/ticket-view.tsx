@@ -523,7 +523,7 @@ export default function TicketViewPage(): React.ReactElement {
                         ) : !timeValidation.valid ? (
                           <>
                             <Clock size={18} className="me-2" />
-                            Re-validation Expired
+                            {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Re-validation Expired'}
                           </>
                         ) : (
                           <>
@@ -614,7 +614,7 @@ export default function TicketViewPage(): React.ReactElement {
                     ) : !timeValidation.valid ? (
                       <>
                         <Clock size={18} className="me-2" />
-                        Validation Expired
+                        {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Validation Expired'}
                       </>
                     ) : (
                       <>
