@@ -427,11 +427,6 @@ export default function EventDetailPage() {
   
   // Calculate days until deletion (69 days after event ends)
   const daysUntilDeletion = (() => {
-    // For demonstration: Show countdown for "Monthly 1" event to demonstrate feature
-    if (event.name === "Monthly 1") {
-      // Pretend it ended 30 days ago for demo
-      return 39; // 69 - 30 = 39 days remaining
-    }
     if (!isEventPast) return null;
     
     const now = new Date();
@@ -620,14 +615,14 @@ export default function EventDetailPage() {
 
           {/* Deletion countdown - Only shown for past events */}
           {daysUntilDeletion !== null && (
-            <div className="alert alert-warning d-flex align-items-center mb-4" role="alert">
-              <AlertTriangle size={20} className="me-2" />
-              <div>
-                <strong>{daysUntilDeletion} days until deletion.</strong>
+            <div className="d-flex align-items-center mb-4 text-danger">
+              <AlertTriangle size={18} className="me-2" />
+              <span>
+                {daysUntilDeletion} days until deletion
                 {daysUntilDeletion <= 7 && (
-                  <span className="ms-2">Event data will be permanently removed soon.</span>
+                  <span className="ms-1">- data will be permanently removed soon</span>
                 )}
-              </div>
+              </span>
             </div>
           )}
 

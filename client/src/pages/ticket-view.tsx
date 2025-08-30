@@ -323,11 +323,6 @@ export default function TicketViewPage(): React.ReactElement {
   
   // Calculate days until deletion (69 days after event ends)
   const daysUntilDeletion = (() => {
-    // For demonstration: Show countdown for "Monthly 1" event to demonstrate feature
-    if (event.name === "Monthly 1") {
-      // Pretend it ended 30 days ago for demo
-      return 39; // 69 - 30 = 39 days remaining
-    }
     const now = new Date();
     
     // Check if event has passed
@@ -401,14 +396,14 @@ export default function TicketViewPage(): React.ReactElement {
       {daysUntilDeletion !== null && (
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-md-8 col-lg-6">
-            <div className="alert alert-warning d-flex align-items-center" role="alert">
-              <AlertTriangle size={20} className="me-2" />
-              <div>
-                <strong>{daysUntilDeletion} days until deletion.</strong>
+            <div className="d-flex align-items-center text-danger">
+              <AlertTriangle size={18} className="me-2" />
+              <span>
+                {daysUntilDeletion} days until deletion
                 {daysUntilDeletion <= 7 && (
-                  <span className="ms-2">Ticket data will be permanently removed soon.</span>
+                  <span className="ms-1">- data will be permanently removed soon</span>
                 )}
-              </div>
+              </span>
             </div>
           </div>
         </div>
