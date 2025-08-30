@@ -7,6 +7,7 @@ import { insertEventSchema, type InsertEvent, type Event, type Ticket } from "@s
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useNotifications } from "@/hooks/use-notifications";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { ArrowLeft, ArrowRight, CreditCard, Image } from "lucide-react";
@@ -33,6 +34,7 @@ export default function EventForm() {
   const { id } = useParams<{ id?: string }>();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [stickerEnabled, setStickerEnabled] = useState(false);
@@ -207,12 +209,15 @@ export default function EventForm() {
       const response = await apiRequest("POST", "/api/events", data);
       return response.json();
     },
-    onSuccess: (event) => {
+    onSuccess: async (event) => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      toast({
-        title: "Success",
-        description: "Event created successfully",
+      // Use notification instead of toast for success
+      await addNotification({
+        type: "success",
+        title: "Event Created!",
+        message: `Your event "${event.name}" has been created successfully.`,
+        relatedEventId: event.id,
       });
       // Redirect to the event page
       setLocation(`/events/${event.id}`);
