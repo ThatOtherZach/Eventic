@@ -1927,9 +1927,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return true;
       });
       
+      // Add isAdminCreated field to each event
+      const featuredEventsWithAdmin = await Promise.all(featuredEvents.map(async (featuredEvent) => {
+        const eventWithCreator = await storage.getEventWithCreator(featuredEvent.event.id);
+        const isAdminCreated = eventWithCreator?.creatorEmail?.endsWith("@saymservices.com") || false;
+        
+        return {
+          ...featuredEvent,
+          event: {
+            ...featuredEvent.event,
+            isAdminCreated
+          }
+        };
+      }));
+      
       // Featured events should ALWAYS show regardless of location preferences
       
-      res.json(featuredEvents);
+      res.json(featuredEventsWithAdmin);
     } catch (error) {
       await logError(error, "GET /api/featured-events", {
         request: req
