@@ -338,8 +338,7 @@ export function FeaturedEventsPage() {
                           </div>
                           <div className="d-flex justify-content-end align-items-end">
                             {event.p2pValidation && (
-                              <span className="badge bg-success bg-opacity-75">
-                                <Shield size={12} className="me-1" />
+                              <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
                                 P2P Validation
                               </span>
                             )}
