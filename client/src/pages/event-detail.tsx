@@ -844,8 +844,12 @@ export default function EventDetailPage() {
                         "This event is sold out"
                       ) : (
                         <>
-                          <div>{event.ticketsAvailable} remaining</div>
-                          <div className="mt-1">
+                          <div className="d-flex align-items-center">
+                            <img src="@assets/image_1756532232153.png" alt="" style={{ width: '16px', height: '16px', marginRight: '6px' }} />
+                            {event.ticketsAvailable} remaining
+                          </div>
+                          <div className="mt-1 d-flex align-items-center">
+                            <img src="@assets/image_1756532232153.png" alt="" style={{ width: '16px', height: '16px', marginRight: '6px' }} />
                             {event.resaleCount || 0} available
                           </div>
                         </>
