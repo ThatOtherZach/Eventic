@@ -593,7 +593,26 @@ export default function EventDetailPage() {
               <button
                 className="btn btn-sm btn-outline-danger"
                 onClick={() => {
-                  const searchQuery = encodeURIComponent(event.venue);
+                  let searchQuery = '';
+                  
+                  // Use GPS coordinates if available
+                  if (event.latitude && event.longitude) {
+                    searchQuery = `${event.latitude},${event.longitude}`;
+                  } else {
+                    // Fall back to city and country from venue
+                    const venueParts = event.venue.split(',').map(part => part.trim());
+                    if (venueParts.length >= 2) {
+                      // If venue has multiple parts, use the last two (likely city and country)
+                      searchQuery = encodeURIComponent(venueParts.slice(-2).join(', '));
+                    } else if (event.country) {
+                      // If we have a country field, combine venue with country
+                      searchQuery = encodeURIComponent(`${event.venue}, ${event.country}`);
+                    } else {
+                      // Last resort: use the full venue string
+                      searchQuery = encodeURIComponent(event.venue);
+                    }
+                  }
+                  
                   window.open(`https://www.google.com/maps/search/?api=1&query=${searchQuery}`, '_blank');
                 }}
                 data-testid="button-search-location"
