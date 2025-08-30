@@ -560,8 +560,8 @@ export default function EventDetailPage() {
           )}
 
           {/* Event Settings Display */}
-          {(event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricingEnabled || 
-            event.recurringType || event.stickerUrl || event.isRecurring) && (
+          {(event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
+            event.recurringType || event.stickerUrl || event.p2pValidation) && (
             <div className="card mb-4">
               <div className="card-body">
                 <h6 className="card-title mb-3">Event Features</h6>
@@ -576,12 +576,12 @@ export default function EventDetailPage() {
                       Special Effects
                     </span>
                   )}
-                  {event.surgePricingEnabled && (
+                  {event.surgePricing && (
                     <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
                       Surge Pricing
                     </span>
                   )}
-                  {event.isRecurring && event.recurringType && (
+                  {event.recurringType && (
                     <span className="badge" style={{ backgroundColor: '#059669', color: '#fff' }}>
                       {event.recurringType === 'weekly' && 'Weekly Recurring'}
                       {event.recurringType === 'monthly' && 'Monthly Recurring'}
