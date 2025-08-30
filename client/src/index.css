@@ -827,3 +827,164 @@ a.ticket-card-link:visited {
   transform: translateY(-2px);
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
+
+/* Retro Windows 98 Validation Styles */
+.retro-validation-card {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e0e0e0 50%, #c0c0c0 100%);
+  border: 3px outset #c0c0c0;
+  border-radius: 0;
+  box-shadow: 
+    inset -2px -2px 4px rgba(0, 0, 0, 0.25),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    4px 4px 8px rgba(0, 0, 0, 0.3);
+  font-family: 'MS Sans Serif', sans-serif;
+  padding: 0;
+}
+
+.retro-card-body {
+  padding: 16px;
+  background: #c0c0c0;
+}
+
+.retro-header {
+  background: linear-gradient(90deg, #000080 0%, #0000ff 100%);
+  color: white;
+  padding: 8px 12px;
+  margin: -16px -16px 16px -16px;
+  border-bottom: 2px inset #c0c0c0;
+  font-weight: bold;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
+}
+
+.retro-title {
+  margin: 0;
+  font-size: 14px;
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+.retro-info-panel {
+  background: #ffffcc;
+  border: 2px inset #c0c0c0;
+  padding: 12px;
+  font-size: 12px;
+  color: #000080;
+  margin-bottom: 16px;
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.retro-input-section {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.retro-code-input {
+  flex: 1;
+  background: white;
+  border: 2px inset #c0c0c0;
+  padding: 8px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 0.5rem;
+  color: #000080;
+  min-height: 60px;
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.2),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.7);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.retro-code-input:focus {
+  background: #ffffcc;
+  border-color: #000080;
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.3),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.8),
+    0 0 8px rgba(0, 0, 128, 0.4);
+}
+
+.retro-code-input:disabled {
+  background: #f0f0f0;
+  color: #808080;
+}
+
+.retro-validate-btn {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e0e0e0 50%, #c0c0c0 100%);
+  border: 2px outset #c0c0c0;
+  padding: 8px 20px;
+  font-family: 'MS Sans Serif', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #000000;
+  cursor: pointer;
+  min-height: 60px;
+  box-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.1s ease;
+}
+
+.retro-validate-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d0d0d0 0%, #f0f0f0 50%, #d0d0d0 100%);
+  transform: translateY(-1px);
+  box-shadow: 
+    3px 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.retro-validate-btn:active:not(:disabled) {
+  border: 2px inset #c0c0c0;
+  transform: translateY(1px);
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.retro-validate-btn:disabled {
+  background: #a0a0a0;
+  color: #808080;
+  cursor: not-allowed;
+  border: 2px inset #a0a0a0;
+}
+
+.retro-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #808080;
+  border-top: 2px solid #000000;
+  border-radius: 50%;
+  animation: retro-spin 1s linear infinite;
+}
+
+@keyframes retro-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.retro-help-text {
+  font-size: 11px;
+  color: #000080;
+  margin-bottom: 8px;
+  font-family: 'MS Sans Serif', sans-serif;
+}
+
+.retro-counter {
+  font-size: 10px;
+  color: #800000;
+  font-family: 'MS Sans Serif', sans-serif;
+  background: #ffffcc;
+  padding: 2px 6px;
+  border: 1px solid #c0c0c0;
+  display: inline-block;
+}
+
+/* Add subtle pixelated effect for ultimate retro feel */
+.retro-validation-card * {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
