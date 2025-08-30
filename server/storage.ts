@@ -1393,8 +1393,23 @@ export class DatabaseStorage implements IStorage {
       const event = await this.getEvent(eventId);
       if (!event || !event.userId) return false;
 
+      // Double-check: Don't archive recurring events
+      if (event.recurringType) {
+        console.log(`Skipping archive for recurring event ${eventId}`);
+        return false;
+      }
+
       // Get all tickets for this event
       const eventTickets = await this.getTicketsByEventId(eventId);
+      
+      // Double-check: Don't archive if any tickets are minted as NFTs
+      for (const ticket of eventTickets) {
+        const registryRecord = await this.getRegistryRecordByTicket(ticket.id);
+        if (registryRecord) {
+          console.log(`Skipping archive for event ${eventId} - has NFT-minted tickets`);
+          return false;
+        }
+      }
       
       // Calculate total tickets sold and revenue
       const totalTicketsSold = eventTickets.length;
@@ -1483,6 +1498,39 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(archivedTickets.archivedAt));
   }
 
+  async performScheduledArchiving(): Promise<void> {
+    try {
+      console.log('[ARCHIVE] Starting scheduled event archiving...');
+      
+      // Get events that need archiving
+      const eventsToArchive = await this.getEventsToArchive();
+      
+      if (eventsToArchive.length === 0) {
+        console.log('[ARCHIVE] No events to archive at this time');
+        return;
+      }
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      // Archive each event
+      for (const event of eventsToArchive) {
+        const success = await this.archiveEvent(event.id);
+        if (success) {
+          successCount++;
+          console.log(`[ARCHIVE] Successfully archived event: ${event.name} (${event.id})`);
+        } else {
+          failCount++;
+          console.log(`[ARCHIVE] Failed to archive event: ${event.name} (${event.id})`);
+        }
+      }
+      
+      console.log(`[ARCHIVE] Archiving complete. Success: ${successCount}, Failed: ${failCount}`);
+    } catch (error) {
+      console.error('[ARCHIVE] Error during scheduled archiving:', error);
+    }
+  }
+
   async getEventsToArchive(): Promise<Event[]> {
     // Get all events
     const allEvents = await db.select().from(events);
@@ -1491,15 +1539,46 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const sixtyNineDaysMs = 69 * 24 * 60 * 60 * 1000;
     
-    return allEvents.filter(event => {
+    const eventsToArchive = [];
+    
+    for (const event of allEvents) {
+      // Skip recurring events - they should never be auto-archived
+      if (event.recurringType) {
+        continue;
+      }
+      
       // Use end date if available, otherwise use start date
       const eventDateStr = event.endDate || event.date;
       const eventDate = new Date(eventDateStr);
       
       // Check if 69 days have passed
       const timeDiff = now.getTime() - eventDate.getTime();
-      return timeDiff >= sixtyNineDaysMs;
-    });
+      if (timeDiff < sixtyNineDaysMs) {
+        continue;
+      }
+      
+      // Check if any tickets for this event have been minted as NFTs
+      const eventTickets = await this.getTicketsByEventId(event.id);
+      let hasNFTTickets = false;
+      
+      for (const ticket of eventTickets) {
+        const registryRecord = await this.getRegistryRecordByTicket(ticket.id);
+        if (registryRecord) {
+          hasNFTTickets = true;
+          break;
+        }
+      }
+      
+      // Skip events with NFT-minted tickets
+      if (hasNFTTickets) {
+        continue;
+      }
+      
+      // This event is eligible for archiving
+      eventsToArchive.push(event);
+    }
+    
+    return eventsToArchive;
   }
 
   // Registry Management

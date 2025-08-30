@@ -1,7 +1,7 @@
 # Event Ticket Management System
 
 ## Overview
-This is a full-stack event ticketing application built with React and Express.js. It enables users to create and manage events, generate tickets, and validate them via QR codes. The system provides a complete event management workflow with a modern web interface, robust backend API, comprehensive error logging, and Bootstrap-style user notifications. It includes features like location-based routing, a unified event form, smart event sorting, and a simplified image system. Advanced functionalities include P2P ticket validation, an event reputation system, and a ticket resale mechanism. The interface features subtle Windows 98-inspired styling for a nostalgic touch.
+This is a full-stack event ticketing application built with React and Express.js. It enables users to create and manage events, generate tickets, and validate them via QR codes. The system provides a complete event management workflow with a modern web interface, robust backend API, comprehensive error logging, and Bootstrap-style user notifications. It includes features like location-based routing, a unified event form, smart event sorting, and a simplified image system. Advanced functionalities include P2P ticket validation, an event reputation system, a ticket resale mechanism, and NFT minting for validated tickets. The system implements a 69-day data retention policy with automated archiving. The interface features subtle Windows 98-inspired styling for a nostalgic touch.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -36,6 +36,8 @@ The system includes client-side QR code generation for tickets and server-side v
 - **Enhanced Event Management**: Date/time validation for event starts/ends, supporting multi-day events.
 - **Production Readiness**: Robust date handling, resilient authentication (JWKS), schema optimization, rate limiting on key actions, and Zod validation.
 - **Venue Address System**: Separate fields for Street, City, Country, with a country dropdown. Intelligent parsing for existing events and automatic combination for storage. User location preference updates automatically based on event activity.
+- **Event Creation Rules**: Events must be scheduled at least 3 hours in advance, with real-time validation feedback showing hours until event start.
+- **Data Retention Policy**: Events and tickets are automatically archived 69 days after the event ends (or start date if no end date). Exceptions: recurring events and tickets minted as NFTs (stored in Registry table) are never auto-archived. Archived data is preserved in CSV format for historical records.
 
 ## External Dependencies
 
