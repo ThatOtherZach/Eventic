@@ -906,8 +906,8 @@ export default function EventDetailPage() {
                     className="btn btn-warning w-100 mb-2"
                     data-testid="button-boost-event"
                   >
-                    <Star size={18} className="me-2" />
-                    Boost to Featured
+                    <img src="/boost-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
+                    Boost
                   </button>
                   <div className="alert alert-info mt-3">
                     <small>{isOwner ? "You own this event" : "Admin: You can edit this event"}</small>
