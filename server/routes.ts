@@ -1437,6 +1437,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // P2P Validation route for voting
+  app.post("/api/validate/p2p", requireAuth, validationRateLimiter, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { qrData, eventId } = req.body;
+      if (!qrData) {
+        return res.status(400).json({ message: "QR data is required" });
+      }
+
+      const userId = req.user?.id;
+      const userEmail = req.user?.email;
+      if (!userId || !userEmail) {
+        return res.status(401).json({ message: "Authentication required for P2P validation" });
+      }
+
+      // Get the ticket being validated
+      const ticket = await storage.getTicketByQrData(qrData);
+      if (!ticket) {
+        return res.status(404).json({ 
+          message: "Invalid ticket", 
+          valid: false 
+        });
+      }
+
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event) {
+        return res.status(404).json({ 
+          message: "Event not found", 
+          valid: false 
+        });
+      }
+
+      // Check if event has P2P validation enabled (voting)
+      if (!event.p2pValidation && !event.enableVoting) {
+        return res.status(403).json({ 
+          message: "P2P validation not enabled for this event", 
+          valid: false 
+        });
+      }
+
+      // Check if the validator has a ticket for this event
+      const validatorTickets = await storage.getTicketsByEventAndUser(event.id, userId);
+      const validatorHasTicket = validatorTickets.some(t => t.isValidated);
+      
+      if (!validatorHasTicket) {
+        return res.status(403).json({ 
+          message: "You need a validated ticket for this event to use P2P validation", 
+          valid: false 
+        });
+      }
+
+      // Don't allow self-validation
+      if (ticket.userId === userId) {
+        return res.status(400).json({ 
+          message: "You cannot validate your own ticket", 
+          valid: false 
+        });
+      }
+
+      // Check if ticket has already been validated by this user
+      // (We could track this more specifically if needed)
+      
+      // Validate the ticket (this will increment voteCount for voting-enabled events)
+      const validatedTicket = await storage.validateTicket(ticket.id, undefined, userId);
+      
+      return res.json({ 
+        message: event.enableVoting ? "Vote recorded successfully!" : "Ticket validated successfully", 
+        valid: true,
+        canValidate: true,
+        ticket: validatedTicket,
+        event 
+      });
+    } catch (error) {
+      await logError(error, "POST /api/validate/p2p", {
+        request: req,
+        metadata: { qrData: req.body.qrData }
+      });
+      res.status(500).json({ message: "Failed to validate ticket" });
+    }
+  });
+
   // Stats route
   app.get("/api/stats", async (req, res) => {
     try {

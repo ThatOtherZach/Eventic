@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield, Users, QrCode } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -80,6 +80,7 @@ function isTicketWithinValidTime(event: Event | undefined): { valid: boolean; me
 
 export default function TicketViewPage(): React.ReactElement {
   const { ticketId } = useParams<{ ticketId: string }>();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
   const [currentToken, setCurrentToken] = useState<string>("");
@@ -535,6 +536,29 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           )}
 
+          {/* P2P Validation Scanner for Voting-Enabled Events */}
+          {event.enableVoting && ticket.isValidated && (
+            <div className="card mb-3">
+              <div className="card-body">
+                <h5 className="card-title mb-3">
+                  <Users size={20} className="me-2" />
+                  Vote for Other Attendees
+                </h5>
+                <p className="text-muted mb-3">
+                  Use your ticket to validate and vote for other attendees' tickets.
+                </p>
+                <button
+                  className="btn btn-primary w-100"
+                  onClick={() => setLocation(`/scanner?eventId=${event.id}&mode=p2p`)}
+                  data-testid="button-p2p-scanner"
+                >
+                  <QrCode size={18} className="me-2" />
+                  Open P2P Scanner
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Validation Section */}
           <div className="card">
             <div className="card-body">
@@ -543,8 +567,8 @@ export default function TicketViewPage(): React.ReactElement {
                 Ticket Validation
               </h5>
 
-              {/* Golden Ticket Badge */}
-              {ticket.isGoldenTicket && (
+              {/* Golden Ticket Badge - Only show for non-voting events */}
+              {ticket.isGoldenTicket && !event.enableVoting && (
                 <div className="alert alert-warning text-center mb-3">
                   <h5 className="mb-2">
                     <span className="badge bg-warning text-dark">🎫 GOLDEN TICKET WINNER! 🎫</span>

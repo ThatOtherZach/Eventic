@@ -35,7 +35,12 @@ interface ValidationHistory {
   valid: boolean;
 }
 
-export function QrScannerImplementation() {
+interface QrScannerImplementationProps {
+  mode?: "standard" | "p2p";
+  eventId?: string | null;
+}
+
+export function QrScannerImplementation({ mode = "standard", eventId }: QrScannerImplementationProps) {
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const [validationResult, setValidationResult] =
@@ -52,12 +57,15 @@ export function QrScannerImplementation() {
 
   const validateTicketMutation = useMutation({
     mutationFn: async ({code, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng}: {code: string, validatorLat?: number, validatorLng?: number, ticketHolderLat?: number, ticketHolderLng?: number}) => {
-      const response = await apiRequest("POST", "/api/validate", {
+      // Use P2P validation endpoint if in P2P mode
+      const endpoint = mode === "p2p" ? "/api/validate/p2p" : "/api/validate";
+      const response = await apiRequest("POST", endpoint, {
         qrData: code,
         validatorLat,
         validatorLng,
         ticketHolderLat,
         ticketHolderLng,
+        eventId: eventId, // Include eventId for P2P validation
       });
       return response.json();
     },
