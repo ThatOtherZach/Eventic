@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
 import { BoostEventModal } from "@/components/boost/boost-event-modal";
 import { ValidatedTicketsList } from "@/components/validated-tickets-list";
+import ticketIcon from "@assets/image_1756532232153.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -845,7 +846,7 @@ export default function EventDetailPage() {
                       ) : (
                         <>
                           <div className="d-flex">
-                            <img src="@assets/image_1756532232153.png" alt="" style={{ width: '16px', height: '16px', marginRight: '6px', marginTop: '2px' }} />
+                            <img src={ticketIcon} alt="" style={{ width: '16px', height: '16px', marginRight: '6px', marginTop: '2px' }} />
                             <div>
                               <div>{event.ticketsAvailable} remaining</div>
                               <div className="mt-1">{event.resaleCount || 0} available</div>
