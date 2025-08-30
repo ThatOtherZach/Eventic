@@ -553,7 +553,7 @@ export default function TicketViewPage(): React.ReactElement {
                       {!timeValidation.valid ? (
                         <div className="alert alert-warning mb-3">
                           <div className="d-flex align-items-center">
-                            <Clock size={20} className="me-2" />
+                            <img src="/clock-warning-icon.png" alt="" width="20" height="20" className="me-2" style={{ flexShrink: 0 }} />
                             <div>
                               <h6 className="mb-1">Re-validation Unavailable</h6>
                               <p className="mb-0 small">{timeValidation.message}</p>
@@ -644,7 +644,7 @@ export default function TicketViewPage(): React.ReactElement {
                   {!timeValidation.valid ? (
                     <div className="alert alert-warning mb-3">
                       <div className="d-flex align-items-center">
-                        <Clock size={20} className="me-2" />
+                        <img src="/clock-warning-icon.png" alt="" width="20" height="20" className="me-2" style={{ flexShrink: 0 }} />
                         <div>
                           <h6 className="mb-1">Validation Unavailable</h6>
                           <p className="mb-0 small">{timeValidation.message}</p>
