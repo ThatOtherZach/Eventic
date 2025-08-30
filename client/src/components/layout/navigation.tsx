@@ -64,7 +64,6 @@ export function Navigation() {
             
             {user ? (
               <>
-                <NotificationBell user={user} location={location} />
                 {user.email?.endsWith("@saymservices.com") && (
                   <li className="nav-item">
                     <Link
@@ -95,6 +94,7 @@ export function Navigation() {
                     <span>Account</span>
                   </Link>
                 </li>
+                <NotificationBell user={user} location={location} />
                 <li className="nav-item">
                   <button
                     className="nav-link btn btn-link d-flex align-items-center"
@@ -146,7 +146,7 @@ function NotificationBell({ user, location }: { user: any; location: string }) {
         data-testid="link-nav-notifications"
       >
         <Bell className="me-1" size={18} />
-        Notifications
+        Inbox
         {unreadCount > 0 && (
           <span 
             className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
