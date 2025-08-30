@@ -419,7 +419,46 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          <h1 className="mb-4">{event.name}</h1>
+          <h1 className="mb-2">{event.name}</h1>
+
+          {/* Event Settings Display - Badges below title */}
+          {(event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
+            event.recurringType || event.stickerUrl || event.p2pValidation) && (
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              {event.goldenTicketEnabled && (
+                <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000' }}>
+                  Golden Tickets
+                </span>
+              )}
+              {event.specialEffectsEnabled && (
+                <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff' }}>
+                  Special Effects
+                </span>
+              )}
+              {event.surgePricing && (
+                <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
+                  Surge Pricing
+                </span>
+              )}
+              {event.recurringType && (
+                <span className="badge" style={{ backgroundColor: '#059669', color: '#fff' }}>
+                  {event.recurringType === 'weekly' && 'Weekly Recurring'}
+                  {event.recurringType === 'monthly' && 'Monthly Recurring'}
+                  {event.recurringType === 'annually' && 'Annual Recurring'}
+                </span>
+              )}
+              {event.stickerUrl && (
+                <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff' }}>
+                  Custom Stickers ({event.stickerOdds || 50}%)
+                </span>
+              )}
+              {event.p2pValidation && (
+                <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
+                  P2P Validation
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="d-flex flex-wrap gap-3 mb-4">
             <div className="d-flex align-items-center text-muted">
@@ -559,49 +598,6 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Event Settings Display */}
-          {(event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
-            event.recurringType || event.stickerUrl || event.p2pValidation) && (
-            <div className="card mb-4">
-              <div className="card-body">
-                <h6 className="card-title mb-3">Event Features</h6>
-                <div className="d-flex flex-wrap gap-2">
-                  {event.goldenTicketEnabled && (
-                    <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000' }}>
-                      Golden Tickets
-                    </span>
-                  )}
-                  {event.specialEffectsEnabled && (
-                    <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff' }}>
-                      Special Effects
-                    </span>
-                  )}
-                  {event.surgePricing && (
-                    <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
-                      Surge Pricing
-                    </span>
-                  )}
-                  {event.recurringType && (
-                    <span className="badge" style={{ backgroundColor: '#059669', color: '#fff' }}>
-                      {event.recurringType === 'weekly' && 'Weekly Recurring'}
-                      {event.recurringType === 'monthly' && 'Monthly Recurring'}
-                      {event.recurringType === 'annually' && 'Annual Recurring'}
-                    </span>
-                  )}
-                  {event.stickerUrl && (
-                    <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff' }}>
-                      Custom Stickers ({event.stickerOdds || 50}%)
-                    </span>
-                  )}
-                  {event.p2pValidation && (
-                    <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
-                      P2P Validation
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="card bg-light mb-4">
             <div className="card-body">
