@@ -151,7 +151,7 @@ export function FeaturedGrid() {
                         </span>
                       )}
                       {featuredEvent.event.allowMinting && (
-                        <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff', fontSize: "0.7em" }}>
+                        <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', fontSize: "0.7em" }}>
                           Collectable
                         </span>
                       )}

@@ -486,7 +486,7 @@ export default function EventDetailPage() {
                 </span>
               )}
               {event.allowMinting && (
-                <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
+                <span className="badge" style={{ backgroundColor: '#000000', color: '#fff' }}>
                   Collectable
                 </span>
               )}
