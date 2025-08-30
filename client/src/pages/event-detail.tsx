@@ -571,7 +571,17 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Calendar Buttons */}
+          {event.description && (
+            <div className="mb-4">
+              <h5>About This Event</h5>
+              <div 
+                className="text-muted"
+                dangerouslySetInnerHTML={{ __html: event.description }}
+              />
+            </div>
+          )}
+
+          {/* Calendar and Location Buttons */}
           <div className="mb-4">
             <div className="d-flex gap-2 flex-wrap">
               <button
@@ -622,16 +632,6 @@ export default function EventDetailPage() {
               </button>
             </div>
           </div>
-
-          {event.description && (
-            <div className="mb-4">
-              <h5>About This Event</h5>
-              <div 
-                className="text-muted"
-                dangerouslySetInnerHTML={{ __html: event.description }}
-              />
-            </div>
-          )}
 
           {/* Venue Location Map */}
           {event.latitude && event.longitude && (
