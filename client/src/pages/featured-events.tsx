@@ -91,7 +91,7 @@ export function FeaturedEventsPage() {
               Featured & Special Events
             </h2>
             <p className="text-muted">
-              {combinedEvents.length} {combinedEvents.length === 1 ? 'event' : 'events'} • Boosted events, admin missions, and NFT collectibles
+              {combinedEvents.length} {combinedEvents.length === 1 ? 'event' : 'events'}
             </p>
           </div>
         </div>
