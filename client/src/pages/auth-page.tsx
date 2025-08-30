@@ -19,7 +19,7 @@ export default function AuthPage() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    
+
     setIsLoading(true);
     try {
       await signUp(email);
@@ -55,9 +55,7 @@ export default function AuthPage() {
                 <Ticket className="text-primary" size={32} />
               </div>
               <h2 className="h3 fw-bold">Welcome to Eventic</h2>
-              <p className="text-muted">
-                Enter your email to sign in
-              </p>
+              <p className="text-muted">Enter your email to sign in</p>
             </div>
 
             {!emailSent ? (
@@ -116,7 +114,8 @@ export default function AuthPage() {
 
                 <div className="alert alert-info">
                   <small>
-                    Click the link in your email to sign in. The link will expire in 60 minutes.
+                    Click the link in your email to sign in. The link will
+                    expire in 60 minutes.
                   </small>
                 </div>
 
@@ -159,13 +158,13 @@ export default function AuthPage() {
             <div className="mb-4">
               <Ticket className="text-primary" size={80} />
             </div>
-            <h3 className="h2 fw-bold mb-3">Event Management Made Simple</h3>
+            <h3 className="h2 fw-bold mb-3">What is This?</h3>
             <p className="lead text-muted mb-4">
-              Create events, generate tickets with QR codes, and validate them seamlessly.
+              Please read <a href="/manifesto" className="text-primary">The Manifesto</a> to understand the mission.
             </p>
             <div className="mt-5">
               <p className="text-muted">
-                Please read the manifesto to understand our mission and values.
+                
               </p>
             </div>
           </div>

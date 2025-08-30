@@ -13,12 +13,9 @@ export default function Manifesto() {
 
       <div className="card mb-4">
         <div className="card-body">
-          <h2 className="h4 mb-3">The Origin Story: A Hero's Journey</h2>
+          <h2 className="h4 mb-3">Mission Statement</h2>
           <p className="mb-3">
-            Picture this: One fateful morning, after a legendary night of edibles and craft beer, 
-            I woke up with a revelation. The job market had been kicking my ass, rejection emails 
-            were piling up like unpaid bills, and I thought to myself, "You know what? Screw this. 
-            I'm going to build something that matters."
+            It started like all great revolutions do—with edibles, craft beer, and the creeping dread of rejection emails piling up like parking tickets on a dead man’s car. I woke up sweating, buzzing, half-convinced I was being chased through the desert by the ghost of Steve Jobs. Somewhere in that chemical afterglow, I muttered the words that would change everything: “To hell with this. I’m building my own circus.”
           </p>
           <p className="mb-3">
             And in that moment of divine inspiration (or THC-induced clarity), I decided to take on 
