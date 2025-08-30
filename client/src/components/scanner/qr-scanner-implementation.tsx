@@ -6,6 +6,7 @@ import successIcon from "@assets/image_1756530807933.png";
 import warningIcon from "@assets/image_1756530837845.png";
 import spiderIcon from "@assets/image_1756530947341.png";
 import lockIcon from "@assets/image_1756530985990.png";
+import geofenceIcon from "@assets/geofence-icon.png";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -322,6 +323,8 @@ export function QrScannerImplementation() {
                   ) : (
                     <img src={successIcon} alt="Success" style={{ width: '30px', height: '30px' }} />
                   )
+                ) : validationResult.outsideGeofence ? (
+                  <img src={geofenceIcon} alt="Outside Geofence" style={{ width: '30px', height: '30px' }} />
                 ) : validationResult.outsideValidTime || validationResult.alreadyValidated ? (
                   <img src={warningIcon} alt="Warning" style={{ width: '30px', height: '30px' }} />
                 ) : validationResult.isAuthentic ? (
@@ -334,7 +337,9 @@ export function QrScannerImplementation() {
                 <h6 className="fw-semibold mb-1">
                   {validationResult.canValidate && validationResult.valid
                     ? "✅ Ticket Validated"
-                    : validationResult.outsideValidTime
+                    : validationResult.outsideGeofence
+                      ? "📍 Outside Event Area"
+                      : validationResult.outsideValidTime
                       ? "⏰ Outside Valid Time"
                       : validationResult.isAuthentic
                         ? "✔️ Authentic Ticket"
