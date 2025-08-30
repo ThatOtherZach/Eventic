@@ -20,6 +20,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { countries } from "@/lib/countries";
 import { LocationPicker } from "@/components/location-picker";
+import { Clock } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -78,9 +79,9 @@ export default function EventForm() {
   ];
 
   // Calculate min and max dates for event creation
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split("T")[0];
+  // Allow events to be created for today (will validate 3-hour rule on submit)
+  const today = new Date();
+  const minDate = today.toISOString().split("T")[0];
 
   const fiveYearsFromNow = new Date();
   fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
@@ -298,19 +299,25 @@ export default function EventForm() {
 
     // Only validate dates for new events (not in edit mode)
     if (!isEditMode) {
-      // Validate start date is at least 1 day in the future
+      // Validate event is at least 3 hours in the future
       const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0); // Set to start of day
+      const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
 
       const eventDate = new Date(`${data.date}T${data.time}`);
 
-      if (eventDate < tomorrow) {
-        form.setError("date", {
-          type: "manual",
-          message: "Event must be scheduled at least one day in advance",
-        });
+      if (eventDate < threeHoursFromNow) {
+        const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        if (hoursUntilEvent < 0) {
+          form.setError("time", {
+            type: "manual",
+            message: "Event cannot be scheduled in the past",
+          });
+        } else {
+          form.setError("time", {
+            type: "manual",
+            message: `Event must be scheduled at least 3 hours in advance (${hoursUntilEvent.toFixed(1)} hours is too soon)`,
+          });
+        }
         return;
       }
 
@@ -788,8 +795,65 @@ export default function EventForm() {
                                 type="time"
                                 className="form-control"
                                 data-testid="input-time"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Clear any existing date/time errors when user changes the time
+                                  form.clearErrors(["date", "time"]);
+                                  
+                                  // Validate 3-hour rule if both date and time are set
+                                  const dateValue = form.getValues("date");
+                                  const timeValue = e.target.value;
+                                  
+                                  if (dateValue && timeValue && !isEditMode) {
+                                    const eventDate = new Date(`${dateValue}T${timeValue}`);
+                                    const now = new Date();
+                                    const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+                                    
+                                    if (eventDate < threeHoursFromNow) {
+                                      const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+                                      if (hoursUntilEvent < 0) {
+                                        form.setError("time", {
+                                          type: "manual",
+                                          message: "Event cannot be scheduled in the past",
+                                        });
+                                      } else {
+                                        form.setError("time", {
+                                          type: "manual",
+                                          message: `Event must be scheduled at least 3 hours in advance`,
+                                        });
+                                      }
+                                    }
+                                  }
+                                }}
                               />
                             </FormControl>
+                            {/* Show validation status when both date and time are selected */}
+                            {form.watch("date") && form.watch("time") && !isEditMode && (() => {
+                              const dateValue = form.watch("date");
+                              const timeValue = form.watch("time");
+                              if (!dateValue || !timeValue) return null;
+                              
+                              const eventDate = new Date(`${dateValue}T${timeValue}`);
+                              const now = new Date();
+                              const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+                              
+                              if (hoursUntilEvent >= 3) {
+                                return (
+                                  <div className="text-success small mt-1">
+                                    <Clock size={14} className="d-inline me-1" />
+                                    Event starts in {hoursUntilEvent.toFixed(1)} hours ✓
+                                  </div>
+                                );
+                              } else if (hoursUntilEvent >= 0) {
+                                return (
+                                  <div className="text-warning small mt-1">
+                                    <Clock size={14} className="d-inline me-1" />
+                                    Too soon: {hoursUntilEvent.toFixed(1)} hours (minimum 3 hours required)
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                             <FormMessage />
                           </FormItem>
                         )}
