@@ -975,7 +975,7 @@ export default function EventDetailPage() {
               <button
                 className="btn btn-primary w-100 mb-3"
                 onClick={handlePurchase}
-                disabled={isSoldOut || isPurchasing || isEventPast || !event?.ticketPurchasesEnabled}
+                disabled={isSoldOut || isPurchasing || isEventPast || !event?.ticketPurchasesEnabled || (event?.oneTicketPerUser && userTickets && userTickets.length > 0)}
                 data-testid="button-purchase"
               >
                 {isPurchasing ? (
@@ -989,6 +989,8 @@ export default function EventDetailPage() {
                   "Sold Out"
                 ) : !event?.ticketPurchasesEnabled ? (
                   "Event Suspended"
+                ) : (event?.oneTicketPerUser && userTickets && userTickets.length > 0) ? (
+                  "Already Have Ticket"
                 ) : (
                   <>
                     <img src="/ticket-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
