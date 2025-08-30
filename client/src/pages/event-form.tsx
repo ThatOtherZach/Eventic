@@ -3,7 +3,12 @@ import { useLocation, useParams } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertEventSchema, type InsertEvent, type Event, type Ticket } from "@shared/schema";
+import {
+  insertEventSchema,
+  type InsertEvent,
+  type Event,
+  type Ticket,
+} from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,43 +47,45 @@ export default function EventForm() {
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = user?.email?.endsWith("@saymservices.com") || false;
-  
+
   // Address component states
   const [address, setAddress] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [country, setCountry] = useState<string>("");
-  
+
   // GPS coordinates states
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
-  
+
   // State for cycling through special effects preview
   const [previewEffectIndex, setPreviewEffectIndex] = useState(0);
-  
+
   // Get current month name for monthly effect
-  const currentMonthName = new Date().toLocaleDateString('en-US', { month: 'long' });
-  
-  const availableEffects: Array<{type: string, name: string}> = [
-    { type: 'monthly', name: currentMonthName + ' Color' },
-    { type: 'snowflakes', name: 'Christmas (Dec. 25 Only)' },
-    { type: 'confetti', name: 'Confetti (Party Events)' },
-    { type: 'fireworks', name: 'New Year\'s (Dec. 31 Only)' },
-    { type: 'hearts', name: 'Valentine\'s (Feb. 14 Only)' },
-    { type: 'spooky', name: 'Halloween (Oct. 31 Only)' },
-    { type: 'pride', name: 'Pride (June + Keywords)' },
-    { type: 'nice', name: 'Nice Day (Mar. 10 Only)' },
-    { type: 'rainbow', name: 'Super RGB (Rare)' },
+  const currentMonthName = new Date().toLocaleDateString("en-US", {
+    month: "long",
+  });
+
+  const availableEffects: Array<{ type: string; name: string }> = [
+    { type: "monthly", name: currentMonthName + " Color" },
+    { type: "snowflakes", name: "Christmas (Dec. 25 Only)" },
+    { type: "confetti", name: "Confetti (Party Events)" },
+    { type: "fireworks", name: "New Year's (Dec. 31 Only)" },
+    { type: "hearts", name: "Valentine's (Feb. 14 Only)" },
+    { type: "spooky", name: "Halloween (Oct. 31 Only)" },
+    { type: "pride", name: "Pride (June + Keywords)" },
+    { type: "nice", name: "Nice Day (Mar. 10 Only)" },
+    { type: "rainbow", name: "Super RGB (Rare)" },
   ];
-  
+
   // Calculate min and max dates for event creation
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
-  
+  const minDate = tomorrow.toISOString().split("T")[0];
+
   const fiveYearsFromNow = new Date();
   fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
-  const maxDate = fiveYearsFromNow.toISOString().split('T')[0];
-  
+  const maxDate = fiveYearsFromNow.toISOString().split("T")[0];
+
   // Load existing event if in edit mode
   const { data: event, isLoading } = useQuery<EventWithTicketInfo>({
     queryKey: [`/api/events/${id}`],
@@ -121,7 +128,7 @@ export default function EventForm() {
       timezone: "America/New_York",
     },
   });
-  
+
   // Load event data into form when in edit mode
   useEffect(() => {
     if (event && isEditMode) {
@@ -138,7 +145,7 @@ export default function EventForm() {
 
       // Parse venue string to populate address fields
       if (event.venue) {
-        const venueParts = event.venue.split(',').map(part => part.trim());
+        const venueParts = event.venue.split(",").map((part) => part.trim());
         if (venueParts.length === 3) {
           setAddress(venueParts[0]);
           setCity(venueParts[1]);
@@ -150,13 +157,13 @@ export default function EventForm() {
           setAddress(event.venue);
         }
       }
-      
+
       // Load GPS coordinates if they exist
       if (event.latitude && event.longitude) {
         setLatitude(Number(event.latitude));
         setLongitude(Number(event.longitude));
       }
-      
+
       // Reset form with event data
       form.reset({
         name: event.name || "",
@@ -171,8 +178,17 @@ export default function EventForm() {
         maxTickets: event.maxTickets || 100,
         imageUrl: event.imageUrl || undefined,
         ticketBackgroundUrl: event.ticketBackgroundUrl || undefined,
-        earlyValidation: (event.earlyValidation || "Allow at Anytime") as "Allow at Anytime" | "One Hour Before" | "Two Hours Before" | "At Start Time" | undefined,
-        reentryType: (event.reentryType || "No Reentry (Single Use)") as "No Reentry (Single Use)" | "Pass (Multiple Use)" | "No Limit" | undefined,
+        earlyValidation: (event.earlyValidation || "Allow at Anytime") as
+          | "Allow at Anytime"
+          | "One Hour Before"
+          | "Two Hours Before"
+          | "At Start Time"
+          | undefined,
+        reentryType: (event.reentryType || "No Reentry (Single Use)") as
+          | "No Reentry (Single Use)"
+          | "Pass (Multiple Use)"
+          | "No Limit"
+          | undefined,
         maxUses: event.maxUses || 1,
         goldenTicketEnabled: event.goldenTicketEnabled || false,
         goldenTicketCount: event.goldenTicketCount || undefined,
@@ -186,12 +202,14 @@ export default function EventForm() {
         p2pValidation: event.p2pValidation || false,
         enableVoting: event.enableVoting || false,
         geofence: event.geofence || false,
-        recurringType: (event.recurringType as "weekly" | "monthly" | "annual" | null) || null,
+        recurringType:
+          (event.recurringType as "weekly" | "monthly" | "annual" | null) ||
+          null,
         recurringEndDate: event.recurringEndDate || null,
         ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
         timezone: event.timezone || "America/New_York",
       });
-      
+
       setImageUrl(event.imageUrl || "");
       setStickerEnabled(!!event.stickerUrl);
       setTicketsSold(event.ticketsSold || 0);
@@ -200,18 +218,19 @@ export default function EventForm() {
 
   // Update venue field when address components change
   useEffect(() => {
-    const venueString = [address, city, country]
-      .filter(Boolean)
-      .join(', ');
+    const venueString = [address, city, country].filter(Boolean).join(", ");
     // Always set venue value, even if empty to trigger validation
-    form.setValue('venue', venueString || '', { shouldValidate: true });
+    form.setValue("venue", venueString || "", { shouldValidate: true });
   }, [address, city, country, form]);
 
   // When ticket sales are disabled, automatically set event to private
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (name === 'ticketPurchasesEnabled' && value.ticketPurchasesEnabled === false) {
-        form.setValue('isPrivate', true);
+      if (
+        name === "ticketPurchasesEnabled" &&
+        value.ticketPurchasesEnabled === false
+      ) {
+        form.setValue("isPrivate", true);
       }
     });
     return () => subscription.unsubscribe();
@@ -243,7 +262,7 @@ export default function EventForm() {
       });
     },
   });
-  
+
   const updateEventMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest("PUT", `/api/events/${id}`, data);
@@ -269,7 +288,7 @@ export default function EventForm() {
 
   const onSubmit = (data: InsertEvent) => {
     // Venue is already set by the useEffect hook, just validate it exists
-    if (!data.venue || data.venue.trim() === '') {
+    if (!data.venue || data.venue.trim() === "") {
       toast({
         title: "Validation Error",
         description: "Please enter at least one venue location field",
@@ -277,7 +296,7 @@ export default function EventForm() {
       });
       return;
     }
-    
+
     // Only validate dates for new events (not in edit mode)
     if (!isEditMode) {
       // Validate start date is at least 1 day in the future
@@ -285,51 +304,51 @@ export default function EventForm() {
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(0, 0, 0, 0); // Set to start of day
-      
+
       const eventDate = new Date(`${data.date}T${data.time}`);
-      
+
       if (eventDate < tomorrow) {
-        form.setError('date', {
-          type: 'manual',
-          message: 'Event must be scheduled at least one day in advance'
+        form.setError("date", {
+          type: "manual",
+          message: "Event must be scheduled at least one day in advance",
         });
         return;
       }
-      
+
       // Validate event date is not more than 5 years in the future
       const fiveYearsFromNow = new Date(now);
       fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
-      
+
       if (eventDate > fiveYearsFromNow) {
-        form.setError('date', {
-          type: 'manual',
-          message: 'Event cannot be scheduled more than 5 years in advance'
+        form.setError("date", {
+          type: "manual",
+          message: "Event cannot be scheduled more than 5 years in advance",
         });
         return;
       }
     }
-    
+
     // Validate end date/time if both are provided
     if (data.endDate && data.endTime) {
       const startDateTime = new Date(`${data.date}T${data.time}`);
       const endDateTime = new Date(`${data.endDate}T${data.endTime}`);
-      
+
       if (endDateTime <= startDateTime) {
-        form.setError('endDate', {
-          type: 'manual',
-          message: 'End date/time must be after start date/time'
+        form.setError("endDate", {
+          type: "manual",
+          message: "End date/time must be after start date/time",
         });
         return;
       }
     }
-    
+
     // Validate surge pricing minimum ticket price
     if (data.surgePricing) {
-      const ticketPrice = parseFloat(data.ticketPrice || '0');
-      if (ticketPrice < 1.00) {
-        form.setError('ticketPrice', {
-          type: 'manual',
-          message: 'Ticket price must be at least $1.00 for surge pricing'
+      const ticketPrice = parseFloat(data.ticketPrice || "0");
+      if (ticketPrice < 1.0) {
+        form.setError("ticketPrice", {
+          type: "manual",
+          message: "Ticket price must be at least $1.00 for surge pricing",
         });
         return;
       }
@@ -339,12 +358,14 @@ export default function EventForm() {
     const submitData = {
       ...data,
       maxTickets: data.maxTickets || 100,
-      endDate: data.endDate && data.endDate !== '' ? data.endDate : null,
-      endTime: data.endTime && data.endTime !== '' ? data.endTime : null,
+      endDate: data.endDate && data.endDate !== "" ? data.endDate : null,
+      endTime: data.endTime && data.endTime !== "" ? data.endTime : null,
       imageUrl: imageUrl || undefined,
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
-      stickerUrl: (stickerEnabled && data.stickerUrl) ? data.stickerUrl : undefined,
-      stickerOdds: (stickerEnabled && data.stickerUrl) ? (data.stickerOdds || 25) : undefined,
+      stickerUrl:
+        stickerEnabled && data.stickerUrl ? data.stickerUrl : undefined,
+      stickerOdds:
+        stickerEnabled && data.stickerUrl ? data.stickerOdds || 25 : undefined,
       timezone: data.timezone || "America/New_York",
       latitude: latitude ? String(latitude) : undefined,
       longitude: longitude ? String(longitude) : undefined,
@@ -365,7 +386,7 @@ export default function EventForm() {
           return;
         }
       }
-      
+
       // Prepare update data with only the necessary fields
       const updateData = {
         name: data.name,
@@ -374,20 +395,26 @@ export default function EventForm() {
         venue: data.venue,
         date: data.date,
         time: data.time,
-        endDate: data.endDate && data.endDate !== '' ? data.endDate : null,
-        endTime: data.endTime && data.endTime !== '' ? data.endTime : null,
+        endDate: data.endDate && data.endDate !== "" ? data.endDate : null,
+        endTime: data.endTime && data.endTime !== "" ? data.endTime : null,
         ticketPrice: data.ticketPrice,
         maxTickets: data.maxTickets || undefined,
         imageUrl: imageUrl || undefined,
         ticketBackgroundUrl: imageUrl || undefined,
-        stickerUrl: (stickerEnabled && data.stickerUrl) ? data.stickerUrl : event?.stickerUrl || undefined,
-        stickerOdds: (stickerEnabled && data.stickerUrl) ? (data.stickerOdds || 25) : event?.stickerOdds || undefined,
+        stickerUrl:
+          stickerEnabled && data.stickerUrl
+            ? data.stickerUrl
+            : event?.stickerUrl || undefined,
+        stickerOdds:
+          stickerEnabled && data.stickerUrl
+            ? data.stickerOdds || 25
+            : event?.stickerOdds || undefined,
         timezone: data.timezone || "America/New_York",
         latitude: latitude ? String(latitude) : undefined,
         longitude: longitude ? String(longitude) : undefined,
         geofence: watchedValues.geofence || false,
       };
-      
+
       updateEventMutation.mutate(updateData);
     } else {
       createEventMutation.mutate(submitData);
@@ -402,8 +429,6 @@ export default function EventForm() {
       url: data.uploadURL,
     };
   };
-  
-
 
   const handleImageComplete = (result: any) => {
     // Extract the uploaded URL from the result
@@ -414,32 +439,34 @@ export default function EventForm() {
     }
   };
 
-
-
-
   // Create a sample ticket for preview
-  const goldenTicketEnabled = form.watch('goldenTicketEnabled');
-  const specialEffectsEnabled = form.watch('specialEffectsEnabled');
-  
+  const goldenTicketEnabled = form.watch("goldenTicketEnabled");
+  const specialEffectsEnabled = form.watch("specialEffectsEnabled");
+
   // Determine what effect to show
-  let currentEffect = specialEffectsEnabled ? availableEffects[previewEffectIndex]?.type : undefined;
+  let currentEffect = specialEffectsEnabled
+    ? availableEffects[previewEffectIndex]?.type
+    : undefined;
   // Golden ticket shows independently of stickers
   let isGolden = goldenTicketEnabled && !specialEffectsEnabled;
-  let isDoubleGolden = currentEffect === 'rainbow';
-  
+  let isDoubleGolden = currentEffect === "rainbow";
+
   const sampleTicket: Ticket & { previewEffectType?: string } = {
     id: "sample",
     eventId: "sample",
     userId: user?.id || "",
     ticketNumber: "PREVIEW-001",
     qrData: "sample-qr-data", // Need QR data to show QR code in preview
-    isValidated: specialEffectsEnabled || (stickerEnabled && !!form.watch('stickerUrl')), // Mark as validated for preview when special effects or sticker enabled
+    isValidated:
+      specialEffectsEnabled || (stickerEnabled && !!form.watch("stickerUrl")), // Mark as validated for preview when special effects or sticker enabled
     validatedAt: null,
     validationCode: null,
     useCount: 0,
     isGoldenTicket: isGolden, // Apply golden ticket when enabled and no other effect
     isDoubleGolden: isDoubleGolden, // Show double golden for rainbow effect
-    specialEffect: currentEffect || (stickerEnabled && form.watch('stickerUrl') ? 'sticker' : null),
+    specialEffect:
+      currentEffect ||
+      (stickerEnabled && form.watch("stickerUrl") ? "sticker" : null),
     createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
@@ -455,27 +482,28 @@ export default function EventForm() {
     // Add preview effect type for special effects preview
     previewEffectType: currentEffect,
     // Add sticker URL for overlay on any effect
-    previewStickerUrl: (stickerEnabled && form.watch('stickerUrl')) ? form.watch('stickerUrl') : undefined,
+    previewStickerUrl:
+      stickerEnabled && form.watch("stickerUrl")
+        ? form.watch("stickerUrl")
+        : undefined,
   };
 
   const watchedValues = form.watch();
-  
+
   // Format date for preview
   const formatPreviewDate = (date: string | undefined) => {
     if (!date) return "2024-01-01";
     try {
-      return new Date(date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
+      return new Date(date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       });
     } catch {
       return date;
     }
   };
-  
 
-  
   const previewEvent: Event = {
     id: "preview",
     name: watchedValues.name || "Your Event Name",
@@ -498,7 +526,10 @@ export default function EventForm() {
     goldenTicketEnabled: watchedValues.goldenTicketEnabled || false,
     goldenTicketCount: watchedValues.goldenTicketCount || null,
     specialEffectsEnabled: watchedValues.specialEffectsEnabled || false,
-    stickerUrl: (stickerEnabled && form.watch('stickerUrl')) ? (form.watch('stickerUrl') || null) : null,
+    stickerUrl:
+      stickerEnabled && form.watch("stickerUrl")
+        ? form.watch("stickerUrl") || null
+        : null,
     stickerOdds: watchedValues.stickerOdds || 25,
     allowMinting: watchedValues.allowMinting || false,
     isPrivate: watchedValues.isPrivate || false,
@@ -522,14 +553,16 @@ export default function EventForm() {
       <div className="row">
         <div className="col-lg-8 mx-auto">
           <div className="d-flex align-items-center mb-4">
-            <button 
+            <button
               className="btn btn-link text-decoration-none p-0 me-3"
               onClick={() => setLocation("/events")}
               data-testid="button-back"
             >
               <ArrowLeft size={24} />
             </button>
-            <h1 className="h2 mb-0">{isEditMode ? 'Edit Event' : 'Create New Event'}</h1>
+            <h1 className="h2 mb-0">
+              {isEditMode ? "Edit Event" : "Create New Event"}
+            </h1>
           </div>
 
           <div className="card">
@@ -546,9 +579,16 @@ export default function EventForm() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Event Name <span className="text-danger">*</span></FormLabel>
+                            <FormLabel>
+                              Event Name <span className="text-danger">*</span>
+                            </FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Enter event name" className="form-control" data-testid="input-event-name" />
+                              <Input
+                                {...field}
+                                placeholder="Enter event name"
+                                className="form-control"
+                                data-testid="input-event-name"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -562,7 +602,10 @@ export default function EventForm() {
                           <Image size={18} className="me-2" />
                           Featured Image
                         </label>
-                        <div className="form-text mb-2">Maximum file size: 5MB. Accepted formats: JPEG, JPG, PNG, GIF</div>
+                        <div className="form-text mb-2">
+                          Maximum file size: 5MB. Accepted formats: JPEG, JPG,
+                          PNG, GIF
+                        </div>
                         <ObjectUploader
                           onGetUploadParameters={handleImageUpload}
                           onComplete={(result) => handleImageComplete(result)}
@@ -586,10 +629,10 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>Contact Details</FormLabel>
                             <FormControl>
-                              <Input 
-                                {...field} 
+                              <Input
+                                {...field}
                                 placeholder="email, phone, secret handshake, etc."
-                                className="form-control" 
+                                className="form-control"
                                 maxLength={150}
                                 data-testid="input-contact-details"
                               />
@@ -611,9 +654,9 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>Description</FormLabel>
                             <FormControl>
-                              <ReactQuill 
-                                theme="snow" 
-                                value={field.value || ''} 
+                              <ReactQuill
+                                theme="snow"
+                                value={field.value || ""}
                                 onChange={field.onChange}
                                 placeholder="Describe your event..."
                                 className="bg-white"
@@ -632,7 +675,10 @@ export default function EventForm() {
                         name="venue"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-dark">Venue Location <span className="text-danger">*</span></FormLabel>
+                            <FormLabel className="text-dark">
+                              Venue Location{" "}
+                              <span className="text-danger">*</span>
+                            </FormLabel>
                             <input type="hidden" {...field} />
                             <div className="row g-2">
                               <div className="col-12">
@@ -664,7 +710,10 @@ export default function EventForm() {
                                 >
                                   <option value="">Select Country</option>
                                   {countries.map((countryName) => (
-                                    <option key={countryName} value={countryName}>
+                                    <option
+                                      key={countryName}
+                                      value={countryName}
+                                    >
                                       {countryName}
                                     </option>
                                   ))}
@@ -694,7 +743,8 @@ export default function EventForm() {
                       {latitude && longitude && (
                         <div className="mt-2">
                           <small className="text-muted">
-                            Location set: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                            Location set: {latitude.toFixed(6)},{" "}
+                            {longitude.toFixed(6)}
                           </small>
                         </div>
                       )}
@@ -706,12 +756,14 @@ export default function EventForm() {
                         name="date"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Starts on <span className="text-danger">*</span></FormLabel>
+                            <FormLabel>
+                              Starts on <span className="text-danger">*</span>
+                            </FormLabel>
                             <FormControl>
-                              <Input 
-                                {...field} 
-                                type="date" 
-                                className="form-control" 
+                              <Input
+                                {...field}
+                                type="date"
+                                className="form-control"
                                 min={minDate}
                                 max={maxDate}
                                 data-testid="input-date"
@@ -729,9 +781,16 @@ export default function EventForm() {
                         name="time"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Start Time <span className="text-danger">*</span></FormLabel>
+                            <FormLabel>
+                              Start Time <span className="text-danger">*</span>
+                            </FormLabel>
                             <FormControl>
-                              <Input {...field} type="time" className="form-control" data-testid="input-time" />
+                              <Input
+                                {...field}
+                                type="time"
+                                className="form-control"
+                                data-testid="input-time"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -747,17 +806,19 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>Ends on</FormLabel>
                             <FormControl>
-                              <Input 
+                              <Input
                                 {...field}
-                                value={field.value || ''}  
-                                type="date" 
+                                value={field.value || ""}
+                                type="date"
                                 className="form-control"
-                                min={form.watch('date') || minDate}
+                                min={form.watch("date") || minDate}
                                 max={maxDate}
                                 data-testid="input-end-date"
                               />
                             </FormControl>
-                            <div className="form-text">For multi-day events</div>
+                            <div className="form-text">
+                              For multi-day events
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -772,7 +833,13 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>End Time</FormLabel>
                             <FormControl>
-                              <Input {...field} value={field.value || ''} type="time" className="form-control" data-testid="input-end-time" />
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                type="time"
+                                className="form-control"
+                                data-testid="input-end-time"
+                              />
                             </FormControl>
                             <div className="form-text">When the event ends</div>
                             <FormMessage />
@@ -789,46 +856,88 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>Timezone</FormLabel>
                             <FormControl>
-                              <select 
-                                className="form-select" 
+                              <select
+                                className="form-select"
                                 data-testid="select-timezone"
                                 value={field.value || "America/New_York"}
                                 onChange={(e) => field.onChange(e.target.value)}
                               >
                                 <optgroup label="US & Canada">
-                                  <option value="America/New_York">Eastern Time (ET)</option>
-                                  <option value="America/Chicago">Central Time (CT)</option>
-                                  <option value="America/Denver">Mountain Time (MT)</option>
-                                  <option value="America/Phoenix">Arizona Time (MST)</option>
-                                  <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                                  <option value="America/Anchorage">Alaska Time (AKT)</option>
-                                  <option value="Pacific/Honolulu">Hawaii Time (HST)</option>
+                                  <option value="America/New_York">
+                                    Eastern Time (ET)
+                                  </option>
+                                  <option value="America/Chicago">
+                                    Central Time (CT)
+                                  </option>
+                                  <option value="America/Denver">
+                                    Mountain Time (MT)
+                                  </option>
+                                  <option value="America/Phoenix">
+                                    Arizona Time (MST)
+                                  </option>
+                                  <option value="America/Los_Angeles">
+                                    Pacific Time (PT)
+                                  </option>
+                                  <option value="America/Anchorage">
+                                    Alaska Time (AKT)
+                                  </option>
+                                  <option value="Pacific/Honolulu">
+                                    Hawaii Time (HST)
+                                  </option>
                                 </optgroup>
                                 <optgroup label="Europe">
-                                  <option value="Europe/London">London (GMT/BST)</option>
-                                  <option value="Europe/Paris">Paris (CET)</option>
-                                  <option value="Europe/Berlin">Berlin (CET)</option>
-                                  <option value="Europe/Moscow">Moscow (MSK)</option>
+                                  <option value="Europe/London">
+                                    London (GMT/BST)
+                                  </option>
+                                  <option value="Europe/Paris">
+                                    Paris (CET)
+                                  </option>
+                                  <option value="Europe/Berlin">
+                                    Berlin (CET)
+                                  </option>
+                                  <option value="Europe/Moscow">
+                                    Moscow (MSK)
+                                  </option>
                                 </optgroup>
                                 <optgroup label="Asia">
-                                  <option value="Asia/Tokyo">Tokyo (JST)</option>
-                                  <option value="Asia/Shanghai">Shanghai (CST)</option>
-                                  <option value="Asia/Hong_Kong">Hong Kong (HKT)</option>
-                                  <option value="Asia/Singapore">Singapore (SGT)</option>
-                                  <option value="Asia/Dubai">Dubai (GST)</option>
-                                  <option value="Asia/Kolkata">India (IST)</option>
+                                  <option value="Asia/Tokyo">
+                                    Tokyo (JST)
+                                  </option>
+                                  <option value="Asia/Shanghai">
+                                    Shanghai (CST)
+                                  </option>
+                                  <option value="Asia/Hong_Kong">
+                                    Hong Kong (HKT)
+                                  </option>
+                                  <option value="Asia/Singapore">
+                                    Singapore (SGT)
+                                  </option>
+                                  <option value="Asia/Dubai">
+                                    Dubai (GST)
+                                  </option>
+                                  <option value="Asia/Kolkata">
+                                    India (IST)
+                                  </option>
                                 </optgroup>
                                 <optgroup label="Australia & Pacific">
-                                  <option value="Australia/Sydney">Sydney (AEDT)</option>
-                                  <option value="Australia/Melbourne">Melbourne (AEDT)</option>
-                                  <option value="Pacific/Auckland">Auckland (NZDT)</option>
+                                  <option value="Australia/Sydney">
+                                    Sydney (AEDT)
+                                  </option>
+                                  <option value="Australia/Melbourne">
+                                    Melbourne (AEDT)
+                                  </option>
+                                  <option value="Pacific/Auckland">
+                                    Auckland (NZDT)
+                                  </option>
                                 </optgroup>
                                 <optgroup label="Other">
                                   <option value="UTC">UTC</option>
                                 </optgroup>
                               </select>
                             </FormControl>
-                            <div className="form-text">Event times will be displayed in this timezone</div>
+                            <div className="form-text">
+                              Event times will be displayed in this timezone
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -848,26 +957,30 @@ export default function EventForm() {
                                 <FormItem>
                                   <FormLabel>Ticket Price ($)</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      {...field} 
-                                      type="number" 
-                                      step="0.01" 
-                                      min="0" 
-                                      placeholder="0.00" 
-                                      className="form-control" 
+                                    <Input
+                                      {...field}
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      placeholder="0.00"
+                                      className="form-control"
                                       data-testid="input-price"
                                       onChange={(e) => {
                                         field.onChange(e);
                                         // Clear surge pricing error if price meets requirement
-                                        const surgePricing = form.getValues('surgePricing');
+                                        const surgePricing =
+                                          form.getValues("surgePricing");
                                         if (surgePricing) {
-                                          const ticketPrice = parseFloat(e.target.value || '0');
-                                          if (ticketPrice >= 1.00) {
-                                            form.clearErrors('ticketPrice');
+                                          const ticketPrice = parseFloat(
+                                            e.target.value || "0",
+                                          );
+                                          if (ticketPrice >= 1.0) {
+                                            form.clearErrors("ticketPrice");
                                           } else {
-                                            form.setError('ticketPrice', {
-                                              type: 'manual',
-                                              message: 'Ticket price must be at least $1.00 for surge pricing'
+                                            form.setError("ticketPrice", {
+                                              type: "manual",
+                                              message:
+                                                "Ticket price must be at least $1.00 for surge pricing",
                                             });
                                           }
                                         }
@@ -878,7 +991,7 @@ export default function EventForm() {
                                 </FormItem>
                               )}
                             />
-                            
+
                             <FormField
                               control={form.control}
                               name="surgePricing"
@@ -893,16 +1006,20 @@ export default function EventForm() {
                                           field.onChange(e);
                                           // Validate ticket price when enabling surge pricing
                                           if (e.target.checked) {
-                                            const ticketPrice = parseFloat(form.getValues('ticketPrice') || '0');
-                                            if (ticketPrice < 1.00) {
-                                              form.setError('ticketPrice', {
-                                                type: 'manual',
-                                                message: 'Ticket price must be at least $1.00 for surge pricing'
+                                            const ticketPrice = parseFloat(
+                                              form.getValues("ticketPrice") ||
+                                                "0",
+                                            );
+                                            if (ticketPrice < 1.0) {
+                                              form.setError("ticketPrice", {
+                                                type: "manual",
+                                                message:
+                                                  "Ticket price must be at least $1.00 for surge pricing",
                                               });
                                             }
                                           } else {
                                             // Clear the error when disabling surge pricing
-                                            form.clearErrors('ticketPrice');
+                                            form.clearErrors("ticketPrice");
                                           }
                                         }}
                                         className="form-check-input"
@@ -910,10 +1027,14 @@ export default function EventForm() {
                                         data-testid="checkbox-surge-pricing"
                                       />
                                     </FormControl>
-                                    <label className="form-check-label" htmlFor="surgePricingCheck">
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="surgePricingCheck"
+                                    >
                                       <strong>Surge Pricing</strong>
                                       <div className="text-muted small">
-                                        Ticket prices increase with demand. Minimum $1.00 ticket price.
+                                        Ticket prices increase with demand.
+                                        Minimum $1.00 ticket price.
                                       </div>
                                     </label>
                                   </div>
@@ -922,7 +1043,7 @@ export default function EventForm() {
                               )}
                             />
                           </div>
-                          
+
                           <div className="col-md-6">
                             <FormField
                               control={form.control}
@@ -931,18 +1052,18 @@ export default function EventForm() {
                                 <FormItem>
                                   <FormLabel>Maximum Tickets</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      {...field} 
+                                    <Input
+                                      {...field}
                                       type="number"
                                       min="5"
                                       max="5000"
-                                      placeholder="100" 
-                                      className="form-control" 
+                                      placeholder="100"
+                                      className="form-control"
                                       data-testid="input-max-tickets"
-                                      value={field.value || ''}
+                                      value={field.value || ""}
                                       onChange={(e) => {
                                         const value = e.target.value;
-                                        if (value === '') {
+                                        if (value === "") {
                                           field.onChange(100);
                                         } else {
                                           const numValue = parseInt(value);
@@ -957,14 +1078,17 @@ export default function EventForm() {
                                       }}
                                     />
                                   </FormControl>
-                                  <div className="form-text">Minimum 5, maximum 5,000 tickets. Default is 100.</div>
+                                  <div className="form-text">
+                                    Minimum 5, maximum 5,000 tickets. Default is
+                                    100.
+                                  </div>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
                           </div>
                         </div>
-                        
+
                         {/* Admin-only Disable Ticket Sales checkbox */}
                         {isAdmin && (
                           <div className="row mt-3">
@@ -980,15 +1104,27 @@ export default function EventForm() {
                                         className="form-check-input"
                                         id="ticketPurchasesEnabled"
                                         checked={!field.value}
-                                        onChange={(e) => field.onChange(!e.target.checked)}
+                                        onChange={(e) =>
+                                          field.onChange(!e.target.checked)
+                                        }
                                         data-testid="checkbox-disable-ticket-sales"
                                       />
-                                      <label className="form-check-label" htmlFor="ticketPurchasesEnabled">
-                                        <span className="badge bg-danger me-2">⚠️</span>
+                                      <label
+                                        className="form-check-label"
+                                        htmlFor="ticketPurchasesEnabled"
+                                      >
+                                        <span className="badge bg-danger me-2">
+                                          ⚠️
+                                        </span>
                                         Suspend Event
                                       </label>
                                     </div>
-                                    <div className="form-text">Suspend this event from public view and stop new ticket sales. Existing ticket holders can still access and resell tickets. Admin moderation tool.</div>
+                                    <div className="form-text">
+                                      Suspend this event from public view and
+                                      stop new ticket sales. Existing ticket
+                                      holders can still access and resell
+                                      tickets. Admin moderation tool.
+                                    </div>
                                     <FormMessage />
                                   </FormItem>
                                 )}
@@ -1007,19 +1143,31 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>Early Validation</FormLabel>
                             <FormControl>
-                              <select 
-                                {...field} 
+                              <select
+                                {...field}
                                 className="form-control"
                                 data-testid="select-early-validation"
                               >
-                                <option value="Allow at Anytime">Allow at Anytime</option>
-                                <option value="No Early Validation">No Early Validation</option>
-                                <option value="30 Minutes Before">30 Minutes Before</option>
-                                <option value="1 Hour Before">1 Hour Before</option>
-                                <option value="2 Hours Before">2 Hours Before</option>
+                                <option value="Allow at Anytime">
+                                  Allow at Anytime
+                                </option>
+                                <option value="No Early Validation">
+                                  No Early Validation
+                                </option>
+                                <option value="30 Minutes Before">
+                                  30 Minutes Before
+                                </option>
+                                <option value="1 Hour Before">
+                                  1 Hour Before
+                                </option>
+                                <option value="2 Hours Before">
+                                  2 Hours Before
+                                </option>
                               </select>
                             </FormControl>
-                            <div className="form-text">When attendees can validate their tickets</div>
+                            <div className="form-text">
+                              When attendees can validate their tickets
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1034,23 +1182,29 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>Ticket Type</FormLabel>
                             <FormControl>
-                              <select 
-                                {...field} 
+                              <select
+                                {...field}
                                 className="form-control"
                                 data-testid="select-reentry-type"
                               >
-                                <option value="No Reentry (Single Use)">No Reentry (Single Use)</option>
-                                <option value="Pass (Multiple Use)">Pass (Multiple Use)</option>
+                                <option value="No Reentry (Single Use)">
+                                  No Reentry (Single Use)
+                                </option>
+                                <option value="Pass (Multiple Use)">
+                                  Pass (Multiple Use)
+                                </option>
                               </select>
                             </FormControl>
-                            <div className="form-text">Single use tickets or multi-use passes</div>
+                            <div className="form-text">
+                              Single use tickets or multi-use passes
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
 
-                    {form.watch('reentryType') === 'Pass (Multiple Use)' && (
+                    {form.watch("reentryType") === "Pass (Multiple Use)" && (
                       <div className="col-12">
                         <FormField
                           control={form.control}
@@ -1059,8 +1213,8 @@ export default function EventForm() {
                             <FormItem>
                               <FormLabel>Number of Uses</FormLabel>
                               <FormControl>
-                                <Input 
-                                  {...field} 
+                                <Input
+                                  {...field}
                                   type="number"
                                   min="2"
                                   max="24"
@@ -1080,7 +1234,10 @@ export default function EventForm() {
                                   }}
                                 />
                               </FormControl>
-                              <div className="form-text">How many times the ticket can be used (minimum 2, maximum 24)</div>
+                              <div className="form-text">
+                                How many times the ticket can be used (minimum
+                                2, maximum 24)
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -1109,7 +1266,10 @@ export default function EventForm() {
                                       onChange={() => field.onChange(null)}
                                       data-testid="radio-recurring-none"
                                     />
-                                    <label className="form-check-label" htmlFor="recurring-none">
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="recurring-none"
+                                    >
                                       None
                                     </label>
                                   </div>
@@ -1124,7 +1284,10 @@ export default function EventForm() {
                                       onChange={() => field.onChange("weekly")}
                                       data-testid="radio-recurring-weekly"
                                     />
-                                    <label className="form-check-label" htmlFor="recurring-weekly">
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="recurring-weekly"
+                                    >
                                       Weekly
                                     </label>
                                   </div>
@@ -1139,7 +1302,10 @@ export default function EventForm() {
                                       onChange={() => field.onChange("monthly")}
                                       data-testid="radio-recurring-monthly"
                                     />
-                                    <label className="form-check-label" htmlFor="recurring-monthly">
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="recurring-monthly"
+                                    >
                                       Monthly
                                     </label>
                                   </div>
@@ -1154,19 +1320,24 @@ export default function EventForm() {
                                       onChange={() => field.onChange("annual")}
                                       data-testid="radio-recurring-annual"
                                     />
-                                    <label className="form-check-label" htmlFor="recurring-annual">
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="recurring-annual"
+                                    >
                                       Annual
                                     </label>
                                   </div>
                                 </div>
                                 <div className="form-text mt-2">
-                                  When enabled, the event will automatically recreate after it has passed (minimum 7 days after start date).
+                                  When enabled, the event will automatically
+                                  recreate after it has passed (minimum 7 days
+                                  after start date).
                                 </div>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                          
+
                           {form.watch("recurringType") && (
                             <FormField
                               control={form.control}
@@ -1175,22 +1346,27 @@ export default function EventForm() {
                                 <FormItem className="mt-3">
                                   <FormLabel>Repeat Until</FormLabel>
                                   <FormControl>
-                                    <Input 
-                                      {...field} 
-                                      type="date" 
-                                      className="form-control" 
+                                    <Input
+                                      {...field}
+                                      type="date"
+                                      className="form-control"
                                       min={minDate}
                                       max={(() => {
                                         const twoYearsFromNow = new Date();
-                                        twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
-                                        return twoYearsFromNow.toISOString().split('T')[0];
+                                        twoYearsFromNow.setFullYear(
+                                          twoYearsFromNow.getFullYear() + 2,
+                                        );
+                                        return twoYearsFromNow
+                                          .toISOString()
+                                          .split("T")[0];
                                       })()}
                                       value={field.value || ""}
                                       data-testid="input-recurring-end-date"
                                     />
                                   </FormControl>
                                   <div className="form-text">
-                                    The date to stop creating recurring events (maximum 2 years from event start date).
+                                    The date to stop creating recurring events
+                                    (maximum 2 years from event start date).
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -1205,7 +1381,7 @@ export default function EventForm() {
                     <div className="col-12">
                       <div className="border rounded p-3 bg-light">
                         <h6 className="mb-3">Additional Options</h6>
-                        
+
                         {/* Private Event Setting - moved to top */}
                         <FormField
                           control={form.control}
@@ -1218,26 +1394,42 @@ export default function EventForm() {
                                   className="form-check-input"
                                   id="isPrivate"
                                   checked={field.value}
-                                  onChange={(e) => field.onChange(e.target.checked)}
-                                  disabled={!form.watch("ticketPurchasesEnabled")}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.checked)
+                                  }
+                                  disabled={
+                                    !form.watch("ticketPurchasesEnabled")
+                                  }
                                   data-testid="checkbox-is-private"
                                 />
-                                <label className="form-check-label" htmlFor="isPrivate">
-                                  <span className="badge bg-secondary me-2">🔒</span>
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="isPrivate"
+                                >
+                                  <span className="badge bg-secondary me-2">
+                                    🔒
+                                  </span>
                                   Private Event
                                 </label>
                               </div>
                               <div className="form-text">
-                                Private events won't appear in search results or be featured. Only accessible via direct link.
+                                Private events won't appear in search results or
+                                be featured. Only accessible via direct link.
                                 {!form.watch("ticketPurchasesEnabled") && (
-                                  <span className="text-warning"> <strong>Automatically enabled when event is suspended.</strong></span>
+                                  <span className="text-warning">
+                                    {" "}
+                                    <strong>
+                                      Automatically enabled when event is
+                                      suspended.
+                                    </strong>
+                                  </span>
                                 )}
                               </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
                           name="oneTicketPerUser"
@@ -1249,20 +1441,30 @@ export default function EventForm() {
                                   className="form-check-input"
                                   id="oneTicketPerUser"
                                   checked={field.value}
-                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.checked)
+                                  }
                                   data-testid="checkbox-one-ticket-per-user"
                                 />
-                                <label className="form-check-label" htmlFor="oneTicketPerUser">
-                                  <span className="badge bg-info text-white me-2">👤</span>
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="oneTicketPerUser"
+                                >
+                                  <span className="badge bg-info text-white me-2">
+                                    👤
+                                  </span>
                                   Limit Ticket Sales
                                 </label>
                               </div>
-                              <div className="form-text">Prevent scalping by restricting users to purchasing only one ticket.</div>
+                              <div className="form-text">
+                                Prevent scalping by restricting users to
+                                purchasing only one ticket.
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
                           name="p2pValidation"
@@ -1274,16 +1476,30 @@ export default function EventForm() {
                                   className="form-check-input"
                                   id="p2pValidation"
                                   checked={field.value || false}
-                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.checked)
+                                  }
                                   data-testid="checkbox-p2p-validation"
                                   disabled={isEditMode} // Disable if editing existing event
                                 />
-                                <label className="form-check-label" htmlFor="p2pValidation">
-                                  <span className="badge bg-primary me-2">🤝</span>
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="p2pValidation"
+                                >
+                                  <span className="badge bg-primary me-2">
+                                    🤝
+                                  </span>
                                   P2P Validation
                                 </label>
                               </div>
-                              <div className="form-text">Allow any ticket holder the ability to validate other tickets{isEditMode ? " (This setting is read-only after event creation)" : ""}.</div>
+                              <div className="form-text">
+                                Allow any ticket holder the ability to validate
+                                other tickets
+                                {isEditMode
+                                  ? " (This setting is read-only after event creation)"
+                                  : ""}
+                                .
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -1302,22 +1518,33 @@ export default function EventForm() {
                                     className="form-check-input"
                                     id="enableVoting"
                                     checked={field.value || false}
-                                    onChange={(e) => field.onChange(e.target.checked)}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.checked)
+                                    }
                                     data-testid="checkbox-enable-voting"
                                     disabled={isEditMode} // Disable if editing existing event
                                   />
-                                  <label className="form-check-label" htmlFor="enableVoting">
-                                    <span className="badge bg-warning text-dark me-2">🗳️</span>
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="enableVoting"
+                                  >
+                                    <span className="badge bg-warning text-dark me-2">
+                                      🗳️
+                                    </span>
                                     Enable Voting
                                   </label>
                                 </div>
-                                <div className="form-text">Tickets can collect votes! The most voted ticket becomes golden. Use the validator to vote/validate someones ticket.</div>
+                                <div className="form-text">
+                                  Tickets can collect votes! The most voted
+                                  ticket becomes golden. Use the validator to
+                                  vote/validate someones ticket.
+                                </div>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                         )}
-                        
+
                         {/* Geofence setting - only shown when GPS coordinates are set */}
                         {latitude && longitude && (
                           <FormField
@@ -1331,21 +1558,30 @@ export default function EventForm() {
                                     className="form-check-input"
                                     id="geofence"
                                     checked={field.value || false}
-                                    onChange={(e) => field.onChange(e.target.checked)}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.checked)
+                                    }
                                     data-testid="checkbox-geofence"
                                   />
-                                  <label className="form-check-label" htmlFor="geofence">
-                                    <span className="badge bg-success me-2">📍</span>
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="geofence"
+                                  >
+                                    <span className="badge bg-success me-2">
+                                      🌎
+                                    </span>
                                     Geofence
                                   </label>
                                 </div>
-                                <div className="form-text">Tickets can only be validated within 690 meters of the GPS coordinates set on the map.</div>
+                                <div className="form-text">
+                                  Tickets can only be validated within 690
+                                  meters of the GPS coordinates set on the map.
+                                </div>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
                         )}
-                        
                       </div>
                     </div>
 
@@ -1357,13 +1593,21 @@ export default function EventForm() {
                           Ticket Preview
                         </label>
                         <p className="text-muted small mb-3">
-                          This is how your event tickets will appear to attendees. The featured image will be used as the ticket background.
+                          This is how your event tickets will appear to
+                          attendees. The featured image will be used as the
+                          ticket background.
                         </p>
-                        
+
                         {/* Ticket Preview */}
                         <div className="mb-3">
-                          <div className="bg-light rounded p-4" style={{ backgroundColor: '#f8f9fa' }}>
-                            <div className="mx-auto" style={{ maxWidth: '400px' }}>
+                          <div
+                            className="bg-light rounded p-4"
+                            style={{ backgroundColor: "#f8f9fa" }}
+                          >
+                            <div
+                              className="mx-auto"
+                              style={{ maxWidth: "400px" }}
+                            >
                               <TicketCard
                                 ticket={sampleTicket}
                                 event={previewEvent}
@@ -1376,19 +1620,35 @@ export default function EventForm() {
                                 <button
                                   type="button"
                                   className="btn btn-sm btn-outline-secondary"
-                                  onClick={() => setPreviewEffectIndex((prev) => (prev - 1 + availableEffects.length) % availableEffects.length)}
+                                  onClick={() =>
+                                    setPreviewEffectIndex(
+                                      (prev) =>
+                                        (prev - 1 + availableEffects.length) %
+                                        availableEffects.length,
+                                    )
+                                  }
                                   data-testid="button-prev-effect"
                                   title="Previous effect"
                                 >
                                   <ArrowLeft size={16} />
                                 </button>
-                                <span className="text-muted small text-center" style={{ minWidth: '180px' }}>
-                                  <strong>{availableEffects[previewEffectIndex]?.name}</strong>
+                                <span
+                                  className="text-muted small text-center"
+                                  style={{ minWidth: "180px" }}
+                                >
+                                  <strong>
+                                    {availableEffects[previewEffectIndex]?.name}
+                                  </strong>
                                 </span>
                                 <button
                                   type="button"
                                   className="btn btn-sm btn-outline-secondary"
-                                  onClick={() => setPreviewEffectIndex((prev) => (prev + 1) % availableEffects.length)}
+                                  onClick={() =>
+                                    setPreviewEffectIndex(
+                                      (prev) =>
+                                        (prev + 1) % availableEffects.length,
+                                    )
+                                  }
                                   data-testid="button-next-effect"
                                   title="Next effect"
                                 >
@@ -1398,7 +1658,9 @@ export default function EventForm() {
                             )}
                             <p className="text-center text-muted small mt-3 mb-0">
                               <i className="bi bi-info-circle me-1"></i>
-                              {imageUrl ? "Your featured image is being used as the ticket background" : "Upload a featured image to customize the ticket background"}
+                              {imageUrl
+                                ? "Your featured image is being used as the ticket background"
+                                : "Upload a featured image to customize the ticket background"}
                             </p>
                           </div>
                         </div>
@@ -1420,21 +1682,30 @@ export default function EventForm() {
                                   className="form-check-input"
                                   id="goldenTicketEnabled"
                                   checked={field.value}
-                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.checked)
+                                  }
                                   data-testid="checkbox-golden-ticket"
                                 />
-                                <label className="form-check-label" htmlFor="goldenTicketEnabled">
-                                  <span className="badge bg-warning text-dark me-2">🎫</span>
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="goldenTicketEnabled"
+                                >
+                                  <span className="badge bg-warning text-dark me-2">
+                                    🎫
+                                  </span>
                                   Enable Golden Tickets
                                 </label>
                               </div>
-                              <div className="form-text">Random ticket(s) will be golden when validated.</div>
+                              <div className="form-text">
+                                Random ticket(s) will be golden when validated.
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
 
-                        {form.watch('goldenTicketEnabled') && (
+                        {form.watch("goldenTicketEnabled") && (
                           <FormField
                             control={form.control}
                             name="goldenTicketCount"
@@ -1450,25 +1721,35 @@ export default function EventForm() {
                                     placeholder="Enter number of golden tickets"
                                     className="form-control"
                                     data-testid="input-golden-number"
-                                    value={field.value || ''}
+                                    value={field.value || ""}
                                     onKeyPress={(e) => {
                                       // Prevent non-numeric characters
-                                      if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') {
+                                      if (
+                                        !/[0-9]/.test(e.key) &&
+                                        e.key !== "Backspace" &&
+                                        e.key !== "Delete"
+                                      ) {
                                         e.preventDefault();
                                       }
                                     }}
                                     onChange={(e) => {
                                       // Only allow numbers
-                                      const rawValue = e.target.value.replace(/[^0-9]/g, '');
-                                      if (rawValue === '') {
+                                      const rawValue = e.target.value.replace(
+                                        /[^0-9]/g,
+                                        "",
+                                      );
+                                      if (rawValue === "") {
                                         field.onChange(undefined);
                                         return;
                                       }
-                                      
+
                                       const value = parseInt(rawValue);
-                                      const maxTickets = form.getValues('maxTickets');
-                                      const maxGoldenTickets = maxTickets ? Math.floor(maxTickets / 2) : 100;
-                                      
+                                      const maxTickets =
+                                        form.getValues("maxTickets");
+                                      const maxGoldenTickets = maxTickets
+                                        ? Math.floor(maxTickets / 2)
+                                        : 100;
+
                                       if (value < 1) {
                                         field.onChange(1);
                                       } else if (value > maxGoldenTickets) {
@@ -1480,9 +1761,17 @@ export default function EventForm() {
                                   />
                                 </FormControl>
                                 <div className="form-text">
-                                  Maximum number of golden tickets that can be won for this event
-                                  {form.watch('maxTickets') && (
-                                    <span className="text-muted"> (limit: {Math.floor((form.watch('maxTickets') || 0) / 2)} - half of total tickets)</span>
+                                  Maximum number of golden tickets that can be
+                                  won for this event
+                                  {form.watch("maxTickets") && (
+                                    <span className="text-muted">
+                                      {" "}
+                                      (limit:{" "}
+                                      {Math.floor(
+                                        (form.watch("maxTickets") || 0) / 2,
+                                      )}{" "}
+                                      - half of total tickets)
+                                    </span>
                                   )}
                                 </div>
                                 <FormMessage />
@@ -1502,15 +1791,27 @@ export default function EventForm() {
                                   className="form-check-input"
                                   id="specialEffectsEnabled"
                                   checked={field.value || false}
-                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.checked)
+                                  }
                                   data-testid="checkbox-special-effects"
                                 />
-                                <label className="form-check-label" htmlFor="specialEffectsEnabled">
-                                  <span className="badge bg-primary me-2">✨</span>
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="specialEffectsEnabled"
+                                >
+                                  <span className="badge bg-primary me-2">
+                                    ✨
+                                  </span>
                                   Enable Special Effects
                                 </label>
                               </div>
-                              <div className="form-text">Validated tickets may display special visual effects on holidays and themed events. These effects are randomly assigned, not all tickets will get an effect.</div>
+                              <div className="form-text">
+                                Validated tickets may display special visual
+                                effects on holidays and themed events. These
+                                effects are randomly assigned, not all tickets
+                                will get an effect.
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -1522,31 +1823,42 @@ export default function EventForm() {
                             type="checkbox"
                             className="form-check-input"
                             id="stickerEnabled"
-                            checked={stickerEnabled || !!form.watch('stickerUrl')}
+                            checked={
+                              stickerEnabled || !!form.watch("stickerUrl")
+                            }
                             onChange={(e) => {
-                              if (!form.watch('stickerUrl')) {
+                              if (!form.watch("stickerUrl")) {
                                 setStickerEnabled(e.target.checked);
                               }
                             }}
                             disabled={isEditMode && !!event?.stickerUrl}
                             data-testid="checkbox-sticker-enabled"
                           />
-                          <label className="form-check-label" htmlFor="stickerEnabled">
+                          <label
+                            className="form-check-label"
+                            htmlFor="stickerEnabled"
+                          >
                             <span className="badge bg-success me-2">🎯</span>
                             Enable Custom Sticker
                           </label>
                         </div>
                         {isEditMode && event?.stickerUrl && (
                           <div className="form-text text-info">
-                            <small>✓ Sticker configured. This feature cannot be removed once added.</small>
+                            <small>
+                              ✓ Sticker configured. This feature cannot be
+                              removed once added.
+                            </small>
                           </div>
                         )}
-                        {!form.watch('stickerUrl') && stickerEnabled && (
-                          <div className="form-text">Enter a URL for a custom sticker that will float on lucky tickets</div>
+                        {!form.watch("stickerUrl") && stickerEnabled && (
+                          <div className="form-text">
+                            Enter a URL for a custom sticker that will float on
+                            lucky tickets
+                          </div>
                         )}
 
                         {/* Custom Sticker URL - shows when checkbox is checked */}
-                        {(stickerEnabled || form.watch('stickerUrl')) && (
+                        {(stickerEnabled || form.watch("stickerUrl")) && (
                           <div className="mt-3 p-3 border rounded bg-light">
                             <FormField
                               control={form.control}
@@ -1560,33 +1872,43 @@ export default function EventForm() {
                                       className="form-control"
                                       placeholder="https://example.com/sticker.png"
                                       {...field}
-                                      value={field.value || ''}
-                                      disabled={isEditMode && !!event?.stickerUrl}
+                                      value={field.value || ""}
+                                      disabled={
+                                        isEditMode && !!event?.stickerUrl
+                                      }
                                       data-testid="input-sticker-url"
                                     />
                                   </FormControl>
                                   <div className="form-text">
-                                    Enter a direct URL to a PNG or GIF image (transparent PNGs work best)
+                                    Enter a direct URL to a PNG or GIF image
+                                    (transparent PNGs work best)
                                   </div>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
-                            
-                            {form.watch('stickerUrl') && (
+
+                            {form.watch("stickerUrl") && (
                               <div className="d-flex align-items-center gap-3 mb-3">
-                                <img 
-                                  src={form.watch('stickerUrl') || ''} 
-                                  alt="Sticker preview" 
-                                  style={{ maxHeight: '60px', maxWidth: '60px' }}
+                                <img
+                                  src={form.watch("stickerUrl") || ""}
+                                  alt="Sticker preview"
+                                  style={{
+                                    maxHeight: "60px",
+                                    maxWidth: "60px",
+                                  }}
                                   onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = "none";
                                   }}
                                 />
-                                <span className="text-success small">✓ Sticker URL configured</span>
+                                <span className="text-success small">
+                                  ✓ Sticker URL configured
+                                </span>
                               </div>
                             )}
-                            
+
                             <FormField
                               control={form.control}
                               name="stickerOdds"
@@ -1597,7 +1919,7 @@ export default function EventForm() {
                                     <input
                                       type="number"
                                       className="form-control"
-                                      style={{ width: '100px' }}
+                                      style={{ width: "100px" }}
                                       min="1"
                                       max="100"
                                       value={field.value || 25}
@@ -1607,13 +1929,14 @@ export default function EventForm() {
                                           field.onChange(val);
                                         }
                                       }}
-                                      disabled={!form.watch('stickerUrl')}
+                                      disabled={!form.watch("stickerUrl")}
                                       data-testid="input-sticker-odds"
                                     />
                                     <span className="text-muted">%</span>
                                   </div>
                                   <div className="form-text">
-                                    Percentage of validated tickets that will display the custom sticker (1-100)
+                                    Percentage of validated tickets that will
+                                    display the custom sticker (1-100)
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -1621,7 +1944,7 @@ export default function EventForm() {
                             />
                           </div>
                         )}
-                        
+
                         {/* Allow Minting - moved to bottom */}
                         <FormField
                           control={form.control}
@@ -1634,15 +1957,29 @@ export default function EventForm() {
                                   className="form-check-input"
                                   id="allowMinting"
                                   checked={field.value}
-                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.checked)
+                                  }
                                   data-testid="checkbox-allow-minting"
                                 />
-                                <label className="form-check-label" htmlFor="allowMinting">
-                                  <span className="badge bg-info text-dark me-2">🎨</span>
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="allowMinting"
+                                >
+                                  <span className="badge bg-info text-dark me-2">
+                                    🎨
+                                  </span>
                                   Allow Minting
                                 </label>
                               </div>
-                              <div className="form-text">Attendees will be allowed to mint a digital collectible of the event ticket. The details seen in the ticket preview will be publicly accessible if enabled. Digital collectible will be issued on the Coinbase L2 network (Base, Ethereum).</div>
+                              <div className="form-text">
+                                Attendees will be allowed to mint a digital
+                                collectible of the event ticket. The details
+                                seen in the ticket preview will be publicly
+                                accessible if enabled. Digital collectible will
+                                be issued on the Coinbase L2 network (Base,
+                                Ethereum).
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -1655,10 +1992,16 @@ export default function EventForm() {
                         <button
                           type="submit"
                           className="btn btn-primary"
-                          disabled={createEventMutation.isPending || updateEventMutation.isPending}
+                          disabled={
+                            createEventMutation.isPending ||
+                            updateEventMutation.isPending
+                          }
                           data-testid="button-save-event"
                         >
-                          {(createEventMutation.isPending || updateEventMutation.isPending) ? "Saving..." : "Save"}
+                          {createEventMutation.isPending ||
+                          updateEventMutation.isPending
+                            ? "Saving..."
+                            : "Save"}
                         </button>
                         <button
                           type="button"
