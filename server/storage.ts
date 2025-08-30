@@ -1,6 +1,6 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne, isNull } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne, isNull, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -71,6 +71,7 @@ export interface IStorage {
     totalTickets: number;
     validatedTickets: number;
   }>;
+  getUserValidatedTicketsCount(userId: string): Promise<number>;
   
   // System Logs
   getSystemLogs(params: {
@@ -1303,6 +1304,30 @@ export class DatabaseStorage implements IStorage {
       totalTickets: ticketResult?.count || 0,
       validatedTickets: validatedResult?.count || 0,
     };
+  }
+
+  async getUserValidatedTicketsCount(userId: string): Promise<number> {
+    // Get all events owned by the user
+    const userEvents = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(eq(events.userId, userId));
+    
+    if (userEvents.length === 0) {
+      return 0;
+    }
+
+    // Count all validated tickets for user's events
+    const eventIds = userEvents.map(e => e.id);
+    const [result] = await db
+      .select({ count: db.$count(tickets) })
+      .from(tickets)
+      .where(and(
+        inArray(tickets.eventId, eventIds),
+        eq(tickets.isValidated, true)
+      ));
+
+    return result?.count || 0;
   }
 
   async getSystemLogs(params: {

@@ -2493,6 +2493,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users/:userId/validated-count", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const validatedCount = await storage.getUserValidatedTicketsCount(userId);
+      res.json({ validatedCount });
+    } catch (error) {
+      await logError(error, "GET /api/users/:userId/validated-count", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch validated tickets count" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

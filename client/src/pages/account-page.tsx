@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, LogOut, Eye, Sparkles, Edit, Save, X, Star } from "lucide-react";
+import { Calendar, Ticket, User, LogOut, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +55,15 @@ export default function AccountPage() {
     enabled: !!user?.id,
   });
 
+  const { data: validatedCount } = useQuery<{ validatedCount: number }>({
+    queryKey: [`/api/users/${user?.id}/validated-count`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${user?.id}/validated-count`);
+      return response.json();
+    },
+    enabled: !!user?.id,
+  });
+
 
 
 
@@ -102,13 +111,21 @@ export default function AccountPage() {
                     <h5 className="card-title mb-1">Account Details</h5>
                     <p className="text-muted mb-0">{user.email}</p>
                     {reputation && reputation.percentage !== null && (
-                      <div className="d-flex align-items-center mt-2 mb-2">
-                        <Star size={16} className="text-warning me-2" />
+                      <div className="d-flex align-items-center mt-2">
+                        <Globe size={16} className="text-warning me-2" />
                         <span className="text-muted small">
                           Reputation: <strong>{reputation.percentage}%</strong>
                           <span className="ms-2 text-secondary">
                             ({reputation.thumbsUp} 👍 / {reputation.thumbsDown} 👎)
                           </span>
+                        </span>
+                      </div>
+                    )}
+                    {validatedCount && (
+                      <div className="d-flex align-items-center mt-2">
+                        <CheckCircle size={16} className="text-success me-2" />
+                        <span className="text-muted small">
+                          Total Validated: <strong>{validatedCount.validatedCount}</strong> tickets
                         </span>
                       </div>
                     )}
