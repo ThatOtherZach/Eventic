@@ -321,6 +321,8 @@ export default function EventForm() {
     const submitData = {
       ...data,
       maxTickets: data.maxTickets || 100,
+      endDate: data.endDate && data.endDate !== '' ? data.endDate : null,
+      endTime: data.endTime && data.endTime !== '' ? data.endTime : null,
       imageUrl: imageUrl || undefined,
       ticketBackgroundUrl: imageUrl || undefined, // Use featured image for ticket background
       stickerUrl: (stickerEnabled && data.stickerUrl) ? data.stickerUrl : undefined,
@@ -351,8 +353,8 @@ export default function EventForm() {
         venue: data.venue,
         date: data.date,
         time: data.time,
-        endDate: data.endDate || null,
-        endTime: data.endTime || null,
+        endDate: data.endDate && data.endDate !== '' ? data.endDate : null,
+        endTime: data.endTime && data.endTime !== '' ? data.endTime : null,
         ticketPrice: data.ticketPrice,
         maxTickets: data.maxTickets || undefined,
         imageUrl: imageUrl || undefined,
