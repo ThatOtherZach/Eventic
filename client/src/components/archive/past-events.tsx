@@ -57,8 +57,7 @@ export function PastEvents() {
         onClick={() => setIsOpen(true)}
         data-testid="button-past-events"
       >
-        <Archive className="mr-2 h-4 w-4" />
-        Past Events
+        Archive
       </Button>
       
       <Modal open={isOpen} onOpenChange={setIsOpen} className="modal-lg">
