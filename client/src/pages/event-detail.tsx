@@ -883,6 +883,18 @@ export default function EventDetailPage() {
                 )}
               </button>
               
+              {/* Boost Button for event owners */}
+              {isOwner && (
+                <button 
+                  onClick={() => setIsBoostModalOpen(true)}
+                  className="btn btn-warning w-100 mb-3"
+                  data-testid="button-boost-event"
+                >
+                  <img src="/boost-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
+                  Boost
+                </button>
+              )}
+              
               {/* Show message if ticket sales are disabled */}
               {!event?.ticketPurchasesEnabled && !isEventPast && !isSoldOut && (
                 <div className="alert alert-warning mb-3">
@@ -901,14 +913,6 @@ export default function EventDetailPage() {
                     <img src="/edit-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
                     Edit Event
                   </Link>
-                  <button 
-                    onClick={() => setIsBoostModalOpen(true)}
-                    className="btn btn-warning w-100 mb-2"
-                    data-testid="button-boost-event"
-                  >
-                    <img src="/boost-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
-                    Boost
-                  </button>
                   <div className="alert alert-info mt-3">
                     <small>{isOwner ? "You own this event" : "Admin: You can edit this event"}</small>
                   </div>
