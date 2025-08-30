@@ -452,7 +452,8 @@ export default function EventDetailPage() {
 
           {/* Event Settings Display - Badges below title */}
           {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
-            event.recurringType || event.stickerUrl || event.p2pValidation) && (
+            event.recurringType || event.stickerUrl || event.p2pValidation || event.allowMinting || 
+            event.geofence || event.enableVoting) && (
             <div className="d-flex flex-wrap gap-2 mb-3">
               {event.isAdminCreated && (
                 <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
@@ -482,6 +483,21 @@ export default function EventDetailPage() {
               {event.p2pValidation && (
                 <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
                   P2P Validation
+                </span>
+              )}
+              {event.allowMinting && (
+                <span className="badge" style={{ backgroundColor: '#10B981', color: '#fff' }}>
+                  Collectable
+                </span>
+              )}
+              {event.geofence && (
+                <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff' }}>
+                  Location Lock
+                </span>
+              )}
+              {event.enableVoting && (
+                <span className="badge" style={{ backgroundColor: '#8B5CF6', color: '#fff' }}>
+                  Vote
                 </span>
               )}
               {event.recurringType && (
