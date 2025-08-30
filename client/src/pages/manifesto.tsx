@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Sparkles, Shield, TrendingUp, Repeat, Sticker, Users, QrCode, Calendar, Ticket as TicketIcon, Zap } from "lucide-react";
+import { Sparkles, Shield, TrendingUp, Repeat, Sticker, Users, Calendar, Ticket as TicketIcon, Zap } from "lucide-react";
 
 export default function Manifesto() {
   return (
@@ -13,12 +13,27 @@ export default function Manifesto() {
 
       <div className="card mb-4">
         <div className="card-body">
-          <h2 className="h4 mb-3">What Even Is This Thing?</h2>
+          <h2 className="h4 mb-3">The Origin Story: A Hero's Journey</h2>
+          <p className="mb-3">
+            Picture this: One fateful morning, after a legendary night of edibles and craft beer, 
+            I woke up with a revelation. The job market had been kicking my ass, rejection emails 
+            were piling up like unpaid bills, and I thought to myself, "You know what? Screw this. 
+            I'm going to build something that matters."
+          </p>
+          <p className="mb-3">
+            And in that moment of divine inspiration (or THC-induced clarity), I decided to take on 
+            the final boss of the ticketing world: Ticketmaster. Yeah, THAT Ticketmaster. The one 
+            with the fees that cost more than your actual ticket. The one that crashes every time 
+            Taylor Swift announces a tour.
+          </p>
           <p>
-            Welcome to the ultimate event management playground where tickets get golden, 
-            effects get special, and sometimes your event just keeps coming back like that 
-            friend who "forgot" their wallet. This is where event creators become legends 
-            and ticket holders become... well, ticket holders with really cool effects.
+            So here it is, folks. My magnum opus. My middle finger to the establishment. 
+            An event ticketing platform where tickets get golden, effects get special, and 
+            sometimes your event just keeps coming back like that friend who "forgot" their wallet. 
+            This is where event creators become legends and ticket holders get treated like actual humans.
+          </p>
+          <p className="text-muted small mt-3">
+            <em>Take that, corporate overlords. This one's for the people.</em>
           </p>
         </div>
       </div>
@@ -89,7 +104,7 @@ export default function Manifesto() {
               <li><strong>Annually:</strong> Once a year, for those special occasions</li>
             </ul>
             <small className="text-muted">
-              Admin powers required (@saymservices.com email). With great power comes great recurring events.
+              The event automatically recreates itself after it ends. Set it and forget it!
             </small>
           </div>
 
@@ -122,40 +137,44 @@ export default function Manifesto() {
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="h4 mb-3 d-flex align-items-center">
-            <QrCode className="text-primary me-2" size={24} />
-            The Validator: Your Digital Bouncer
+            <Shield className="text-primary me-2" size={24} />
+            The Validator: PIN Code Power
           </h2>
           
           <p className="mb-3">
-            The validator is like a bouncer, but smarter and with better eyesight. 
-            Navigate to <Link href="/validate"><a className="text-primary">the validator page</a></Link> and 
-            you become the gatekeeper of fun.
+            Forget QR codes - we're keeping it simple with good old PIN codes. 
+            The validator is your gateway to checking tickets at the door. 
+            Navigate to <Link href="/scanner"><a className="text-primary">the validator page</a></Link> and 
+            become the gatekeeper of your event.
           </p>
 
-          <h5>How to Be a Validation Legend:</h5>
+          <h5>How PIN Validation Works:</h5>
           <ol>
             <li className="mb-2">
-              <strong>Open the validator</strong> - It's that QR code icon in the nav, can't miss it
+              <strong>Ticket holders get a PIN</strong> - When someone views their ticket, they can generate 
+              a 6-digit validation PIN that's good for 5 minutes. It's like a secret handshake, but with numbers.
             </li>
             <li className="mb-2">
-              <strong>Allow camera access</strong> - We promise we're not taking selfies (that's a different app)
+              <strong>Open the validator</strong> - Click "Validate" in the navigation (the checkmark icon)
             </li>
             <li className="mb-2">
-              <strong>Point at QR code</strong> - Like taking a photo, but cooler
+              <strong>Enter the PIN</strong> - Type in that 6-digit code the ticket holder shows you
             </li>
             <li className="mb-2">
               <strong>Watch the magic happen</strong> - Valid ticket? ✅ Special effects might appear! 
-              Invalid or used? ❌ Better luck next time!
+              Invalid, expired, or already used? ❌ No entry for you!
             </li>
           </ol>
 
-          <div className="alert alert-warning mt-3">
-            <strong>Validator Rules:</strong>
+          <div className="alert alert-info mt-3">
+            <strong>PIN Code Facts:</strong>
             <ul className="mb-0 mt-2">
+              <li>PINs expire after 5 minutes (keeps things secure)</li>
+              <li>Each ticket can generate unlimited PINs (until it's validated)</li>
+              <li>Once validated, the ticket is marked as used forever</li>
               <li>Event creators can ALWAYS validate their own event tickets</li>
-              <li>P2P events? Any ticket holder can validate (it's anarchy, but organized)</li>
+              <li>P2P events? Any ticket holder can validate others</li>
               <li>Regular events? Only the creator or designated validators allowed</li>
-              <li>Each ticket can only be validated ONCE (no double-dipping)</li>
             </ul>
           </div>
         </div>
@@ -198,28 +217,6 @@ export default function Manifesto() {
               <li>Purchase info shows on validated tickets (we see you, scalpers)</li>
             </ul>
           </div>
-        </div>
-      </div>
-
-      <div className="card mb-4">
-        <div className="card-body">
-          <h2 className="h4 mb-3 d-flex align-items-center">
-            <Shield className="text-warning me-2" size={24} />
-            Admin Powers (The Secret Sauce)
-          </h2>
-          
-          <p>
-            Got a @saymservices.com email? Congratulations, you're basically a wizard now:
-          </p>
-          <ul>
-            <li>Create recurring events that never die</li>
-            <li>Suspend sketchy events (great power, great responsibility)</li>
-            <li>See all the admin-only stats and glory</li>
-            <li>Basically be the Batman of event management</li>
-          </ul>
-          <small className="text-muted">
-            Note: Cape not included. Terms and conditions apply. 
-          </small>
         </div>
       </div>
 
