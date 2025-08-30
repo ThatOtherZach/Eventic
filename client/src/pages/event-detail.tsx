@@ -877,7 +877,7 @@ export default function EventDetailPage() {
                   "Event Suspended"
                 ) : (
                   <>
-                    <Ticket size={18} className="me-2" />
+                    <img src="/ticket-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
                     {event.currentPrice === 0 ? "Get Ticket" : "Buy Ticket"}
                   </>
                 )}
