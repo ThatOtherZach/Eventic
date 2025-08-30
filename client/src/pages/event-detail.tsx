@@ -17,6 +17,7 @@ interface EventWithStats extends Event {
   ticketsAvailable: number | null;
   currentPrice: number;
   resaleCount?: number;
+  isAdminCreated?: boolean;
 }
 
 export default function EventDetailPage() {
@@ -422,9 +423,14 @@ export default function EventDetailPage() {
           <h1 className="mb-2">{event.name}</h1>
 
           {/* Event Settings Display - Badges below title */}
-          {(event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
+          {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
             event.recurringType || event.stickerUrl || event.p2pValidation) && (
             <div className="d-flex flex-wrap gap-2 mb-3">
+              {event.isAdminCreated && (
+                <span className="badge" style={{ backgroundColor: '#059669', color: '#fff' }}>
+                  Missions
+                </span>
+              )}
               {event.goldenTicketEnabled && (
                 <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000' }}>
                   Golden Tickets

@@ -645,10 +645,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/events/:id", async (req, res) => {
     try {
-      const event = await storage.getEvent(req.params.id);
-      if (!event) {
+      const eventWithCreator = await storage.getEventWithCreator(req.params.id);
+      if (!eventWithCreator) {
         return res.status(404).json({ message: "Event not found" });
       }
+      
+      // Check if creator is an admin (has @saymservices.com email)
+      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
+      
+      // Remove creatorEmail from response for privacy
+      const { creatorEmail, ...event } = eventWithCreator;
       
       // Get total count of ALL tickets created for this event (regardless of resale status)
       // This gives us the true count of tickets sold
@@ -671,7 +677,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketsSold,
         ticketsAvailable,
         currentPrice,
-        resaleCount
+        resaleCount,
+        isAdminCreated
       });
     } catch (error) {
       await logError(error, "GET /api/events/:id", {

@@ -376,6 +376,24 @@ export class DatabaseStorage implements IStorage {
     return event || undefined;
   }
 
+  async getEventWithCreator(id: string): Promise<(Event & { creatorEmail?: string }) | undefined> {
+    const [result] = await db
+      .select({
+        event: events,
+        creatorEmail: users.email,
+      })
+      .from(events)
+      .leftJoin(users, eq(events.userId, users.id))
+      .where(eq(events.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.event,
+      creatorEmail: result.creatorEmail || undefined,
+    };
+  }
+
   async getEventsByUserId(userId: string): Promise<Event[]> {
     return db
       .select()
