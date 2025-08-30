@@ -112,7 +112,7 @@ export default function AccountPage() {
                     <p className="text-muted mb-0">{user.email}</p>
                     {reputation && reputation.percentage !== null && (
                       <div className="d-flex align-items-center mt-2">
-                        <Globe size={16} className="text-warning me-2" />
+                        <img src="/world-icon.png" alt="" style={{ width: '16px', height: '16px', marginRight: '8px' }} />
                         <span className="text-muted small">
                           Reputation: <strong>{reputation.percentage}%</strong>
                           <span className="ms-2 text-secondary">
