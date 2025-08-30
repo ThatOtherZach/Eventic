@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Shield, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin } from "lucide-react";
+import { ArrowLeft, Calculator, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -445,7 +445,7 @@ export default function TicketViewPage(): React.ReactElement {
           <div className="card">
             <div className="card-body">
               <h5 className="card-title mb-3">
-                <Shield size={20} className="me-2" />
+                <Calculator size={20} className="me-2" />
                 Ticket Validation
               </h5>
 
@@ -687,7 +687,7 @@ export default function TicketViewPage(): React.ReactElement {
                       </>
                     ) : (
                       <>
-                        <Shield size={18} className="me-2" />
+                        <Calculator size={18} className="me-2" />
                         Validate Ticket
                       </>
                     )}
