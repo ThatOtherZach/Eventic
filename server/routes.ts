@@ -1797,23 +1797,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/past-tickets", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const archivedTickets = await storage.getArchivedTicketsByUser(userId);
-      res.json(archivedTickets);
-    } catch (error) {
-      await logError(error, "GET /api/user/past-tickets", {
-        request: req
-      });
-      res.status(500).json({ message: "Failed to fetch past tickets" });
-    }
-  });
-
   // Manual archive trigger (for testing or admin use)
   app.post("/api/archive/check", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

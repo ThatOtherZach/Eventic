@@ -86,8 +86,8 @@ export interface IStorage {
   // Archive Management
   archiveEvent(eventId: string): Promise<boolean>;
   getArchivedEventsByUser(userId: string): Promise<ArchivedEvent[]>;
-  getArchivedTicketsByUser(userId: string): Promise<ArchivedTicket[]>;
   getEventsToArchive(): Promise<Event[]>;
+  cleanupOldArchives(): Promise<void>;
   
   // Registry Management
   createRegistryRecord(record: InsertRegistryRecord): Promise<RegistryRecord>;
@@ -1417,42 +1417,52 @@ export class DatabaseStorage implements IStorage {
         totalRevenue
       ].join(',');
 
-      // Archive the event for the owner
-      await db.insert(archivedEvents).values({
-        userId: event.userId,
-        originalEventId: eventId,
-        csvData: eventCsvData,
-        eventName: event.name,
-        eventDate: event.date,
-        totalTicketsSold,
-        totalRevenue: totalRevenue.toFixed(2),
-      });
+      // Archive the event for the owner (if they exist)
+      if (event.userId) {
+        await db.insert(archivedEvents).values({
+          userId: event.userId,
+          originalEventId: eventId,
+          csvData: eventCsvData,
+          eventName: event.name,
+          eventDate: event.date,
+          totalTicketsSold,
+          totalRevenue: totalRevenue.toFixed(2),
+        });
+      }
 
-      // Archive tickets for each ticket holder
+      // Archive the event for each ticket holder (attendees)
+      // Get unique user IDs to avoid duplicate entries
+      const attendeeUserIds = new Set<string>();
       for (const ticket of eventTickets) {
-        if (ticket.userId) {
-          const ticketCsvData = [
-            ticket.ticketNumber,
-            event.name,
-            event.venue,
-            event.date,
-            event.time,
-            event.ticketPrice,
-            ticket.isValidated,
-            ticket.validatedAt || ''
-          ].join(',');
-
-          await db.insert(archivedTickets).values({
-            userId: ticket.userId,
-            originalTicketId: ticket.id,
-            originalEventId: eventId,
-            csvData: ticketCsvData,
-            eventName: event.name,
-            eventDate: event.date,
-            ticketNumber: ticket.ticketNumber,
-            wasValidated: ticket.isValidated || false,
-          });
+        if (ticket.userId && ticket.userId !== event.userId) {
+          attendeeUserIds.add(ticket.userId);
         }
+      }
+
+      // Create archive record for each attendee
+      for (const attendeeUserId of Array.from(attendeeUserIds)) {
+        // Create a simplified CSV for attendees (they don't need revenue info)
+        const attendeeCsvData = [
+          event.name,
+          event.venue,
+          event.date,
+          event.time,
+          event.endDate || '',
+          event.endTime || '',
+          event.ticketPrice,
+          0, // attendees don't see total tickets sold
+          0  // attendees don't see revenue
+        ].join(',');
+
+        await db.insert(archivedEvents).values({
+          userId: attendeeUserId,
+          originalEventId: eventId,
+          csvData: attendeeCsvData,
+          eventName: event.name,
+          eventDate: event.date,
+          totalTicketsSold: 0, // Not relevant for attendees
+          totalRevenue: "0",   // Not relevant for attendees
+        });
       }
 
       // Delete the tickets
@@ -1479,12 +1489,23 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(archivedEvents.archivedAt));
   }
 
-  async getArchivedTicketsByUser(userId: string): Promise<ArchivedTicket[]> {
-    return db
-      .select()
-      .from(archivedTickets)
-      .where(eq(archivedTickets.userId, userId))
-      .orderBy(desc(archivedTickets.archivedAt));
+  async cleanupOldArchives(): Promise<void> {
+    try {
+      // Delete archive records older than 1 year
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
+      const result = await db
+        .delete(archivedEvents)
+        .where(sql`archived_at < ${oneYearAgo.toISOString()}`)
+        .returning();
+      
+      if (result.length > 0) {
+        console.log(`[ARCHIVE] Cleaned up ${result.length} archive records older than 1 year`);
+      }
+    } catch (error) {
+      console.error('[ARCHIVE] Error cleaning up old archives:', error);
+    }
   }
 
   async performScheduledArchiving(): Promise<void> {
@@ -1496,25 +1517,28 @@ export class DatabaseStorage implements IStorage {
       
       if (eventsToArchive.length === 0) {
         console.log('[ARCHIVE] No events to archive at this time');
-        return;
-      }
-      
-      let successCount = 0;
-      let failCount = 0;
-      
-      // Archive each event
-      for (const event of eventsToArchive) {
-        const success = await this.archiveEvent(event.id);
-        if (success) {
-          successCount++;
-          console.log(`[ARCHIVE] Successfully archived event: ${event.name} (${event.id})`);
-        } else {
-          failCount++;
-          console.log(`[ARCHIVE] Failed to archive event: ${event.name} (${event.id})`);
+      } else {
+        let successCount = 0;
+        let failCount = 0;
+        
+        // Archive each event
+        for (const event of eventsToArchive) {
+          const success = await this.archiveEvent(event.id);
+          if (success) {
+            successCount++;
+            console.log(`[ARCHIVE] Successfully archived event: ${event.name} (${event.id})`);
+          } else {
+            failCount++;
+            console.log(`[ARCHIVE] Failed to archive event: ${event.name} (${event.id})`);
+          }
         }
+        
+        console.log(`[ARCHIVE] Archiving complete. Success: ${successCount}, Failed: ${failCount}`);
       }
       
-      console.log(`[ARCHIVE] Archiving complete. Success: ${successCount}, Failed: ${failCount}`);
+      // Also clean up archive records older than 1 year
+      await this.cleanupOldArchives();
+      
     } catch (error) {
       console.error('[ARCHIVE] Error during scheduled archiving:', error);
     }

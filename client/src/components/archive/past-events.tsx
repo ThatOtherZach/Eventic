@@ -6,18 +6,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, MapPin, Users, DollarSign, Download, Archive } from "lucide-react";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
-import type { ArchivedEvent, ArchivedTicket } from "@shared/schema";
+import type { ArchivedEvent } from "@shared/schema";
 
 export function PastEvents() {
   const [isOpen, setIsOpen] = useState(false);
 
   const { data: pastEvents = [], isLoading } = useQuery<ArchivedEvent[]>({
     queryKey: ["/api/user/past-events"],
-    enabled: isOpen,
-  });
-
-  const { data: pastTickets = [] } = useQuery<ArchivedTicket[]>({
-    queryKey: ["/api/user/past-tickets"],
     enabled: isOpen,
   });
 
@@ -41,13 +36,6 @@ export function PastEvents() {
     downloadCSV(csvContent, "past-events.csv");
   };
 
-  const downloadAllTickets = () => {
-    if (pastTickets.length === 0) return;
-    
-    const headers = "Ticket Number,Event Name,Venue,Date,Time,Price,Was Validated,Validated At\n";
-    const csvContent = headers + pastTickets.map(ticket => ticket.csvData).join("\n");
-    downloadCSV(csvContent, "past-tickets.csv");
-  };
 
   return (
     <>
@@ -73,7 +61,7 @@ export function PastEvents() {
           {/* Past Events Section */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Events You Organized</h3>
+              <h3 className="text-lg font-semibold">Your Past Events</h3>
               {pastEvents.length > 0 && (
                 <Button size="sm" variant="outline" onClick={downloadAllEvents} data-testid="button-download-all-events">
                   <Download className="mr-2 h-4 w-4" />
@@ -99,14 +87,18 @@ export function PastEvents() {
                               <Calendar className="h-3 w-3" />
                               {event.eventDate}
                             </span>
-                            <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              {event.totalTicketsSold} tickets
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <DollarSign className="h-3 w-3" />
-                              ${event.totalRevenue}
-                            </span>
+                            {event.totalTicketsSold && event.totalTicketsSold > 0 && (
+                              <>
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {event.totalTicketsSold} tickets
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <DollarSign className="h-3 w-3" />
+                                  ${event.totalRevenue}
+                                </span>
+                              </>
+                            )}
                           </div>
                           <Badge variant="secondary" className="text-xs">
                             Archived {event.archivedAt ? new Date(event.archivedAt).toLocaleDateString() : 'Unknown'}
@@ -131,62 +123,6 @@ export function PastEvents() {
             </ScrollArea>
           </div>
 
-          {/* Past Tickets Section */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Tickets You Purchased</h3>
-              {pastTickets.length > 0 && (
-                <Button size="sm" variant="outline" onClick={downloadAllTickets} data-testid="button-download-all-tickets">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download All
-                </Button>
-              )}
-            </div>
-            
-            <ScrollArea className="h-[250px] rounded-md border p-4">
-              {pastTickets.length === 0 ? (
-                <div className="text-center text-muted-foreground">No archived tickets yet</div>
-              ) : (
-                <div className="space-y-3">
-                  {pastTickets.map((ticket) => (
-                    <Card key={ticket.id} className="p-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="font-medium" data-testid={`text-ticket-event-${ticket.id}`}>{ticket.eventName}</p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>Ticket #{ticket.ticketNumber}</span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {ticket.eventDate}
-                            </span>
-                            {ticket.wasValidated && (
-                              <Badge variant="outline" className="text-xs">
-                                Used
-                              </Badge>
-                            )}
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            Archived {ticket.archivedAt ? new Date(ticket.archivedAt).toLocaleDateString() : 'Unknown'}
-                          </Badge>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => downloadCSV(
-                            "Ticket Number,Event Name,Venue,Date,Time,Price,Was Validated,Validated At\n" + ticket.csvData,
-                            `ticket-${ticket.ticketNumber}-data.csv`
-                          )}
-                          data-testid={`button-download-ticket-${ticket.id}`}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
         </div>
         </ModalBody>
       </Modal>
