@@ -898,7 +898,7 @@ export default function EventDetailPage() {
               {canEdit && (
                 <div>
                   <Link href={`/events/${id}/edit`} className="btn btn-secondary w-100 mb-2">
-                    <Edit size={18} className="me-2" />
+                    <img src="/edit-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
                     Edit Event
                   </Link>
                   <button 
@@ -974,7 +974,7 @@ export default function EventDetailPage() {
                   <div className="mt-4">
                     <ValidatedTicketsList 
                       eventId={id!} 
-                      isEventOwner={isOwner} 
+                      isEventOwner={!!isOwner} 
                     />
                   </div>
                 </div>
