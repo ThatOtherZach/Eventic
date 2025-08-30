@@ -120,12 +120,13 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
         <div className="modal-content">
           <div className="modal-header border-0">
             <h5 className="modal-title d-flex align-items-center">
-              <Star className="text-warning me-2" size={20} />
+              <img src="/boost-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
               Boost Event to Featured
             </h5>
             <button 
               type="button" 
               className="btn-close" 
+              aria-label="Close"
               onClick={() => onOpenChange(false)}
             />
           </div>
