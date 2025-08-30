@@ -334,12 +334,9 @@ export function QrScannerImplementation() {
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center">
                           {validation.valid ? (
-                            <CheckCircle
-                              className="text-success me-2"
-                              size={16}
-                            />
+                            <img src={successIcon} alt="Success" className="me-2" style={{ width: '16px', height: '16px' }} />
                           ) : (
-                            <XCircle className="text-danger me-2" size={16} />
+                            <img src={errorIcon} alt="Error" className="me-2" style={{ width: '16px', height: '16px' }} />
                           )}
                           <div>
                             <p className="mb-0 small fw-medium">
