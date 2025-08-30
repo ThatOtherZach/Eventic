@@ -679,8 +679,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if creator is an admin (has @saymservices.com email)
       const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
       
-      // Remove creatorEmail from response for privacy
-      const { creatorEmail, ...event } = eventWithCreator;
+      // Remove creatorEmail from response for privacy, but keep creatorUsername
+      const { creatorEmail, creatorUsername, ...event } = eventWithCreator;
       
       // Get total count of ALL tickets created for this event (regardless of resale status)
       // This gives us the true count of tickets sold
@@ -700,6 +700,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         ...event,
+        creatorUsername,
         ticketsSold,
         ticketsAvailable,
         currentPrice,

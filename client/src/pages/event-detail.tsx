@@ -24,6 +24,7 @@ interface EventWithStats extends Event {
   currentPrice: number;
   resaleCount?: number;
   isAdminCreated?: boolean;
+  creatorUsername?: string;
 }
 
 export default function EventDetailPage() {
@@ -61,7 +62,7 @@ export default function EventDetailPage() {
     },
   });
 
-  const { data: organizerReputation } = useQuery<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>({
+  const { data: organizerReputation } = useQuery<{ thumbsUp: number; thumbsDown: number; percentage: number | null; username?: string }>({
     queryKey: [`/api/users/${event?.userId}/reputation`],
     enabled: !!event?.userId,
     queryFn: async () => {
@@ -669,7 +670,7 @@ export default function EventDetailPage() {
             <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
               <div className="flex items-center gap-2">
                 <Award className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-sm">Event Creator Reputation</span>
+                <span className="font-medium text-sm">{organizerReputation.username || event?.creatorUsername || 'Organizer'} Reputation</span>
                 {organizerReputation.percentage === null ? (
                   <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
                     New

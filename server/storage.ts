@@ -165,7 +165,7 @@ export interface IStorage {
   // Event Ratings
   rateEvent(rating: InsertEventRating): Promise<EventRating | null>;
   hasUserRatedEvent(ticketId: string): Promise<boolean>;
-  getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>;
+  getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; username?: string }>;
 }
 
 interface ValidationSession {
@@ -392,21 +392,22 @@ export class DatabaseStorage implements IStorage {
     return event || undefined;
   }
 
-  async getEventWithCreator(id: string): Promise<(Event & { creatorEmail?: string }) | undefined> {
+  async getEventWithCreator(id: string): Promise<(Event & { creatorEmail?: string; creatorUsername?: string }) | undefined> {
     const [result] = await db
-      .select({
-        event: events,
-        creatorEmail: users.email,
-      })
+      .select()
       .from(events)
       .leftJoin(users, eq(events.userId, users.id))
       .where(eq(events.id, id));
     
     if (!result) return undefined;
     
+    // Debug log
+    console.log("Creator username:", result.users?.username);
+    
     return {
-      ...result.event,
-      creatorEmail: result.creatorEmail || undefined,
+      ...result.events,
+      creatorEmail: result.users?.email || undefined,
+      creatorUsername: result.users?.username || undefined,
     };
   }
 
@@ -2317,7 +2318,7 @@ export class DatabaseStorage implements IStorage {
     return !!rating;
   }
   
-  async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
+  async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; username?: string }> {
     // First check cache
     const [cached] = await db
       .select()
@@ -2331,10 +2332,14 @@ export class DatabaseStorage implements IStorage {
       const oneHour = 60 * 60 * 1000;
       
       if (cacheAge < oneHour) {
+        // Get username
+        const [user] = await db.select({ username: users.username }).from(users).where(eq(users.id, userId)).limit(1);
+        
         return {
           thumbsUp: cached.thumbsUp,
           thumbsDown: cached.thumbsDown,
-          percentage: cached.percentage
+          percentage: cached.percentage,
+          username: user?.username || undefined
         };
       }
     }
@@ -2344,7 +2349,7 @@ export class DatabaseStorage implements IStorage {
   }
   
 
-  async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
+  async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; username?: string }> {
     const ratings = await db
       .select({
         rating: eventRatings.rating,
@@ -2388,7 +2393,10 @@ export class DatabaseStorage implements IStorage {
         }
       });
     
-    return { thumbsUp, thumbsDown, percentage };
+    // Get username
+    const [user] = await db.select({ username: users.username }).from(users).where(eq(users.id, userId)).limit(1);
+    
+    return { thumbsUp, thumbsDown, percentage, username: user?.username || undefined };
   }
   
   async updateAllUserReputations(): Promise<void> {
