@@ -78,7 +78,15 @@ export function ValidatedTicketsList({ eventId, isEventOwner }: ValidatedTickets
         </div>
       ) : (
         <div className="list-group">
-          {validatedTickets.map((ticket) => (
+          {validatedTickets
+            .sort((a, b) => {
+              // Sort golden tickets to the top
+              if (a.isGoldenTicket && !b.isGoldenTicket) return -1;
+              if (!a.isGoldenTicket && b.isGoldenTicket) return 1;
+              // Then sort by validation time (most recent first)
+              return new Date(b.validatedAt).getTime() - new Date(a.validatedAt).getTime();
+            })
+            .map((ticket) => (
             <div key={ticket.ticketId} className="list-group-item d-flex justify-content-between align-items-center">
               <div className="d-flex align-items-center gap-2">
                 <span className="badge bg-primary">{ticket.ticketNumber}</span>
