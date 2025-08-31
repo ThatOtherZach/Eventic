@@ -758,6 +758,11 @@ export default function TicketViewPage(): React.ReactElement {
                           const formData = new FormData(e.currentTarget);
                           const code = formData.get('voteCode') as string;
                           if (code && code.length >= 4) {
+                            // Check if trying to vote for themselves
+                            if (code.toUpperCase() === ticket.validationCode?.toUpperCase()) {
+                              setP2pVoteError("Nice try ;) you can't vote for yourself Kyle.");
+                              return;
+                            }
                             p2pVoteMutation.mutate(code.toUpperCase());
                           }
                         }}>
