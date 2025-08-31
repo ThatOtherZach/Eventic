@@ -266,73 +266,71 @@ export function EventList({ onGenerateTickets }: EventListProps) {
             className={`p-3 ${index !== events.length - 1 ? 'border-bottom' : ''}`}
             data-testid={`card-event-${event.id}`}
           >
-            <div className="row align-items-center">
-              <div className="col-12 col-md-6">
-                <div className="d-flex align-items-center">
-                  {event.imageUrl ? (
-                    <img 
-                      src={event.imageUrl} 
-                      alt={event.name}
-                      className="rounded me-3"
-                      style={{ width: '48px', height: '48px', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div className="bg-primary bg-opacity-10 rounded p-2 me-3">
-                      <Ticket className="text-primary" size={24} />
-                    </div>
-                  )}
-                  <div>
-                    <div className="d-flex align-items-center">
-                      <h6 className="mb-1 fw-semibold me-2">{event.name}</h6>
-                      {event.p2pValidation && (
-                        <span className="badge bg-success me-2" style={{ fontSize: "0.7em" }} title="Peer-to-Peer Validation Event">
-                          <Shield size={12} className="me-1" style={{ verticalAlign: "middle" }} />
-                          P2P
-                        </span>
-                      )}
-                      {(event as any).country && (
-                        <span className="badge bg-info text-white" style={{ fontSize: "0.7em" }}>
-                          {(event as any).country}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-muted small mb-0">
-                      {event.date} • {event.time}
-                    </p>
-                    <p className="text-muted small mb-0">{event.venue}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="col-12 col-md-6">
-                <div className="d-flex justify-content-md-end align-items-center mt-3 mt-md-0">
-                  <div className="text-md-end me-3">
-                    <p className="mb-0 fw-semibold">{parseFloat(event.ticketPrice) === 0 ? 'Free' : `$${event.ticketPrice}`}</p>
-                    {parseFloat(event.ticketPrice) !== 0 && <p className="text-muted small mb-0">per ticket</p>}
-                  </div>
-                  <div className="d-flex flex-column gap-1">
-                    <Link 
-                      href={`/events/${event.id}`}
-                      className="btn btn-sm btn-outline-secondary"
-                      title="View Event"
-                      data-testid={`button-view-${event.id}`}
-                    >
-                      <Eye size={16} />
-                    </Link>
-                    {user && event.userId === user.id && (
-                      <Link
-                        href={`/events/${event.id}/edit`}
-                        className="btn btn-sm btn-outline-secondary"
-                        title="Edit Event"
-                        data-testid={`button-edit-${event.id}`}
-                      >
-                        <Edit size={16} />
-                      </Link>
+            <Link 
+              href={`/events/${event.id}`}
+              className="text-decoration-none"
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="row align-items-center">
+                <div className="col">
+                  <div className="d-flex align-items-center">
+                    {event.imageUrl ? (
+                      <img 
+                        src={event.imageUrl} 
+                        alt={event.name}
+                        className="rounded me-3"
+                        style={{ width: '48px', height: '48px', objectFit: 'cover', cursor: 'pointer' }}
+                      />
+                    ) : (
+                      <div className="bg-primary bg-opacity-10 rounded p-2 me-3" style={{ cursor: 'pointer' }}>
+                        <Ticket className="text-primary" size={24} />
+                      </div>
                     )}
+                    <div className="flex-grow-1">
+                      <div className="d-flex align-items-center flex-wrap">
+                        <h6 className="mb-1 fw-semibold me-2 text-dark">{event.name}</h6>
+                        {event.p2pValidation && (
+                          <span className="badge bg-success me-2" style={{ fontSize: "0.7em" }} title="Peer-to-Peer Validation Event">
+                            <Shield size={12} className="me-1" style={{ verticalAlign: "middle" }} />
+                            P2P
+                          </span>
+                        )}
+                        {event.recurringDays && event.recurringDays.length > 0 && (
+                          <span className="badge bg-primary me-2" style={{ fontSize: "0.7em" }} title="Recurring Event">
+                            Recurring
+                          </span>
+                        )}
+                        {event.endDate && (
+                          <span className="badge bg-warning text-dark me-2" style={{ fontSize: "0.7em" }} title="Multi-day Event">
+                            Multi-day
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-muted small mb-0">
+                        {event.date} • {event.time}
+                      </p>
+                      <p className="text-muted small mb-0">{event.venue}</p>
+                    </div>
+                    <div className="text-end ms-auto">
+                      <p className="mb-0 fw-semibold text-dark" style={{ cursor: 'pointer' }}>
+                        {parseFloat(event.ticketPrice) === 0 ? 'Free' : `${parseFloat(event.ticketPrice)} Tickets`}
+                      </p>
+                      {user && event.userId === user.id && (
+                        <Link
+                          href={`/events/${event.id}/edit`}
+                          className="btn btn-sm btn-link p-0 text-muted"
+                          title="Edit Event"
+                          data-testid={`button-edit-${event.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Edit size={14} />
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         ))}
       </div>
