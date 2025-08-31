@@ -1,8 +1,32 @@
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, useLocation } from "wouter";
-import { Calendar, MapPin, Users, DollarSign, Star, Sparkles, Vote, Crown } from "lucide-react";
-import { format } from "date-fns";
-import type { Event } from "@shared/schema";
+import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star, Hash } from "lucide-react";
+import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "@/components/tickets/special-effects";
+
+interface Event {
+  id: string;
+  name: string;
+  venue: string;
+  date: string;
+  time: string;
+  endDate?: string;
+  endTime?: string;
+  imageUrl?: string;
+  ticketPrice: string;
+  p2pValidation?: boolean;
+  specialEffects?: string;
+  ticketBackgroundUrl?: string;
+  isAdminCreated?: boolean;
+  allowMinting?: boolean;
+  goldenTicketEnabled?: boolean;
+  specialEffectsEnabled?: boolean;
+  surgePricing?: boolean;
+  stickerUrl?: string;
+  stickerOdds?: number;
+  geofence?: boolean;
+  enableVoting?: boolean;
+  recurringType?: string;
+}
 
 export function HashtagEventsPage() {
   const { hashtag } = useParams<{ hashtag: string }>();
@@ -67,14 +91,11 @@ export function HashtagEventsPage() {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger">
-          Failed to load events for #{processedHashtag}. Please try again later.
+          Failed to load events for #{processedHashtag}
         </div>
       </div>
     );
   }
-
-  // Format hashtag for display (capitalize first letter)
-  const displayHashtag = processedHashtag.charAt(0).toUpperCase() + processedHashtag.slice(1);
 
   return (
     <div className="container mt-4 pb-5">
@@ -82,154 +103,275 @@ export function HashtagEventsPage() {
         <div className="d-flex align-items-start justify-content-between">
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
-              <span className={`badge bg-gradient text-white bg-${currentMonthColor.glow}`}>
-                #{displayHashtag}
-              </span>
-              Events
+              <Hash className="text-primary" size={28} />
+              Events tagged #{processedHashtag}
             </h2>
             <p className="text-muted">
-              {events.length} {events.length === 1 ? 'event' : 'events'} tagged with #{processedHashtag}
+              {events.length} {events.length === 1 ? 'event' : 'events'} found
             </p>
           </div>
         </div>
       </div>
 
       {events.length === 0 ? (
-        <div className="alert alert-info">
-          <h5 className="alert-heading">No events found</h5>
-          <p className="mb-0">There are no upcoming events with the hashtag #{processedHashtag}.</p>
+        <div className="card">
+          <div className="card-body text-center py-5">
+            <Hash size={48} className="text-muted mb-3" />
+            <h5 className="text-muted">No events found with #{processedHashtag}</h5>
+            <p className="text-muted">Check back later or explore events with other tags</p>
+            <Link href="/">
+              <a className="btn btn-primary mt-3" style={{ textDecoration: 'none' }} data-testid="button-go-home">
+                Browse All Events
+              </a>
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="row g-4">
+        <div className="row g-3">
           {events.map((event) => {
-            const eventDate = new Date(`${event.date}T${event.time}`);
-            const isPastEvent = eventDate < new Date();
+            // Create a mock ticket object for display purposes
+            const mockTicket = {
+              id: `preview-${event.id}`,
+              ticketNumber: "PREVIEW",
+              isGoldenTicket: event.specialEffects?.includes("Golden Ticket"),
+              qrData: null,
+              isValidated: false
+            };
+
+            // Create a full event object for special effects components
+            const fullEvent = {
+              ...event,
+              description: null,
+              country: null,
+              maxTickets: null,
+              createdAt: new Date().toISOString(),
+              userId: '',
+              stripePaymentIntentId: null,
+              stripePriceId: null,
+              stripeProductId: null,
+              specialEffects: event.specialEffects || null,
+              ticketBackgroundUrl: event.ticketBackgroundUrl || null,
+              organizerName: null,
+              organizerEmail: null,
+              organizerPhone: null,
+              category: null,
+              tags: null,
+              isPrivate: false
+            };
+
+            // Check for special effects
+            const specialEffect = detectSpecialEffect(fullEvent, mockTicket);
+            const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(fullEvent, mockTicket) : null;
             
             return (
-              <div key={event.id} className="col-md-6 col-lg-4">
+              <div key={event.id} className="col-md-6">
                 <div 
-                  className="card h-100 shadow-sm hover-card cursor-pointer"
                   onClick={() => setLocation(`/events/${event.id}`)}
-                  style={{
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                    cursor: "pointer",
-                    opacity: isPastEvent ? 0.7 : 1,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "";
-                  }}
+                  style={{ cursor: 'pointer' }}
+                  data-testid={`link-event-${event.id}`}
                 >
-                  {/* Event Image */}
+                  {/* Ticket-style card matching TicketCard component */}
                   <div 
-                    className="card-img-top position-relative"
-                    style={{
-                      height: "200px",
-                      backgroundImage: event.imageUrl 
-                        ? `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.3)), url(${event.imageUrl})`
-                        : `linear-gradient(135deg, ${currentMonthColor.gradient})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
-                  >
-                    {/* Badges */}
-                    <div className="position-absolute top-0 start-0 p-2 d-flex flex-wrap gap-1">
-                      {event.goldenTicketEnabled && (
-                        <span className="badge bg-warning text-dark">
-                          <Crown size={12} className="me-1" />
-                          Golden Ticket
-                        </span>
-                      )}
-                      {event.specialEffectsEnabled && (
-                        <span className="badge bg-info">
-                          <Sparkles size={12} className="me-1" />
-                          Effects
-                        </span>
-                      )}
-                      {event.allowMinting && (
-                        <span className="badge bg-success">
-                          NFT
-                        </span>
-                      )}
-                      {event.p2pValidation && (
-                        <span className="badge bg-secondary">
-                          P2P
-                        </span>
-                      )}
-                      {event.enableVoting && (
-                        <span className="badge bg-primary">
-                          <Vote size={12} className="me-1" />
-                          Voting
-                        </span>
-                      )}
-                      {isPastEvent && (
-                        <span className="badge bg-dark">
-                          Past Event
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Price Badge */}
-                    {event.ticketPrice && parseFloat(event.ticketPrice) > 0 && (
-                      <div className="position-absolute bottom-0 end-0 p-2">
-                        <span className="badge bg-dark bg-opacity-75">
-                          <DollarSign size={14} />
-                          {parseFloat(event.ticketPrice).toFixed(2)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Event Details */}
-                  <div className="card-body">
-                    <h5 className="card-title fw-bold text-dark mb-2">
-                      {event.name}
-                    </h5>
-                    
-                    <div className="d-flex flex-column gap-2 text-muted small">
-                      <div className="d-flex align-items-center gap-2">
-                        <Calendar size={14} />
-                        <span>{format(eventDate, "MMM d, yyyy 'at' h:mm a")}</span>
-                      </div>
-                      
-                      {event.venue && (
-                        <div className="d-flex align-items-center gap-2">
-                          <MapPin size={14} />
-                          <span className="text-truncate">{event.venue}</span>
-                        </div>
-                      )}
-                      
-                      {event.maxTickets && (
-                        <div className="d-flex align-items-center gap-2">
-                          <Users size={14} />
-                          <span>Max {event.maxTickets} tickets</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* View Details Button */}
-                    <div className="mt-3">
-                      <button 
-                        className="btn btn-sm btn-outline-primary w-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLocation(`/events/${event.id}`);
+                    className="ticket-card position-relative w-100"
+                      style={{
+                        aspectRatio: '16/9',
+                        maxWidth: '100%',
+                        minHeight: '200px',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        background: event.ticketBackgroundUrl 
+                          ? `url(${event.ticketBackgroundUrl}) center/cover` 
+                          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                      }}
+                    >
+                      {/* Semi-transparent overlay for text readability */}
+                      <div 
+                        className="position-absolute w-100 h-100"
+                        style={{
+                          background: event.ticketBackgroundUrl 
+                            ? 'rgba(0, 0, 0, 0.4)' 
+                            : 'rgba(0, 0, 0, 0.2)',
+                          backdropFilter: 'blur(1px)',
                         }}
-                      >
-                        View Details
-                      </button>
+                      />
+
+                      {/* Golden Ticket Glow Overlay */}
+                      {mockTicket.isGoldenTicket && (
+                        <div 
+                          className="position-absolute w-100 h-100 pointer-events-none"
+                          style={{
+                            background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 70%)',
+                            boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.225), inset 0 0 60px rgba(255, 215, 0, 0.075)',
+                            animation: 'goldenGlow 3s ease-in-out infinite',
+                            zIndex: 2,
+                          }}
+                        />
+                      )}
+
+                      {/* Special Event Effects Badge */}
+                      <SpecialEffectBadge event={fullEvent} ticket={mockTicket} />
+                      
+                      {/* Special Effects Overlay (for glows and text) */}
+                      <SpecialEffectOverlay event={fullEvent} ticket={mockTicket} />
+                      
+                      {/* Special Effects Animation (for particles) */}
+                      <SpecialEffects event={fullEvent} ticket={mockTicket} />
+
+                      {/* Event Feature Badges */}
+                      <div className="position-absolute top-0 start-0 p-2 d-flex flex-wrap gap-1" style={{ zIndex: 10 }}>
+                        {event.isAdminCreated && (
+                          <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
+                            Mission
+                          </span>
+                        )}
+                        {event.goldenTicketEnabled && (
+                          <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', fontSize: '0.8em' }}>
+                            Golden Tickets
+                          </span>
+                        )}
+                        {event.specialEffectsEnabled && (
+                          <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', fontSize: '0.8em' }}>
+                            Special Effects
+                          </span>
+                        )}
+                        {event.surgePricing && (
+                          <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
+                            Surge
+                          </span>
+                        )}
+                        {event.stickerUrl && (
+                          <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', fontSize: '0.8em' }}>
+                            Stickers
+                          </span>
+                        )}
+                        {event.allowMinting && (
+                          <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', fontSize: '0.8em' }}>
+                            Collectable
+                          </span>
+                        )}
+                        {event.geofence && (
+                          <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', fontSize: '0.8em' }}>
+                            Location Lock
+                          </span>
+                        )}
+                        {event.enableVoting && (
+                          <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', fontSize: '0.8em' }}>
+                            Vote
+                          </span>
+                        )}
+                        {event.recurringType && (
+                          <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', fontSize: '0.8em' }}>
+                            {event.recurringType === 'weekly' && 'Weekly'}
+                            {event.recurringType === 'monthly' && 'Monthly'}
+                            {event.recurringType === 'annually' && 'Annual'}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ticket Content */}
+                      <div className="position-relative h-100 d-flex">
+                        {/* Event Details */}
+                        <div className="flex-grow-1 px-3 pt-3 pb-4 text-white d-flex flex-column justify-content-between">
+                          <div>
+                            <h5 className="mb-2 fw-bold" style={{ fontSize: '18px', marginTop: '24px' }}>
+                              {mockTicket.isGoldenTicket ? (
+                                // Golden ticket takes priority
+                                <span 
+                                  style={{
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    backgroundColor: 'rgba(255, 215, 0, 0.85)',
+                                    color: '#000',
+                                    display: 'inline-block',
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                  }}
+                                >
+                                  {event.name}
+                                </span>
+                              ) : monthlyColor ? (
+                                // Monthly effect badge
+                                <span 
+                                  style={{
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                    background: `linear-gradient(135deg, ${monthlyColor.color1}, ${monthlyColor.color2})`,
+                                    color: '#fff',
+                                    display: 'inline-block',
+                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                                  }}
+                                >
+                                  {event.name}
+                                </span>
+                              ) : (
+                                event.name
+                              )}
+                            </h5>
+                            <div className="small opacity-90">
+                              <div className="d-flex align-items-center mb-1">
+                                <Calendar size={14} className="me-1" />
+                                {event.date}
+                                {event.endDate && event.endDate !== event.date && (
+                                  <span> - {event.endDate}</span>
+                                )}
+                              </div>
+                              <div className="d-flex align-items-center mb-1">
+                                <Clock size={14} className="me-1" />
+                                {event.time}
+                                {event.endTime && (
+                                  <span> - {event.endTime}</span>
+                                )}
+                              </div>
+                              <div className="d-flex align-items-center mb-1">
+                                <MapPin size={14} className="me-1" />
+                                <span>{event.venue}</span>
+                              </div>
+                              <div className="fw-bold" style={{ fontSize: '16px' }}>
+                                {event.ticketPrice && parseFloat(event.ticketPrice) > 0 
+                                  ? `$${event.ticketPrice}` 
+                                  : 'Free'}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="d-flex justify-content-end align-items-end">
+                            {event.p2pValidation && (
+                              <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
+                                P2P Validation
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+      
+      {/* Add CSS for golden glow animation */}
+      <style>{`
+        @keyframes goldenGlow {
+          0%, 100% {
+            opacity: 0.8;
+          }
+          50% {
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }
