@@ -1949,6 +1949,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint to check if event has validated tickets
+  app.get("/api/events/:eventId/validated-tickets/count", async (req, res) => {
+    try {
+      const validatedTickets = await storage.getValidatedTicketsForEvent(req.params.eventId);
+      res.json({ count: validatedTickets.length });
+    } catch (error) {
+      await logError(error, "GET /api/events/:eventId/validated-tickets/count", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
+      res.status(500).json({ message: "Failed to check validated tickets" });
+    }
+  });
+
   // System logs endpoint (for administrators)
   app.get("/api/system-logs", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

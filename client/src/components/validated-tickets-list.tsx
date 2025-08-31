@@ -33,8 +33,37 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
     },
   });
 
-  // Only show to event owners
+  // Show different content based on whether user is event owner
   if (!isEventOwner) {
+    // Check if there are no validated tickets
+    const { data: hasValidatedTickets } = useQuery<boolean>({
+      queryKey: [`/api/events/${eventId}/has-validated-tickets`],
+      enabled: !!eventId,
+      queryFn: async () => {
+        try {
+          const response = await apiRequest("GET", `/api/events/${eventId}/validated-tickets/count`);
+          const data = await response.json();
+          return data.count > 0;
+        } catch {
+          return false;
+        }
+      },
+    });
+
+    if (!hasValidatedTickets) {
+      return (
+        <div>
+          <h5 className="card-title mb-3">
+            <Ticket size={20} className="me-2" />
+            Validated Tickets
+          </h5>
+          <div className="text-center text-muted p-3">
+            <p className="small mb-0">Powered by Saym Services Inc.</p>
+          </div>
+        </div>
+      );
+    }
+    
     return null;
   }
 
