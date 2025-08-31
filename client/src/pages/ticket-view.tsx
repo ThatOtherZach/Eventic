@@ -145,13 +145,13 @@ export default function TicketViewPage(): React.ReactElement {
   // P2P Vote mutation
   const p2pVoteMutation = useMutation({
     mutationFn: async (validationCode: string) => {
-      const response = await apiRequest("POST", "/api/validate/p2p", {
+      const response = await apiRequest("POST", "/api/validate/p2p-vote", {
         validationCode,
-        eventId: ticketData?.event.id
+        voterId: ticket.id
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to submit vote");
+        throw new Error(error.message || "Invalid validation code");
       }
       return response.json();
     },
@@ -162,11 +162,11 @@ export default function TicketViewPage(): React.ReactElement {
         description: "Your vote has been recorded successfully.",
       });
       // Clear the input form
-      const form = document.querySelector('form[data-p2p-vote]') as HTMLFormElement;
-      if (form) form.reset();
+      const form = document.querySelector('[data-testid="input-vote-code"]') as HTMLInputElement;
+      if (form) form.value = '';
     },
     onError: (error: any) => {
-      setP2pVoteError(error.message || "Failed to submit vote");
+      setP2pVoteError(error.message || "Invalid validation code");
     },
   });
 
@@ -789,12 +789,8 @@ export default function TicketViewPage(): React.ReactElement {
                           </button>
                         </form>
                         {p2pVoteError && (
-                          <div className="alert alert-danger mt-2 small">
-                            {typeof p2pVoteError === 'object' && 'message' in p2pVoteError 
-                              ? (p2pVoteError as any).message 
-                              : typeof p2pVoteError === 'string' 
-                              ? p2pVoteError 
-                              : 'Invalid validation code'}
+                          <div className="alert alert-danger mt-2">
+                            {p2pVoteError}
                           </div>
                         )}
                       </div>
