@@ -94,22 +94,22 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
   };
 
   const getPrice = () => {
-    if (!boostInfo) return "0.00";
+    if (!boostInfo) return "0";
     
     const hours = getDurationHours(selectedDuration);
-    const standardRate = parseFloat(boostInfo.standardHourlyRate || "0.02");
-    const bumpRate = parseFloat(boostInfo.bumpHourlyRate || "0.04");
+    const standardRate = parseFloat(boostInfo.standardHourlyRate || "2");
+    const bumpRate = parseFloat(boostInfo.bumpHourlyRate || "4");
     
     let price = useBoostType === "bump" ? bumpRate * hours : standardRate * hours;
     
     // Apply discounts for longer durations
     if (selectedDuration === "12hours") {
-      price = price * 0.9; // 10% discount
+      price = Math.floor(price * 0.9); // 10% discount
     } else if (selectedDuration === "24hours") {
-      price = price * 0.8; // 20% discount
+      price = Math.floor(price * 0.8); // 20% discount
     }
     
-    return price.toFixed(2);
+    return Math.floor(price).toString();
   };
 
   if (!open) return null;
@@ -188,7 +188,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                             <div className="flex-grow-1">
                               <div className="d-flex justify-content-between align-items-center">
                                 <span className="fw-medium">Standard Boost</span>
-                                <span className="text-primary fw-bold">${boostInfo.standardHourlyRate}/hour</span>
+                                <span className="text-primary fw-bold">{boostInfo.standardHourlyRate} Tickets/hour</span>
                               </div>
                               <small className="text-muted">
                                 {boostInfo.allSlotsTaken 
@@ -222,7 +222,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                                     <TrendingUp size={16} className="me-1" />
                                     Bump to Top
                                   </span>
-                                  <span className="text-warning fw-bold">${boostInfo.bumpHourlyRate}/hour</span>
+                                  <span className="text-warning fw-bold">{boostInfo.bumpHourlyRate} Tickets/hour</span>
                                 </div>
                                 <small className="text-muted">
                                   Jump to position #1 - 2x price for priority placement
@@ -261,8 +261,8 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                       </small>
                     </div>
                     <div className="text-end">
-                      <div className="h5 mb-0 fw-bold text-primary">${getPrice()}</div>
-                      <small className="text-muted">Payment required</small>
+                      <div className="h5 mb-0 fw-bold text-primary">{getPrice()} Tickets</div>
+                      <small className="text-muted">From your balance</small>
                     </div>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                 <div className="alert alert-info d-flex align-items-start">
                   <AlertTriangle size={20} className="me-2 mt-1 flex-shrink-0" />
                   <div>
-                    <strong>Pricing:</strong> Standard boost costs $0.02 per hour, Bump costs $0.04 per hour (2x rate). 12-hour bookings get 10% discount, 24-hour bookings get 20% discount. Payment processing is not yet implemented - this will activate the boost immediately.
+                    <strong>Pricing:</strong> Standard boost costs 2 Tickets per hour, Bump costs 4 Tickets per hour (2x rate). 12-hour bookings get 10% discount, 24-hour bookings get 20% discount. Tickets will be deducted from your balance immediately.
                   </div>
                 </div>
               </>
@@ -300,7 +300,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
                   </>
                 ) : (
                   <>
-                    ${getPrice()} Buy Boost
+                    {getPrice()} Tickets - Buy Boost
                   </>
                 )}
               </button>

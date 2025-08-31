@@ -173,10 +173,10 @@ export default function AccountPage() {
                             <Wallet className="text-primary me-2" size={24} />
                             <div>
                               <div className="small text-muted">Tickets Balance</div>
-                              <div className="h5 mb-0 fw-bold">{parseFloat(balance.balance).toFixed(2)}</div>
+                              <div className="h5 mb-0 fw-bold">{Math.floor(parseFloat(balance.balance))}</div>
                               {parseFloat(balance.holdBalance) > 0 && (
                                 <div className="small text-warning">
-                                  {parseFloat(balance.holdBalance).toFixed(2)} on hold
+                                  {Math.floor(parseFloat(balance.holdBalance))} on hold
                                 </div>
                               )}
                             </div>

@@ -2401,17 +2401,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const featuredCount = await storage.getFeaturedEventCount();
       const nextPosition = await storage.getNextAvailablePosition();
       
-      // Duration-based pricing: $0.02 per hour for standard, $0.04 per hour for bump
-      const standardHourlyRate = 0.02;
-      const bumpHourlyRate = 0.04;
+      // Duration-based pricing: 2 Tickets per hour for standard, 4 Tickets per hour for bump
+      const standardHourlyRate = 2;
+      const bumpHourlyRate = 4;
 
       res.json({
         canBoost,
         currentFeaturedCount: featuredCount,
         maxSlots: 100,
         nextPosition,
-        standardHourlyRate: standardHourlyRate.toFixed(2),
-        bumpHourlyRate: bumpHourlyRate.toFixed(2),
+        standardHourlyRate: standardHourlyRate.toString(),
+        bumpHourlyRate: bumpHourlyRate.toString(),
         allSlotsTaken: nextPosition === null
       });
     } catch (error) {
@@ -2457,9 +2457,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const featuredCount = await storage.getFeaturedEventCount();
       let position = await storage.getNextAvailablePosition();
       
-      // Calculate duration-based pricing
-      const standardHourlyRate = 0.02;
-      const bumpHourlyRate = 0.04;
+      // Calculate duration-based pricing in Tickets
+      const standardHourlyRate = 2;
+      const bumpHourlyRate = 4;
       
       const durationHours = {
         "1hour": 1,
@@ -2487,9 +2487,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Apply discounts for longer durations
       if (duration === "12hours") {
-        price = price * 0.9; // 10% discount
+        price = Math.floor(price * 0.9); // 10% discount
       } else if (duration === "24hours") {
-        price = price * 0.8; // 20% discount
+        price = Math.floor(price * 0.8); // 20% discount
       }
 
       // Calculate end time based on duration
@@ -2503,6 +2503,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const endTime = new Date(now.getTime() + durationMs);
 
+      // Check user's Ticket balance
+      const userBalance = await storage.getUserBalance(userId);
+      const availableBalance = parseFloat(userBalance.availableBalance);
+      
+      if (availableBalance < price) {
+        return res.status(400).json({ message: `Insufficient Tickets. You need ${price} Tickets but only have ${Math.floor(availableBalance)} Tickets` });
+      }
+      
+      // Debit user's Ticket balance
+      const debitSuccess = await storage.debitUserAccount(
+        userId,
+        price,
+        `Event boost: ${duration} ${isBump ? '(Bump)' : '(Standard)'}`,
+        { eventId: id, duration, boostType: isBump ? 'bump' : 'standard' }
+      );
+      
+      if (!debitSuccess) {
+        return res.status(500).json({ message: "Failed to deduct Tickets" });
+      }
+      
       // Create featured event record
       const featuredEvent = await storage.createFeaturedEvent({
         eventId: id,
@@ -2517,7 +2537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         success: true,
         featuredEvent,
-        price: price.toFixed(2),
+        price: price.toString(),
         endTime
       });
     } catch (error) {
