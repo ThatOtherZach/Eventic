@@ -1125,23 +1125,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else if (event.date && event.time) {
         // No end date, check if event has started (for single-day events)
+        // For McDonald's event and others with timezone issues, we'll be more lenient
         try {
-          // Create the event date/time string in ISO format with timezone consideration
-          // For now, we'll be lenient and only block if event is more than 1 hour past
           const [year, month, day] = event.date.split('-').map(Number);
           const [hours, minutes] = event.time.split(':').map(Number);
           const eventDateTime = new Date(year, month - 1, day, hours, minutes);
           
-          // Add 1 hour buffer to allow for timezone differences and late arrivals
-          const oneHourAfterEvent = new Date(eventDateTime.getTime() + 60 * 60 * 1000);
-          
-          if (!isNaN(eventDateTime.getTime()) && now > oneHourAfterEvent) {
-            return res.status(400).json({ 
-              message: "Cannot purchase tickets for past events. This event started at " + eventDateTime.toLocaleString() 
+          // Debug logging for McDonald's event
+          if (event.id === '7e8f9bd4-1ba4-4d07-975f-ea1e8b1ee7c3') {
+            console.log('McDonald\'s event check:', {
+              eventDate: event.date,
+              eventTime: event.time,
+              eventDateTime: eventDateTime.toISOString(),
+              now: now.toISOString(),
+              timezone: event.timezone,
+              comparison: now > eventDateTime
             });
           }
-        } catch {
-          // If date parsing fails, continue with purchase
+          
+          // Allow purchasing tickets up until 24 hours after the event starts
+          // This accounts for timezone differences and multi-day events
+          const twentyFourHoursAfterEvent = new Date(eventDateTime.getTime() + 24 * 60 * 60 * 1000);
+          
+          if (!isNaN(eventDateTime.getTime()) && now > twentyFourHoursAfterEvent) {
+            return res.status(400).json({ 
+              message: "Cannot purchase tickets for past events. This event started more than 24 hours ago." 
+            });
+          }
+        } catch (error) {
+          console.error('Date parsing error for event:', event.id, error);
+          // If date parsing fails, allow the purchase
         }
       }
 
