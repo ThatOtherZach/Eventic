@@ -2416,60 +2416,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // 6 or more events available - show 6 events (2 rows)
         
-        // First row (3 slots) - prioritize boosted events
-        const firstRowBoosted = featuredEvents.slice(0, 3);
-        gridEvents.push(...firstRowBoosted);
-        
-        // Calculate remaining slots
-        const firstRowFilled = gridEvents.length;
-        const firstRowRemaining = 3 - firstRowFilled;
-        
-        // Fill first row with regular events if not enough boosted
-        if (firstRowRemaining > 0) {
-          const fillerEvents = availableRegularEvents
-            .sort(() => Math.random() - 0.5)
-            .slice(0, firstRowRemaining)
-            .map(event => ({
-              id: `random-${event.id}`,
-              event,
-              isPaid: false,
-              isBumped: false,
-              duration: '',
-              startTime: new Date(),
-              endTime: new Date(),
-              position: 0
-            }));
-          gridEvents.push(...fillerEvents);
-        }
-        
-        // Second row (3 slots) - use remaining boosted events or regular events
-        const remainingBoosted = featuredEvents.slice(3);
-        const secondRowBoosted = remainingBoosted.slice(0, 3);
-        gridEvents.push(...secondRowBoosted);
-        
-        // Fill second row with regular events
-        const totalSlotsNeeded = 6;
-        const slotsToFill = totalSlotsNeeded - gridEvents.length;
-        
-        if (slotsToFill > 0) {
-          // Get regular events not already used
-          const usedEventIds = new Set(gridEvents.map(ge => ge.event.id));
-          const unusedRegularEvents = availableRegularEvents.filter(e => !usedEventIds.has(e.id));
+        // If we have 6+ featured events, just use the first 6 featured events
+        if (featuredEvents.length >= 6) {
+          gridEvents = featuredEvents.slice(0, 6);
+        } else {
+          // First row (3 slots) - prioritize boosted events
+          const firstRowBoosted = featuredEvents.slice(0, 3);
+          gridEvents.push(...firstRowBoosted);
           
-          const fillerEvents = unusedRegularEvents
-            .sort(() => Math.random() - 0.5)
-            .slice(0, slotsToFill)
-            .map(event => ({
-              id: `random-${event.id}`,
-              event,
-              isPaid: false,
-              isBumped: false,
-              duration: '',
-              startTime: new Date(),
-              endTime: new Date(),
-              position: 0
-            }));
-          gridEvents.push(...fillerEvents);
+          // Calculate remaining slots
+          const firstRowFilled = gridEvents.length;
+          const firstRowRemaining = 3 - firstRowFilled;
+          
+          // Fill first row with regular events if not enough boosted
+          if (firstRowRemaining > 0) {
+            const fillerEvents = availableRegularEvents
+              .sort(() => Math.random() - 0.5)
+              .slice(0, firstRowRemaining)
+              .map(event => ({
+                id: `random-${event.id}`,
+                event,
+                isPaid: false,
+                isBumped: false,
+                duration: '',
+                startTime: new Date(),
+                endTime: new Date(),
+                position: 0
+              }));
+            gridEvents.push(...fillerEvents);
+          }
+          
+          // Second row (3 slots) - use remaining boosted events or regular events
+          const remainingBoosted = featuredEvents.slice(3);
+          const secondRowBoosted = remainingBoosted.slice(0, 3);
+          gridEvents.push(...secondRowBoosted);
+          
+          // Fill second row with regular events
+          const totalSlotsNeeded = 6;
+          const slotsToFill = totalSlotsNeeded - gridEvents.length;
+          
+          if (slotsToFill > 0) {
+            // Get regular events not already used
+            const usedEventIds = new Set(gridEvents.map(ge => ge.event.id));
+            const unusedRegularEvents = availableRegularEvents.filter(e => !usedEventIds.has(e.id));
+            
+            const fillerEvents = unusedRegularEvents
+              .sort(() => Math.random() - 0.5)
+              .slice(0, slotsToFill)
+              .map(event => ({
+                id: `random-${event.id}`,
+                event,
+                isPaid: false,
+                isBumped: false,
+                duration: '',
+                startTime: new Date(),
+                endTime: new Date(),
+                position: 0
+              }));
+            gridEvents.push(...fillerEvents);
+          }
         }
       }
       
