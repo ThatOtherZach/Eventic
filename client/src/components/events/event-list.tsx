@@ -289,29 +289,78 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     <div className="flex-grow-1">
                       <h6 className="mb-1 fw-semibold text-dark">{event.name}</h6>
                       {/* Color bar for event features */}
-                      <div className="d-flex mb-1" style={{ height: '3px', gap: '2px' }}>
-                        {event.p2pValidation && (
-                          <div 
-                            className="bg-success" 
-                            style={{ flex: 1, borderRadius: '2px' }}
-                            title="P2P Validation Enabled"
-                          />
-                        )}
-                        {event.recurringDays && event.recurringDays.length > 0 && (
-                          <div 
-                            className="bg-primary" 
-                            style={{ flex: 1, borderRadius: '2px' }}
-                            title="Recurring Event"
-                          />
-                        )}
-                        {event.endDate && (
-                          <div 
-                            className="bg-warning" 
-                            style={{ flex: 1, borderRadius: '2px' }}
-                            title="Multi-day Event"
-                          />
-                        )}
-                      </div>
+                      {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || 
+                        event.surgePricing || event.stickerUrl || event.p2pValidation || event.allowMinting || 
+                        event.geofence || event.enableVoting || event.recurringType || event.endDate) && (
+                        <div className="d-flex mb-1" style={{ height: '3px', gap: '2px' }}>
+                          {event.isAdminCreated && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#DC2626' }}
+                              title="Mission Event"
+                            />
+                          )}
+                          {event.goldenTicketEnabled && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#FFD700' }}
+                              title="Golden Tickets"
+                            />
+                          )}
+                          {event.specialEffectsEnabled && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#9333EA' }}
+                              title="Special Effects"
+                            />
+                          )}
+                          {event.surgePricing && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#DC2626' }}
+                              title="Surge Pricing"
+                            />
+                          )}
+                          {event.stickerUrl && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#EC4899' }}
+                              title="Custom Stickers"
+                            />
+                          )}
+                          {event.p2pValidation && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#3B82F6' }}
+                              title="P2P Validation"
+                            />
+                          )}
+                          {event.allowMinting && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#000000' }}
+                              title="Collectable NFT"
+                            />
+                          )}
+                          {event.geofence && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#F59E0B' }}
+                              title="Location Lock"
+                            />
+                          )}
+                          {event.enableVoting && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#EAB308' }}
+                              title="Voting Enabled"
+                            />
+                          )}
+                          {event.recurringType && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#059669' }}
+                              title={`${event.recurringType.charAt(0).toUpperCase() + event.recurringType.slice(1)} Recurring`}
+                            />
+                          )}
+                          {event.endDate && (
+                            <div 
+                              style={{ flex: 1, borderRadius: '2px', backgroundColor: '#6B7280' }}
+                              title="Multi-day Event"
+                            />
+                          )}
+                        </div>
+                      )}
                       <p className="text-muted small mb-0">
                         {event.date} • {event.time}
                       </p>
