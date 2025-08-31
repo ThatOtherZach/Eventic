@@ -90,21 +90,20 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
             })
             .map((ticket) => (
             <div key={ticket.ticketId} className="list-group-item">
-              <div className="d-flex justify-content-between align-items-center">
-                <div className="d-flex align-items-center gap-3">
-                  <span className="text-primary fw-semibold" style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
-                    {ticket.ticketNumber}
-                  </span>
-                  <span className="text-muted small">
-                    {format(new Date(ticket.validatedAt), "MMM d, h:mm a")}
-                  </span>
+              <div className="mb-2">
+                <span className="badge bg-primary">{ticket.ticketNumber}</span>
+              </div>
+              <div className="mb-2 text-muted small">
+                {format(new Date(ticket.validatedAt), "MMM d, yyyy 'at' h:mm a")}
+              </div>
+              {(ticket.isGoldenTicket || ticket.ticketType === "Pass" || 
+                (enableVoting && ticket.voteCount > 0) || (!enableVoting && ticket.useCount > 1)) && (
+                <div>
                   {ticket.isGoldenTicket && (
-                    <span className="badge bg-warning text-dark">Golden</span>
+                    <span className="badge bg-warning text-dark me-2">Golden</span>
                   )}
-                </div>
-                <div className="d-flex align-items-center gap-2">
                   {ticket.ticketType === "Pass" && (
-                    <span className="badge bg-info">Pass</span>
+                    <span className="badge bg-info me-2">Pass</span>
                   )}
                   {enableVoting ? (
                     ticket.voteCount > 0 && (
@@ -118,7 +117,7 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
                     )
                   )}
                 </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
