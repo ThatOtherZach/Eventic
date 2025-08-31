@@ -1187,15 +1187,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get current price for this ticket
       const currentPrice = await storage.getCurrentPrice(req.params.eventId);
       
-      // Check if user has sufficient balance (if logged in and paying with Tickets currency)
-      if (userId && currentPrice > 0) {
-        const userBalance = await storage.getUserBalance(userId);
-        if (!userBalance || parseFloat(userBalance.availableBalance) < currentPrice) {
-          return res.status(400).json({ 
-            message: `Insufficient Tickets balance. You need ${currentPrice.toFixed(2)} Tickets but only have ${userBalance?.availableBalance || '0.00'} available.` 
-          });
-        }
-      }
+      // Note: Getting tickets for events is FREE - no currency check needed
+      // The ticketPrice field is kept for display/sorting purposes only
       
       // Generate QR data for the ticket
       const tempTicketNumber = `${event.id.slice(0, 8)}-PENDING`;
@@ -1219,24 +1212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use transactional ticket creation to prevent race conditions
       const ticket = await storage.createTicketWithTransaction(ticketData);
       
-      // Process payment if price > 0 and user is logged in
-      if (userId && currentPrice > 0) {
-        await storage.createLedgerTransaction({
-          transactionType: 'TICKET_PURCHASE',
-          description: `Purchased ticket for ${event.name}`,
-          debits: [{ accountId: userId, accountType: 'user', amount: currentPrice }],
-          credits: [{ accountId: 'system_revenue', accountType: 'system', amount: currentPrice }],
-          metadata: {
-            eventId: event.id,
-            eventName: event.name,
-            ticketId: ticket.id,
-            ticketNumber: ticket.ticketNumber,
-          },
-          relatedEntityId: ticket.id,
-          relatedEntityType: 'ticket',
-          createdBy: userId,
-        });
-      }
+      // Getting tickets is FREE - no currency transaction needed
       
       res.status(201).json(ticket);
     } catch (error) {

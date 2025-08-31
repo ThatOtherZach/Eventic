@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Mail, CheckCircle } from "lucide-react";
+import { Mail, CheckCircle, Ticket } from "lucide-react";
 
 export default function AuthPage() {
   const { user, signUp } = useAuth();

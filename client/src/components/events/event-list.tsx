@@ -368,7 +368,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     </div>
                     <div className="text-end ms-auto">
                       <p className="mb-0 fw-semibold text-dark" style={{ cursor: 'pointer' }}>
-                        {parseFloat(event.ticketPrice) === 0 ? 'Free' : `${parseFloat(event.ticketPrice)} Tickets`}
+                        Free
                       </p>
                     </div>
                   </div>
