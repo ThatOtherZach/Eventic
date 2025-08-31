@@ -1443,6 +1443,8 @@ export class DatabaseStorage implements IStorage {
     totalTickets: number;
     validatedTickets: number;
   }> {
+    // These stats automatically reflect only active events within the 69-day retention period
+    // Archived events are moved to the archivedEvents table and not counted here
     const [eventResult] = await db
       .select({ count: db.$count(events) })
       .from(events);
