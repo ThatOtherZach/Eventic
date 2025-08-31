@@ -206,7 +206,7 @@ export function FeaturedCarousel() {
       </div>
       
       {/* Dynamic color bar showing event types */}
-      <div style={{ marginTop: '-8px' }}>
+      <div style={{ marginTop: '-20px' }}>
         <EventTypesBar events={featuredEvents.map(fe => ({ event: fe.event }))} />
       </div>
     </div>
