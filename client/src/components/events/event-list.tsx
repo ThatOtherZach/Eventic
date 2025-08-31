@@ -368,8 +368,11 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     </div>
                     <div className="text-end ms-auto">
                       <p className="mb-0 fw-semibold text-dark" style={{ cursor: 'pointer' }}>
-                        Free
+                        {parseFloat(event.ticketPrice) === 0 ? 'Free' : `$${parseFloat(event.ticketPrice).toFixed(2)}`}
                       </p>
+                      {parseFloat(event.ticketPrice) !== 0 && (
+                        <p className="text-muted small mb-0">at door</p>
+                      )}
                     </div>
                   </div>
                 </div>
