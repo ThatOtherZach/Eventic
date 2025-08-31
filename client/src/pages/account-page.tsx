@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, LogOut, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle } from "lucide-react";
+import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,10 +11,9 @@ import { PastEvents } from "@/components/archive/past-events";
 import type { Ticket as TicketType, Event, RegistryRecord } from "@shared/schema";
 
 export default function AccountPage() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
-
 
   const { toast } = useToast();
   const { addNotification } = useNotifications();
@@ -64,14 +63,6 @@ export default function AccountPage() {
     enabled: !!user?.id,
   });
 
-
-
-
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   if (!user) {
     return null;
   }
@@ -80,20 +71,9 @@ export default function AccountPage() {
     <div className="container py-5">
       <div className="row mb-4">
         <div className="col">
-          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
+          <div className="d-flex justify-content-between align-items-center">
             <h1 className="h3 fw-bold mb-0">My Account</h1>
-            <div className="d-flex gap-2 flex-wrap">
-              <PastEvents />
-              <button 
-                className="btn btn-outline-secondary"
-                onClick={handleSignOut}
-                data-testid="button-sign-out"
-              >
-                <LogOut size={18} className="me-2" />
-                <span className="d-none d-sm-inline">Sign Out</span>
-                <span className="d-inline d-sm-none">Sign Out</span>
-              </button>
-            </div>
+            <PastEvents />
           </div>
         </div>
       </div>
