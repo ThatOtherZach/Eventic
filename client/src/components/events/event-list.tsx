@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
-import { Eye, Ticket, Edit, ShoppingCart, ChevronLeft, ChevronRight, Plus, Shield } from "lucide-react";
+import { Eye, Ticket, ShoppingCart, ChevronLeft, ChevronRight, Plus, Shield } from "lucide-react";
 import { countries } from "@/lib/countries";
 import { getCountryFlag } from "@/lib/country-flags";
 import type { Event } from "@shared/schema";
@@ -315,17 +315,6 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                       <p className="mb-0 fw-semibold text-dark" style={{ cursor: 'pointer' }}>
                         {parseFloat(event.ticketPrice) === 0 ? 'Free' : `${parseFloat(event.ticketPrice)} Tickets`}
                       </p>
-                      {user && event.userId === user.id && (
-                        <Link
-                          href={`/events/${event.id}/edit`}
-                          className="btn btn-sm btn-link p-0 text-muted"
-                          title="Edit Event"
-                          data-testid={`button-edit-${event.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Edit size={14} />
-                        </Link>
-                      )}
                     </div>
                   </div>
                 </div>
