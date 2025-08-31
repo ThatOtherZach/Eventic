@@ -292,7 +292,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                       {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || 
                         event.surgePricing || event.stickerUrl || event.p2pValidation || event.allowMinting || 
                         event.geofence || event.enableVoting || event.recurringType || event.endDate) && (
-                        <div className="d-flex mb-1" style={{ height: '3px', gap: '2px' }}>
+                        <div className="d-flex mb-1" style={{ height: '3px', gap: '2px', width: '50%' }}>
                           {event.isAdminCreated && (
                             <div 
                               style={{ flex: 1, borderRadius: '2px', backgroundColor: '#DC2626' }}
