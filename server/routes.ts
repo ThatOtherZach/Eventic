@@ -434,6 +434,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const startDate = new Date(event.date);
             if (!isNaN(startDate.getTime())) {
+              // If event has a specific time, use it; otherwise consider the whole day
+              if (event.time) {
+                const [hours, minutes] = event.time.split(':').map(Number);
+                startDate.setHours(hours, minutes, 0, 0);
+              } else {
+                // If no time specified, consider event valid until end of day
+                startDate.setHours(23, 59, 59, 999);
+              }
               return now <= startDate;
             }
           } catch {}
@@ -496,6 +504,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const startDate = new Date(event.date);
             if (!isNaN(startDate.getTime())) {
+              // If event has a specific time, use it; otherwise consider the whole day
+              if (event.time) {
+                const [hours, minutes] = event.time.split(':').map(Number);
+                startDate.setHours(hours, minutes, 0, 0);
+              } else {
+                // If no time specified, consider event valid until end of day
+                startDate.setHours(23, 59, 59, 999);
+              }
               return now <= startDate;
             }
           } catch {}
