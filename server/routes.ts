@@ -2465,7 +2465,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const featuredCount = await storage.getFeaturedEventCount();
-      let position = await storage.getNextAvailablePosition();
       
       // Calculate duration-based pricing in Tickets
       const standardHourlyRate = 2;
@@ -2482,18 +2481,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle bump-in scenario
       if (isBump) {
-        if (position !== null) {
+        // Check if bump is actually needed
+        if (featuredCount < 100) {
           return res.status(400).json({ message: "Bump not needed, slots available" });
         }
         price = bumpHourlyRate * durationHours;
-        position = 1; // Bump to position 1
-        
-        // Shift all existing positions down by 1
-        // This would require additional logic to update existing featured events
-        // For now, we'll just place it at position 1
-      } else if (position === null) {
+      } else if (featuredCount >= 100) {
+        // All slots taken and not bumping
         return res.status(400).json({ message: "All featured slots are taken" });
       }
+
+      // Shift all existing featured events down by 1 position
+      // This ensures newest boosts always appear at the top
+      await storage.shiftFeaturedPositionsDown();
+      
+      // New boost always gets position 1 (top of the list)
+      const position = 1;
 
       // Apply discounts for longer durations
       if (duration === "12hours") {

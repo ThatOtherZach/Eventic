@@ -2014,6 +2014,15 @@ export class DatabaseStorage implements IStorage {
     return null; // All 100 slots taken
   }
 
+  async shiftFeaturedPositionsDown(): Promise<void> {
+    // Shift all existing featured events' positions down by 1
+    const now = new Date();
+    await db
+      .update(featuredEvents)
+      .set({ position: sql`${featuredEvents.position} + 1` })
+      .where(gt(featuredEvents.endTime, now));
+  }
+
   async cleanupExpiredFeaturedEvents(): Promise<void> {
     const now = new Date();
     await db.delete(featuredEvents).where(lt(featuredEvents.endTime, now));
