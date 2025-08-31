@@ -60,48 +60,8 @@ export function QrScannerImplementation() {
       return response.json();
     },
     onSuccess: (result: any) => {
-      // Check if geofence is required
-      if (result.requiresLocation && !result.valid) {
-        setNeedsGeofence(true);
-        setValidationResult(result);
-        // Store the code for retry after location is obtained
-        setPendingCode(pendingCode || manualCode);
-        // Automatically request location
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              // Retry with validator's location
-              validateTicketMutation.mutate({
-                code: pendingCode || manualCode,
-                validatorLat: position.coords.latitude,
-                validatorLng: position.coords.longitude,
-              });
-              setNeedsGeofence(false);
-            },
-            (error) => {
-              toast({
-                title: "Location Required",
-                description: "Eventic needs your location to verify ticket.",
-                variant: "destructive",
-              });
-              setNeedsGeofence(false);
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0
-            }
-          );
-        } else {
-          toast({
-            title: "Location Not Supported",
-            description: "Your browser doesn't support location services.",
-            variant: "destructive",
-          });
-          setNeedsGeofence(false);
-        }
-        return;
-      }
+      // This will only be reached for successful validations now
+      // since location-required responses return 400 status
       
       setValidationResult(result);
 
@@ -151,17 +111,53 @@ export function QrScannerImplementation() {
         });
       }
     },
-    onError: (error: any) => {
-      const result = {
-        valid: false,
-        message: error.message || "Failed to validate ticket",
-      };
-      setValidationResult(result);
-      addNotification({
-        type: "error",
-        title: "❌ Validation Error",
-        description: result.message,
-      });
+    onError: async (error: any) => {
+      // Check if this is a location-required error (400: Location required for this event)
+      if (error.message?.includes("Location required for this event")) {
+        // Automatically request validator's location
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Retry validation with validator's location
+              validateTicketMutation.mutate({
+                code: pendingCode || manualCode,
+                validatorLat: position.coords.latitude,
+                validatorLng: position.coords.longitude,
+              });
+            },
+            (err) => {
+              toast({
+                title: "Location Required",
+                description: "Eventic needs your location to verify ticket.",
+                variant: "destructive",
+              });
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+        } else {
+          toast({
+            title: "Location Not Supported",
+            description: "Your browser doesn't support location services.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Handle other errors normally
+        const result = {
+          valid: false,
+          message: error.message || "Failed to validate ticket",
+        };
+        setValidationResult(result);
+        addNotification({
+          type: "error",
+          title: "❌ Validation Error",
+          description: result.message,
+        });
+      }
     },
   });
 
