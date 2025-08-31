@@ -2327,6 +2327,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Filter out past events from both featured and regular events
       const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
       const isEventNotPast = (event: any) => {
         // Check if event has an end date
         if (event.endDate) {
@@ -2335,19 +2337,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (!isNaN(endDate.getTime())) {
               // Set end date to end of day for comparison
               endDate.setHours(23, 59, 59, 999);
-              // Keep event if it hasn't ended yet
-              return now <= endDate;
+              // Keep event if it ended less than 24 hours ago
+              return endDate >= twentyFourHoursAgo;
+            }
+          } catch {
+            // If date parsing fails, keep the event
+          }
+        } else if (event.date && event.time) {
+          // No end date, single day event - check if it started less than 24 hours ago
+          try {
+            const eventDateTime = new Date(`${event.date}T${event.time}:00`);
+            if (!isNaN(eventDateTime.getTime())) {
+              // Add 24 hours to the event start time for single-day events
+              const eventEndTime = new Date(eventDateTime.getTime() + 24 * 60 * 60 * 1000);
+              return eventEndTime >= now;
             }
           } catch {
             // If date parsing fails, keep the event
           }
         } else if (event.date) {
-          // No end date, check if event hasn't started yet (for single-day events)
+          // Just date, no time - assume end of day
           try {
-            const startDate = new Date(event.date);
-            if (!isNaN(startDate.getTime())) {
-              // Keep event if it hasn't started yet
-              return now <= startDate;
+            const eventDate = new Date(event.date);
+            if (!isNaN(eventDate.getTime())) {
+              eventDate.setHours(23, 59, 59, 999);
+              // Add 24 hours buffer for single-day events
+              const bufferTime = new Date(eventDate.getTime() + 24 * 60 * 60 * 1000);
+              return bufferTime >= now;
             }
           } catch {
             // If date parsing fails, keep the event
