@@ -199,6 +199,8 @@ interface ValidationSession {
   expiresAt: Date;
   tokens: Set<string>;
   codes: Map<string, number>; // code -> timestamp
+  ticketHolderLat?: number;
+  ticketHolderLng?: number;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1206,13 +1208,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Validation Sessions (in-memory for temporary tokens)
-  async createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }> {
+  async createValidationSession(ticketId: string, lat?: number, lng?: number): Promise<{ token: string; expiresAt: Date }> {
     const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes from now
     const session: ValidationSession = {
       ticketId,
       expiresAt,
       tokens: new Set(),
       codes: new Map(),
+      ticketHolderLat: lat,
+      ticketHolderLng: lng,
     };
     this.validationSessions.set(ticketId, session);
     
@@ -1348,7 +1352,7 @@ export class DatabaseStorage implements IStorage {
     return { valid: true, ticketId };
   }
 
-  async checkDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string }> {
+  async checkDynamicToken(token: string): Promise<{ valid: boolean; ticketId?: string; ticketHolderLat?: number; ticketHolderLng?: number }> {
     // First check if it's a 4-digit code
     if (/^\d{4}$/.test(token)) {
       const ticketId = this.validationCodes.get(token);
@@ -1366,7 +1370,12 @@ export class DatabaseStorage implements IStorage {
         return { valid: false };
       }
       
-      return { valid: true, ticketId };
+      return { 
+        valid: true, 
+        ticketId, 
+        ticketHolderLat: session.ticketHolderLat,
+        ticketHolderLng: session.ticketHolderLng
+      };
     }
     
     // Otherwise check as normal token
@@ -1386,7 +1395,12 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Just check validity without marking as validated
-    return { valid: true, ticketId };
+    return { 
+      valid: true, 
+      ticketId,
+      ticketHolderLat: session.ticketHolderLat,
+      ticketHolderLng: session.ticketHolderLng
+    };
   }
 
   // Delegated Validators

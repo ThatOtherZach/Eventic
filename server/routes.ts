@@ -584,6 +584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tickets/:ticketId/validate-session", async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id || null;
+      const { lat, lng } = req.body; // Get location data from ticket holder
       const ticket = await storage.getTicket(req.params.ticketId);
       
       if (!ticket) {
@@ -599,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ticket already validated" });
       }
       
-      const session = await storage.createValidationSession(req.params.ticketId);
+      const session = await storage.createValidationSession(req.params.ticketId, lat, lng);
       res.json(session);
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/validate-session", {
@@ -1365,8 +1366,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Check geofence if enabled
         if (event.geofence && event.latitude && event.longitude) {
+          // Use ticket holder location from session if not provided directly
+          const finalTicketHolderLat = ticketHolderLat || tokenCheck.ticketHolderLat;
+          const finalTicketHolderLng = ticketHolderLng || tokenCheck.ticketHolderLng;
+          
           // Check if location data was provided
-          if (!validatorLat || !validatorLng || !ticketHolderLat || !ticketHolderLng) {
+          if (!validatorLat || !validatorLng || !finalTicketHolderLat || !finalTicketHolderLng) {
             return res.status(400).json({
               message: "Location required for this event",
               valid: false,
@@ -1383,12 +1388,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             validatorLng
           );
           
-          // Check ticket holder's distance from event
+          // Check ticket holder's distance from event (using location from session or provided)
           const ticketHolderDistance = calculateDistance(
             Number(event.latitude),
             Number(event.longitude),
-            ticketHolderLat,
-            ticketHolderLng
+            finalTicketHolderLat,
+            finalTicketHolderLng
           );
           
           // Both must be within 690 meters

@@ -172,8 +172,8 @@ export default function TicketViewPage(): React.ReactElement {
 
   // Start validation session mutation
   const startValidationMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", `/api/tickets/${ticketId}/validate-session`);
+    mutationFn: async (locationData?: {lat: number, lng: number}) => {
+      const response = await apiRequest("POST", `/api/tickets/${ticketId}/validate-session`, locationData);
       return response.json();
     },
     onSuccess: (data: ValidationSession) => {
@@ -458,7 +458,7 @@ export default function TicketViewPage(): React.ReactElement {
               
               {/* Event Feature Badges */}
               <div className="d-flex flex-wrap gap-1 mb-3">
-                {event.isAdminCreated && (
+                {(event as any).isAdminCreated && (
                   <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
                     Mission
                   </span>
@@ -694,7 +694,36 @@ export default function TicketViewPage(): React.ReactElement {
                       )}
                       <button
                         className="btn btn-primary w-100"
-                        onClick={() => startValidationMutation.mutate()}
+                        onClick={() => {
+                          // For geofenced events, request location first
+                          if (event.geofence) {
+                            if (navigator.geolocation) {
+                              navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                  startValidationMutation.mutate({
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude
+                                  });
+                                },
+                                (error) => {
+                                  toast({
+                                    title: "Location Required",
+                                    description: "Please enable location access to validate this ticket at the event venue.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              );
+                            } else {
+                              toast({
+                                title: "Location Not Supported",
+                                description: "Your browser doesn't support location services.",
+                                variant: "destructive",
+                              });
+                            }
+                          } else {
+                            startValidationMutation.mutate(undefined);
+                          }
+                        }}
                         disabled={startValidationMutation.isPending || !timeValidation.valid}
                         data-testid="button-revalidate-ticket"
                       >
@@ -885,7 +914,36 @@ export default function TicketViewPage(): React.ReactElement {
                   )}
                   <button
                     className="btn btn-primary w-100"
-                    onClick={() => startValidationMutation.mutate()}
+                    onClick={() => {
+                      // For geofenced events, request location first
+                      if (event.geofence) {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                              startValidationMutation.mutate({
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                              });
+                            },
+                            (error) => {
+                              toast({
+                                title: "Location Required",
+                                description: "Please enable location access to validate this ticket at the event venue.",
+                                variant: "destructive",
+                              });
+                            }
+                          );
+                        } else {
+                          toast({
+                            title: "Location Not Supported",
+                            description: "Your browser doesn't support location services.",
+                            variant: "destructive",
+                          });
+                        }
+                      } else {
+                        startValidationMutation.mutate(undefined);
+                      }
+                    }}
                     disabled={startValidationMutation.isPending || !timeValidation.valid}
                     data-testid="button-validate-ticket"
                   >

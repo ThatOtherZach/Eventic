@@ -45,9 +45,6 @@ export function QrScannerImplementation() {
   >([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [manualCode, setManualCode] = useState<string>("");
-  const [validatorLocation, setValidatorLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [ticketHolderLocation, setTicketHolderLocation] = useState<{lat: number, lng: number} | null>(null);
-  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [needsGeofence, setNeedsGeofence] = useState(false);
 
   const validateTicketMutation = useMutation({
@@ -63,9 +60,15 @@ export function QrScannerImplementation() {
     },
     onSuccess: (result: any) => {
       // Check if geofence is required
-      if (result.requiresLocation) {
+      if (result.requiresLocation && !result.valid) {
         setNeedsGeofence(true);
         setValidationResult(result);
+        // Store the code that needs geofencing
+        const lastCode = manualCode || result.qrData;
+        if (lastCode) {
+          // Automatically request location and retry
+          handleGeofencedValidation(lastCode);
+        }
         return;
       }
       
@@ -135,57 +138,6 @@ export function QrScannerImplementation() {
     setValidationResult(null);
   };
 
-  const requestLocationAndValidate = async (code: string) => {
-    setIsRequestingLocation(true);
-    
-    try {
-      // Request validator's location
-      const validatorPos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        });
-      });
-      
-      setValidatorLocation({
-        lat: validatorPos.coords.latitude,
-        lng: validatorPos.coords.longitude
-      });
-      
-      // Request ticket holder's location (simulated - in real app, ticket holder would provide this)
-      toast({
-        title: "📍 Location Request",
-        description: "Ask the ticket holder to confirm their location on their device",
-      });
-      
-      // For now, use the same location for both (in production, ticket holder would send their location)
-      const ticketHolderPos = validatorPos;
-      
-      setTicketHolderLocation({
-        lat: ticketHolderPos.coords.latitude,
-        lng: ticketHolderPos.coords.longitude
-      });
-      
-      // Validate with locations
-      validateTicketMutation.mutate({
-        code,
-        validatorLat: validatorPos.coords.latitude,
-        validatorLng: validatorPos.coords.longitude,
-        ticketHolderLat: ticketHolderPos.coords.latitude,
-        ticketHolderLng: ticketHolderPos.coords.longitude,
-      });
-    } catch (error) {
-      toast({
-        title: "❌ Location Error",
-        description: "Could not get location. Please enable location services.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRequestingLocation(false);
-      setNeedsGeofence(false);
-    }
-  };
   
   const handleManualCodeSubmit = () => {
     if (!manualCode || manualCode.length !== 4) {
@@ -197,9 +149,46 @@ export function QrScannerImplementation() {
       return;
     }
 
-    // First try without location
+    // First try without location - the server will tell us if we need it
     validateTicketMutation.mutate({code: manualCode});
     setManualCode("");
+  };
+
+  // Handle validation with geofencing
+  const handleGeofencedValidation = (code: string) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Now validate with validator's location
+          // The ticket holder's location comes from the session
+          validateTicketMutation.mutate({
+            code,
+            validatorLat: position.coords.latitude,
+            validatorLng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          toast({
+            title: "Location Required",
+            description: "Please enable location access to validate tickets at this geofenced event.",
+            variant: "destructive",
+          });
+          setNeedsGeofence(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      toast({
+        title: "Location Not Supported",
+        description: "Your browser doesn't support location services.",
+        variant: "destructive",
+      });
+      setNeedsGeofence(false);
+    }
   };
 
   return (
@@ -285,25 +274,10 @@ export function QrScannerImplementation() {
             <p className="mb-3">
               This event has geofencing enabled. Both you and the ticket holder must be within 690 meters of the venue.
             </p>
-            <button
-              className="btn btn-warning w-100"
-              onClick={() => requestLocationAndValidate(manualCode || validationResult.ticket?.ticketNumber || "")}
-              disabled={isRequestingLocation}
-            >
-              {isRequestingLocation ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" />
-                  Getting Location...
-                </>
-              ) : (
-                <>
-                  📍 Share Location & Validate
-                </>
-              )}
-            </button>
-            <small className="text-muted d-block mt-2">
-              Your browser will ask for location permission. The ticket holder will also need to share their location.
-            </small>
+            <div className="alert alert-info small mb-0">
+              <strong>📍 Requesting location access...</strong><br/>
+              Your browser will ask for permission to share your location. The ticket holder's location was already captured when they started validation.
+            </div>
           </div>
         </div>
       )}
