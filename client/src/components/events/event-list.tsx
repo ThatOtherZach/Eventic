@@ -287,23 +287,29 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                       </div>
                     )}
                     <div className="flex-grow-1">
-                      <div className="d-flex align-items-center flex-wrap">
-                        <h6 className="mb-1 fw-semibold me-2 text-dark">{event.name}</h6>
+                      <h6 className="mb-1 fw-semibold text-dark">{event.name}</h6>
+                      {/* Color bar for event features */}
+                      <div className="d-flex mb-1" style={{ height: '3px', gap: '2px' }}>
                         {event.p2pValidation && (
-                          <span className="badge bg-success me-2" style={{ fontSize: "0.7em" }} title="Peer-to-Peer Validation Event">
-                            <Shield size={12} className="me-1" style={{ verticalAlign: "middle" }} />
-                            P2P
-                          </span>
+                          <div 
+                            className="bg-success" 
+                            style={{ flex: 1, borderRadius: '2px' }}
+                            title="P2P Validation Enabled"
+                          />
                         )}
                         {event.recurringDays && event.recurringDays.length > 0 && (
-                          <span className="badge bg-primary me-2" style={{ fontSize: "0.7em" }} title="Recurring Event">
-                            Recurring
-                          </span>
+                          <div 
+                            className="bg-primary" 
+                            style={{ flex: 1, borderRadius: '2px' }}
+                            title="Recurring Event"
+                          />
                         )}
                         {event.endDate && (
-                          <span className="badge bg-warning text-dark me-2" style={{ fontSize: "0.7em" }} title="Multi-day Event">
-                            Multi-day
-                          </span>
+                          <div 
+                            className="bg-warning" 
+                            style={{ flex: 1, borderRadius: '2px' }}
+                            title="Multi-day Event"
+                          />
                         )}
                       </div>
                       <p className="text-muted small mb-0">
