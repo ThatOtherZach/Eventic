@@ -1498,7 +1498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if ticket hasn't been validated yet
       if (!ticket.isValidated) {
         return res.status(400).json({ 
-          message: "This ticket needs to be validated first before it can receive votes", 
+          message: event.enableVoting ? "This ticket needs to be validated first before it can receive votes" : "Kyle needs to be validated first before you can use P2P validation", 
           valid: false 
         });
       }
