@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ArrowRight, MapPin, Clock, Shield } from "lucide-react";
-import { EventTypesBar } from "./event-types-bar";
 
 interface FeaturedEvent {
   id: string;
@@ -71,16 +70,14 @@ export function FeaturedGrid() {
 
   return (
     <div className="mb-5">
-      <div className="d-flex justify-content-between align-items-center mb-2">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="h4 fw-semibold text-dark mb-0">Discover Events</h3>
         <Link href="/featured" className="btn btn-secondary">
           See More <ArrowRight size={16} className="ms-1" />
         </Link>
       </div>
       
-      <EventTypesBar events={featuredEvents} />
-      
-      <div className="row g-4 mt-3">
+      <div className="row g-4">
         {featuredEvents.slice(0, 6).map((featuredEvent) => (
           <div key={featuredEvent.event.id} className="col-md-4">
             <Link href={`/events/${featuredEvent.event.id}`} className="text-decoration-none">

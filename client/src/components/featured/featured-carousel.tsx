@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Star, Clock, MapPin } from "lucide-react";
 import type { FeaturedEvent, Event } from "@shared/schema";
+import { EventTypesBar } from "./event-types-bar";
 
 interface FeaturedEventsResponse {
   id: string;
@@ -203,6 +204,9 @@ export function FeaturedCarousel() {
           </div>
         )}
       </div>
+      
+      {/* Dynamic color bar showing event types */}
+      <EventTypesBar events={featuredEvents.map(fe => ({ event: fe.event }))} />
     </div>
   );
 }
