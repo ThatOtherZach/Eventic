@@ -96,13 +96,15 @@ export default function TicketViewPage(): React.ReactElement {
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Fetch ticket details
+  // Fetch ticket details with polling during validation
   const { data: ticketData, isLoading, error } = useQuery<{ ticket: Ticket; event: Event }>({
     queryKey: [`/api/tickets/${ticketId}`],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/tickets/${ticketId}`);
       return response.json();
     },
+    // Poll every 2 seconds while validation is active
+    refetchInterval: isValidating ? 2000 : false,
   });
 
   // Check if user has already rated
@@ -271,6 +273,9 @@ export default function TicketViewPage(): React.ReactElement {
       clearInterval(countdownRef.current);
       countdownRef.current = null;
     }
+    
+    // Refetch ticket data when validation ends to ensure UI updates
+    queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
   };
 
   // Check if ticket is already validated on mount and after mutations
