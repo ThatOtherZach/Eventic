@@ -1490,7 +1490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Don't allow self-validation
       if (ticket.userId === userId) {
         return res.status(400).json({ 
-          message: "You cannot vote for your own ticket", 
+          message: event.enableVoting ? "You cannot vote for your own ticket" : "You cannot validate your own ticket", 
           valid: false 
         });
       }
