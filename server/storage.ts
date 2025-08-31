@@ -752,22 +752,20 @@ export class DatabaseStorage implements IStorage {
         
         // Process currency transaction if price > 0 and buyer is logged in
         if (newBuyerId && ticketPrice > 0) {
-          // Ensure currency accounts exist
-          await this.ensureUserCurrencyAccount(newBuyerId);
-          await this.ensureUserCurrencyAccount(resellEntry.originalOwnerId);
+          // Ensure currency accounts exist - they should already exist from initial purchase
           
-          // Create transaction ID
-          const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          // Create ledger entries for the resale transaction
+          const transactionType = 'TICKET_RESALE';
+          const transactionDescription = `Resale of ticket for event ${eventId}`;
           
           // Debit buyer for full amount
-          await tx.insert(currencyLedgerEntries).values({
-            transactionId,
+          await tx.insert(currencyLedger).values({
+            transactionType,
             accountId: newBuyerId,
             entryType: 'debit',
             amount: ticketPrice.toString(),
-            description: `Purchased resale ticket for event ${eventId}`,
+            description: `Purchased resale ticket`,
             metadata: {
-              eventId,
               ticketId: ticket.id,
               ticketNumber: newTicketNumber,
               sellerId: resellEntry.originalOwnerId,
@@ -776,14 +774,13 @@ export class DatabaseStorage implements IStorage {
           });
           
           // Credit seller with amount minus platform fee
-          await tx.insert(currencyLedgerEntries).values({
-            transactionId,
+          await tx.insert(currencyLedger).values({
+            transactionType,
             accountId: resellEntry.originalOwnerId,
             entryType: 'credit',
             amount: sellerAmount.toString(),
-            description: `Sold ticket for event ${eventId}`,
+            description: `Sold ticket - received payment`,
             metadata: {
-              eventId,
               ticketId: ticket.id,
               ticketNumber: ticket.ticketNumber,
               buyerId: newBuyerId,
@@ -794,14 +791,13 @@ export class DatabaseStorage implements IStorage {
           
           // Credit platform fee to system account if there's a fee
           if (platformFee > 0) {
-            await tx.insert(currencyLedgerEntries).values({
-              transactionId,
+            await tx.insert(currencyLedger).values({
+              transactionType,
               accountId: 'platform_fees',
               entryType: 'credit',
               amount: platformFee.toString(),
-              description: `Platform fee for resale of ticket ${ticket.ticketNumber}`,
+              description: `Platform fee for ticket resale`,
               metadata: {
-                eventId,
                 ticketId: ticket.id,
                 sellerId: resellEntry.originalOwnerId,
                 buyerId: newBuyerId,
@@ -1535,6 +1531,52 @@ export class DatabaseStorage implements IStorage {
           totalTicketsSold,
           totalRevenue: totalRevenue.toFixed(2),
         });
+      }
+
+      // Process refunds for unvalidated tickets before archiving
+      const unvalidatedTickets = eventTickets.filter(ticket => !ticket.isValidated);
+      if (unvalidatedTickets.length > 0) {
+        console.log(`[ARCHIVE] Processing ${unvalidatedTickets.length} refunds for unvalidated tickets`);
+        
+        // Group unvalidated tickets by user for batch refunds
+        const refundsByUser = new Map<string, number>();
+        for (const ticket of unvalidatedTickets) {
+          if (ticket.userId && ticket.purchasePrice) {
+            const price = parseFloat(ticket.purchasePrice);
+            if (price > 0) {
+              const currentTotal = refundsByUser.get(ticket.userId) || 0;
+              refundsByUser.set(ticket.userId, currentTotal + price);
+            }
+          }
+        }
+        
+        // Process refunds for each user
+        for (const [userId, refundAmount] of Array.from(refundsByUser.entries())) {
+          try {
+            // Currency account should exist from initial purchase
+            
+            // Create refund transaction
+            await this.createLedgerTransaction({
+              transactionType: 'TICKET_REFUND',
+              description: `Refund for unvalidated tickets - Event: ${event.name} (archived)`,
+              debits: [{ accountId: 'system_revenue', accountType: 'system', amount: refundAmount }],
+              credits: [{ accountId: userId, accountType: 'user', amount: refundAmount }],
+              metadata: {
+                eventId: event.id,
+                eventName: event.name,
+                reason: 'event_archived',
+                ticketCount: unvalidatedTickets.filter(t => t.userId === userId).length,
+              },
+              relatedEntityId: eventId,
+              relatedEntityType: 'event',
+              createdBy: 'system',
+            });
+            
+            console.log(`[ARCHIVE] Refunded ${refundAmount} Tickets to user ${userId} for event ${event.name}`);
+          } catch (error) {
+            console.error(`[ARCHIVE] Failed to refund user ${userId}:`, error);
+          }
+        }
       }
 
       // Archive the event for each ticket holder (attendees)
