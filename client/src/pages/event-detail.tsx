@@ -792,28 +792,28 @@ export default function EventDetailPage() {
                             <span className="badge bg-warning text-dark">Listed for Resale</span>
                           )}
                         </div>
-                        {(ticket as any).resellStatus !== "for_resale" && (
-                          <Link href={`/tickets/${ticket.id}`}>
-                            <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
-                              <Eye size={14} className="me-1" />
-                              View
-                            </a>
-                          </Link>
-                        )}
-                      </div>
-                      {canResellTicket(ticket) && (
-                        <div>
-                          <button
-                            className="btn btn-sm btn-outline-warning"
-                            onClick={() => handleResell(ticket.id)}
-                            disabled={resellTicketMutation.isPending}
-                            data-testid={`button-resell-ticket-${ticket.id}`}
-                          >
-                            <RotateCcw size={14} className="me-1" />
-                            {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
-                          </button>
+                        <div className="d-flex gap-2">
+                          {(ticket as any).resellStatus !== "for_resale" && (
+                            <Link href={`/tickets/${ticket.id}`}>
+                              <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
+                                <Eye size={14} className="me-1" />
+                                View
+                              </a>
+                            </Link>
+                          )}
+                          {canResellTicket(ticket) && (
+                            <button
+                              className="btn btn-sm btn-outline-warning"
+                              onClick={() => handleResell(ticket.id)}
+                              disabled={resellTicketMutation.isPending}
+                              data-testid={`button-resell-ticket-${ticket.id}`}
+                            >
+                              <RotateCcw size={14} className="me-1" />
+                              {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
+                            </button>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>
