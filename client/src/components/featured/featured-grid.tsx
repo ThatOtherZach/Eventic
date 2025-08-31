@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ArrowRight, MapPin, Clock, Shield } from "lucide-react";
+import { EventTypesBar } from "./event-types-bar";
 
 interface FeaturedEvent {
   id: string;
@@ -76,6 +77,8 @@ export function FeaturedGrid() {
           See More <ArrowRight size={16} className="ms-1" />
         </Link>
       </div>
+      
+      <EventTypesBar events={featuredEvents} />
       
       <div className="row g-4">
         {featuredEvents.slice(0, 6).map((featuredEvent) => (
