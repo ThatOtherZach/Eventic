@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield, Users, QrCode } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield, Users } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -565,64 +565,6 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           )}
 
-          {/* P2P Voting for Voting-Enabled Events */}
-          {event.enableVoting && event.p2pValidation && ticket.isValidated && (
-            <div className="card mb-3">
-              <div className="card-body">
-                <h5 className="card-title mb-3">
-                  <Users size={20} className="me-2" />
-                  Vote for Other Attendees
-                </h5>
-                <p className="text-muted mb-3">
-                  Enter another attendee's 4-digit validation code to vote for them.
-                </p>
-                <form data-p2p-vote onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const code = formData.get('voteCode') as string;
-                  if (code && code.length === 4) {
-                    p2pVoteMutation.mutate(code.toUpperCase());
-                  }
-                }}>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      name="voteCode"
-                      className="form-control"
-                      placeholder="Enter 4-digit code"
-                      maxLength={4}
-                      pattern="[0-9A-Z]{4}"
-                      required
-                      data-testid="input-vote-code"
-                    />
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      disabled={p2pVoteMutation.isPending}
-                      data-testid="button-submit-vote"
-                    >
-                      {p2pVoteMutation.isPending ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Voting...
-                        </>
-                      ) : (
-                        <>
-                          <ThumbsUp size={18} className="me-2" />
-                          Submit Vote
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-                {p2pVoteError && (
-                  <div className="alert alert-danger mt-2 small">
-                    {p2pVoteError}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Validation Section */}
           <div className="card">
@@ -639,6 +581,76 @@ export default function TicketViewPage(): React.ReactElement {
                     <span className="badge bg-warning text-dark">🎫 GOLDEN TICKET WINNER! 🎫</span>
                   </h5>
                   <p className="mb-0">Congratulations!</p>
+                </div>
+              )}
+
+              {/* For voting-enabled events with P2P, show validation code for others to vote */}
+              {event.enableVoting && event.p2pValidation && ticket.isValidated && ticket.validationCode && (
+                <div className="mb-3">
+                  <div className="alert alert-info">
+                    <h6 className="mb-2">
+                      <Users size={18} className="me-2" />
+                      Your Validation Code for Voting
+                    </h6>
+                    <div className="bg-primary text-white rounded-3 p-3 mb-2 text-center">
+                      <p className="text-white-50 small mb-1">Share this code with other attendees so they can vote for you:</p>
+                      <h2 className="mb-0 font-monospace fw-bold" style={{ letterSpacing: '0.3rem' }}>
+                        {ticket.validationCode}
+                      </h2>
+                    </div>
+                  </div>
+                  
+                  {/* Vote input section */}
+                  <div className="alert alert-light">
+                    <h6 className="mb-2">
+                      <ThumbsUp size={18} className="me-2" />
+                      Vote for Another Attendee
+                    </h6>
+                    <form data-p2p-vote onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      const code = formData.get('voteCode') as string;
+                      if (code && code.length === 4) {
+                        p2pVoteMutation.mutate(code.toUpperCase());
+                      }
+                    }}>
+                      <div className="input-group">
+                        <input
+                          type="text"
+                          name="voteCode"
+                          className="form-control"
+                          placeholder="Enter 4-digit code"
+                          maxLength={4}
+                          pattern="[0-9A-Z]{4}"
+                          required
+                          data-testid="input-vote-code"
+                        />
+                        <button
+                          type="submit"
+                          className="btn btn-primary"
+                          disabled={p2pVoteMutation.isPending}
+                          data-testid="button-submit-vote"
+                        >
+                          {p2pVoteMutation.isPending ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                              Voting...
+                            </>
+                          ) : (
+                            <>
+                              <ThumbsUp size={16} className="me-1" />
+                              Submit Vote
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                    {p2pVoteError && (
+                      <div className="alert alert-danger mt-2 small">
+                        {p2pVoteError}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
