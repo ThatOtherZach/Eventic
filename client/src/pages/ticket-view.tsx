@@ -767,7 +767,8 @@ export default function TicketViewPage(): React.ReactElement {
                             className="form-control mb-2"
                             placeholder="Enter 4-digit code"
                             maxLength={4}
-                            pattern="[0-9A-Z]{4}"
+                            pattern="[0-9A-Za-z]{4}"
+                            style={{ textTransform: 'uppercase' }}
                             required
                             data-testid="input-vote-code"
                           />
@@ -789,7 +790,11 @@ export default function TicketViewPage(): React.ReactElement {
                         </form>
                         {p2pVoteError && (
                           <div className="alert alert-danger mt-2 small">
-                            {p2pVoteError}
+                            {typeof p2pVoteError === 'object' && 'message' in p2pVoteError 
+                              ? (p2pVoteError as any).message 
+                              : typeof p2pVoteError === 'string' 
+                              ? p2pVoteError 
+                              : 'Invalid validation code'}
                           </div>
                         )}
                       </div>
@@ -826,9 +831,17 @@ export default function TicketViewPage(): React.ReactElement {
                   {/* Stop Button - different text for voting vs validation */}
                   <button
                     className="btn btn-secondary w-100"
-                    onClick={event.enableVoting && event.p2pValidation && ticket.isValidated 
-                      ? () => setIsValidating(false) 
-                      : stopValidation}
+                    onClick={() => {
+                      if (event.enableVoting && event.p2pValidation && ticket.isValidated) {
+                        // For voting, just hide the panel
+                        setIsValidating(false);
+                        setTimeRemaining(0);
+                        setCurrentCode('');
+                      } else {
+                        // For regular validation, stop the session
+                        stopValidation();
+                      }
+                    }}
                     data-testid="button-stop-validation"
                   >
                     {event.enableVoting && event.p2pValidation && ticket.isValidated 
