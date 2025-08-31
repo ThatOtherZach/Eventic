@@ -1,12 +1,30 @@
 import { Link, useLocation } from "wouter";
 import { Calendar, Check, User, LogOut, LogIn, Bell, Settings, Scroll } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Notification } from "@shared/schema";
 
 export function Navigation() {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
+  const navbarCollapseRef = useRef<HTMLDivElement>(null);
+  const navbarTogglerRef = useRef<HTMLButtonElement>(null);
+  
+  // Function to close the navbar
+  const closeNavbar = () => {
+    if (navbarCollapseRef.current?.classList.contains('show')) {
+      navbarCollapseRef.current.classList.remove('show');
+      if (navbarTogglerRef.current) {
+        navbarTogglerRef.current.setAttribute('aria-expanded', 'false');
+      }
+    }
+  };
+  
+  // Close navbar when location changes
+  useEffect(() => {
+    closeNavbar();
+  }, [location]);
 
   const navItems = [
     { path: "/events", label: "Events", icon: Calendar, ariaLabel: "View all events" },
@@ -15,6 +33,7 @@ export function Navigation() {
   ];
 
   const handleSignOut = async () => {
+    closeNavbar();
     await signOut();
   };
 
@@ -27,6 +46,7 @@ export function Navigation() {
         </Link>
         
         <button 
+          ref={navbarTogglerRef}
           className="navbar-toggler" 
           type="button" 
           data-bs-toggle="collapse" 
@@ -38,7 +58,7 @@ export function Navigation() {
           <span className="navbar-toggler-icon"></span>
         </button>
         
-        <div className="collapse navbar-collapse" id="navbarNav">
+        <div ref={navbarCollapseRef} className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
