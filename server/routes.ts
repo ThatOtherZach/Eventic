@@ -419,31 +419,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all public events only - private events must never appear in location listings
       let events = (await storage.getEvents()).filter(event => !event.isPrivate);
       
-      // Filter out past events
+      // Filter out past events (only if more than 24 hours past)
       const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       events = events.filter(event => {
         if (event.endDate) {
           try {
             const endDate = new Date(event.endDate);
             if (!isNaN(endDate.getTime())) {
               endDate.setHours(23, 59, 59, 999);
-              return now <= endDate;
+              return endDate >= twentyFourHoursAgo;
             }
           } catch {}
-        } else if (event.date) {
+        } else if (event.date && event.time) {
           try {
-            const startDate = new Date(event.date);
-            if (!isNaN(startDate.getTime())) {
-              // If event has a specific time, use it; otherwise consider the whole day
-              if (event.time) {
-                const [hours, minutes] = event.time.split(':').map(Number);
-                startDate.setHours(hours, minutes, 0, 0);
-              } else {
-                // If no time specified, consider event valid until end of day
-                startDate.setHours(23, 59, 59, 999);
-              }
-              return now <= startDate;
-            }
+            const [year, month, day] = event.date.split('-').map(Number);
+            const [hours, minutes] = event.time.split(':').map(Number);
+            const eventDateTime = new Date(year, month - 1, day, hours, minutes);
+            
+            // Include events that ended less than 24 hours ago
+            return eventDateTime >= twentyFourHoursAgo;
           } catch {}
         }
         return true;
@@ -489,31 +484,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all public events only - private events must never appear in hashtag listings
       let events = (await storage.getEvents()).filter(event => !event.isPrivate);
       
-      // Filter out past events
+      // Filter out past events (only if more than 24 hours past)
       const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       events = events.filter(event => {
         if (event.endDate) {
           try {
             const endDate = new Date(event.endDate);
             if (!isNaN(endDate.getTime())) {
               endDate.setHours(23, 59, 59, 999);
-              return now <= endDate;
+              return endDate >= twentyFourHoursAgo;
             }
           } catch {}
-        } else if (event.date) {
+        } else if (event.date && event.time) {
           try {
-            const startDate = new Date(event.date);
-            if (!isNaN(startDate.getTime())) {
-              // If event has a specific time, use it; otherwise consider the whole day
-              if (event.time) {
-                const [hours, minutes] = event.time.split(':').map(Number);
-                startDate.setHours(hours, minutes, 0, 0);
-              } else {
-                // If no time specified, consider event valid until end of day
-                startDate.setHours(23, 59, 59, 999);
-              }
-              return now <= startDate;
-            }
+            const [year, month, day] = event.date.split('-').map(Number);
+            const [hours, minutes] = event.time.split(':').map(Number);
+            const eventDateTime = new Date(year, month - 1, day, hours, minutes);
+            
+            // Include events that ended less than 24 hours ago
+            return eventDateTime >= twentyFourHoursAgo;
           } catch {}
         }
         return true;
@@ -718,23 +708,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
 
       
-      // Filter out past events and sort by date (soonest first)
+      // Filter out past events (only if more than 24 hours past) and sort by date (soonest first)
       const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       const activeEvents = publicEvents.filter(event => {
         try {
-          const eventDateTime = new Date(`${event.date}T${event.time}`);
-          return eventDateTime > now;
+          // Parse date and time separately to handle properly
+          const [year, month, day] = event.date.split('-').map(Number);
+          const [hours, minutes] = event.time.split(':').map(Number);
+          const eventDateTime = new Date(year, month - 1, day, hours, minutes);
+          
+          // Include events that haven't started yet OR ended less than 24 hours ago
+          return eventDateTime > twentyFourHoursAgo;
         } catch (error) {
-          // If date parsing fails, exclude the event
-          return false;
+          // If date parsing fails, include the event to be safe
+          return true;
         }
       });
       
       // Sort events by date and time, prioritizing events in next 24 hours
       const sortedEvents = activeEvents.sort((a, b) => {
         try {
-          const dateTimeA = new Date(`${a.date}T${a.time}`);
-          const dateTimeB = new Date(`${b.date}T${b.time}`);
+          // Parse dates properly
+          const [yearA, monthA, dayA] = a.date.split('-').map(Number);
+          const [hoursA, minutesA] = a.time.split(':').map(Number);
+          const dateTimeA = new Date(yearA, monthA - 1, dayA, hoursA, minutesA);
+          
+          const [yearB, monthB, dayB] = b.date.split('-').map(Number);
+          const [hoursB, minutesB] = b.time.split(':').map(Number);
+          const dateTimeB = new Date(yearB, monthB - 1, dayB, hoursB, minutesB);
           
           const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
           
@@ -1121,13 +1123,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch {
           // If date parsing fails, continue with other checks
         }
-      } else if (event.date) {
+      } else if (event.date && event.time) {
         // No end date, check if event has started (for single-day events)
         try {
-          const startDate = new Date(event.date);
-          if (!isNaN(startDate.getTime()) && now > startDate) {
+          const [year, month, day] = event.date.split('-').map(Number);
+          const [hours, minutes] = event.time.split(':').map(Number);
+          const eventDateTime = new Date(year, month - 1, day, hours, minutes);
+          
+          if (!isNaN(eventDateTime.getTime()) && now > eventDateTime) {
             return res.status(400).json({ 
-              message: "Cannot purchase tickets for past events. This event started on " + startDate.toLocaleDateString() 
+              message: "Cannot purchase tickets for past events. This event started at " + eventDateTime.toLocaleString() 
             });
           }
         } catch {
