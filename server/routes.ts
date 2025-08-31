@@ -1440,9 +1440,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // P2P Validation route for voting
   app.post("/api/validate/p2p", requireAuth, validationRateLimiter, async (req: AuthenticatedRequest, res) => {
     try {
-      const { qrData, eventId } = req.body;
-      if (!qrData) {
-        return res.status(400).json({ message: "QR data is required" });
+      const { validationCode, eventId } = req.body;
+      if (!validationCode) {
+        return res.status(400).json({ message: "Validation code is required" });
       }
 
       const userId = req.user?.id;
@@ -1451,11 +1451,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required for P2P validation" });
       }
 
-      // Get the ticket being validated
-      const ticket = await storage.getTicketByQrData(qrData);
+      // Get the ticket by validation code
+      const ticket = await storage.getTicketByValidationCode(validationCode.toUpperCase());
       if (!ticket) {
         return res.status(404).json({ 
-          message: "Invalid ticket", 
+          message: "Invalid validation code", 
           valid: false 
         });
       }
@@ -1490,7 +1490,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Don't allow self-validation
       if (ticket.userId === userId) {
         return res.status(400).json({ 
-          message: "You cannot validate your own ticket", 
+          message: "You cannot vote for your own ticket", 
+          valid: false 
+        });
+      }
+
+      // Check if ticket hasn't been validated yet
+      if (!ticket.isValidated) {
+        return res.status(400).json({ 
+          message: "This ticket needs to be validated first before it can receive votes", 
           valid: false 
         });
       }
@@ -1498,7 +1506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if ticket has already been validated by this user
       // (We could track this more specifically if needed)
       
-      // Validate the ticket (this will increment voteCount for voting-enabled events)
+      // Submit the vote (this will increment voteCount for voting-enabled events)
       const validatedTicket = await storage.validateTicket(ticket.id, undefined, userId);
       
       return res.json({ 

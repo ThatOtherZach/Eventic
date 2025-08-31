@@ -36,6 +36,7 @@ export interface IStorage {
   getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]>;
   getTicket(id: string): Promise<Ticket | undefined>;
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
+  getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
   reassignGoldenTicketByVotes(eventId: string): Promise<void>;
@@ -540,6 +541,11 @@ export class DatabaseStorage implements IStorage {
     return ticket || undefined;
   }
 
+  async getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined> {
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.validationCode, validationCode));
+    return ticket || undefined;
+  }
+
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
     const [ticket] = await db.insert(tickets).values(insertTicket).returning();
     return ticket;
@@ -978,14 +984,17 @@ export class DatabaseStorage implements IStorage {
         isValidated: true, 
         validatedAt: new Date(),
         validationCode: fullValidationCode,
-        useCount: (currentTicket.useCount || 0) + 1, // Always increment use count for passes
         isGoldenTicket: isGoldenTicket,
         specialEffect: specialEffect
     };
     
-    // If this is a voting-enabled event and being validated by another ticket holder (P2P), increment vote count
+    // If this is a voting-enabled event and being validated by another ticket holder (P2P)
     if (event.enableVoting && validatorId && validatorId !== currentTicket.userId) {
+      // This is a vote, only increment vote count
       updateData.voteCount = (currentTicket.voteCount || 0) + 1;
+    } else {
+      // This is regular validation, increment use count
+      updateData.useCount = (currentTicket.useCount || 0) + 1;
     }
     
     const [ticket] = await db

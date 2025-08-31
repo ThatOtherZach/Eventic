@@ -91,6 +91,7 @@ export default function TicketViewPage(): React.ReactElement {
   const [hasRated, setHasRated] = useState(false);
   const [canRate, setCanRate] = useState(false);
   const [ratingPeriodEnded, setRatingPeriodEnded] = useState(false);
+  const [p2pVoteError, setP2pVoteError] = useState<string>("");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -138,6 +139,34 @@ export default function TicketViewPage(): React.ReactElement {
         title: "Rating Failed",
         description: error.message || "Could not submit rating",
       });
+    },
+  });
+
+  // P2P Vote mutation
+  const p2pVoteMutation = useMutation({
+    mutationFn: async (validationCode: string) => {
+      const response = await apiRequest("POST", "/api/validate/p2p", {
+        validationCode,
+        eventId: ticketData?.event.id
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to submit vote");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setP2pVoteError("");
+      toast({
+        title: "Vote Submitted!",
+        description: "Your vote has been recorded successfully.",
+      });
+      // Clear the input form
+      const form = document.querySelector('form[data-p2p-vote]') as HTMLFormElement;
+      if (form) form.reset();
+    },
+    onError: (error: any) => {
+      setP2pVoteError(error.message || "Failed to submit vote");
     },
   });
 
@@ -536,8 +565,8 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           )}
 
-          {/* P2P Validation Scanner for Voting-Enabled Events */}
-          {event.enableVoting && ticket.isValidated && (
+          {/* P2P Voting for Voting-Enabled Events */}
+          {event.enableVoting && event.p2pValidation && ticket.isValidated && (
             <div className="card mb-3">
               <div className="card-body">
                 <h5 className="card-title mb-3">
@@ -545,16 +574,52 @@ export default function TicketViewPage(): React.ReactElement {
                   Vote for Other Attendees
                 </h5>
                 <p className="text-muted mb-3">
-                  Use your ticket to validate and vote for other attendees' tickets.
+                  Enter another attendee's 4-digit validation code to vote for them.
                 </p>
-                <button
-                  className="btn btn-primary w-100"
-                  onClick={() => setLocation(`/scanner?eventId=${event.id}&mode=p2p`)}
-                  data-testid="button-p2p-scanner"
-                >
-                  <QrCode size={18} className="me-2" />
-                  Open P2P Scanner
-                </button>
+                <form data-p2p-vote onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const code = formData.get('voteCode') as string;
+                  if (code && code.length === 4) {
+                    p2pVoteMutation.mutate(code.toUpperCase());
+                  }
+                }}>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      name="voteCode"
+                      className="form-control"
+                      placeholder="Enter 4-digit code"
+                      maxLength={4}
+                      pattern="[0-9A-Z]{4}"
+                      required
+                      data-testid="input-vote-code"
+                    />
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={p2pVoteMutation.isPending}
+                      data-testid="button-submit-vote"
+                    >
+                      {p2pVoteMutation.isPending ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          Voting...
+                        </>
+                      ) : (
+                        <>
+                          <ThumbsUp size={18} className="me-2" />
+                          Submit Vote
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+                {p2pVoteError && (
+                  <div className="alert alert-danger mt-2 small">
+                    {p2pVoteError}
+                  </div>
+                )}
               </div>
             </div>
           )}
