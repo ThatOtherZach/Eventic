@@ -52,14 +52,8 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
 
     if (!hasValidatedTickets) {
       return (
-        <div>
-          <h5 className="card-title mb-3">
-            <Ticket size={20} className="me-2" />
-            Validated Tickets
-          </h5>
-          <div className="text-center text-muted p-3">
-            <p className="small mb-0">Powered by Saym Services Inc.</p>
-          </div>
+        <div className="text-center text-muted p-3">
+          <p className="small mb-0">Powered by Saym Services Inc.</p>
         </div>
       );
     }
