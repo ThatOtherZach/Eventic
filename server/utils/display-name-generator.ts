@@ -92,17 +92,20 @@ export function generateDisplayName(signupDate?: Date): string {
 // Function to ensure uniqueness by adding a suffix if needed
 export function generateUniqueDisplayName(existingNames: string[], signupDate?: Date): string {
   let displayName = generateDisplayName(signupDate);
-  let suffix = 1;
   
-  // If name exists, add numeric suffix
-  while (existingNames.includes(displayName)) {
-    displayName = generateDisplayName(signupDate);
-    if (suffix > 10) {
-      // After 10 attempts, just append a number
-      displayName = `${displayName}${suffix}`;
-      break;
-    }
-    suffix++;
+  // If name exists after first attempt, just generate a random hex string
+  if (existingNames.includes(displayName)) {
+    // Generate a random 16-character hex string (8 bytes)
+    const randomBytes = new Array(8)
+      .fill(0)
+      .map(() => Math.floor(Math.random() * 256));
+    
+    const hexString = randomBytes
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('');
+    
+    // Create a unique gibberish username
+    displayName = `user_${hexString}`;
   }
   
   return displayName;
