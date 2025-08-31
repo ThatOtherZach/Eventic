@@ -836,10 +836,6 @@ export default function TicketViewPage(): React.ReactElement {
                       if (event.enableVoting && event.p2pValidation && ticket.isValidated) {
                         // For voting, refresh the ticket data to update vote count
                         queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
-                        toast({
-                          title: "Refreshing vote count...",
-                          description: "Getting the latest vote tally."
-                        });
                       } else {
                         // For regular validation, stop the session
                         stopValidation();
