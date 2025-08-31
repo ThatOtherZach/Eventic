@@ -720,13 +720,15 @@ export default function TicketViewPage(): React.ReactElement {
                 </div>
               ) : (event.enableVoting && event.p2pValidation && ticket.isValidated) || isValidating ? (
                 <div>
-                  {/* Timer Display */}
-                  <div className="alert alert-info mb-3">
-                    <div className="d-flex align-items-center">
-                      <Clock size={20} className="me-2" />
-                      <span>Time remaining: <strong>{formatTime(timeRemaining)}</strong></span>
+                  {/* Only show timer for regular validation, not for voting */}
+                  {!(event.enableVoting && event.p2pValidation && ticket.isValidated) && (
+                    <div className="alert alert-info mb-3">
+                      <div className="d-flex align-items-center">
+                        <Clock size={20} className="me-2" />
+                        <span>Time remaining: <strong>{formatTime(timeRemaining)}</strong></span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Validation Code Display OR Voting Interface */}
                   {event.enableVoting && event.p2pValidation && ticket.isValidated ? (
@@ -735,9 +737,9 @@ export default function TicketViewPage(): React.ReactElement {
                       <div className="alert alert-info mb-3">
                         <h6 className="mb-2">
                           <Users size={18} className="me-2" />
-                          Your Code for Voting
+                          Your Voting Code
                         </h6>
-                        <p className="small mb-2">Other attendees can vote for you using this code:</p>
+                        <p className="small mb-2">Share this code with other attendees so they can vote for you:</p>
                         <div className="bg-primary text-white rounded-3 p-3 text-center">
                           <h2 className="mb-0 font-monospace fw-bold" style={{ letterSpacing: '0.3rem' }}>
                             {ticket.validationCode}
@@ -750,7 +752,7 @@ export default function TicketViewPage(): React.ReactElement {
                           <ThumbsUp size={18} className="me-2" />
                           Vote for Another Attendee
                         </h6>
-                        <p className="small mb-2">Enter their 4-digit code to vote:</p>
+                        <p className="small mb-2">Enter their 4-digit code:</p>
                         <form onSubmit={(e) => {
                           e.preventDefault();
                           const formData = new FormData(e.currentTarget);
@@ -759,36 +761,31 @@ export default function TicketViewPage(): React.ReactElement {
                             p2pVoteMutation.mutate(code.toUpperCase());
                           }
                         }}>
-                          <div className="input-group">
-                            <input
-                              type="text"
-                              name="voteCode"
-                              className="form-control"
-                              placeholder="Enter 4-digit code"
-                              maxLength={4}
-                              pattern="[0-9A-Z]{4}"
-                              required
-                              data-testid="input-vote-code"
-                            />
-                            <button
-                              type="submit"
-                              className="btn btn-primary"
-                              disabled={p2pVoteMutation.isPending}
-                              data-testid="button-submit-vote"
-                            >
-                              {p2pVoteMutation.isPending ? (
-                                <>
-                                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                  Voting...
-                                </>
-                              ) : (
-                                <>
-                                  <ThumbsUp size={16} className="me-1" />
-                                  Submit Vote
-                                </>
-                              )}
-                            </button>
-                          </div>
+                          <input
+                            type="text"
+                            name="voteCode"
+                            className="form-control mb-2"
+                            placeholder="Enter 4-digit code"
+                            maxLength={4}
+                            pattern="[0-9A-Z]{4}"
+                            required
+                            data-testid="input-vote-code"
+                          />
+                          <button
+                            type="submit"
+                            className="btn btn-primary w-100"
+                            disabled={p2pVoteMutation.isPending}
+                            data-testid="button-submit-vote"
+                          >
+                            {p2pVoteMutation.isPending ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Voting...
+                              </>
+                            ) : (
+                              'Vote'
+                            )}
+                          </button>
                         </form>
                         {p2pVoteError && (
                           <div className="alert alert-danger mt-2 small">
@@ -826,13 +823,17 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   )}
 
-                  {/* Stop Button */}
+                  {/* Stop Button - different text for voting vs validation */}
                   <button
                     className="btn btn-secondary w-100"
-                    onClick={stopValidation}
+                    onClick={event.enableVoting && event.p2pValidation && ticket.isValidated 
+                      ? () => setIsValidating(false) 
+                      : stopValidation}
                     data-testid="button-stop-validation"
                   >
-                    Stop Validation
+                    {event.enableVoting && event.p2pValidation && ticket.isValidated 
+                      ? 'Close Voting Panel' 
+                      : 'Stop Validation'}
                   </button>
                 </div>
               ) : (
