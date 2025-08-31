@@ -84,10 +84,7 @@ export function QrScannerImplementation() {
         }
       } else if (result.isAuthentic && !result.canValidate) {
         // Ticket is authentic but user not authorized to validate
-        toast({
-          title: "✔️ Authentic Ticket",
-          description: `Valid ticket for ${result.event?.name}, but you're not authorized to validate. Only the event owner or delegated validators can validate.`,
-        });
+        // Don't show toast notification, just update the result
       } else if (result.alreadyValidated) {
         // Ticket was already validated
         toast({
