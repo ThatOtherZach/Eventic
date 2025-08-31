@@ -267,6 +267,63 @@ export const featuredEvents = pgTable("featured_events", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Currency Ledger System - Double-entry bookkeeping for Tickets currency
+export const currencyLedger = pgTable("currency_ledger", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  transactionId: varchar("transaction_id").notNull(), // Groups debit and credit entries together
+  accountId: varchar("account_id").notNull(), // Account identifier (user ID or system accounts)
+  accountType: text("account_type").notNull(), // user, system_revenue, system_fees, system_rewards, etc.
+  entryType: text("entry_type").notNull(), // debit or credit
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Always positive
+  balance: decimal("balance", { precision: 10, scale: 2 }).notNull(), // Running balance after this entry
+  transactionType: text("transaction_type").notNull(), // purchase, sale, refund, reward, fee, transfer, etc.
+  description: text("description").notNull(),
+  metadata: text("metadata"), // JSON string with transaction details
+  relatedEntityId: varchar("related_entity_id"), // Reference to ticket, event, etc.
+  relatedEntityType: text("related_entity_type"), // ticket, event, resell_transaction, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by").references(() => users.id), // Who initiated the transaction
+});
+
+// Account Balances - Cached view of current balances
+export const accountBalances = pgTable("account_balances", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").notNull().unique(), // User ID or system account ID
+  accountType: text("account_type").notNull(), // user, system_revenue, system_fees, etc.
+  balance: decimal("balance", { precision: 10, scale: 2 }).notNull().default("0"),
+  holdBalance: decimal("hold_balance", { precision: 10, scale: 2 }).notNull().default("0"), // Amount on hold (pending transactions)
+  availableBalance: decimal("available_balance", { precision: 10, scale: 2 }).notNull().default("0"), // balance - holdBalance
+  lastTransactionId: varchar("last_transaction_id"), // Last ledger transaction for this account
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Transaction Templates - Define standard transactions
+export const transactionTemplates = pgTable("transaction_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(), // TICKET_PURCHASE, TICKET_RESELL, etc.
+  name: text("name").notNull(),
+  description: text("description"),
+  debitAccount: text("debit_account").notNull(), // Account to debit
+  creditAccount: text("credit_account").notNull(), // Account to credit
+  requiresApproval: boolean("requires_approval").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Currency Transaction Holds - For pending transactions
+export const currencyHolds = pgTable("currency_holds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  reason: text("reason").notNull(),
+  relatedEntityId: varchar("related_entity_id"),
+  relatedEntityType: text("related_entity_type"),
+  status: text("status").notNull().default("active"), // active, released, expired
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  releasedAt: timestamp("released_at"),
+});
+
 // NFT Registry table for minted tickets
 export const registryRecords = pgTable("registry_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -667,6 +724,29 @@ export const insertResellQueueSchema = createInsertSchema(resellQueue).omit({
   createdAt: true,
 });
 
+export const insertCurrencyLedgerSchema = createInsertSchema(currencyLedger).omit({
+  id: true,
+  createdAt: true,
+  balance: true, // Balance is calculated, not inserted
+});
+
+export const insertAccountBalanceSchema = createInsertSchema(accountBalances).omit({
+  id: true,
+  lastUpdated: true,
+  availableBalance: true, // Calculated field
+});
+
+export const insertTransactionTemplateSchema = createInsertSchema(transactionTemplates).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCurrencyHoldSchema = createInsertSchema(currencyHolds).omit({
+  id: true,
+  createdAt: true,
+  releasedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -713,3 +793,11 @@ export type InsertEventRating = z.infer<typeof insertEventRatingSchema>;
 export type EventRating = typeof eventRatings.$inferSelect;
 export type InsertUserReputationCache = z.infer<typeof insertUserReputationCacheSchema>;
 export type UserReputationCache = typeof userReputationCache.$inferSelect;
+export type InsertCurrencyLedger = z.infer<typeof insertCurrencyLedgerSchema>;
+export type CurrencyLedger = typeof currencyLedger.$inferSelect;
+export type InsertAccountBalance = z.infer<typeof insertAccountBalanceSchema>;
+export type AccountBalance = typeof accountBalances.$inferSelect;
+export type InsertTransactionTemplate = z.infer<typeof insertTransactionTemplateSchema>;
+export type TransactionTemplate = typeof transactionTemplates.$inferSelect;
+export type InsertCurrencyHold = z.infer<typeof insertCurrencyHoldSchema>;
+export type CurrencyHold = typeof currencyHolds.$inferSelect;

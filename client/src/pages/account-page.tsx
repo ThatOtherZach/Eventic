@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle } from "lucide-react";
+import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
-import type { Ticket as TicketType, Event, RegistryRecord } from "@shared/schema";
+import type { Ticket as TicketType, Event, RegistryRecord, AccountBalance } from "@shared/schema";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -61,6 +61,15 @@ export default function AccountPage() {
       return response.json();
     },
     enabled: !!user?.id,
+  });
+
+  const { data: balance } = useQuery<AccountBalance>({
+    queryKey: ["/api/currency/balance"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/currency/balance");
+      return response.json();
+    },
+    enabled: !!user,
   });
 
   if (!user) {
@@ -121,6 +130,27 @@ export default function AccountPage() {
 
                   </div>
                 </div>
+                {/* Balance Display */}
+                {balance && (
+                  <div className="mt-3 mt-sm-0">
+                    <div className="card bg-light">
+                      <div className="card-body py-2 px-3">
+                        <div className="d-flex align-items-center">
+                          <Wallet className="text-primary me-2" size={24} />
+                          <div>
+                            <div className="small text-muted">Tickets Balance</div>
+                            <div className="h5 mb-0 fw-bold">{parseFloat(balance.balance).toFixed(2)}</div>
+                            {parseFloat(balance.holdBalance) > 0 && (
+                              <div className="small text-warning">
+                                {parseFloat(balance.holdBalance).toFixed(2)} on hold
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

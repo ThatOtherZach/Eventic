@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne, isNull, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -167,6 +167,27 @@ export interface IStorage {
   rateEvent(rating: InsertEventRating): Promise<EventRating | null>;
   hasUserRatedEvent(ticketId: string): Promise<boolean>;
   getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>;
+  
+  // Currency Ledger Operations
+  getUserBalance(userId: string): Promise<AccountBalance | null>;
+  createLedgerTransaction(params: {
+    transactionType: string;
+    description: string;
+    debits: Array<{ accountId: string; accountType: string; amount: number }>;
+    credits: Array<{ accountId: string; accountType: string; amount: number }>;
+    metadata?: any;
+    relatedEntityId?: string;
+    relatedEntityType?: string;
+    createdBy?: string;
+  }): Promise<CurrencyLedger[]>;
+  getAccountTransactions(accountId: string, limit?: number): Promise<CurrencyLedger[]>;
+  createHold(hold: InsertCurrencyHold): Promise<CurrencyHold>;
+  releaseHold(holdId: string): Promise<boolean>;
+  expireOldHolds(): Promise<void>;
+  initializeSystemAccounts(): Promise<void>;
+  creditUserAccount(userId: string, amount: number, description: string, metadata?: any): Promise<boolean>;
+  debitUserAccount(userId: string, amount: number, description: string, metadata?: any): Promise<boolean>;
+  transferTickets(fromUserId: string, toUserId: string, amount: number, description: string): Promise<boolean>;
 }
 
 interface ValidationSession {
@@ -659,9 +680,17 @@ export class DatabaseStorage implements IStorage {
       
       const { ticket, resellEntry } = resellData;
       
+      // Check buyer has sufficient balance
+      const ticketPrice = parseFloat(resellEntry.ticketPrice.toString());
+      if (newBuyerId && ticketPrice > 0) {
+        const buyerBalance = await this.getUserBalance(newBuyerId);
+        if (!buyerBalance || parseFloat(buyerBalance.availableBalance) < ticketPrice) {
+          return null; // Insufficient balance
+        }
+      }
+      
       return await db.transaction(async (tx) => {
         // Calculate transaction amounts
-        const ticketPrice = parseFloat(resellEntry.ticketPrice.toString());
         // No platform fee for free tickets (returns)
         const platformFee = ticketPrice === 0 ? 0 : Math.round(ticketPrice * 0.02 * 100) / 100; // 2% fee only for paid tickets
         const sellerAmount = Math.round((ticketPrice - platformFee) * 100) / 100; // Amount to seller
@@ -720,6 +749,67 @@ export class DatabaseStorage implements IStorage {
             eq(resellQueue.eventId, eventId),
             gt(resellQueue.position, resellEntry.position)
           ));
+        
+        // Process currency transaction if price > 0 and buyer is logged in
+        if (newBuyerId && ticketPrice > 0) {
+          // Ensure currency accounts exist
+          await this.ensureUserCurrencyAccount(newBuyerId);
+          await this.ensureUserCurrencyAccount(resellEntry.originalOwnerId);
+          
+          // Create transaction ID
+          const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          
+          // Debit buyer for full amount
+          await tx.insert(currencyLedgerEntries).values({
+            transactionId,
+            accountId: newBuyerId,
+            entryType: 'debit',
+            amount: ticketPrice.toString(),
+            description: `Purchased resale ticket for event ${eventId}`,
+            metadata: {
+              eventId,
+              ticketId: ticket.id,
+              ticketNumber: newTicketNumber,
+              sellerId: resellEntry.originalOwnerId,
+            },
+            createdBy: newBuyerId,
+          });
+          
+          // Credit seller with amount minus platform fee
+          await tx.insert(currencyLedgerEntries).values({
+            transactionId,
+            accountId: resellEntry.originalOwnerId,
+            entryType: 'credit',
+            amount: sellerAmount.toString(),
+            description: `Sold ticket for event ${eventId}`,
+            metadata: {
+              eventId,
+              ticketId: ticket.id,
+              ticketNumber: ticket.ticketNumber,
+              buyerId: newBuyerId,
+              platformFee: platformFee.toString(),
+            },
+            createdBy: newBuyerId,
+          });
+          
+          // Credit platform fee to system account if there's a fee
+          if (platformFee > 0) {
+            await tx.insert(currencyLedgerEntries).values({
+              transactionId,
+              accountId: 'platform_fees',
+              entryType: 'credit',
+              amount: platformFee.toString(),
+              description: `Platform fee for resale of ticket ${ticket.ticketNumber}`,
+              metadata: {
+                eventId,
+                ticketId: ticket.id,
+                sellerId: resellEntry.originalOwnerId,
+                buyerId: newBuyerId,
+              },
+              createdBy: newBuyerId,
+            });
+          }
+        }
         
         return updatedTicket;
       });
@@ -2692,6 +2782,424 @@ export class DatabaseStorage implements IStorage {
       
       return newTicket;
     });
+  }
+
+  // Currency Ledger Operations
+  async getUserBalance(userId: string): Promise<AccountBalance | null> {
+    const [balance] = await db
+      .select()
+      .from(accountBalances)
+      .where(eq(accountBalances.accountId, userId));
+    
+    if (!balance) {
+      // Create a new balance record for the user
+      const [newBalance] = await db
+        .insert(accountBalances)
+        .values({
+          accountId: userId,
+          accountType: 'user',
+          balance: '0',
+          holdBalance: '0',
+          availableBalance: '0',
+        })
+        .returning();
+      return newBalance;
+    }
+    
+    return balance;
+  }
+
+  async createLedgerTransaction(params: {
+    transactionType: string;
+    description: string;
+    debits: Array<{ accountId: string; accountType: string; amount: number }>;
+    credits: Array<{ accountId: string; accountType: string; amount: number }>;
+    metadata?: any;
+    relatedEntityId?: string;
+    relatedEntityType?: string;
+    createdBy?: string;
+  }): Promise<CurrencyLedger[]> {
+    const transactionId = randomUUID();
+    const entries: CurrencyLedger[] = [];
+    
+    // Validate that debits equal credits (double-entry bookkeeping)
+    const totalDebits = params.debits.reduce((sum, d) => sum + d.amount, 0);
+    const totalCredits = params.credits.reduce((sum, c) => sum + c.amount, 0);
+    
+    if (Math.abs(totalDebits - totalCredits) > 0.01) {
+      throw new Error('Debits must equal credits in double-entry bookkeeping');
+    }
+    
+    return await db.transaction(async (tx) => {
+      // Process debits
+      for (const debit of params.debits) {
+        // Get or create account balance
+        let [accountBalance] = await tx
+          .select()
+          .from(accountBalances)
+          .where(eq(accountBalances.accountId, debit.accountId))
+          .for('update');
+        
+        if (!accountBalance) {
+          [accountBalance] = await tx
+            .insert(accountBalances)
+            .values({
+              accountId: debit.accountId,
+              accountType: debit.accountType,
+              balance: '0',
+              holdBalance: '0',
+              availableBalance: '0',
+            })
+            .returning();
+        }
+        
+        // Calculate new balance (debit decreases user balance)
+        const currentBalance = parseFloat(accountBalance.balance);
+        const newBalance = currentBalance - debit.amount;
+        
+        // Create ledger entry
+        const [ledgerEntry] = await tx
+          .insert(currencyLedger)
+          .values({
+            transactionId,
+            accountId: debit.accountId,
+            accountType: debit.accountType,
+            entryType: 'debit',
+            amount: debit.amount.toString(),
+            balance: newBalance.toString(),
+            transactionType: params.transactionType,
+            description: params.description,
+            metadata: params.metadata ? JSON.stringify(params.metadata) : null,
+            relatedEntityId: params.relatedEntityId,
+            relatedEntityType: params.relatedEntityType,
+            createdBy: params.createdBy,
+          })
+          .returning();
+        
+        entries.push(ledgerEntry);
+        
+        // Update account balance
+        const holdBalance = parseFloat(accountBalance.holdBalance);
+        await tx
+          .update(accountBalances)
+          .set({
+            balance: newBalance.toString(),
+            availableBalance: (newBalance - holdBalance).toString(),
+            lastTransactionId: transactionId,
+            lastUpdated: new Date(),
+          })
+          .where(eq(accountBalances.accountId, debit.accountId));
+      }
+      
+      // Process credits
+      for (const credit of params.credits) {
+        // Get or create account balance
+        let [accountBalance] = await tx
+          .select()
+          .from(accountBalances)
+          .where(eq(accountBalances.accountId, credit.accountId))
+          .for('update');
+        
+        if (!accountBalance) {
+          [accountBalance] = await tx
+            .insert(accountBalances)
+            .values({
+              accountId: credit.accountId,
+              accountType: credit.accountType,
+              balance: '0',
+              holdBalance: '0',
+              availableBalance: '0',
+            })
+            .returning();
+        }
+        
+        // Calculate new balance (credit increases user balance)
+        const currentBalance = parseFloat(accountBalance.balance);
+        const newBalance = currentBalance + credit.amount;
+        
+        // Create ledger entry
+        const [ledgerEntry] = await tx
+          .insert(currencyLedger)
+          .values({
+            transactionId,
+            accountId: credit.accountId,
+            accountType: credit.accountType,
+            entryType: 'credit',
+            amount: credit.amount.toString(),
+            balance: newBalance.toString(),
+            transactionType: params.transactionType,
+            description: params.description,
+            metadata: params.metadata ? JSON.stringify(params.metadata) : null,
+            relatedEntityId: params.relatedEntityId,
+            relatedEntityType: params.relatedEntityType,
+            createdBy: params.createdBy,
+          })
+          .returning();
+        
+        entries.push(ledgerEntry);
+        
+        // Update account balance
+        const holdBalance = parseFloat(accountBalance.holdBalance);
+        await tx
+          .update(accountBalances)
+          .set({
+            balance: newBalance.toString(),
+            availableBalance: (newBalance - holdBalance).toString(),
+            lastTransactionId: transactionId,
+            lastUpdated: new Date(),
+          })
+          .where(eq(accountBalances.accountId, credit.accountId));
+      }
+      
+      return entries;
+    });
+  }
+
+  async getAccountTransactions(accountId: string, limit: number = 50): Promise<CurrencyLedger[]> {
+    return await db
+      .select()
+      .from(currencyLedger)
+      .where(eq(currencyLedger.accountId, accountId))
+      .orderBy(desc(currencyLedger.createdAt))
+      .limit(limit);
+  }
+
+  async createHold(hold: InsertCurrencyHold): Promise<CurrencyHold> {
+    return await db.transaction(async (tx) => {
+      // Get account balance
+      const [accountBalance] = await tx
+        .select()
+        .from(accountBalances)
+        .where(eq(accountBalances.accountId, hold.accountId))
+        .for('update');
+      
+      if (!accountBalance) {
+        throw new Error('Account not found');
+      }
+      
+      const availableBalance = parseFloat(accountBalance.availableBalance);
+      const holdAmount = parseFloat(hold.amount.toString());
+      
+      if (availableBalance < holdAmount) {
+        throw new Error('Insufficient available balance');
+      }
+      
+      // Create hold
+      const [newHold] = await tx
+        .insert(currencyHolds)
+        .values(hold)
+        .returning();
+      
+      // Update account balance
+      const currentHoldBalance = parseFloat(accountBalance.holdBalance);
+      const newHoldBalance = currentHoldBalance + holdAmount;
+      const balance = parseFloat(accountBalance.balance);
+      
+      await tx
+        .update(accountBalances)
+        .set({
+          holdBalance: newHoldBalance.toString(),
+          availableBalance: (balance - newHoldBalance).toString(),
+          lastUpdated: new Date(),
+        })
+        .where(eq(accountBalances.accountId, hold.accountId));
+      
+      return newHold;
+    });
+  }
+
+  async releaseHold(holdId: string): Promise<boolean> {
+    return await db.transaction(async (tx) => {
+      // Get the hold
+      const [hold] = await tx
+        .select()
+        .from(currencyHolds)
+        .where(and(
+          eq(currencyHolds.id, holdId),
+          eq(currencyHolds.status, 'active')
+        ))
+        .for('update');
+      
+      if (!hold) {
+        return false;
+      }
+      
+      // Update hold status
+      await tx
+        .update(currencyHolds)
+        .set({
+          status: 'released',
+          releasedAt: new Date(),
+        })
+        .where(eq(currencyHolds.id, holdId));
+      
+      // Update account balance
+      const [accountBalance] = await tx
+        .select()
+        .from(accountBalances)
+        .where(eq(accountBalances.accountId, hold.accountId))
+        .for('update');
+      
+      if (accountBalance) {
+        const currentHoldBalance = parseFloat(accountBalance.holdBalance);
+        const holdAmount = parseFloat(hold.amount);
+        const newHoldBalance = Math.max(0, currentHoldBalance - holdAmount);
+        const balance = parseFloat(accountBalance.balance);
+        
+        await tx
+          .update(accountBalances)
+          .set({
+            holdBalance: newHoldBalance.toString(),
+            availableBalance: (balance - newHoldBalance).toString(),
+            lastUpdated: new Date(),
+          })
+          .where(eq(accountBalances.accountId, hold.accountId));
+      }
+      
+      return true;
+    });
+  }
+
+  async expireOldHolds(): Promise<void> {
+    const expiredHolds = await db
+      .select()
+      .from(currencyHolds)
+      .where(and(
+        eq(currencyHolds.status, 'active'),
+        lt(currencyHolds.expiresAt, new Date())
+      ));
+    
+    for (const hold of expiredHolds) {
+      await this.releaseHold(hold.id);
+    }
+  }
+
+  async initializeSystemAccounts(): Promise<void> {
+    const systemAccounts = [
+      { accountId: 'system_revenue', accountType: 'system', description: 'System Revenue Account' },
+      { accountId: 'system_fees', accountType: 'system', description: 'System Fees Account' },
+      { accountId: 'system_rewards', accountType: 'system', description: 'System Rewards Account' },
+      { accountId: 'system_escrow', accountType: 'system', description: 'System Escrow Account' },
+    ];
+    
+    for (const account of systemAccounts) {
+      const [existing] = await db
+        .select()
+        .from(accountBalances)
+        .where(eq(accountBalances.accountId, account.accountId));
+      
+      if (!existing) {
+        await db
+          .insert(accountBalances)
+          .values({
+            accountId: account.accountId,
+            accountType: account.accountType,
+            balance: '0',
+            holdBalance: '0',
+            availableBalance: '0',
+          });
+      }
+    }
+    
+    // Initialize transaction templates
+    const templates = [
+      {
+        code: 'TICKET_PURCHASE',
+        name: 'Ticket Purchase',
+        description: 'User purchases a ticket',
+        debitAccount: 'user',
+        creditAccount: 'system_revenue',
+      },
+      {
+        code: 'TICKET_RESELL',
+        name: 'Ticket Resale',
+        description: 'User resells a ticket',
+        debitAccount: 'buyer',
+        creditAccount: 'seller',
+      },
+      {
+        code: 'PLATFORM_FEE',
+        name: 'Platform Fee',
+        description: 'Platform fee for resale',
+        debitAccount: 'seller',
+        creditAccount: 'system_fees',
+      },
+      {
+        code: 'REWARD',
+        name: 'Reward',
+        description: 'User receives a reward',
+        debitAccount: 'system_rewards',
+        creditAccount: 'user',
+      },
+      {
+        code: 'TRANSFER',
+        name: 'Transfer',
+        description: 'Transfer between users',
+        debitAccount: 'sender',
+        creditAccount: 'receiver',
+      },
+    ];
+    
+    for (const template of templates) {
+      const [existing] = await db
+        .select()
+        .from(transactionTemplates)
+        .where(eq(transactionTemplates.code, template.code));
+      
+      if (!existing) {
+        await db.insert(transactionTemplates).values(template);
+      }
+    }
+  }
+
+  async creditUserAccount(userId: string, amount: number, description: string, metadata?: any): Promise<boolean> {
+    try {
+      await this.createLedgerTransaction({
+        transactionType: 'credit',
+        description,
+        debits: [{ accountId: 'system_revenue', accountType: 'system', amount }],
+        credits: [{ accountId: userId, accountType: 'user', amount }],
+        metadata,
+        createdBy: userId,
+      });
+      return true;
+    } catch (error) {
+      console.error('Error crediting user account:', error);
+      return false;
+    }
+  }
+
+  async debitUserAccount(userId: string, amount: number, description: string, metadata?: any): Promise<boolean> {
+    try {
+      await this.createLedgerTransaction({
+        transactionType: 'debit',
+        description,
+        debits: [{ accountId: userId, accountType: 'user', amount }],
+        credits: [{ accountId: 'system_revenue', accountType: 'system', amount }],
+        metadata,
+        createdBy: userId,
+      });
+      return true;
+    } catch (error) {
+      console.error('Error debiting user account:', error);
+      return false;
+    }
+  }
+
+  async transferTickets(fromUserId: string, toUserId: string, amount: number, description: string): Promise<boolean> {
+    try {
+      await this.createLedgerTransaction({
+        transactionType: 'transfer',
+        description,
+        debits: [{ accountId: fromUserId, accountType: 'user', amount }],
+        credits: [{ accountId: toUserId, accountType: 'user', amount }],
+        createdBy: fromUserId,
+      });
+      return true;
+    } catch (error) {
+      console.error('Error transferring tickets:', error);
+      return false;
+    }
   }
 }
 

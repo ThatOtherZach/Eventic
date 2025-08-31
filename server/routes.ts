@@ -837,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (matches) {
           // Remove the # and store unique hashtags
           const uniqueTags = Array.from(new Set(matches.map((tag: string) => tag.substring(1).toLowerCase())));
-          hashtags.push(...uniqueTags);
+          hashtags.push(...uniqueTags as string[]);
         }
       }
       
@@ -1162,6 +1162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (resellTicket) {
         // Found and purchased a resell ticket
+        // Note: Currency transaction is handled within processResellPurchase
         await logInfo(
           "Resell ticket purchased",
           "POST /api/events/:eventId/tickets",
@@ -1186,6 +1187,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get current price for this ticket
       const currentPrice = await storage.getCurrentPrice(req.params.eventId);
       
+      // Check if user has sufficient balance (if logged in and paying with Tickets currency)
+      if (userId && currentPrice > 0) {
+        const userBalance = await storage.getUserBalance(userId);
+        if (!userBalance || parseFloat(userBalance.availableBalance) < currentPrice) {
+          return res.status(400).json({ 
+            message: `Insufficient Tickets balance. You need ${currentPrice.toFixed(2)} Tickets but only have ${userBalance?.availableBalance || '0.00'} available.` 
+          });
+        }
+      }
+      
       // Generate QR data for the ticket
       const tempTicketNumber = `${event.id.slice(0, 8)}-PENDING`;
       const qrData = JSON.stringify({
@@ -1207,6 +1218,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use transactional ticket creation to prevent race conditions
       const ticket = await storage.createTicketWithTransaction(ticketData);
+      
+      // Process payment if price > 0 and user is logged in
+      if (userId && currentPrice > 0) {
+        await storage.createLedgerTransaction({
+          transactionType: 'TICKET_PURCHASE',
+          description: `Purchased ticket for ${event.name}`,
+          debits: [{ accountId: userId, accountType: 'user', amount: currentPrice }],
+          credits: [{ accountId: 'system_revenue', accountType: 'system', amount: currentPrice }],
+          metadata: {
+            eventId: event.id,
+            eventName: event.name,
+            ticketId: ticket.id,
+            ticketNumber: ticket.ticketNumber,
+          },
+          relatedEntityId: ticket.id,
+          relatedEntityType: 'ticket',
+          createdBy: userId,
+        });
+      }
       
       res.status(201).json(ticket);
     } catch (error) {
@@ -2825,6 +2855,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
         request: req
       });
       res.status(500).json({ message: "Failed to fetch validated tickets count" });
+    }
+  });
+
+  // Currency API Routes
+  app.get("/api/currency/balance", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const balance = await storage.getUserBalance(userId);
+      res.json(balance);
+    } catch (error) {
+      await logError(error, "GET /api/currency/balance", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch balance" });
+    }
+  });
+
+  app.get("/api/currency/transactions", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 50;
+      const transactions = await storage.getAccountTransactions(userId, limit);
+      res.json(transactions);
+    } catch (error) {
+      await logError(error, "GET /api/currency/transactions", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  app.post("/api/currency/transfer", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const fromUserId = req.user?.id;
+      if (!fromUserId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { toEmail, amount, description } = req.body;
+
+      if (!toEmail || !amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid transfer parameters" });
+      }
+
+      // Find the recipient user
+      const toUser = await storage.getUserByEmail(toEmail);
+      if (!toUser) {
+        return res.status(404).json({ message: "Recipient not found" });
+      }
+
+      if (toUser.id === fromUserId) {
+        return res.status(400).json({ message: "Cannot transfer to yourself" });
+      }
+
+      // Check balance
+      const balance = await storage.getUserBalance(fromUserId);
+      if (!balance || parseFloat(balance.availableBalance) < amount) {
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+
+      // Perform transfer
+      const success = await storage.transferTickets(
+        fromUserId,
+        toUser.id,
+        amount,
+        description || `Transfer to ${toUser.email}`
+      );
+
+      if (!success) {
+        return res.status(500).json({ message: "Transfer failed" });
+      }
+
+      res.json({ message: "Transfer successful" });
+    } catch (error) {
+      await logError(error, "POST /api/currency/transfer", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to process transfer" });
+    }
+  });
+
+  // Admin route to credit user accounts (for testing)
+  app.post("/api/admin/currency/credit", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const adminId = req.user?.id;
+      if (!adminId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // For now, any authenticated user can credit accounts (for testing)
+      // In production, this should check for admin role
+      const { userId, amount, description } = req.body;
+
+      if (!userId || !amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid credit parameters" });
+      }
+
+      const success = await storage.creditUserAccount(
+        userId,
+        amount,
+        description || "Account credit"
+      );
+
+      if (!success) {
+        return res.status(500).json({ message: "Credit failed" });
+      }
+
+      res.json({ message: "Account credited successfully" });
+    } catch (error) {
+      await logError(error, "POST /api/admin/currency/credit", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to credit account" });
     }
   });
 

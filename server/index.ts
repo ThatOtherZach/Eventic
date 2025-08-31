@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError, scheduleLogCleanup } from "./logger";
 import { scheduleEventArchiving } from "./archiveScheduler";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -44,6 +45,9 @@ app.use((req, res, next) => {
   
   // Initialize event archiving scheduler
   scheduleEventArchiving();
+  
+  // Initialize currency system accounts
+  await storage.initializeSystemAccounts();
   
   const server = await registerRoutes(app);
 
