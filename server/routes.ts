@@ -1402,10 +1402,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`  Ticket holder: ${finalTicketHolderLat}, ${finalTicketHolderLng} (${Math.round(ticketHolderDistance)}m away)`);
           console.log(`  Validator: ${validatorLat}, ${validatorLng} (${Math.round(validatorDistance)}m away)`);
           
-          // Both must be within 690 meters
-          if (validatorDistance > 690 || ticketHolderDistance > 690) {
+          // Both must be within 300 meters
+          if (validatorDistance > 300 || ticketHolderDistance > 300) {
             return res.status(400).json({
-              message: `Must be within 690 meters of venue to validate. Validator: ${Math.round(validatorDistance)}m away, Ticket holder: ${Math.round(ticketHolderDistance)}m away`,
+              message: `Must be within 300 meters of venue to validate. Validator: ${Math.round(validatorDistance)}m away, Ticket holder: ${Math.round(ticketHolderDistance)}m away`,
               valid: false,
               outsideGeofence: true,
               validatorDistance: Math.round(validatorDistance),
