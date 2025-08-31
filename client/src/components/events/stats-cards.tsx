@@ -39,7 +39,7 @@ export function StatsCards() {
       bgOpacity: "10",
     },
     {
-      title: "Tickets Sold",
+      title: "Tickets (48h)",
       value: stats?.totalTickets || 0,
       icon: Ticket,
       bgColor: "success",

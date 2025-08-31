@@ -1449,9 +1449,12 @@ export class DatabaseStorage implements IStorage {
       .select({ count: db.$count(events) })
       .from(events);
     
-    const [ticketResult] = await db
-      .select({ count: db.$count(tickets) })
-      .from(tickets);
+    // Count tickets created in the last 48 hours from the most recent ticket
+    // Using SQL to handle the date calculation directly in the database
+    const recentTicketsQuery = await db.execute(
+      sql`SELECT COUNT(*) as count FROM ${tickets} WHERE ${tickets.createdAt} >= (SELECT MAX(${tickets.createdAt}) - INTERVAL '48 hours' FROM ${tickets})`
+    );
+    const recentTicketCount = Number(recentTicketsQuery.rows[0]?.count) || 0;
     
     // Count unique users who have tickets (active attendees)
     const [uniqueUsersResult] = await db
@@ -1463,8 +1466,8 @@ export class DatabaseStorage implements IStorage {
 
     return {
       totalEvents: eventResult?.count || 0,
-      totalTickets: ticketResult?.count || 0,
-      validatedTickets: Number(uniqueUsersResult?.count) || 0, // Now shows active attendees count
+      totalTickets: recentTicketCount, // Now shows tickets from last 48 hours
+      validatedTickets: Number(uniqueUsersResult?.count) || 0, // Active attendees count
     };
   }
 
