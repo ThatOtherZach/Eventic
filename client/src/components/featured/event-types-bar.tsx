@@ -4,17 +4,17 @@ import { useLocation } from "wouter";
 interface EventTypesBarProps {
   events: Array<{
     event: {
-      isAdminCreated?: boolean;
-      goldenTicketEnabled?: boolean;
-      specialEffectsEnabled?: boolean;
-      surgePricing?: boolean;
-      stickerUrl?: string;
-      p2pValidation?: boolean;
-      allowMinting?: boolean;
-      geofence?: boolean;
-      enableVoting?: boolean;
-      recurringType?: string;
-      endDate?: string;
+      isAdminCreated?: boolean | null;
+      goldenTicketEnabled?: boolean | null;
+      specialEffectsEnabled?: boolean | null;
+      surgePricing?: boolean | null;
+      stickerUrl?: string | null;
+      p2pValidation?: boolean | null;
+      allowMinting?: boolean | null;
+      geofence?: boolean | null;
+      enableVoting?: boolean | null;
+      recurringType?: string | null;
+      endDate?: string | null;
     };
   }>;
 }

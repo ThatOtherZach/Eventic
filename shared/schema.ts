@@ -105,6 +105,7 @@ export const events = pgTable("events", {
   stickerUrl: text("sticker_url"),
   stickerOdds: integer("sticker_odds").default(25), // Percentage chance (1-100)
   allowMinting: boolean("allow_minting").default(false), // Allow attendees to mint tickets as NFTs
+  isAdminCreated: boolean("is_admin_created").default(false), // Whether this event was created by admin (@saymservices.com email)
   isPrivate: boolean("is_private").default(false), // Private events are excluded from searches and boosts
   isEnabled: boolean("is_enabled").default(true), // Whether event is publicly visible
   ticketPurchasesEnabled: boolean("ticket_purchases_enabled").default(true), // Whether new tickets can be purchased
