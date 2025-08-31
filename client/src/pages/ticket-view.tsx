@@ -708,7 +708,7 @@ export default function TicketViewPage(): React.ReactElement {
                                 (error) => {
                                   toast({
                                     title: "Location Required",
-                                    description: "Please enable location access to validate this ticket at the event venue.",
+                                    description: "Eventic needs your location to verify ticket.",
                                     variant: "destructive",
                                   });
                                 }
@@ -928,7 +928,7 @@ export default function TicketViewPage(): React.ReactElement {
                             (error) => {
                               toast({
                                 title: "Location Required",
-                                description: "Please enable location access to validate this ticket at the event venue.",
+                                description: "Eventic needs your location to verify ticket.",
                                 variant: "destructive",
                               });
                             }

@@ -46,6 +46,7 @@ export function QrScannerImplementation() {
   const [currentPage, setCurrentPage] = useState(0);
   const [manualCode, setManualCode] = useState<string>("");
   const [needsGeofence, setNeedsGeofence] = useState(false);
+  const [pendingCode, setPendingCode] = useState<string>("");
 
   const validateTicketMutation = useMutation({
     mutationFn: async ({code, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng}: {code: string, validatorLat?: number, validatorLng?: number, ticketHolderLat?: number, ticketHolderLng?: number}) => {
@@ -63,11 +64,41 @@ export function QrScannerImplementation() {
       if (result.requiresLocation && !result.valid) {
         setNeedsGeofence(true);
         setValidationResult(result);
-        // Store the code that needs geofencing
-        const lastCode = manualCode || result.qrData;
-        if (lastCode) {
-          // Automatically request location and retry
-          handleGeofencedValidation(lastCode);
+        // Store the code for retry after location is obtained
+        setPendingCode(pendingCode || manualCode);
+        // Automatically request location
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Retry with validator's location
+              validateTicketMutation.mutate({
+                code: pendingCode || manualCode,
+                validatorLat: position.coords.latitude,
+                validatorLng: position.coords.longitude,
+              });
+              setNeedsGeofence(false);
+            },
+            (error) => {
+              toast({
+                title: "Location Required",
+                description: "Eventic needs your location to verify ticket.",
+                variant: "destructive",
+              });
+              setNeedsGeofence(false);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+        } else {
+          toast({
+            title: "Location Not Supported",
+            description: "Your browser doesn't support location services.",
+            variant: "destructive",
+          });
+          setNeedsGeofence(false);
         }
         return;
       }
@@ -149,47 +180,12 @@ export function QrScannerImplementation() {
       return;
     }
 
-    // First try without location - the server will tell us if we need it
+    // Store the code and try validation
+    setPendingCode(manualCode);
     validateTicketMutation.mutate({code: manualCode});
     setManualCode("");
   };
 
-  // Handle validation with geofencing
-  const handleGeofencedValidation = (code: string) => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Now validate with validator's location
-          // The ticket holder's location comes from the session
-          validateTicketMutation.mutate({
-            code,
-            validatorLat: position.coords.latitude,
-            validatorLng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          toast({
-            title: "Location Required",
-            description: "Please enable location access to validate tickets at this geofenced event.",
-            variant: "destructive",
-          });
-          setNeedsGeofence(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    } else {
-      toast({
-        title: "Location Not Supported",
-        description: "Your browser doesn't support location services.",
-        variant: "destructive",
-      });
-      setNeedsGeofence(false);
-    }
-  };
 
   return (
     <div className="animate-fade-in">
