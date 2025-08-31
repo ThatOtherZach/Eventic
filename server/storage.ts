@@ -1453,15 +1453,16 @@ export class DatabaseStorage implements IStorage {
       .select({ count: db.$count(tickets) })
       .from(tickets);
     
-    const [validatedResult] = await db
-      .select({ count: db.$count(tickets) })
+    // Count unique users who have tickets (active attendees)
+    const uniqueUsers = await db
+      .selectDistinct({ userId: tickets.userId })
       .from(tickets)
-      .where(eq(tickets.isValidated, true));
+      .where(isNotNull(tickets.userId));
 
     return {
       totalEvents: eventResult?.count || 0,
       totalTickets: ticketResult?.count || 0,
-      validatedTickets: validatedResult?.count || 0,
+      validatedTickets: uniqueUsers.length, // Now shows active attendees count
     };
   }
 

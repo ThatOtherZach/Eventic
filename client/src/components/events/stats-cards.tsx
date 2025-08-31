@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Ticket, CheckCircle } from "lucide-react";
+import { Calendar, Ticket, Users } from "lucide-react";
 
 export function StatsCards() {
   const { data: stats, isLoading } = useQuery<{
@@ -46,9 +46,9 @@ export function StatsCards() {
       bgOpacity: "10",
     },
     {
-      title: "Validated",
+      title: "Active Attendees",
       value: stats?.validatedTickets || 0,
-      icon: CheckCircle,
+      icon: Users,
       bgColor: "info",
       bgOpacity: "10",
     },
