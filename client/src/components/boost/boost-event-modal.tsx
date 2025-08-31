@@ -48,6 +48,7 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/featured-events"] });
       queryClient.invalidateQueries({ queryKey: ["/api/events", eventId, "boost-info"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       toast({
         title: "Success",
         description: "Event has been boosted to featured section!",
