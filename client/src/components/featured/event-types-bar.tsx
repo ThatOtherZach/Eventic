@@ -108,17 +108,17 @@ export function EventTypesBar({ events }: EventTypesBarProps) {
             flex: segment.percentage,
             backgroundColor: segment.color,
             cursor: 'pointer',
-            transition: 'transform 0.2s, opacity 0.2s',
+            transition: 'opacity 0.2s, filter 0.2s',
             borderRadius: index === 0 ? '4px 0 0 4px' : index === segments.length - 1 ? '0 4px 4px 0' : '0',
           }}
           title={`${segment.label} (${segment.count} event${segment.count > 1 ? 's' : ''})`}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scaleY(1.5)';
             e.currentTarget.style.opacity = '0.8';
+            e.currentTarget.style.filter = 'brightness(1.2)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scaleY(1)';
             e.currentTarget.style.opacity = '1';
+            e.currentTarget.style.filter = 'brightness(1)';
           }}
         />
       ))}
