@@ -2385,15 +2385,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Check if event exists and belongs to user
-      const event = await storage.getEvent(id);
-      if (!event || event.userId !== userId) {
-        return res.status(404).json({ message: "Event not found" });
+      // Check if user can boost this event (owner or ticket holder)
+      const canUserBoost = await storage.canUserBoostEvent(userId, id);
+      if (!canUserBoost) {
+        return res.status(403).json({ message: "You can only boost events you own or have a ticket for" });
       }
 
-      // Private events cannot be boosted
-      if (event.isPrivate) {
-        return res.status(400).json({ message: "Private events cannot be featured or boosted" });
+      const event = await storage.getEvent(id);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
       }
 
       // Check if event can be boosted
@@ -2437,15 +2437,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid duration" });
       }
 
-      // Check if event exists and belongs to user
-      const event = await storage.getEvent(id);
-      if (!event || event.userId !== userId) {
-        return res.status(404).json({ message: "Event not found" });
+      // Check if user can boost this event (owner or ticket holder)
+      const canUserBoost = await storage.canUserBoostEvent(userId, id);
+      if (!canUserBoost) {
+        return res.status(403).json({ message: "You can only boost events you own or have a ticket for" });
       }
 
-      // Private events cannot be boosted
-      if (event.isPrivate) {
-        return res.status(400).json({ message: "Private events cannot be featured or boosted" });
+      const event = await storage.getEvent(id);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
       }
 
       // Check if event can be boosted

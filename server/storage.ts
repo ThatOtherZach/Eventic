@@ -1957,6 +1957,36 @@ export class DatabaseStorage implements IStorage {
     return !existing;
   }
 
+  async canUserBoostEvent(userId: string, eventId: string): Promise<boolean> {
+    // Check if event exists
+    const event = await this.getEvent(eventId);
+    if (!event) {
+      return false;
+    }
+
+    // Private events cannot be boosted
+    if (event.isPrivate) {
+      return false;
+    }
+
+    // Check if user is the event owner
+    if (event.userId === userId) {
+      return true;
+    }
+
+    // Check if user has a ticket for this event
+    const [userTicket] = await db
+      .select()
+      .from(tickets)
+      .where(and(
+        eq(tickets.eventId, eventId),
+        eq(tickets.userId, userId)
+      ))
+      .limit(1);
+    
+    return !!userTicket;
+  }
+
   async getNextAvailablePosition(): Promise<number | null> {
     const activeFeatured = await this.getActiveFeaturedEvents();
     
