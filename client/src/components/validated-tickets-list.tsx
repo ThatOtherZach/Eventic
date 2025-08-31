@@ -89,29 +89,35 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
               return new Date(b.validatedAt).getTime() - new Date(a.validatedAt).getTime();
             })
             .map((ticket) => (
-            <div key={ticket.ticketId} className="list-group-item d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center gap-2">
-                <span className="badge bg-primary">{ticket.ticketNumber}</span>
-                {ticket.isGoldenTicket && (
-                  <span className="badge bg-warning text-dark">Golden</span>
-                )}
-                {ticket.ticketType === "Pass" && (
-                  <span className="badge bg-info">Pass</span>
-                )}
-                {enableVoting ? (
-                  ticket.voteCount > 0 && (
-                    <span className="badge bg-success">
-                      {ticket.voteCount} {ticket.voteCount === 1 ? 'vote' : 'votes'}
-                    </span>
-                  )
-                ) : (
-                  ticket.useCount > 1 && (
-                    <span className="badge bg-dark">Used {ticket.useCount}x</span>
-                  )
-                )}
-              </div>
-              <div className="text-muted small">
-                {format(new Date(ticket.validatedAt), "MMM d, h:mm a")}
+            <div key={ticket.ticketId} className="list-group-item">
+              <div className="d-flex justify-content-between align-items-center">
+                <div className="d-flex align-items-center gap-3">
+                  <span className="text-primary fw-semibold" style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                    {ticket.ticketNumber}
+                  </span>
+                  <span className="text-muted small">
+                    {format(new Date(ticket.validatedAt), "MMM d, h:mm a")}
+                  </span>
+                  {ticket.isGoldenTicket && (
+                    <span className="badge bg-warning text-dark">Golden</span>
+                  )}
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  {ticket.ticketType === "Pass" && (
+                    <span className="badge bg-info">Pass</span>
+                  )}
+                  {enableVoting ? (
+                    ticket.voteCount > 0 && (
+                      <span className="badge bg-success">
+                        {ticket.voteCount} {ticket.voteCount === 1 ? 'vote' : 'votes'}
+                      </span>
+                    )
+                  ) : (
+                    ticket.useCount > 1 && (
+                      <span className="badge bg-dark">Used {ticket.useCount}x</span>
+                    )
+                  )}
+                </div>
               </div>
             </div>
           ))}

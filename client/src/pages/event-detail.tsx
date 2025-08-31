@@ -781,34 +781,38 @@ export default function EventDetailPage() {
                 </h5>
                 <div className="list-group">
                   {userTickets.slice(0, ticketsDisplayed).map((ticket) => (
-                    <div key={ticket.id} className="list-group-item d-flex justify-content-between align-items-center">
-                      <div>
-                        <span className="badge bg-primary me-2">{ticket.ticketNumber}</span>
-                        {ticket.isValidated && <span className="badge bg-success">Used</span>}
-                        {(ticket as any).resellStatus === "for_resale" && (
-                          <span className="badge bg-warning text-dark">Listed for Resale</span>
-                        )}
-                      </div>
-                      <div className="d-flex gap-2">
-                        {(ticket as any).resellStatus !== "for_resale" && (
-                          <Link href={`/tickets/${ticket.id}`}>
-                            <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
-                              <Eye size={14} className="me-1" />
-                              View
-                            </a>
-                          </Link>
-                        )}
-                        {canResellTicket(ticket) && (
-                          <button
-                            className="btn btn-sm btn-outline-warning"
-                            onClick={() => handleResell(ticket.id)}
-                            disabled={resellTicketMutation.isPending}
-                            data-testid={`button-resell-ticket-${ticket.id}`}
-                          >
-                            <RotateCcw size={14} className="me-1" />
-                            {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
-                          </button>
-                        )}
+                    <div key={ticket.id} className="list-group-item">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex align-items-center gap-2">
+                          <span className="text-primary fw-semibold" style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                            {ticket.ticketNumber}
+                          </span>
+                          {ticket.isValidated && <span className="badge bg-success">Used</span>}
+                          {(ticket as any).resellStatus === "for_resale" && (
+                            <span className="badge bg-warning text-dark">Listed for Resale</span>
+                          )}
+                        </div>
+                        <div className="d-flex gap-2">
+                          {(ticket as any).resellStatus !== "for_resale" && (
+                            <Link href={`/tickets/${ticket.id}`}>
+                              <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
+                                <Eye size={14} className="me-1" />
+                                View
+                              </a>
+                            </Link>
+                          )}
+                          {canResellTicket(ticket) && (
+                            <button
+                              className="btn btn-sm btn-outline-warning"
+                              onClick={() => handleResell(ticket.id)}
+                              disabled={resellTicketMutation.isPending}
+                              data-testid={`button-resell-ticket-${ticket.id}`}
+                            >
+                              <RotateCcw size={14} className="me-1" />
+                              {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
