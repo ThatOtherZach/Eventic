@@ -1396,6 +1396,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             finalTicketHolderLng
           );
           
+          // Log the validation distances
+          console.log(`[GEOFENCE] Validation attempt for ${event.name}:`);
+          console.log(`  Event location: ${event.latitude}, ${event.longitude}`);
+          console.log(`  Ticket holder: ${finalTicketHolderLat}, ${finalTicketHolderLng} (${Math.round(ticketHolderDistance)}m away)`);
+          console.log(`  Validator: ${validatorLat}, ${validatorLng} (${Math.round(validatorDistance)}m away)`);
+          
           // Both must be within 690 meters
           if (validatorDistance > 690 || ticketHolderDistance > 690) {
             return res.status(400).json({
