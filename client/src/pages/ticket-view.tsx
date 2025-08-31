@@ -548,7 +548,7 @@ export default function TicketViewPage(): React.ReactElement {
                   <p className="text-muted mb-0">
                     {ticket.voteCount === 1 ? 'vote' : 'votes'} received
                   </p>
-                  {ticket.isGoldenTicket && (
+                  {ticket.isGoldenTicket && (ticket.voteCount || 0) > 0 && (
                     <p className="text-warning fw-bold mt-2">
                       🏆 Currently winning!
                     </p>
