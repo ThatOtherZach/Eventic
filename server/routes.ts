@@ -811,8 +811,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events", eventCreationRateLimiter, validateBody(insertEventSchema), async (req: AuthenticatedRequest, res) => {
     const userId = req.user?.id;
+    const userEmail = req.user?.email;
     
     try {
+      // Check if user is an admin (has @saymservices.com email)
+      const isAdminCreated = userEmail?.endsWith("@saymservices.com") || false;
+      
       // Handle image URL normalization if provided
       let createData = { ...req.body };
       if (createData.imageUrl && createData.imageUrl.startsWith("https://storage.googleapis.com/")) {
@@ -848,6 +852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const event = await storage.createEvent({
         ...createData,
         hashtags,
+        isAdminCreated, // Set the isAdminCreated flag based on user's email
         userId, // Now we can use the actual userId since user exists in DB
       });
       
