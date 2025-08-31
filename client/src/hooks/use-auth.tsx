@@ -4,8 +4,14 @@ import { supabase } from "@/lib/supabase";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useLocation } from "wouter";
 
+// Extended user type that includes our custom fields
+type ExtendedUser = User & {
+  displayName?: string;
+  memberStatus?: string;
+};
+
 type AuthContextType = {
-  user: User | null;
+  user: ExtendedUser | null;
   isLoading: boolean;
   signUp: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -41,7 +47,7 @@ function getRedirectUrl() {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { addNotification } = useNotifications();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
   const hasInitialized = useRef(false);
@@ -85,9 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               if (syncResponse.ok) {
                 const userData = await syncResponse.json();
-                // Update user object with any new data (like displayName)
-                if (userData.displayName && mounted) {
-                  setUser({ ...data.session.user, ...userData });
+                // Update user object with any new data (like displayName and memberStatus)
+                if (mounted) {
+                  setUser({ ...data.session.user, displayName: userData.displayName, memberStatus: userData.memberStatus });
                 }
               }
             } catch (error) {
@@ -122,9 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               if (syncResponse.ok) {
                 const userData = await syncResponse.json();
-                // Update user object with any new data (like displayName)
-                if (userData.displayName && mounted) {
-                  setUser({ ...session.user, ...userData });
+                // Update user object with any new data (like displayName and memberStatus)
+                if (mounted) {
+                  setUser({ ...session.user, displayName: userData.displayName, memberStatus: userData.memberStatus });
                 }
               }
             } catch (error) {
