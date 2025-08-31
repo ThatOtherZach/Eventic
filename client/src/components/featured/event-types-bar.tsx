@@ -86,8 +86,8 @@ export function EventTypesBar({ events }: EventTypesBarProps) {
   if (segments.length === 0) return null;
   
   const handleSegmentClick = (searchParam: string) => {
-    // Navigate to a filtered view (we'll implement this next)
-    setLocation(`/events?filter=${searchParam}`);
+    // Navigate to the event type page
+    setLocation(`/type/${searchParam}`);
   };
   
   return (

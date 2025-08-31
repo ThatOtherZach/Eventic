@@ -21,6 +21,7 @@ import AdminSettings from "@/pages/admin-settings";
 import { LocationEventsPage } from "@/pages/location-events";
 import { HashtagEventsPage } from "@/pages/hashtag-events";
 import { FeaturedEventsPage } from "@/pages/featured-events";
+import { EventTypePage } from "@/pages/event-type";
 import Manifesto from "@/pages/manifesto";
 import NotFound from "@/pages/not-found";
 
@@ -43,6 +44,7 @@ function Router() {
       <Route path="/manifesto" component={Manifesto} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/hashtag/:hashtag">{(params) => <HashtagEventsPage />}</Route>
+      <Route path="/type/:type">{(params) => <EventTypePage />}</Route>
       <Route path="/:location">{(params) => <LocationEventsPage />}</Route>
       <Route component={NotFound} />
     </Switch>
