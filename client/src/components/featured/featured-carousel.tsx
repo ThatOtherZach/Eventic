@@ -90,7 +90,7 @@ export function FeaturedCarousel() {
   const currentEvent = featuredEvents[currentSlide];
 
   return (
-    <div className="mb-5">
+    <div className="mb-3">
       <h3 className="h4 fw-semibold text-dark mb-3">
         <img src="/boost-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'text-bottom' }} />
         Featured
@@ -206,7 +206,9 @@ export function FeaturedCarousel() {
       </div>
       
       {/* Dynamic color bar showing event types */}
-      <EventTypesBar events={featuredEvents.map(fe => ({ event: fe.event }))} />
+      <div style={{ marginTop: '-8px' }}>
+        <EventTypesBar events={featuredEvents.map(fe => ({ event: fe.event }))} />
+      </div>
     </div>
   );
 }

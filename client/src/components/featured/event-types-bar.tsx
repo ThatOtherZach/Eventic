@@ -92,7 +92,7 @@ export function EventTypesBar({ events }: EventTypesBarProps) {
   
   return (
     <div 
-      className="d-flex mb-3" 
+      className="d-flex" 
       style={{ 
         height: '10px', 
         gap: '2px',
