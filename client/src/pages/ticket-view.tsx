@@ -585,7 +585,7 @@ export default function TicketViewPage(): React.ReactElement {
               )}
 
 
-              {ticket.isValidated && event.reentryType === 'No Reentry (Single Use)' ? (
+              {ticket.isValidated && event.reentryType === 'No Reentry (Single Use)' && !(event.enableVoting && event.p2pValidation) ? (
                 <div className="text-center py-4">
                   <CheckCircle size={48} className="text-success mb-3" />
                   <h6 className="text-success">Ticket Already Used</h6>
@@ -718,7 +718,7 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   )}
                 </div>
-              ) : isValidating ? (
+              ) : (event.enableVoting && event.p2pValidation && ticket.isValidated) || isValidating ? (
                 <div>
                   {/* Timer Display */}
                   <div className="alert alert-info mb-3">
@@ -728,51 +728,29 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   </div>
 
-                  {/* Validation Code Display - Clean and simple like the screenshot */}
-                  <div className="text-center mb-3">
-                    {currentCode && (
-                      <div>
-                        <div className="bg-primary text-white rounded-3 p-4 mb-3">
-                          <p className="text-white-50 mb-2">Tell the validator this code:</p>
-                          <h1 className="display-1 fw-bold mb-0" style={{ letterSpacing: '0.5rem' }}>
-                            {currentCode}
-                          </h1>
-                          <p className="text-white-50 mt-2">Changes every 10 seconds</p>
-                        </div>
-                        
-                        <div className="alert alert-light">
-                          <h6 className="mb-2">
-                            <Shield size={18} className="me-2" />
-                            Instructions:
-                          </h6>
-                          <ol className="mb-0 ps-3">
-                            <li>Show this code at the event.</li>
-                            <li>The event needs to know the code to validate it.</li>
-                            <li>Tickets cannot be resold after validation. Buy the ticket, take the ride.</li>
-                          </ol>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* For voting-enabled events, add voting section within validation session */}
-                  {event.enableVoting && event.p2pValidation && ticket.isValidated && ticket.validationCode && (
-                    <>
+                  {/* Validation Code Display OR Voting Interface */}
+                  {event.enableVoting && event.p2pValidation && ticket.isValidated ? (
+                    // Voting interface for already-validated voting tickets
+                    <div className="mb-3">
                       <div className="alert alert-info mb-3">
                         <h6 className="mb-2">
                           <Users size={18} className="me-2" />
                           Your Code for Voting
                         </h6>
                         <p className="small mb-2">Other attendees can vote for you using this code:</p>
-                        <div className="bg-secondary text-white rounded-3 p-2 text-center">
-                          <h3 className="mb-0 font-monospace fw-bold" style={{ letterSpacing: '0.3rem' }}>
+                        <div className="bg-primary text-white rounded-3 p-3 text-center">
+                          <h2 className="mb-0 font-monospace fw-bold" style={{ letterSpacing: '0.3rem' }}>
                             {ticket.validationCode}
-                          </h3>
+                          </h2>
                         </div>
                       </div>
                       
-                      <div className="mb-3">
-                        <p className="small text-muted mb-2">Vote for another attendee by entering their code:</p>
+                      <div className="alert alert-light">
+                        <h6 className="mb-2">
+                          <ThumbsUp size={18} className="me-2" />
+                          Vote for Another Attendee
+                        </h6>
+                        <p className="small mb-2">Enter their 4-digit code to vote:</p>
                         <form onSubmit={(e) => {
                           e.preventDefault();
                           const formData = new FormData(e.currentTarget);
@@ -818,7 +796,34 @@ export default function TicketViewPage(): React.ReactElement {
                           </div>
                         )}
                       </div>
-                    </>
+                    </div>
+                  ) : (
+                    // Regular validation code display
+                    <div className="text-center mb-3">
+                      {currentCode && (
+                        <div>
+                          <div className="bg-primary text-white rounded-3 p-4 mb-3">
+                            <p className="text-white-50 mb-2">Tell the validator this code:</p>
+                            <h1 className="display-1 fw-bold mb-0" style={{ letterSpacing: '0.5rem' }}>
+                              {currentCode}
+                            </h1>
+                            <p className="text-white-50 mt-2">Changes every 10 seconds</p>
+                          </div>
+                          
+                          <div className="alert alert-light">
+                            <h6 className="mb-2">
+                              <Shield size={18} className="me-2" />
+                              Instructions:
+                            </h6>
+                            <ol className="mb-0 ps-3">
+                              <li>Show this code at the event.</li>
+                              <li>The event needs to know the code to validate it.</li>
+                              <li>Tickets cannot be resold after validation. Buy the ticket, take the ride.</li>
+                            </ol>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Stop Button */}
@@ -842,6 +847,11 @@ export default function TicketViewPage(): React.ReactElement {
                         </div>
                       </div>
                     </div>
+                  ) : event.enableVoting && event.p2pValidation && ticket.isValidated ? (
+                    <p className="text-muted mb-3">
+                      Click the button below to vote for other attendees.
+                      You can enter their 4-digit codes during the validation session.
+                    </p>
                   ) : (
                     <p className="text-muted mb-3">
                       Click the button below to generate a time-limited validation session. 
@@ -875,6 +885,11 @@ export default function TicketViewPage(): React.ReactElement {
                       <>
                         <Clock size={18} className="me-2" />
                         {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Expired'}
+                      </>
+                    ) : event.enableVoting && event.p2pValidation && ticket.isValidated ? (
+                      <>
+                        <img src="/shield-icon.png" alt="" width="18" height="18" className="me-2" style={{ display: 'inline-block', verticalAlign: 'text-bottom' }} />
+                        Vote for Other Attendees
                       </>
                     ) : (
                       <>
