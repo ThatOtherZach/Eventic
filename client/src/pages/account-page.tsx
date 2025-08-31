@@ -80,9 +80,9 @@ export default function AccountPage() {
     <div className="container py-5">
       <div className="row mb-4">
         <div className="col">
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
             <h1 className="h3 fw-bold mb-0">My Account</h1>
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 flex-wrap">
               <PastEvents />
               <button 
                 className="btn btn-outline-secondary"
@@ -90,7 +90,8 @@ export default function AccountPage() {
                 data-testid="button-sign-out"
               >
                 <LogOut size={18} className="me-2" />
-                Sign Out
+                <span className="d-none d-sm-inline">Sign Out</span>
+                <span className="d-inline d-sm-none">Sign Out</span>
               </button>
             </div>
           </div>
@@ -102,10 +103,13 @@ export default function AccountPage() {
         <div className="col-12">
           <div className="card">
             <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between">
+              <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between">
                 <div className="d-flex align-items-center">
-                  <div className="me-3">
+                  <div className="me-3 d-none d-sm-block">
                     <img src="/key-icon.png" alt="" style={{ width: '48px', height: '48px' }} />
+                  </div>
+                  <div className="me-3 d-block d-sm-none">
+                    <img src="/key-icon.png" alt="" style={{ width: '36px', height: '36px' }} />
                   </div>
                   <div>
                     {user.displayName && (

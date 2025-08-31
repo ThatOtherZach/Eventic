@@ -93,7 +93,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const userData = await syncResponse.json();
                 // Update user object with any new data (like displayName and memberStatus)
                 if (mounted) {
-                  setUser({ ...data.session.user, displayName: userData.displayName, memberStatus: userData.memberStatus });
+                  const extendedUser = { 
+                    ...data.session.user, 
+                    displayName: userData.displayName, 
+                    memberStatus: userData.memberStatus 
+                  };
+                  setUser(extendedUser);
                 }
               }
             } catch (error) {
@@ -130,7 +135,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const userData = await syncResponse.json();
                 // Update user object with any new data (like displayName and memberStatus)
                 if (mounted) {
-                  setUser({ ...session.user, displayName: userData.displayName, memberStatus: userData.memberStatus });
+                  const extendedUser = { 
+                    ...session.user, 
+                    displayName: userData.displayName, 
+                    memberStatus: userData.memberStatus 
+                  };
+                  setUser(extendedUser);
                 }
               }
             } catch (error) {
