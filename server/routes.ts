@@ -473,6 +473,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get events by hashtag
+  app.get("/api/events/hashtag/:hashtag", async (req: AuthenticatedRequest, res) => {
+    try {
+      const hashtag = decodeURIComponent(req.params.hashtag).trim().toLowerCase();
+      
+      // Get all public events only - private events must never appear in hashtag listings
+      let events = (await storage.getEvents()).filter(event => !event.isPrivate);
+      
+      // Filter out past events
+      const now = new Date();
+      events = events.filter(event => {
+        if (event.endDate) {
+          try {
+            const endDate = new Date(event.endDate);
+            if (!isNaN(endDate.getTime())) {
+              endDate.setHours(23, 59, 59, 999);
+              return now <= endDate;
+            }
+          } catch {}
+        } else if (event.date) {
+          try {
+            const startDate = new Date(event.date);
+            if (!isNaN(startDate.getTime())) {
+              return now <= startDate;
+            }
+          } catch {}
+        }
+        return true;
+      });
+      
+      // Filter by hashtag
+      const filteredEvents = events.filter(event => {
+        // Double-check that event is not private (safety check)
+        if (event.isPrivate) return false;
+        
+        // Check if event has this hashtag
+        if (event.hashtags && Array.isArray(event.hashtags)) {
+          return event.hashtags.some(tag => tag.toLowerCase() === hashtag.toLowerCase());
+        }
+        return false;
+      });
+      
+      // Sort by date
+      filteredEvents.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+      });
+      
+      res.json(filteredEvents);
+    } catch (error) {
+      await logError(error, "GET /api/events/hashtag/:hashtag", {
+        request: req,
+        metadata: { hashtag: req.params.hashtag }
+      });
+      res.status(500).json({ message: "Failed to fetch events by hashtag" });
+    }
+  });
+
   // Ticket routes
   app.get("/api/tickets/:ticketId", async (req: AuthenticatedRequest, res) => {
     try {
@@ -752,9 +811,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createData.isPrivate = true;
       }
       
+      // Extract hashtags from description
+      const hashtags: string[] = [];
+      if (createData.description) {
+        // Strip HTML tags first
+        const textContent = createData.description.replace(/<[^>]*>/g, ' ');
+        // Find all hashtags (words starting with #)
+        const matches = textContent.match(/#[a-zA-Z0-9_]+/g);
+        if (matches) {
+          // Remove the # and store unique hashtags
+          const uniqueTags = Array.from(new Set(matches.map((tag: string) => tag.substring(1).toLowerCase())));
+          hashtags.push(...uniqueTags);
+        }
+      }
+      
       // Body is already validated by middleware
       const event = await storage.createEvent({
         ...createData,
+        hashtags,
         userId, // Now we can use the actual userId since user exists in DB
       });
       
@@ -868,7 +942,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedData.isPrivate = true;
       }
       
-      const updatedEvent = await storage.updateEvent(req.params.id, validatedData);
+      // Extract hashtags from description if it's being updated
+      let hashtags: string[] | undefined;
+      if (validatedData.description !== undefined) {
+        hashtags = [];
+        // Strip HTML tags first
+        const textContent = validatedData.description.replace(/<[^>]*>/g, ' ');
+        // Find all hashtags (words starting with #)
+        const matches = textContent.match(/#[a-zA-Z0-9_]+/g);
+        if (matches) {
+          // Remove the # and store unique hashtags
+          const uniqueTags = Array.from(new Set(matches.map((tag: string) => tag.substring(1).toLowerCase())));
+          hashtags.push(...uniqueTags);
+        }
+      }
+      
+      const updatedEvent = await storage.updateEvent(req.params.id, {
+        ...validatedData,
+        ...(hashtags !== undefined && { hashtags })
+      });
       
       // Send notifications to all ticket holders
       if (updatedEvent) {

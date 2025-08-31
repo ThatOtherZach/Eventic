@@ -19,6 +19,7 @@ import SpecialEffectsPage from "@/pages/special-effects";
 import MonitoringPage from "@/pages/monitoring";
 import AdminSettings from "@/pages/admin-settings";
 import { LocationEventsPage } from "@/pages/location-events";
+import { HashtagEventsPage } from "@/pages/hashtag-events";
 import { FeaturedEventsPage } from "@/pages/featured-events";
 import Manifesto from "@/pages/manifesto";
 import NotFound from "@/pages/not-found";
@@ -41,6 +42,7 @@ function Router() {
       <Route path="/featured" component={FeaturedEventsPage} />
       <Route path="/manifesto" component={Manifesto} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/hashtag/:hashtag">{(params) => <HashtagEventsPage />}</Route>
       <Route path="/:location">{(params) => <LocationEventsPage />}</Route>
       <Route component={NotFound} />
     </Switch>

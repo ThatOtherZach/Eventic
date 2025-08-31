@@ -122,6 +122,8 @@ export const events = pgTable("events", {
   lastRecurrenceCreated: timestamp("last_recurrence_created"), // Track when we last created a recurrence
   // Timezone field
   timezone: text("timezone").default("America/New_York"), // Timezone for the event (IANA timezone format)
+  // Hashtags extracted from description
+  hashtags: text("hashtags").array().default(sql`ARRAY[]::text[]`), // Array of hashtags found in description
   createdAt: timestamp("created_at").defaultNow(),
 });
 

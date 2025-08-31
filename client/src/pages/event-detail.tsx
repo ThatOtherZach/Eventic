@@ -641,7 +641,12 @@ export default function EventDetailPage() {
               <h5>About This Event</h5>
               <div 
                 className="text-muted"
-                dangerouslySetInnerHTML={{ __html: event.description }}
+                dangerouslySetInnerHTML={{ 
+                  __html: event.description.replace(
+                    /#([a-zA-Z0-9_]+)/g, 
+                    '<a href="/hashtag/$1" class="text-decoration-none">#$1</a>'
+                  )
+                }}
               />
             </div>
           )}
