@@ -834,10 +834,12 @@ export default function TicketViewPage(): React.ReactElement {
                     className="btn btn-secondary w-100"
                     onClick={() => {
                       if (event.enableVoting && event.p2pValidation && ticket.isValidated) {
-                        // For voting, just hide the panel
-                        setIsValidating(false);
-                        setTimeRemaining(0);
-                        setCurrentCode('');
+                        // For voting, refresh the ticket data to update vote count
+                        queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
+                        toast({
+                          title: "Refreshing vote count...",
+                          description: "Getting the latest vote tally."
+                        });
                       } else {
                         // For regular validation, stop the session
                         stopValidation();
@@ -846,7 +848,7 @@ export default function TicketViewPage(): React.ReactElement {
                     data-testid="button-stop-validation"
                   >
                     {event.enableVoting && event.p2pValidation && ticket.isValidated 
-                      ? 'Close Voting Panel' 
+                      ? 'Refresh Vote Count' 
                       : 'Stop Validation'}
                   </button>
                 </div>
