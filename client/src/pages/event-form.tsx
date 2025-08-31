@@ -394,8 +394,8 @@ export default function EventForm() {
       }
 
       // Prepare update data with only the necessary fields
+      // Note: name field cannot be updated and is removed on backend
       const updateData = {
-        name: data.name,
         description: data.description || null,
         contactDetails: data.contactDetails || null,
         venue: data.venue,
