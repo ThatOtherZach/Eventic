@@ -752,12 +752,12 @@ export default function TicketViewPage(): React.ReactElement {
                           <ThumbsUp size={18} className="me-2" />
                           Vote for Another Attendee
                         </h6>
-                        <p className="small mb-2">Enter their 4-digit code:</p>
+                        <p className="small mb-2">Enter their vote code:</p>
                         <form onSubmit={(e) => {
                           e.preventDefault();
                           const formData = new FormData(e.currentTarget);
                           const code = formData.get('voteCode') as string;
-                          if (code && code.length === 4) {
+                          if (code && code.length >= 4) {
                             p2pVoteMutation.mutate(code.toUpperCase());
                           }
                         }}>
@@ -765,9 +765,9 @@ export default function TicketViewPage(): React.ReactElement {
                             type="text"
                             name="voteCode"
                             className="form-control mb-2"
-                            placeholder="Enter 4-digit code"
-                            maxLength={4}
-                            pattern="[0-9A-Za-z]{4}"
+                            placeholder="Enter vote code"
+                            maxLength={5}
+                            pattern="[0-9A-Za-z]{4,5}"
                             style={{ textTransform: 'uppercase' }}
                             required
                             data-testid="input-vote-code"
