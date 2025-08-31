@@ -94,7 +94,7 @@ export function EventTypesBar({ events }: EventTypesBarProps) {
     <div 
       className="d-flex" 
       style={{ 
-        height: '100px', 
+        height: '25px', 
         gap: '2px',
         borderRadius: '4px',
         overflow: 'hidden'
