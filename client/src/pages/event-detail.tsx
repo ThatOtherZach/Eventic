@@ -785,15 +785,13 @@ export default function EventDetailPage() {
                       <div className="mb-2">
                         <span className="badge bg-primary">{ticket.ticketNumber}</span>
                       </div>
-                      {(ticket.isValidated || (ticket as any).resellStatus === "for_resale") && (
-                        <div className="mb-2">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div>
                           {ticket.isValidated && <span className="badge bg-success me-2">Used</span>}
                           {(ticket as any).resellStatus === "for_resale" && (
                             <span className="badge bg-warning text-dark">Listed for Resale</span>
                           )}
                         </div>
-                      )}
-                      <div className="d-flex gap-2">
                         {(ticket as any).resellStatus !== "for_resale" && (
                           <Link href={`/tickets/${ticket.id}`}>
                             <a className="btn btn-sm btn-secondary" data-testid={`button-view-ticket-${ticket.id}`}>
@@ -802,7 +800,9 @@ export default function EventDetailPage() {
                             </a>
                           </Link>
                         )}
-                        {canResellTicket(ticket) && (
+                      </div>
+                      {canResellTicket(ticket) && (
+                        <div>
                           <button
                             className="btn btn-sm btn-outline-warning"
                             onClick={() => handleResell(ticket.id)}
@@ -812,8 +812,8 @@ export default function EventDetailPage() {
                             <RotateCcw size={14} className="me-1" />
                             {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
