@@ -906,14 +906,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate the update data - create a new partial schema from the base event schema
       const baseEventSchema = z.object({
         name: z.string().optional(),
-        description: z.string().optional(),
+        description: z.string().nullable().optional(),
         contactDetails: z.string().nullable().optional(),
         venue: z.string().optional(),
         country: z.string().optional(),
         date: z.string().optional(),
         time: z.string().optional(),
-        endDate: z.string().optional(),
-        endTime: z.string().optional(),
+        endDate: z.string().nullable().optional(),
+        endTime: z.string().nullable().optional(),
         ticketPrice: z.string().optional(),
         maxTickets: z.number().optional(),
         userId: z.string().optional(),
@@ -946,14 +946,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let hashtags: string[] | undefined;
       if (validatedData.description !== undefined) {
         hashtags = [];
-        // Strip HTML tags first
-        const textContent = validatedData.description.replace(/<[^>]*>/g, ' ');
-        // Find all hashtags (words starting with #)
-        const matches = textContent.match(/#[a-zA-Z0-9_]+/g);
-        if (matches) {
-          // Remove the # and store unique hashtags
-          const uniqueTags = Array.from(new Set(matches.map((tag: string) => tag.substring(1).toLowerCase())));
-          hashtags.push(...uniqueTags);
+        if (validatedData.description) {
+          // Strip HTML tags first
+          const textContent = validatedData.description.replace(/<[^>]*>/g, ' ');
+          // Find all hashtags (words starting with #)
+          const matches = textContent.match(/#[a-zA-Z0-9_]+/g);
+          if (matches) {
+            // Remove the # and store unique hashtags
+            const uniqueTags = Array.from(new Set(matches.map((tag: string) => tag.substring(1).toLowerCase())));
+            hashtags.push(...uniqueTags);
+          }
         }
       }
       
