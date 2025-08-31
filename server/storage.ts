@@ -281,6 +281,17 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: InsertUser & { id?: string }): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
+    
+    // Give new users a welcome bonus of 10 Tickets
+    if (user && user.id) {
+      await this.creditUserAccount(
+        user.id,
+        10,
+        'Welcome bonus - one time credit for new account',
+        { type: 'welcome_bonus' }
+      );
+    }
+    
     return user;
   }
 
