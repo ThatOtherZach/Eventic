@@ -767,7 +767,7 @@ export default function TicketViewPage(): React.ReactElement {
                             className="form-control mb-2"
                             placeholder="Enter 4-digit code"
                             maxLength={4}
-                            pattern="[0-9A-Z]{4}"
+                            pattern="[0-9]{4}"
                             required
                             data-testid="input-vote-code"
                           />
@@ -826,9 +826,17 @@ export default function TicketViewPage(): React.ReactElement {
                   {/* Stop Button - different text for voting vs validation */}
                   <button
                     className="btn btn-secondary w-100"
-                    onClick={event.enableVoting && event.p2pValidation && ticket.isValidated 
-                      ? () => setIsValidating(false) 
-                      : stopValidation}
+                    onClick={() => {
+                      if (event.enableVoting && event.p2pValidation && ticket.isValidated) {
+                        // For voting panel, just close it
+                        setIsValidating(false);
+                        setCurrentCode(null);
+                        setTimeRemaining(0);
+                      } else {
+                        // For regular validation, stop the session
+                        stopValidation();
+                      }
+                    }}
                     data-testid="button-stop-validation"
                   >
                     {event.enableVoting && event.p2pValidation && ticket.isValidated 
