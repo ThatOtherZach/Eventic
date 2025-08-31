@@ -239,9 +239,31 @@ export default function EventDetailPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
     },
     onError: (error: any) => {
+      // Extract the actual error message from the formatted error
+      let errorMessage = "Unable to list ticket for resale";
+      
+      if (error.message) {
+        // Error format is "400: {"message":"Actual error message"}"
+        const match = error.message.match(/\d{3}:\s*({.*})/);
+        if (match) {
+          try {
+            const errorData = JSON.parse(match[1]);
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            // If JSON parsing fails, try to extract plain text after status code
+            const textMatch = error.message.match(/\d{3}:\s*(.+)/);
+            if (textMatch) {
+              errorMessage = textMatch[1];
+            }
+          }
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Resale Failed",
-        description: error.message || "Unable to list ticket for resale",
+        description: errorMessage,
         variant: "destructive",
       });
     },
