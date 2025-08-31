@@ -2893,6 +2893,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch transactions" });
     }
   });
+  
+  // Daily claim status endpoint
+  app.get("/api/currency/daily-claim-status", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const status = await storage.canClaimDailyTickets(userId);
+      res.json(status);
+    } catch (error) {
+      await logError(error, "GET /api/currency/daily-claim-status", { request: req });
+      res.status(500).json({ message: "Failed to check claim status" });
+    }
+  });
+  
+  // Daily claim endpoint
+  app.post("/api/currency/claim-daily", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const result = await storage.claimDailyTickets(userId);
+      res.json({
+        success: true,
+        amount: result.amount,
+        nextClaimAt: result.nextClaimAt,
+        message: `You received ${result.amount} Tickets!`
+      });
+    } catch (error: any) {
+      if (error.message === 'Cannot claim tickets yet') {
+        return res.status(400).json({ message: "You've already claimed your daily tickets. Please wait 24 hours." });
+      }
+      await logError(error, "POST /api/currency/claim-daily", { request: req });
+      res.status(500).json({ message: "Failed to claim daily tickets" });
+    }
+  });
 
   app.post("/api/currency/transfer", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

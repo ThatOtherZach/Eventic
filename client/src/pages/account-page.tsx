@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet } from "lucide-react";
+import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +71,39 @@ export default function AccountPage() {
     },
     enabled: !!user,
   });
+  
+  const { data: claimStatus } = useQuery<{ canClaim: boolean; nextClaimAt?: string }>({
+    queryKey: ["/api/currency/daily-claim-status"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/currency/daily-claim-status");
+      return response.json();
+    },
+    enabled: !!user,
+    refetchInterval: 60000, // Check every minute
+  });
+  
+  const claimDailyMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/currency/claim-daily");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Daily Tickets Claimed!",
+        description: data.message,
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/daily-claim-status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Claim Failed",
+        description: error.message || "Failed to claim daily tickets",
+        variant: "destructive",
+      });
+    },
+  });
 
   if (!user) {
     return null;
@@ -135,17 +168,31 @@ export default function AccountPage() {
                   <div className="mt-3 mt-sm-0">
                     <div className="card bg-light">
                       <div className="card-body py-2 px-3">
-                        <div className="d-flex align-items-center">
-                          <Wallet className="text-primary me-2" size={24} />
-                          <div>
-                            <div className="small text-muted">Tickets Balance</div>
-                            <div className="h5 mb-0 fw-bold">{parseFloat(balance.balance).toFixed(2)}</div>
-                            {parseFloat(balance.holdBalance) > 0 && (
-                              <div className="small text-warning">
-                                {parseFloat(balance.holdBalance).toFixed(2)} on hold
-                              </div>
-                            )}
+                        <div className="d-flex align-items-center justify-content-between">
+                          <div className="d-flex align-items-center">
+                            <Wallet className="text-primary me-2" size={24} />
+                            <div>
+                              <div className="small text-muted">Tickets Balance</div>
+                              <div className="h5 mb-0 fw-bold">{parseFloat(balance.balance).toFixed(2)}</div>
+                              {parseFloat(balance.holdBalance) > 0 && (
+                                <div className="small text-warning">
+                                  {parseFloat(balance.holdBalance).toFixed(2)} on hold
+                                </div>
+                              )}
+                            </div>
                           </div>
+                          {/* Daily Claim Button */}
+                          {claimStatus && (
+                            <button
+                              onClick={() => claimDailyMutation.mutate()}
+                              disabled={!claimStatus.canClaim || claimDailyMutation.isPending}
+                              className={`btn btn-sm ${claimStatus.canClaim ? 'btn-success' : 'btn-secondary'} d-flex align-items-center`}
+                              title={claimStatus.canClaim ? "Claim your daily tickets!" : `Next claim: ${claimStatus.nextClaimAt ? new Date(claimStatus.nextClaimAt).toLocaleString() : 'N/A'}`}
+                            >
+                              <Gift size={16} className="me-1" />
+                              {claimDailyMutation.isPending ? "Claiming..." : claimStatus.canClaim ? "Claim Daily" : "Claimed"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

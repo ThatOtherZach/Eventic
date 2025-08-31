@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne, isNull, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -188,6 +188,10 @@ export interface IStorage {
   creditUserAccount(userId: string, amount: number, description: string, metadata?: any): Promise<boolean>;
   debitUserAccount(userId: string, amount: number, description: string, metadata?: any): Promise<boolean>;
   transferTickets(fromUserId: string, toUserId: string, amount: number, description: string): Promise<boolean>;
+  
+  // Daily Claims
+  canClaimDailyTickets(userId: string): Promise<{ canClaim: boolean; nextClaimAt?: Date }>;
+  claimDailyTickets(userId: string): Promise<{ amount: number; nextClaimAt: Date }>;
 }
 
 interface ValidationSession {
@@ -3241,6 +3245,75 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error transferring tickets:', error);
       return false;
+    }
+  }
+  
+  // Daily Claims Implementation
+  async canClaimDailyTickets(userId: string): Promise<{ canClaim: boolean; nextClaimAt?: Date }> {
+    try {
+      // Get the most recent claim for this user
+      const [lastClaim] = await db
+        .select()
+        .from(dailyClaims)
+        .where(eq(dailyClaims.userId, userId))
+        .orderBy(desc(dailyClaims.claimedAt))
+        .limit(1);
+      
+      if (!lastClaim) {
+        // User has never claimed, they can claim now
+        return { canClaim: true };
+      }
+      
+      const now = new Date();
+      const nextClaimTime = new Date(lastClaim.nextClaimAt);
+      
+      if (now >= nextClaimTime) {
+        return { canClaim: true };
+      } else {
+        return { canClaim: false, nextClaimAt: nextClaimTime };
+      }
+    } catch (error) {
+      console.error('Error checking daily claim eligibility:', error);
+      return { canClaim: false };
+    }
+  }
+  
+  async claimDailyTickets(userId: string): Promise<{ amount: number; nextClaimAt: Date }> {
+    try {
+      // Check if user can claim
+      const eligibility = await this.canClaimDailyTickets(userId);
+      if (!eligibility.canClaim) {
+        throw new Error('Cannot claim tickets yet');
+      }
+      
+      // Determine amount based on time of day
+      const now = new Date();
+      const hour = now.getHours();
+      // First 12 hours (0-11) = 2 tickets, last 12 hours (12-23) = 4 tickets
+      const amount = hour < 12 ? 2 : 4;
+      
+      // Calculate next claim time (24 hours from now)
+      const nextClaimAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      
+      // Record the claim
+      await db.insert(dailyClaims).values({
+        userId,
+        amount: amount.toString(),
+        nextClaimAt,
+      });
+      
+      // Credit the user's account
+      await this.creditUserAccount(
+        userId,
+        amount,
+        `Daily reward claim: ${amount} Tickets`,
+        { claimTime: now.toISOString(), hour }
+      );
+      
+      return { amount, nextClaimAt };
+    } catch (error) {
+      console.error('Error claiming daily tickets:', error);
+      throw error;
     }
   }
 }

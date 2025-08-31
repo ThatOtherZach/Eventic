@@ -324,6 +324,15 @@ export const currencyHolds = pgTable("currency_holds", {
   releasedAt: timestamp("released_at"),
 });
 
+// Daily Ticket Claims tracking
+export const dailyClaims = pgTable("daily_claims", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  claimedAt: timestamp("claimed_at").defaultNow().notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  nextClaimAt: timestamp("next_claim_at").notNull(),
+});
+
 // NFT Registry table for minted tickets
 export const registryRecords = pgTable("registry_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -747,6 +756,11 @@ export const insertCurrencyHoldSchema = createInsertSchema(currencyHolds).omit({
   releasedAt: true,
 });
 
+export const insertDailyClaimSchema = createInsertSchema(dailyClaims).omit({
+  id: true,
+  claimedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -801,3 +815,5 @@ export type InsertTransactionTemplate = z.infer<typeof insertTransactionTemplate
 export type TransactionTemplate = typeof transactionTemplates.$inferSelect;
 export type InsertCurrencyHold = z.infer<typeof insertCurrencyHoldSchema>;
 export type CurrencyHold = typeof currencyHolds.$inferSelect;
+export type InsertDailyClaim = z.infer<typeof insertDailyClaimSchema>;
+export type DailyClaim = typeof dailyClaims.$inferSelect;
