@@ -633,7 +633,7 @@ export default function EventDetailPage() {
               )}
             </div>
             <div className="d-flex align-items-center text-muted">
-              <Clock size={18} className="me-2" />
+              <span className="me-1">at</span>
               {event.endTime ? (
                 <>
                   {event.time} - {event.endTime}
