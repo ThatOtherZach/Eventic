@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Ticket, Users } from "lucide-react";
 
 export function StatsCards() {
   const { data: stats, isLoading } = useQuery<{
@@ -34,21 +33,21 @@ export function StatsCards() {
     {
       title: "Total Events",
       value: stats?.totalEvents || 0,
-      icon: Calendar,
+      iconSrc: "/calendar-icon.png",
       bgColor: "primary",
       bgOpacity: "10",
     },
     {
       title: "Tickets (48h)",
       value: stats?.totalTickets || 0,
-      icon: Ticket,
+      iconSrc: "/tickets-icon.png",
       bgColor: "success",
       bgOpacity: "10",
     },
     {
       title: "Active Attendees",
       value: stats?.validatedTickets || 0,
-      icon: Users,
+      iconSrc: "/users-icon.png",
       bgColor: "info",
       bgOpacity: "10",
     },
@@ -57,7 +56,6 @@ export function StatsCards() {
   return (
     <div className="row mb-4">
       {cards.map((card, index) => {
-        const Icon = card.icon;
         // Color bars for visual appeal
         const barColors = ['#dc3545', '#ffc107', '#0d6efd']; // Red, Gold, Blue
         return (
@@ -76,7 +74,7 @@ export function StatsCards() {
               />
               <div className="card-body d-flex align-items-center">
                 <div className={`bg-${card.bgColor} bg-opacity-${card.bgOpacity} rounded-circle p-3 me-3 d-flex align-items-center justify-content-center`}>
-                  <Icon className={`text-${card.bgColor}`} size={24} />
+                  <img src={card.iconSrc} alt="" style={{ width: '24px', height: '24px' }} />
                 </div>
                 <div className="flex-grow-1">
                   <p className="text-muted small mb-1 fw-medium">{card.title}</p>
