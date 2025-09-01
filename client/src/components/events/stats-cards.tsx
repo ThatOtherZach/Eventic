@@ -74,7 +74,14 @@ export function StatsCards() {
               />
               <div className="card-body d-flex align-items-center">
                 <div className={`bg-${card.bgColor} bg-opacity-${card.bgOpacity} rounded-circle p-3 me-3 d-flex align-items-center justify-content-center`}>
-                  <img src={card.iconSrc} alt="" style={{ width: '24px', height: '24px' }} />
+                  <img 
+                    src={card.iconSrc} 
+                    alt="" 
+                    style={{ 
+                      width: card.title === 'Total Events' ? '24px' : '30px', 
+                      height: card.title === 'Total Events' ? '24px' : '30px' 
+                    }} 
+                  />
                 </div>
                 <div className="flex-grow-1">
                   <p className="text-muted small mb-1 fw-medium">{card.title}</p>
