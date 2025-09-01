@@ -612,8 +612,8 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          <div className="d-flex flex-wrap gap-3 mb-4">
-            <div className="d-flex align-items-center text-muted">
+          <div className="mb-4">
+            <div className="d-flex align-items-center text-muted mb-2">
               <img src={dateIcon} alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
               <span>
                 {event.endDate ? (
