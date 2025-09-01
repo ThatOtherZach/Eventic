@@ -955,7 +955,7 @@ export class DatabaseStorage implements IStorage {
       } else if (daysUntilEvent <= 3) {
         urgencyFactor = 0.3; // 30% increase in last 3 days
       } else if (daysUntilEvent <= 7) {
-        urgencyFactor = 0.2; // 20% increase in last week
+        urgencyFactor = 0.15; // 15% increase in last week
       } else if (daysUntilEvent <= 14) {
         urgencyFactor = 0.1; // 10% increase in last 2 weeks
       }
