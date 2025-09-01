@@ -17,6 +17,7 @@ import googleCalendarIcon from "@assets/calendar-3_1756578696542.png";
 import globeIcon from "@assets/image_1756578828379.png";
 import dateIcon from "@assets/image_1756751150943.png";
 import locationIcon from "@assets/globe_map-5_1756751517694.png";
+import clockIcon from "@assets/clock-1_1756752706835.png";
 import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
@@ -638,11 +639,14 @@ export default function EventDetailPage() {
                         return 'Invalid end date';
                       }
                     })() : 'No end date'}
+                    <img src={clockIcon} alt="" style={{ width: '14px', height: '14px', marginLeft: '6px', marginRight: '6px' }} />
                   </>
                 ) : (
-                  eventDate ? format(eventDate, "MMMM d, yyyy") : event.date
+                  <>
+                    {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date}
+                    <img src={clockIcon} alt="" style={{ width: '14px', height: '14px', marginLeft: '6px', marginRight: '6px' }} />
+                  </>
                 )}
-                {' at '}
                 {event.endTime ? (
                   <>
                     {event.time} - {event.endTime}
