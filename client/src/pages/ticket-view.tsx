@@ -471,9 +471,30 @@ export default function TicketViewPage(): React.ReactElement {
               ticket={ticket} 
               event={event} 
               showQR={false}
-              showBadges={true}
+              showBadges={false}
             />
           </div>
+
+          {/* Ticket Status Badges */}
+          {(ticket.isValidated || (ticket as any).resellStatus === "for_resale" || event.reentryType === "Pass (Multiple Use)") && (
+            <div className="d-flex justify-content-center gap-2 mb-3">
+              {ticket.isValidated && (
+                <span className="badge" style={{ backgroundColor: '#198754', color: '#fff', fontSize: '0.9em', padding: '6px 12px' }}>
+                  VALIDATED
+                </span>
+              )}
+              {(ticket as any).resellStatus === "for_resale" && (
+                <span className="badge" style={{ backgroundColor: '#FFC107', color: '#000', fontSize: '0.9em', padding: '6px 12px' }}>
+                  RETURNED
+                </span>
+              )}
+              {event.reentryType === "Pass (Multiple Use)" && (
+                <span className="badge" style={{ backgroundColor: '#0DCAF0', color: '#000', fontSize: '0.9em', padding: '6px 12px' }}>
+                  PASS
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Ticket Details */}
           <div className="card mb-4">
