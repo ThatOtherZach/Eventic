@@ -207,7 +207,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
       </div>
 
       {/* Status Badge Bar at Bottom */}
-      {showBadges && (ticket.isValidated || (ticket as any).resellStatus === "for_resale") && (
+      {showBadges && (ticket.isValidated || (ticket as any).resellStatus === "for_resale" || event.reentryType === "Pass (Multiple Use)") && (
         <div 
           className="position-absolute bottom-0 start-0 w-100 d-flex"
           style={{ 
@@ -220,7 +220,12 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           {ticket.isValidated && (
             <div
               style={{
-                flex: (ticket as any).resellStatus === "for_resale" ? '0 0 50%' : '0 0 100%',
+                flex: (() => {
+                  let badgeCount = 1;
+                  if ((ticket as any).resellStatus === "for_resale") badgeCount++;
+                  if (event.reentryType === "Pass (Multiple Use)") badgeCount++;
+                  return `0 0 ${100 / badgeCount}%`;
+                })(),
                 backgroundColor: '#198754',
                 display: 'flex',
                 alignItems: 'center',
@@ -238,7 +243,12 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           {(ticket as any).resellStatus === "for_resale" && (
             <div
               style={{
-                flex: ticket.isValidated ? '0 0 50%' : '0 0 100%',
+                flex: (() => {
+                  let badgeCount = 1;
+                  if (ticket.isValidated) badgeCount++;
+                  if (event.reentryType === "Pass (Multiple Use)") badgeCount++;
+                  return `0 0 ${100 / badgeCount}%`;
+                })(),
                 backgroundColor: '#FFC107',
                 display: 'flex',
                 alignItems: 'center',
@@ -251,6 +261,29 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
               }}
             >
               RETURNED
+            </div>
+          )}
+          {event.reentryType === "Pass (Multiple Use)" && (
+            <div
+              style={{
+                flex: (() => {
+                  let badgeCount = 1;
+                  if (ticket.isValidated) badgeCount++;
+                  if ((ticket as any).resellStatus === "for_resale") badgeCount++;
+                  return `0 0 ${100 / badgeCount}%`;
+                })(),
+                backgroundColor: '#0DCAF0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#000',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+            >
+              PASS
             </div>
           )}
         </div>
