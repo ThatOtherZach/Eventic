@@ -1222,7 +1222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Found and purchased a resell ticket
         // Note: Currency transaction is handled within processResellPurchase
         await logInfo(
-          "Resell ticket purchased",
+          "Returned ticket purchased",
           "POST /api/events/:eventId/tickets",
           {
             userId,
@@ -1331,17 +1331,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (ticket.userId !== userId) {
-        return res.status(403).json({ message: "You can only resell your own tickets" });
+        return res.status(403).json({ message: "You can only return your own tickets" });
       }
 
       // Check if ticket has been validated
       if (ticket.isValidated) {
-        return res.status(400).json({ message: "Cannot resell a validated ticket" });
+        return res.status(400).json({ message: "Cannot return a validated ticket" });
       }
 
       // Check if already for resale
       if (ticket.resellStatus === "for_resale") {
-        return res.status(400).json({ message: "Ticket is already listed for resale" });
+        return res.status(400).json({ message: "Ticket is already returned" });
       }
 
       // Get the event to check timing
@@ -1357,7 +1357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (hoursUntilEvent < 1) {
         return res.status(400).json({ 
-          message: "Reselling is only available until 1 hour before the event starts" 
+          message: "Returns are only available until 1 hour before the event starts" 
         });
       }
 
@@ -1365,12 +1365,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const listed = await storage.resellTicket(ticketId, userId);
       
       if (!listed) {
-        return res.status(500).json({ message: "Failed to list ticket for resale" });
+        return res.status(500).json({ message: "Failed to return ticket" });
       }
 
       // Log the resell listing
       await logInfo(
-        "Ticket listed for resale",
+        "Ticket returned",
         "POST /api/tickets/:ticketId/resell",
         {
           userId,
@@ -1385,7 +1385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       res.json({ 
-        message: "Ticket listed for resale successfully",
+        message: "Ticket returned successfully",
         resold: true
       });
     } catch (error) {
@@ -1393,7 +1393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         request: req,
         metadata: { ticketId: req.params.ticketId }
       });
-      res.status(500).json({ message: "Failed to list ticket for resale" });
+      res.status(500).json({ message: "Failed to return ticket" });
     }
   });
 

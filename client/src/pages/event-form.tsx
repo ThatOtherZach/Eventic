@@ -1184,7 +1184,7 @@ export default function EventForm() {
                                     <div className="form-text">
                                       Suspend this event from public view and
                                       stop new ticket sales. Existing ticket
-                                      holders can still access and resell
+                                      holders can still access and return
                                       tickets. Admin moderation tool.
                                     </div>
                                     <FormMessage />

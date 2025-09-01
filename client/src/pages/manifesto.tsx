@@ -356,9 +356,9 @@ export default function Manifesto() {
           <div className="alert alert-info">
             <strong>Ticket Economics:</strong>
             <ul className="mb-0 mt-2" style={sectionStyle}>
-              <li>Resale allowed at original price (2% platform fee)</li>
+              <li>Returns allowed at original price (2% platform fee)</li>
               <li>Free tickets can be returned to the pool</li>
-              <li>Resale window closes 1 hour before showtime</li>
+              <li>Return window closes 1 hour before showtime</li>
               <li>Purchase history is transparent (no scalper paradise)</li>
             </ul>
           </div>

@@ -241,10 +241,8 @@ export default function EventDetailPage() {
       const isReturn = price === 0;
       
       toast({
-        title: isReturn ? "Ticket Returned" : "Listed for Resale",
-        description: isReturn 
-          ? "Your ticket has been returned and is now available for others."
-          : "Your ticket has been listed for resale successfully.",
+        title: "Ticket Returned",
+        description: "Your ticket has been returned and is now available for others.",
       });
       // Refresh tickets and event data
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/user-tickets`] });
@@ -252,7 +250,7 @@ export default function EventDetailPage() {
     },
     onError: (error: any) => {
       // Extract the actual error message from the formatted error
-      let errorMessage = "Unable to list ticket for resale";
+      let errorMessage = "Unable to return ticket";
       
       if (error.message) {
         // Error format is "400: {"message":"Actual error message"}"
@@ -274,7 +272,7 @@ export default function EventDetailPage() {
       }
       
       toast({
-        title: "Resale Failed",
+        title: "Return Failed",
         description: errorMessage,
         variant: "destructive",
       });
@@ -342,7 +340,7 @@ export default function EventDetailPage() {
     
     const confirmMessage = originalPrice === 0
       ? "Are you sure you want to return this free ticket? It will become available for others to claim."
-      : `Are you sure you want to list this ticket for resale at $${originalPrice.toFixed(2)}? When someone buys it, you'll receive the payment (minus a 2% platform fee). Tickets can only be resold at their original purchase price.`;
+      : `Are you sure you want to return this ticket? The original price of $${originalPrice.toFixed(2)} will be refunded (minus a 2% platform fee), and the ticket will become available for others to purchase.`;
     
     if (confirm(confirmMessage)) {
       resellTicketMutation.mutate(ticketId);
@@ -931,7 +929,7 @@ export default function EventDetailPage() {
                             <div>
                               <span className="badge bg-success me-2">Used</span>
                               {(ticket as any).resellStatus === "for_resale" && (
-                                <span className="badge bg-warning text-dark">Listed for Resale</span>
+                                <span className="badge bg-warning text-dark">Returned</span>
                               )}
                             </div>
                             <div className="d-flex gap-2">
@@ -951,7 +949,7 @@ export default function EventDetailPage() {
                                   data-testid={`button-resell-ticket-${ticket.id}`}
                                 >
                                   <RotateCcw size={14} className="me-1" />
-                                  {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
+                                  Return
                                 </button>
                               )}
                             </div>
@@ -975,13 +973,13 @@ export default function EventDetailPage() {
                                   data-testid={`button-resell-ticket-${ticket.id}`}
                                 >
                                   <RotateCcw size={14} className="me-1" />
-                                  {parseFloat(ticket.purchasePrice || event.ticketPrice) === 0 ? 'Return' : 'Resell'}
+                                  Return
                                 </button>
                               )}
                             </div>
                             <div>
                               {(ticket as any).resellStatus === "for_resale" && (
-                                <span className="badge bg-warning text-dark">Listed for Resale</span>
+                                <span className="badge bg-warning text-dark">Returned</span>
                               )}
                             </div>
                           </>
@@ -1209,7 +1207,7 @@ export default function EventDetailPage() {
                   <small>
                     <strong>This event has been suspended by administrators.</strong><br />
                     {event.resaleCount && event.resaleCount > 0 && (
-                      <>Existing ticket holders can still resell - {event.resaleCount} {event.resaleCount === 1 ? 'ticket is' : 'tickets are'} available for resale.</>
+                      <>Existing ticket holders can still return tickets - {event.resaleCount} {event.resaleCount === 1 ? 'ticket is' : 'tickets are'} available.</>
                     )}
                   </small>
                 </div>

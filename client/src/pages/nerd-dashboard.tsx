@@ -297,7 +297,7 @@ export default function NerdDashboard() {
                     <div className="list-group-item d-flex justify-content-between align-items-center px-0">
                       <div className="d-flex align-items-center gap-2">
                         <RefreshCw size={16} className="text-muted" />
-                        <span className="text-muted">Resale Queue</span>
+                        <span className="text-muted">Return Queue</span>
                       </div>
                       <span className="fw-semibold">{data.ticketMetrics.resaleTickets}</span>
                     </div>
@@ -522,7 +522,7 @@ export default function NerdDashboard() {
             <div className="col-12 col-md-6 col-lg-4 mb-3">
               <div className="card border-0 shadow-sm h-100">
                 <div className="card-body">
-                  <h6 className="card-subtitle mb-2 text-muted">Resale Activity</h6>
+                  <h6 className="card-subtitle mb-2 text-muted">Return Activity</h6>
                   <div className="h3 fw-bold text-secondary">
                     {data.ticketMetrics.resaleTickets}
                   </div>

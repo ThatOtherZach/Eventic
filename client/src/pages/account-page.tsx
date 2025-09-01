@@ -246,9 +246,14 @@ export default function AccountPage() {
                         showQR={false}
                       />
                     </div>
-                    {ticket.isValidated && (
+                    {(ticket.isValidated || (ticket as any).resellStatus === "for_resale") && (
                       <div className="text-center mt-2">
-                        <span className="badge bg-success">Used</span>
+                        {ticket.isValidated && (
+                          <span className="badge bg-success me-2">Used</span>
+                        )}
+                        {(ticket as any).resellStatus === "for_resale" && (
+                          <span className="badge bg-warning text-dark">Returned</span>
+                        )}
                       </div>
                     )}
                   </div>
