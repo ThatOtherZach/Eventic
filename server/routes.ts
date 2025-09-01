@@ -352,7 +352,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Object Storage routes
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
-    const objectStorageService = new ObjectStorageService();
     try {
       const file = await objectStorageService.searchPublicObject(filePath);
       if (!file) {
@@ -1374,7 +1373,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         type: "success",
         title: "Ticket Returned",
-        description: `Your ticket #${ticket.ticketNumber} for ${event.name} has been returned and is now available for others.`
+        description: `Your ticket has been returned and is now available for others.`,
+        metadata: JSON.stringify({
+          ticketId,
+          eventId: ticket.eventId,
+          eventName: event.name,
+          ticketNumber: ticket.ticketNumber
+        })
       });
 
       // Log the resell listing
@@ -2309,7 +2314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { ticketId } = req.params;
-      const { title, description, metadata, ticketImageUrl, ticketGifUrl } = req.body;
+      const { title, description, metadata } = req.body;
 
       // Get the ticket details
       const ticket = await storage.getTicket(ticketId);
@@ -2344,7 +2349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Private events are not eligible for NFT minting" });
       }
 
-      // Create registry record with ALL ticket and event attributes preserved
+      // Create registry record
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
         eventId: ticket.eventId,
@@ -2354,34 +2359,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || `NFT for ${event.name} at ${event.venue} on ${event.date}`,
         metadata: JSON.stringify({
           ...JSON.parse(metadata || "{}"),
-          ticketImageUrl: ticketImageUrl || ticketGifUrl || null,  // Store the captured image/GIF URL
           originalTicket: {
             ticketNumber: ticket.ticketNumber,
             qrData: ticket.qrData,
             validatedAt: ticket.validatedAt,
-            useCount: ticket.useCount,
-            isGoldenTicket: ticket.isGoldenTicket,
-            isCharged: ticket.isCharged,
-            voteCount: ticket.voteCount,
-            purchasePrice: ticket.purchasePrice
-          },
-          eventFeatures: {
-            ticketBackgroundUrl: event.ticketBackgroundUrl,
-            goldenTicketEnabled: event.goldenTicketEnabled,
-            specialEffectsEnabled: event.specialEffectsEnabled,
-            stickerUrl: event.stickerUrl,
-            enableVoting: event.enableVoting,
-            p2pValidation: event.p2pValidation,
-            surgePricing: event.surgePricing,
-            allowMinting: event.allowMinting,
-            isAdminCreated: event.isAdminCreated,
-            recurringType: event.recurringType,
-            maxTickets: event.maxTickets,
-            geofence: event.geofence,
-            reentryType: event.reentryType,
-            maxUses: event.maxUses,
-            endDate: event.endDate,
-            time: event.time
+            useCount: ticket.useCount
           }
         }),
         ticketNumber: ticket.ticketNumber,
