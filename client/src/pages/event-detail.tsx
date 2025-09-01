@@ -1107,20 +1107,6 @@ export default function EventDetailPage() {
                   </div>
                 )}
                 
-                {event.maxTickets && (
-                  <>
-                    <div className="d-flex justify-content-between mb-2">
-                      <span>Tickets Sold:</span>
-                      <span>{event.ticketsSold} / {event.maxTickets}</span>
-                    </div>
-                    <div className="progress mb-3">
-                      <div 
-                        className="progress-bar"
-                        style={{ width: `${(event.ticketsSold / event.maxTickets) * 100}%` }}
-                      />
-                    </div>
-                  </>
-                )}
                 {event.ticketsAvailable !== null && (
                   <div className="alert alert-info">
                     <small>
@@ -1128,6 +1114,20 @@ export default function EventDetailPage() {
                         "This event is sold out"
                       ) : (
                         <>
+                          {event.maxTickets && (
+                            <>
+                              <div className="d-flex justify-content-between mb-2">
+                                <span>Tickets Sold:</span>
+                                <span>{event.ticketsSold} / {event.maxTickets}</span>
+                              </div>
+                              <div className="progress mb-3">
+                                <div 
+                                  className="progress-bar"
+                                  style={{ width: `${(event.ticketsSold / event.maxTickets) * 100}%` }}
+                                />
+                              </div>
+                            </>
+                          )}
                           <div className="d-flex align-items-center">
                             <img src={ticketIcon} alt="" style={{ width: '32px', height: '32px', marginRight: '8px' }} />
                             <div>
