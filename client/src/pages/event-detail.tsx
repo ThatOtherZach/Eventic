@@ -23,7 +23,7 @@ interface EventWithStats extends Event {
   ticketsAvailable: number | null;
   currentPrice: number;
   resaleCount?: number;
-  isAdminCreated?: boolean;
+  isAdminCreated: boolean | null;
 }
 
 export default function EventDetailPage() {
@@ -158,9 +158,9 @@ export default function EventDetailPage() {
   // Initialize Bootstrap tooltips
   useEffect(() => {
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => {
-      if (window.bootstrap && window.bootstrap.Tooltip) {
-        return new window.bootstrap.Tooltip(tooltipTriggerEl);
+    const tooltipList = Array.from(tooltipTriggerList).map(tooltipTriggerEl => {
+      if ((window as any).bootstrap && (window as any).bootstrap.Tooltip) {
+        return new (window as any).bootstrap.Tooltip(tooltipTriggerEl);
       }
       return null;
     });
@@ -949,7 +949,7 @@ export default function EventDetailPage() {
               <ValidatedTicketsList 
                 eventId={id!} 
                 isEventOwner={!!isOwner}
-                enableVoting={event.enableVoting}
+                enableVoting={event.enableVoting ?? false}
               />
             </div>
           </div>
@@ -1131,7 +1131,7 @@ export default function EventDetailPage() {
               <button
                 className="btn btn-primary w-100 mb-3"
                 onClick={handlePurchase}
-                disabled={isSoldOut || isPurchasing || isEventPast || !event?.ticketPurchasesEnabled || (event?.oneTicketPerUser && userTickets && userTickets.length > 0)}
+                disabled={isSoldOut || isPurchasing || isEventPast || !(event?.ticketPurchasesEnabled ?? true) || ((event?.oneTicketPerUser ?? false) && userTickets && userTickets.length > 0)}
                 data-testid="button-purchase"
               >
                 {isPurchasing ? (

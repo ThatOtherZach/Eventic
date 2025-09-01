@@ -1763,7 +1763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate average ticket price
       const ticketsWithPrice = allTickets.filter(t => t.purchasePrice);
       const avgTicketPrice = ticketsWithPrice.length > 0
-        ? ticketsWithPrice.reduce((sum, t) => sum + parseFloat(t.purchasePrice), 0) / ticketsWithPrice.length
+        ? ticketsWithPrice.reduce((sum, t) => sum + parseFloat(t.purchasePrice!), 0) / ticketsWithPrice.length
         : 0;
       
       // Get events by type/hashtag analysis
