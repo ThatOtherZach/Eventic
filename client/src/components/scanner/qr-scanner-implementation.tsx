@@ -180,7 +180,7 @@ export function QrScannerImplementation() {
     if (validateTicketMutation.isPending) {
       const interval = setInterval(() => {
         setButtonColorIndex((prev) => (prev + 1) % badgeColors.length);
-      }, 500); // Change color every 0.5 seconds
+      }, 200); // Change color every 0.2 seconds
       return () => clearInterval(interval);
     } else {
       setButtonColorIndex(0); // Reset when not loading
