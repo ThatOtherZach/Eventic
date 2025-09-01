@@ -1016,12 +1016,12 @@ export default function EventDetailPage() {
                 <div className="mb-3 p-3 bg-light rounded">
                   {organizerDetails && (
                     <div className="mb-2">
-                      <div className="d-flex align-items-center justify-content-between">
-                        <span className="text-muted small">Event Creator</span>
-                        <span className="badge bg-secondary small">{organizerDetails.type}</span>
-                      </div>
+                      <div className="text-muted small">Event Organizer</div>
                       <div className="mt-1">
                         <strong>{organizerDetails.displayName}</strong>
+                      </div>
+                      <div className="mt-1">
+                        <span className="badge bg-secondary small">{organizerDetails.type}</span>
                       </div>
                     </div>
                   )}
