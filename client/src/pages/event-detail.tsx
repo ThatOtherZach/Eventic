@@ -940,6 +940,11 @@ export default function EventDetailPage() {
                           </>
                         ) : (
                           <>
+                            <div>
+                              {(ticket as any).resellStatus === "for_resale" && (
+                                <span className="badge bg-warning text-dark">Returned</span>
+                              )}
+                            </div>
                             <div className="d-flex gap-2">
                               {(ticket as any).resellStatus !== "for_resale" && (
                                 <Link href={`/tickets/${ticket.id}`}>
@@ -959,11 +964,6 @@ export default function EventDetailPage() {
                                   <RotateCcw size={14} className="me-1" />
                                   Return
                                 </button>
-                              )}
-                            </div>
-                            <div>
-                              {(ticket as any).resellStatus === "for_resale" && (
-                                <span className="badge bg-warning text-dark">Returned</span>
                               )}
                             </div>
                           </>
