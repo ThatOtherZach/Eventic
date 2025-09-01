@@ -16,7 +16,7 @@ import calendarIcon from "@assets/image_1756578631464.png";
 import googleCalendarIcon from "@assets/calendar-3_1756578696542.png";
 import globeIcon from "@assets/image_1756578828379.png";
 import dateIcon from "@assets/image_1756751150943.png";
-import locationIcon from "@assets/image_1756751438394.png";
+import locationIcon from "@assets/globe_map-5_1756751517694.png";
 import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
