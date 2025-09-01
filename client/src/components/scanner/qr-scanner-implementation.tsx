@@ -204,8 +204,13 @@ export function QrScannerImplementation() {
 
     // Store the code and try validation
     setPendingCode(manualCode);
-    validateTicketMutation.mutate({code: manualCode});
-    setManualCode("");
+    validateTicketMutation.mutate({code: manualCode}, {
+      onSettled: () => {
+        // Only clear the code after validation completes
+        setManualCode("");
+      }
+    });
+    // Don't clear manualCode here - keep it during validation
   };
 
 
