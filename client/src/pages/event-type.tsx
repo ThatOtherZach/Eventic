@@ -90,6 +90,7 @@ const eventTypeConfig: Record<string, {
   voting: { 
     label: 'Voting Enabled Events', 
     color: '#EAB308',
+    imageIcon: '/voting-icon.png',
     checkField: (e) => !!e.enableVoting 
   },
   recurring: { 
