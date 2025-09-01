@@ -102,7 +102,7 @@ export function FeaturedGrid() {
                   )}
                 </div>
                 
-                <div className="card-body">
+                <div className="card-body py-3">
                   <h6 className="card-title fw-semibold text-dark mb-2 text-truncate">
                     {featuredEvent.event.name}
                   </h6>
