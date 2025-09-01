@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ArrowRight, MapPin, Clock, Shield } from "lucide-react";
-import BadgeBar from "@/components/events/badge-bar";
 
 interface FeaturedEvent {
   id: string;
@@ -82,7 +81,7 @@ export function FeaturedGrid() {
         {featuredEvents.slice(0, 6).map((featuredEvent) => (
           <div key={featuredEvent.event.id} className="col-md-4">
             <Link href={`/events/${featuredEvent.event.id}`} className="text-decoration-none">
-              <div className="card border-0 shadow-sm h-100 hover-card position-relative overflow-hidden">
+              <div className="card border-0 shadow-sm h-100 hover-card">
                 <div 
                   className="card-img-top"
                   style={{
@@ -109,11 +108,72 @@ export function FeaturedGrid() {
                   </div>
                 </div>
                 
-                <div className="card-body pb-4">
+                <div className="card-body">
                   <h6 className="card-title fw-semibold text-dark mb-2 text-truncate">
                     {featuredEvent.event.name}
                   </h6>
                   
+                  {/* Event Feature Badges */}
+                  {(featuredEvent.event.isAdminCreated || featuredEvent.event.goldenTicketEnabled || 
+                    featuredEvent.event.specialEffectsEnabled || featuredEvent.event.surgePricing || 
+                    featuredEvent.event.stickerUrl || featuredEvent.event.p2pValidation || 
+                    featuredEvent.event.allowMinting || featuredEvent.event.geofence || 
+                    featuredEvent.event.enableVoting || featuredEvent.event.recurringType) && (
+                    <div className="d-flex flex-wrap gap-1 mb-2">
+                      {featuredEvent.event.isAdminCreated && (
+                        <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: "0.7em" }}>
+                          Mission
+                        </span>
+                      )}
+                      {featuredEvent.event.goldenTicketEnabled && (
+                        <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', fontSize: "0.7em" }}>
+                          Golden Tickets
+                        </span>
+                      )}
+                      {featuredEvent.event.specialEffectsEnabled && (
+                        <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', fontSize: "0.7em" }}>
+                          Special Effects
+                        </span>
+                      )}
+                      {featuredEvent.event.surgePricing && (
+                        <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: "0.7em" }}>
+                          Surge
+                        </span>
+                      )}
+                      {featuredEvent.event.stickerUrl && (
+                        <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', fontSize: "0.7em" }}>
+                          Stickers
+                        </span>
+                      )}
+                      {featuredEvent.event.p2pValidation && (
+                        <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff', fontSize: "0.7em" }}>
+                          P2P Validation
+                        </span>
+                      )}
+                      {featuredEvent.event.allowMinting && (
+                        <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', fontSize: "0.7em" }}>
+                          Collectable
+                        </span>
+                      )}
+                      {featuredEvent.event.geofence && (
+                        <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', fontSize: "0.7em" }}>
+                          Location Lock
+                        </span>
+                      )}
+                      {featuredEvent.event.enableVoting && (
+                        <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', fontSize: "0.7em" }}>
+                          Vote
+                        </span>
+                      )}
+                      {featuredEvent.event.recurringType && (
+                        <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', fontSize: "0.7em" }}>
+                          {featuredEvent.event.recurringType === 'weekly' && 'Weekly'}
+                          {featuredEvent.event.recurringType === 'monthly' && 'Monthly'}
+                          {featuredEvent.event.recurringType === 'annually' && 'Annual'}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="small text-muted mb-1">
                     <MapPin size={14} className="me-1" />
@@ -128,7 +188,6 @@ export function FeaturedGrid() {
                     })()} at {featuredEvent.event.time}
                   </div>
                 </div>
-                <BadgeBar event={featuredEvent.event} />
               </div>
             </Link>
           </div>
