@@ -162,10 +162,15 @@ function NotificationBell({ user, location }: { user: any; location: string }) {
         href="/notifications"
         className={`nav-link d-flex align-items-center ${
           location === "/notifications" ? "active" : ""
-        } ${unreadCount > 0 ? "text-danger" : ""}`}
+        }`}
         data-testid="link-nav-notifications"
       >
         <Bell className="me-1" size={18} />
+        {unreadCount > 0 && (
+          <span className="text-danger me-1">
+            {unreadCount}
+          </span>
+        )}
         Inbox
       </Link>
     </li>
