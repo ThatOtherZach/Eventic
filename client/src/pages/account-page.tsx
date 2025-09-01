@@ -304,16 +304,16 @@ export default function AccountPage() {
                   const metadata = record.metadata ? JSON.parse(record.metadata) : {};
                   const originalTicket = metadata.originalTicket || {};
                   const eventFeatures = metadata.eventFeatures || {};
-                  const ticketGifUrl = metadata.ticketGifUrl || null;
+                  const ticketImageUrl = metadata.ticketImageUrl || metadata.ticketGifUrl || null;
                   
-                  // If we have a captured GIF, show that instead of reconstructing
-                  if (ticketGifUrl) {
+                  // If we have a captured image, show that instead of reconstructing
+                  if (ticketImageUrl) {
                     return (
                       <div key={record.id} className="col-md-4">
                         <div className="mb-2">
                           <div className="card" style={{ overflow: 'hidden' }}>
                             <img 
-                              src={ticketGifUrl} 
+                              src={ticketImageUrl} 
                               alt={`${record.eventName} - Ticket #${record.ticketNumber}`}
                               className="w-100" 
                               style={{ display: 'block', borderRadius: '8px' }}

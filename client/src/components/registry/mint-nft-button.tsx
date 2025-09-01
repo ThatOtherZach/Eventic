@@ -6,7 +6,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
-import { captureTicketAsGif } from "@/lib/ticket-capture";
+import { captureTicketAsImage } from "@/lib/ticket-capture";
 import type { Ticket, RegistryRecord } from "@shared/schema";
 
 interface MintNFTButtonProps {
@@ -83,31 +83,24 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
     try {
       setIsCapturing(true);
       
-      // Capture the ticket as a GIF
-      const gifBlob = await captureTicketAsGif({
-        element: ticketElementRef.current,
-        duration: 3000, // Capture 3 seconds of animation
-        fps: 15, // Higher FPS for smoother animations
-        quality: 10, // Maximum quality
-        width: 600,
-        height: 400
-      });
+      // Capture the ticket as a high-quality image
+      const imageBlob = await captureTicketAsImage(ticketElementRef.current);
 
       // Get upload URL from server
       const uploadUrlResponse = await apiRequest("POST", "/api/objects/upload");
       const { uploadURL } = await uploadUrlResponse.json();
 
-      // Upload the GIF to object storage
+      // Upload the image to object storage
       const uploadResponse = await fetch(uploadURL, {
         method: 'PUT',
-        body: gifBlob,
+        body: imageBlob,
         headers: {
-          'Content-Type': 'image/gif'
+          'Content-Type': 'image/png'
         }
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload GIF');
+        throw new Error('Failed to upload image');
       }
 
       // Return the uploaded URL
@@ -117,7 +110,7 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
       addNotification({
         type: "error",
         title: "Capture Failed",
-        description: "Failed to capture ticket animation. Minting will continue without visual preservation.",
+        description: "Failed to capture ticket image. Minting will continue without visual preservation.",
       });
       return null;
     } finally {
@@ -127,10 +120,10 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
 
   const mintMutation = useMutation({
     mutationFn: async () => {
-      // First capture the ticket as GIF
-      const gifUrl = await captureAndUploadTicket();
-      if (gifUrl) {
-        setCapturedGifUrl(gifUrl);
+      // First capture the ticket as image
+      const imageUrl = await captureAndUploadTicket();
+      if (imageUrl) {
+        setCapturedGifUrl(imageUrl);
       }
 
       const metadata: any = {};
@@ -142,16 +135,16 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
         }
       }
 
-      // Add the captured GIF URL to metadata
-      if (gifUrl) {
-        metadata.ticketGifUrl = gifUrl;
+      // Add the captured image URL to metadata
+      if (imageUrl) {
+        metadata.ticketImageUrl = imageUrl;
       }
 
       const response = await apiRequest("POST", `/api/tickets/${ticket.id}/mint`, {
         title: title || undefined,
         description: description || undefined,
         metadata: JSON.stringify(metadata),
-        ticketGifUrl: gifUrl || undefined
+        ticketImageUrl: imageUrl || undefined
       });
       return response.json();
     },
@@ -228,14 +221,14 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
           </ModalHeader>
           <ModalBody>
             <div className="alert alert-info mb-3" role="alert">
-              <strong>Note:</strong> Your ticket will be captured as an animated GIF to preserve all visual effects and backgrounds. 
+              <strong>Note:</strong> Your ticket will be captured as a high-quality image to preserve all visual elements and backgrounds. 
               Once minted, it becomes a permanent NFT record. A 2.69% royalty fee applies to future sales (75% goes to the event creator).
             </div>
 
             {isCapturing && (
               <div className="alert alert-warning mb-3" role="alert">
                 <Camera className="me-2" size={16} />
-                <strong>Capturing ticket animation...</strong> Please wait while we preserve your ticket's visual appearance.
+                <strong>Capturing ticket image...</strong> Please wait while we preserve your ticket's visual appearance.
               </div>
             )}
 
