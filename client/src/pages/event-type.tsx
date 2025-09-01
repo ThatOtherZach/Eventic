@@ -55,7 +55,7 @@ const eventTypeConfig: Record<string, {
   effects: { 
     label: 'Special Effects Events', 
     color: '#9333EA',
-    icon: Sparkles,
+    emoji: '✨',
     checkField: (e) => !!e.specialEffectsEnabled 
   },
   surge: { 
