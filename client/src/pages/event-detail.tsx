@@ -16,6 +16,7 @@ import calendarIcon from "@assets/image_1756578631464.png";
 import googleCalendarIcon from "@assets/calendar-3_1756578696542.png";
 import globeIcon from "@assets/image_1756578828379.png";
 import dateIcon from "@assets/image_1756751150943.png";
+import locationIcon from "@assets/image_1756751438394.png";
 import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
@@ -673,7 +674,7 @@ export default function EventDetailPage() {
               </span>
             </div>
             <div className="d-flex align-items-center text-muted">
-              <MapPin size={18} className="me-2" />
+              <img src={locationIcon} alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
               {(() => {
                 // Parse venue to extract city
                 const venueParts = event.venue.split(',').map(part => part.trim());
