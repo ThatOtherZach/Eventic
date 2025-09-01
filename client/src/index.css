@@ -105,11 +105,11 @@ h4 { font-size: 1.125rem; }
 }
 
 .form-control.rainbow-text {
-  animation: rainbow-text 1.5s linear infinite !important;
+  animation: rainbow-text 0.20s linear infinite !important;
 }
 
 .form-control.rainbow-text:disabled {
-  animation: rainbow-text 1.5s linear infinite !important;
+  animation: rainbow-text 0.20s linear infinite !important;
 }
 
 /* Custom Select trigger styling to match Bootstrap forms */
