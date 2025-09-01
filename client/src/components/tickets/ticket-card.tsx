@@ -206,22 +206,52 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         )}
       </div>
 
-      {/* Status Badges at Bottom */}
+      {/* Status Badge Bar at Bottom */}
       {showBadges && (ticket.isValidated || (ticket as any).resellStatus === "for_resale") && (
         <div 
-          className="position-absolute bottom-0 start-0 w-100 d-flex justify-content-center p-2"
+          className="position-absolute bottom-0 start-0 w-100 d-flex"
           style={{ 
-            background: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(2px)',
+            height: '24px',
+            zIndex: 10,
             borderRadius: '0 0 8px 8px',
-            zIndex: 10
+            overflow: 'hidden'
           }}
         >
           {ticket.isValidated && (
-            <span className="badge bg-success me-2">Validated</span>
+            <div
+              style={{
+                flex: (ticket as any).resellStatus === "for_resale" ? '0 0 50%' : '0 0 100%',
+                backgroundColor: '#198754',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+            >
+              VALIDATED
+            </div>
           )}
           {(ticket as any).resellStatus === "for_resale" && (
-            <span className="badge bg-warning text-dark">Returned</span>
+            <div
+              style={{
+                flex: ticket.isValidated ? '0 0 50%' : '0 0 100%',
+                backgroundColor: '#FFC107',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#000',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}
+            >
+              RETURNED
+            </div>
           )}
         </div>
       )}
