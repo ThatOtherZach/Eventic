@@ -6,7 +6,6 @@ import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
-import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
 import type { Ticket as TicketType, Event, RegistryRecord, AccountBalance } from "@shared/schema";
 
@@ -339,57 +338,89 @@ export default function AccountPage() {
                     );
                   }
                   
-                  // Fallback to reconstructed ticket if no GIF/image
-                  const reconstructedTicket = {
-                    id: record.ticketId,
-                    ticketNumber: record.ticketNumber,
-                    qrData: originalTicket.qrData || '',
-                    isValidated: true,
-                    validatedAt: record.validatedAt,
-                    isGoldenTicket: originalTicket.isGoldenTicket || false,
-                    isCharged: originalTicket.isCharged || false,
-                    useCount: originalTicket.useCount || 1,
-                    voteCount: originalTicket.voteCount || 0,
-                    specialEffect: originalTicket.specialEffect || null,
-                    purchasePrice: originalTicket.purchasePrice || '0.00',
-                    eventId: record.eventId,
-                    userId: record.ownerId
-                  };
-                  
-                  // Reconstruct the event object for display
-                  const reconstructedEvent = {
-                    id: record.eventId,
-                    name: record.eventName,
-                    venue: record.eventVenue,
-                    date: record.eventDate,
-                    time: eventFeatures.time || '00:00',
-                    ticketBackgroundUrl: eventFeatures.ticketBackgroundUrl || null,
-                    goldenTicketEnabled: eventFeatures.goldenTicketEnabled || false,
-                    specialEffectsEnabled: eventFeatures.specialEffectsEnabled || false,
-                    stickerUrl: eventFeatures.stickerUrl || null,
-                    enableVoting: eventFeatures.enableVoting || false,
-                    reentryType: eventFeatures.reentryType || 'No Reentry (Single Use)',
-                    maxUses: eventFeatures.maxUses || 1,
-                    endDate: eventFeatures.endDate || null,
-                    endTime: eventFeatures.endTime || null,
-                    isAdminCreated: eventFeatures.isAdminCreated || false,
-                    recurringType: eventFeatures.recurringType || null,
-                    geofence: eventFeatures.geofence || false,
-                    p2pValidation: eventFeatures.p2pValidation || false,
-                    surgePricing: eventFeatures.surgePricing || false,
-                    allowMinting: eventFeatures.allowMinting || true
-                  };
-                  
+                  // No need to reconstruct anymore - we're using the metadata directly
                   return (
                     <div key={record.id} className="col-md-4">
-                      <div className="mb-2">
-                        <TicketCard 
-                          ticket={reconstructedTicket as any}
-                          event={reconstructedEvent as any}
-                          showQR={false}
-                          showBadges={false}
+                      {/* NFT Card with background from registry */}
+                      <div 
+                        className="ticket-card position-relative w-100 mb-2"
+                        style={{
+                          aspectRatio: '16/9',
+                          maxWidth: '100%',
+                          minHeight: '200px',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                          background: eventFeatures.ticketBackgroundUrl 
+                            ? `url(${eventFeatures.ticketBackgroundUrl}) center/cover` 
+                            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          transition: 'transform 0.2s, box-shadow 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                        }}
+                      >
+                        {/* Semi-transparent overlay for text readability */}
+                        <div 
+                          className="position-absolute w-100 h-100"
+                          style={{
+                            background: eventFeatures.ticketBackgroundUrl 
+                              ? 'rgba(0, 0, 0, 0.4)' 
+                              : 'rgba(0, 0, 0, 0.2)',
+                            backdropFilter: 'blur(1px)',
+                          }}
                         />
+
+                        {/* Golden Ticket Glow if applicable */}
+                        {originalTicket.isGoldenTicket && (
+                          <div 
+                            className="position-absolute w-100 h-100 pointer-events-none"
+                            style={{
+                              background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 70%)',
+                              boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.225), inset 0 0 60px rgba(255, 215, 0, 0.075)',
+                              animation: 'goldenGlow 3s ease-in-out infinite',
+                              zIndex: 2,
+                            }}
+                          />
+                        )}
+
+                        {/* Color bars at bottom */}
+                        <div className="position-absolute bottom-0 w-100 d-flex" style={{ height: '4px', zIndex: 10 }}>
+                          {eventFeatures.goldenTicketEnabled && (
+                            <div style={{ flex: 1, backgroundColor: '#FFD700' }} />
+                          )}
+                          {eventFeatures.specialEffectsEnabled && (
+                            <div style={{ flex: 1, backgroundColor: '#9333EA' }} />
+                          )}
+                          {eventFeatures.enableVoting && (
+                            <div style={{ flex: 1, backgroundColor: '#10B981' }} />
+                          )}
+                          {eventFeatures.p2pValidation && (
+                            <div style={{ flex: 1, backgroundColor: '#3B82F6' }} />
+                          )}
+                        </div>
+
+                        {/* Ticket Content */}
+                        <div className="position-relative h-100 d-flex">
+                          <div className="flex-grow-1 px-3 pt-3 pb-5 text-white d-flex flex-column justify-content-between">
+                            <div>
+                              <h5 className="mb-2 fw-bold" style={{ fontSize: '18px', marginTop: '0' }}>
+                                {record.eventName}
+                              </h5>
+                              <div className="small opacity-90">
+                                <div className="mb-1">Ticket #{record.ticketNumber}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
+                      
+                      {/* NFT info card below */}
                       <div className="card">
                         <div className="card-body p-2">
                           <div className="d-flex justify-content-between align-items-center">
