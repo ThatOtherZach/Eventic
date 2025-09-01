@@ -735,9 +735,18 @@ export default function TicketViewPage(): React.ReactElement {
               {ticket.isValidated && event.reentryType === 'No Reentry (Single Use)' && !(event.enableVoting && event.p2pValidation) ? (
                 <div className="text-center py-4">
                   <CheckCircle size={48} className="text-success mb-3" />
-                  <h6 className="text-success">Ticket Already Used</h6>
+                  <h6 className="text-success">Ticket Used</h6>
                   <p className="text-muted">
-                    This ticket was validated on {new Date(ticket.validatedAt!).toLocaleString()}
+                    Validated on {new Date(ticket.validatedAt!).toLocaleDateString('en-US', { 
+                      month: '2-digit',
+                      day: '2-digit', 
+                      year: 'numeric' 
+                    })}, {new Date(ticket.validatedAt!).toLocaleTimeString('en-US', { 
+                      hour12: false,
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    })}
                   </p>
                   <p className="text-muted small">
                     This is a single-use ticket and cannot be re-validated.
