@@ -28,6 +28,7 @@ interface Event {
   geofence?: boolean | null;
   enableVoting?: boolean | null;
   recurringType?: string | null;
+  maxTickets?: number | null;
 }
 
 // Map URL parameters to display names and field checks
@@ -95,6 +96,11 @@ const eventTypeConfig: Record<string, {
     label: 'Multi-day Events', 
     color: '#6B7280',
     checkField: (e) => !!e.endDate 
+  },
+  limited: { 
+    label: 'Limited Tickets Events', 
+    color: '#14B8A6',
+    checkField: (e) => !!e.maxTickets 
   },
 };
 

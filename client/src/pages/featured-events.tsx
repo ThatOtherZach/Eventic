@@ -28,6 +28,7 @@ interface Event {
   geofence?: boolean;
   enableVoting?: boolean;
   recurringType?: string;
+  maxTickets?: number | null;
 }
 
 interface FeaturedEvent {

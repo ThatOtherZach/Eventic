@@ -122,7 +122,8 @@ export function FeaturedGrid() {
                     featuredEvent.event.specialEffectsEnabled || featuredEvent.event.surgePricing || 
                     featuredEvent.event.stickerUrl || featuredEvent.event.p2pValidation || 
                     featuredEvent.event.allowMinting || featuredEvent.event.geofence || 
-                    featuredEvent.event.enableVoting || featuredEvent.event.recurringType) && (
+                    featuredEvent.event.enableVoting || featuredEvent.event.recurringType || 
+                    featuredEvent.event.maxTickets) && (
                     <div className="d-flex flex-wrap gap-1 mb-2">
                       {featuredEvent.event.isAdminCreated && (
                         <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: "0.7em" }}>
@@ -174,6 +175,11 @@ export function FeaturedGrid() {
                           {featuredEvent.event.recurringType === 'weekly' && 'Weekly'}
                           {featuredEvent.event.recurringType === 'monthly' && 'Monthly'}
                           {featuredEvent.event.recurringType === 'annually' && 'Annual'}
+                        </span>
+                      )}
+                      {featuredEvent.event.maxTickets && (
+                        <span className="badge" style={{ backgroundColor: '#14B8A6', color: '#fff', fontSize: "0.7em" }}>
+                          Limited
                         </span>
                       )}
                     </div>
