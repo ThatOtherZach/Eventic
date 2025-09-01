@@ -232,7 +232,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       for (let i = 0; i < 4; i++) {
         const emoji = document.createElement('div');
         emoji.className = 'spooky-ghost'; // Reuse the floating animation
-        emoji.innerHTML = christmasEmojis[Math.floor(Math.random() * christmasEmojis.length)];
+        emoji.textContent = christmasEmojis[Math.floor(Math.random() * christmasEmojis.length)];
         emoji.style.position = 'absolute';
         emoji.style.left = Math.random() * 80 + 10 + '%';
         emoji.style.top = Math.random() * 60 + 20 + '%';
@@ -268,7 +268,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       for (let i = 0; i < 4; i++) {
         const emoji = document.createElement('div');
         emoji.className = 'spooky-ghost'; // Reuse the floating animation
-        emoji.innerHTML = valentineEmojis[Math.floor(Math.random() * valentineEmojis.length)];
+        emoji.textContent = valentineEmojis[Math.floor(Math.random() * valentineEmojis.length)];
         emoji.style.position = 'absolute';
         emoji.style.left = Math.random() * 80 + 10 + '%';
         emoji.style.top = Math.random() * 60 + 20 + '%';
@@ -287,7 +287,7 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       for (let i = 0; i < 4; i++) {
         const ghost = document.createElement('div');
         ghost.className = 'spooky-ghost';
-        ghost.innerHTML = ghosts[Math.floor(Math.random() * ghosts.length)];
+        ghost.textContent = ghosts[Math.floor(Math.random() * ghosts.length)];
         ghost.style.position = 'absolute';
         ghost.style.left = Math.random() * 80 + 10 + '%';
         ghost.style.top = Math.random() * 60 + 20 + '%';
