@@ -249,7 +249,7 @@ export default function AccountPage() {
                     {(ticket.isValidated || (ticket as any).resellStatus === "for_resale") && (
                       <div className="text-center mt-2">
                         {ticket.isValidated && (
-                          <span className="badge bg-success me-2">Used</span>
+                          <span className="badge bg-success me-2">Validated</span>
                         )}
                         {(ticket as any).resellStatus === "for_resale" && (
                           <span className="badge bg-warning text-dark">Returned</span>
