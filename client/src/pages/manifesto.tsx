@@ -5,32 +5,72 @@ export default function Manifesto() {
   return (
     <div className="container py-5" style={{ maxWidth: '800px' }}>
       <div className="mb-5 text-center">
-        <h1 className="display-4 mb-3">📜 The Event Manifesto</h1>
+        <h1 className="display-4 mb-3">🎭 The Manifesto</h1>
         <p className="lead text-muted">
-          Everything you never knew you needed to know about running events like a boss
+          Welcome.
         </p>
       </div>
 
       <div className="card mb-4">
         <div className="card-body">
-          <h2 className="h4 mb-3">Mission Statement</h2>
+          <h2 className="h4 mb-3">The Mission</h2>
           <p className="mb-3">
-            It started like all great revolutions do—with edibles, craft beer, and the creeping dread of rejection emails piling up like parking tickets on a dead man’s car. I woke up sweating, buzzing, half-convinced I was being chased through the desert by the ghost of Steve Jobs. Somewhere in that chemical afterglow, I muttered the words that would change everything: “To hell with this. I’m building my own circus.”
+            I hate Ticketmaster. Bloated fees, endless spam, and all for the privilege of a lousy PDF. Eventbrite isn't much better — a boring event manager that somehow skims 10% just to be a glorified PDF generator. These companies are nothing but digital toll booths at the gates of fun.
           </p>
           <p className="mb-3">
-            And in that moment of divine inspiration (or THC-induced clarity), I decided to take on 
-            the final boss of the ticketing world: Ticketmaster. Yeah, THAT Ticketmaster. The one 
-            with the fees that cost more than your actual ticket. The one that crashes every time 
-            Taylor Swift announces a tour.
+            That's lame. So I built Eventic.
           </p>
-          <p>
-            So here it is, folks. My magnum opus. My middle finger to the establishment. 
-            An event ticketing platform where tickets get golden, effects get special, and 
-            sometimes your event just keeps coming back like that friend who "forgot" their wallet. 
-            This is where event creators become legends and ticket holders get treated like actual humans.
+          
+          <h5 className="mt-4 mb-3">🎟 Tickets, But Actually Fun</h5>
+          <p className="mb-3">
+            Eventic makes ticketing weird again.
+          </p>
+          <p className="mb-3">
+            Tickets can glow golden, sprout emojis on the right day, or burst into confetti.
+          </p>
+          <p className="mb-3">
+            Organizers can drop custom GIFs or stickers right on top.
+          </p>
+          <p className="mb-3">
+            You can turn a ticket into a multi-use pass, lock it to a GPS circle, or flip on peer-to-peer mode where anyone can validate anyone else's ticket. Perfect for flash mobs, rooftop rituals, or anarcho-syndicalist communes.
+          </p>
+          <p className="mb-3">
+            Anyone can create an event. You only pay for tickets, sold in packs. New users get 10 free to start, plus a tiny daily drop (2–4) when you log in. Tickets are the only currency — spend them to host events or boost them into the spotlight.
+          </p>
+          
+          <h5 className="mt-4 mb-3">🔐 Security, Chaos, Control</h5>
+          <p className="mb-2">
+            Validation system: works in any browser.
+          </p>
+          <p className="mb-2">
+            Geofence: lock tickets to a specific location, 690m radius.
+          </p>
+          <p className="mb-2">
+            Passes: allow multiple entries with a toggle.
+          </p>
+          <p className="mb-3">
+            Surge pricing: one checkbox, prices rise when demand spikes.
+          </p>
+          
+          <h5 className="mt-4 mb-3">⏳ The 69-Day Fuse</h5>
+          <p className="mb-3">
+            Here's the law of the land: event and ticket data self-destructs 69 days after the event ends. A barebones archive survives for a year, then it too is gone.
+          </p>
+          <p className="mb-3">
+            Unless you mint it. For $2.69, your ticket becomes a permanent NFT artifact — your proof-of-experience, locked forever. Optional, always optional.
+          </p>
+          
+          <h5 className="mt-4 mb-3">✨ Ephemeral by Design</h5>
+          <p className="mb-3">
+            At Eventic we know most events fade — and that's the point. Some deserve to survive, most don't. Collectibles are an optional add-on. Organizers can enable it, ticket holders can choose it. No one is forced. If you want it, keep it. If not, it vaporizes in 69 days.
+          </p>
+          
+          <h5 className="mt-4 mb-3">🏁 The Ethos</h5>
+          <p className="mb-3">
+            No likes. No algorithms. No clout-chasing. Just a silly ticket to prove you showed up, to remember the moment — or let it disappear.
           </p>
           <p className="text-muted small mt-3">
-            <em>Take that, corporate overlords. This one's for the people.</em>
+            <em>Buy the ticket. Validate the ride. Collect the moment before it burns away.</em>
           </p>
         </div>
       </div>

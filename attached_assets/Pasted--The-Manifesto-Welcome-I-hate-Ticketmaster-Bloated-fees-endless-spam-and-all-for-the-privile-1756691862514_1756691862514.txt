@@ -1,0 +1,45 @@
+🎭 The Manifesto
+
+Welcome.
+
+I hate Ticketmaster. Bloated fees, endless spam, and all for the privilege of a lousy PDF. Eventbrite isn’t much better — a boring event manager that somehow skims 10% just to be a glorified PDF generator. These companies are nothing but digital toll booths at the gates of fun.
+
+That’s lame. So I built Eventic.
+
+🎟 Tickets, But Actually Fun
+
+Eventic makes ticketing weird again.
+
+Tickets can glow golden, sprout emojis on the right day, or burst into confetti.
+
+Organizers can drop custom GIFs or stickers right on top.
+
+You can turn a ticket into a multi-use pass, lock it to a GPS circle, or flip on peer-to-peer mode where anyone can validate anyone else’s ticket. Perfect for flash mobs, rooftop rituals, or anarcho-syndicalist communes.
+
+Anyone can create an event. You only pay for tickets, sold in packs. New users get 10 free to start, plus a tiny daily drop (2–4) when you log in. Tickets are the only currency — spend them to host events or boost them into the spotlight.
+
+🔐 Security, Chaos, Control
+
+Validation system: works in any browser.
+
+Geofence: lock tickets to a specific location, 690m radius.
+
+Passes: allow multiple entries with a toggle.
+
+Surge pricing: one checkbox, prices rise when demand spikes.
+
+⏳ The 69-Day Fuse
+
+Here’s the law of the land: event and ticket data self-destructs 69 days after the event ends. A barebones archive survives for a year, then it too is gone.
+
+Unless you mint it. For $2.69, your ticket becomes a permanent NFT artifact — your proof-of-experience, locked forever. Optional, always optional.
+
+✨ Ephemeral by Design
+
+At Eventic we know most events fade — and that’s the point. Some deserve to survive, most don’t. Collectibles are an optional add-on. Organizers can enable it, ticket holders can choose it. No one is forced. If you want it, keep it. If not, it vaporizes in 69 days.
+
+🏁 The Ethos
+
+No likes. No algorithms. No clout-chasing. Just a silly ticket to prove you showed up, to remember the moment — or let it disappear.
+
+Buy the ticket. Validate the ride. Collect the moment before it burns away.
