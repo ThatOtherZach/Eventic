@@ -2308,7 +2308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { ticketId } = req.params;
-      const { title, description, metadata, ticketImageUrl } = req.body;
+      const { title, description, metadata, ticketImageUrl, ticketGifUrl } = req.body;
 
       // Get the ticket details
       const ticket = await storage.getTicket(ticketId);
@@ -2353,7 +2353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || `NFT for ${event.name} at ${event.venue} on ${event.date}`,
         metadata: JSON.stringify({
           ...JSON.parse(metadata || "{}"),
-          ticketImageUrl: ticketImageUrl || null,  // Store the captured image URL
+          ticketImageUrl: ticketImageUrl || ticketGifUrl || null,  // Store the captured image/GIF URL
           originalTicket: {
             ticketNumber: ticket.ticketNumber,
             qrData: ticket.qrData,

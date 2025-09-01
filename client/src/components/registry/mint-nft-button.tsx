@@ -6,7 +6,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
-import { captureTicketAsImage } from "@/lib/ticket-capture";
+import { captureTicketAsGif } from "@/lib/ticket-capture";
 import type { Ticket, RegistryRecord } from "@shared/schema";
 
 interface MintNFTButtonProps {
@@ -83,8 +83,15 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
     try {
       setIsCapturing(true);
       
-      // Capture the ticket as a high-quality image
-      const imageBlob = await captureTicketAsImage(ticketElementRef.current);
+      // Capture the ticket as an animated GIF
+      const imageBlob = await captureTicketAsGif({
+        element: ticketElementRef.current,
+        duration: 2000, // 2 seconds to capture animations
+        fps: 10, // 10 frames per second
+        quality: 10, // Maximum quality
+        width: 600,
+        height: 400
+      });
 
       // Get upload URL from server
       const uploadUrlResponse = await apiRequest("POST", "/api/objects/upload");
@@ -95,7 +102,7 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
         method: 'PUT',
         body: imageBlob,
         headers: {
-          'Content-Type': 'image/png'
+          'Content-Type': 'image/gif'
         }
       });
 
@@ -144,7 +151,7 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
         title: title || undefined,
         description: description || undefined,
         metadata: JSON.stringify(metadata),
-        ticketImageUrl: imageUrl || undefined
+        ticketGifUrl: imageUrl || undefined
       });
       return response.json();
     },
@@ -221,14 +228,14 @@ export function MintNFTButton({ ticket, ticketElementRef }: MintNFTButtonProps) 
           </ModalHeader>
           <ModalBody>
             <div className="alert alert-info mb-3" role="alert">
-              <strong>Note:</strong> Your ticket will be captured as a high-quality image to preserve all visual elements and backgrounds. 
+              <strong>Note:</strong> Your ticket will be captured as an animated GIF to preserve all visual effects, animations and backgrounds. 
               Once minted, it becomes a permanent NFT record. A 2.69% royalty fee applies to future sales (75% goes to the event creator).
             </div>
 
             {isCapturing && (
               <div className="alert alert-warning mb-3" role="alert">
                 <Camera className="me-2" size={16} />
-                <strong>Capturing ticket image...</strong> Please wait while we preserve your ticket's visual appearance.
+                <strong>Capturing ticket animation...</strong> Please wait (this takes a few seconds to record all effects).
               </div>
             )}
 

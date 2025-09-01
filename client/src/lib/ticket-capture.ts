@@ -1,5 +1,4 @@
 import html2canvas from 'html2canvas';
-import GIF from 'gif.js';
 
 export interface CaptureOptions {
   element: HTMLElement;
@@ -10,6 +9,7 @@ export interface CaptureOptions {
   height?: number;
 }
 
+// Simple approach: capture multiple frames and create animated GIF
 export async function captureTicketAsGif({
   element,
   duration = 3000, // 3 seconds by default to capture animations
@@ -18,60 +18,70 @@ export async function captureTicketAsGif({
   width = 600,
   height = 400
 }: CaptureOptions): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    // Create GIF encoder
-    const gif = new GIF({
-      workers: 2,
-      quality,
-      width,
-      height,
-      workerScript: '/gif.worker.js'
-    });
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Import GIF dynamically to avoid issues
+      const GIF = (await import('gif.js')).default;
+      
+      // Create GIF encoder with worker
+      const gif = new GIF({
+        workers: 2,
+        quality,
+        width,
+        height,
+        workerScript: '/gif.worker.js',
+        transparent: 0x00000000
+      });
 
-    const frameInterval = 1000 / fps;
-    const totalFrames = Math.floor(duration / frameInterval);
-    let capturedFrames = 0;
+      const frameInterval = 1000 / fps;
+      const totalFrames = Math.floor(duration / frameInterval);
+      let capturedFrames = 0;
 
-    // Function to capture a single frame
-    const captureFrame = async () => {
-      try {
-        const canvas = await html2canvas(element, {
-          backgroundColor: null,
-          scale: 2, // Higher quality
-          width: width,
-          height: height,
-          useCORS: true,
-          allowTaint: true,
-          logging: false
-        });
+      // Function to capture a single frame
+      const captureFrame = async () => {
+        try {
+          const canvas = await html2canvas(element, {
+            backgroundColor: 'transparent',
+            scale: 2, // Higher quality
+            width: width,
+            height: height,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            imageTimeout: 0
+          });
 
-        // Add frame to GIF
-        gif.addFrame(canvas, { delay: frameInterval });
-        capturedFrames++;
+          // Add frame to GIF
+          gif.addFrame(canvas, { delay: frameInterval, copy: true });
+          capturedFrames++;
 
-        if (capturedFrames < totalFrames) {
-          setTimeout(captureFrame, frameInterval);
-        } else {
-          // All frames captured, render GIF
-          gif.render();
+          if (capturedFrames < totalFrames) {
+            setTimeout(captureFrame, frameInterval);
+          } else {
+            // All frames captured, render GIF
+            gif.render();
+          }
+        } catch (error) {
+          console.error('Error capturing frame:', error);
+          reject(error);
         }
-      } catch (error) {
-        console.error('Error capturing frame:', error);
+      };
+
+      // Handle GIF completion
+      gif.on('finished', (blob: Blob) => {
+        resolve(blob);
+      });
+
+      gif.on('error', (error: Error) => {
         reject(error);
-      }
-    };
+      });
 
-    // Start capturing frames
-    captureFrame();
-
-    // Handle GIF completion
-    gif.on('finished', (blob: Blob) => {
-      resolve(blob);
-    });
-
-    gif.on('error', (error: Error) => {
+      // Start capturing frames
+      captureFrame();
+    } catch (error) {
+      console.error('Error initializing GIF capture:', error);
       reject(error);
-    });
+    }
   });
 }
 
