@@ -775,7 +775,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      res.json(sortedEvents);
+      // Add current price with surge pricing to each event
+      const eventsWithPricing = await Promise.all(sortedEvents.map(async (event) => {
+        const currentPrice = await storage.getCurrentPrice(event.id);
+        return {
+          ...event,
+          currentPrice
+        };
+      }));
+      
+      res.json(eventsWithPricing);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch events" });
     }
