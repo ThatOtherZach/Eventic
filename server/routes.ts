@@ -2442,19 +2442,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Calculate time remaining
-      const now = new Date();
-      const validatedTime = new Date(ticket.validatedAt);
-      const seventyTwoHoursMs = 72 * 60 * 60 * 1000;
-      const timeDiff = now.getTime() - validatedTime.getTime();
-      const timeRemaining = Math.max(0, seventyTwoHoursMs - timeDiff);
-
+      // Allow minting immediately after validation
       res.json({
-        canMint: timeDiff >= seventyTwoHoursMs,
+        canMint: true,
         alreadyMinted: false,
         validatedAt: ticket.validatedAt,
-        timeRemaining: timeRemaining,
-        timeRemainingHours: Math.ceil(timeRemaining / (60 * 60 * 1000))
+        timeRemaining: 0,
+        timeRemainingHours: 0
       });
     } catch (error) {
       await logError(error, "GET /api/tickets/:ticketId/mint-status", {
