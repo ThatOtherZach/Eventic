@@ -560,13 +560,11 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          <h1 className="mb-2">{event.name}</h1>
-
-          {/* Event Settings Display - Badges below title */}
+          {/* Event Settings Display - Badges above title */}
           {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
             event.recurringType || event.stickerUrl || event.p2pValidation || event.allowMinting || 
             event.geofence || event.enableVoting) && (
-            <div className="d-flex flex-wrap gap-2 mb-3">
+            <div className="d-flex flex-wrap gap-2 mb-2">
               {event.isAdminCreated && (
                 <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff' }}>
                   Mission
@@ -621,6 +619,8 @@ export default function EventDetailPage() {
               )}
             </div>
           )}
+
+          <h1 className="mb-3">{event.name}</h1>
 
           <div className="mb-4">
             <div className="d-flex align-items-center text-muted mb-2">
