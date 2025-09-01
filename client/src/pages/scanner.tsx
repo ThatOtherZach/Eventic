@@ -1,5 +1,5 @@
 import { QrScannerImplementation } from "@/components/scanner/qr-scanner-implementation";
-import validateIcon from "@assets/image_1756750336692.png";
+import validateIcon from "@assets/image_1756750482438.png";
 
 export default function Scanner() {
   return (
