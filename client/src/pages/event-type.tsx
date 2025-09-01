@@ -78,6 +78,7 @@ const eventTypeConfig: Record<string, {
   collectable: { 
     label: 'Collectable Events', 
     color: '#000000',
+    imageIcon: '/collectable-icon.png',
     checkField: (e) => !!e.allowMinting 
   },
   geofenced: { 
