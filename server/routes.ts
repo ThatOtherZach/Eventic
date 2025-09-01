@@ -2483,16 +2483,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return true;
       });
       
-      // Add isAdminCreated field to each event
+      // Add isAdminCreated field and current price to each event
       const featuredEventsWithAdmin = await Promise.all(featuredEvents.map(async (featuredEvent) => {
         const eventWithCreator = await storage.getEventWithCreator(featuredEvent.event.id);
         const isAdminCreated = eventWithCreator?.creatorEmail?.endsWith("@saymservices.com") || false;
+        
+        // Get current price with surge pricing
+        const currentPrice = await storage.getCurrentPrice(featuredEvent.event.id);
         
         return {
           ...featuredEvent,
           event: {
             ...featuredEvent.event,
-            isAdminCreated
+            isAdminCreated,
+            currentPrice
           }
         };
       }));
@@ -2672,7 +2676,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json(gridEvents);
+      // Add current price with surge pricing to each event
+      const gridEventsWithPricing = await Promise.all(gridEvents.map(async (gridEvent) => {
+        const currentPrice = await storage.getCurrentPrice(gridEvent.event.id);
+        return {
+          ...gridEvent,
+          event: {
+            ...gridEvent.event,
+            currentPrice
+          }
+        };
+      }));
+      
+      res.json(gridEventsWithPricing);
     } catch (error) {
       await logError(error, "GET /api/featured-grid", {
         request: req

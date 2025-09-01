@@ -12,6 +12,7 @@ interface FeaturedEvent {
     time: string;
     imageUrl?: string;
     ticketPrice: string;
+    currentPrice?: number;
     p2pValidation?: boolean;
     isAdminCreated?: boolean;
     goldenTicketEnabled?: boolean;
@@ -103,7 +104,10 @@ export function FeaturedGrid() {
                   
                   <div className="position-absolute bottom-0 end-0 m-2">
                     <span className="badge bg-primary" style={{ fontSize: '0.95rem', padding: '0.5rem 0.75rem' }}>
-                      {parseFloat(featuredEvent.event.ticketPrice) === 0 ? 'Free' : `$${parseFloat(featuredEvent.event.ticketPrice).toFixed(2)}`}
+                      {(() => {
+                        const price = featuredEvent.event.currentPrice ?? parseFloat(featuredEvent.event.ticketPrice);
+                        return price === 0 ? 'Free' : `$${price.toFixed(2)}`;
+                      })()}
                     </span>
                   </div>
                 </div>

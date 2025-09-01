@@ -14,7 +14,7 @@ interface FeaturedEventsResponse {
   isBumped: boolean;
   position: number;
   createdAt: string;
-  event: Event;
+  event: Event & { currentPrice?: number };
   isPaid: boolean;
 }
 
@@ -166,7 +166,10 @@ export function FeaturedCarousel() {
               </div>
               <div>
                 <span className="h5 text-white fw-bold">
-                  {parseFloat(currentEvent.event.ticketPrice || '0') === 0 ? 'Free!' : `$${currentEvent.event.ticketPrice || '0'}`}
+                  {(() => {
+                    const price = currentEvent.event.currentPrice ?? parseFloat(currentEvent.event.ticketPrice || '0');
+                    return price === 0 ? 'Free!' : `$${price.toFixed(2)}`;
+                  })()}
                 </span>
               </div>
             </div>
