@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RotateCcw } from "lucide-react";
 import customIcon from "@assets/image_1756530485392.png";
 import errorIcon from "@assets/image_1756530597104.png";
@@ -47,6 +47,20 @@ export function QrScannerImplementation() {
   const [manualCode, setManualCode] = useState<string>("");
   const [needsGeofence, setNeedsGeofence] = useState(false);
   const [pendingCode, setPendingCode] = useState<string>("");
+  const [buttonColorIndex, setButtonColorIndex] = useState(0);
+
+  // Event badge colors to cycle through
+  const badgeColors = [
+    '#DC2626', // Mission Events - red
+    '#FFD700', // Golden Ticket - gold
+    '#10B981', // Minting Enabled - green
+    '#8B5CF6', // Special Effects - purple
+    '#EC4899', // Surge Pricing - pink
+    '#F59E0B', // Sticker Drops - amber
+    '#3B82F6', // Geofenced - blue
+    '#14B8A6', // Voting Enabled - teal
+    '#6366F1', // Recurring - indigo
+  ];
 
   const validateTicketMutation = useMutation({
     mutationFn: async ({code, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng}: {code: string, validatorLat?: number, validatorLng?: number, ticketHolderLat?: number, ticketHolderLng?: number}) => {
@@ -158,6 +172,18 @@ export function QrScannerImplementation() {
     },
   });
 
+  // Cycle through colors when loading
+  useEffect(() => {
+    if (validateTicketMutation.isPending) {
+      const interval = setInterval(() => {
+        setButtonColorIndex((prev) => (prev + 1) % badgeColors.length);
+      }, 500); // Change color every 0.5 seconds
+      return () => clearInterval(interval);
+    } else {
+      setButtonColorIndex(0); // Reset when not loading
+    }
+  }, [validateTicketMutation.isPending, badgeColors.length]);
+
   const resetValidation = () => {
     setValidationResult(null);
   };
@@ -228,6 +254,15 @@ export function QrScannerImplementation() {
                 validateTicketMutation.isPending || manualCode.length !== 4
               }
               data-testid="button-submit-code"
+              style={{
+                backgroundColor: validateTicketMutation.isPending 
+                  ? badgeColors[buttonColorIndex] 
+                  : '',
+                borderColor: validateTicketMutation.isPending 
+                  ? badgeColors[buttonColorIndex] 
+                  : '',
+                transition: 'background-color 0.3s ease, border-color 0.3s ease'
+              }}
             >
               {validateTicketMutation.isPending ? (
                 <span
