@@ -1,281 +1,251 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { Calendar, MapPin, Ticket, Plus, Sparkles, Trophy, Clock, X, Edit2, Eye, EyeOff, AlertCircle, DollarSign, TrendingUp, Coins, Gift, CalendarCheck, Package, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useNotifications } from "@/hooks/use-notifications";
+import { useAuth } from "@/hooks/use-auth";
+import { EventCard } from "@/components/EventCard";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { PastEvents } from "@/components/archive/past-events";
-import type { Ticket as TicketType, Event, RegistryRecord, AccountBalance } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import type { SelectEvent, SelectTicket, SelectRegistryRecord } from "@shared/schema";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
-export default function AccountPage() {
+export function AccountPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
-
   const { toast } = useToast();
-  const { addNotification } = useNotifications();
-  
-  const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
-    queryKey: ["/api/user/tickets"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/user/tickets");
-      return response.json();
-    },
-    enabled: !!user,
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "validated" | "golden">("all");
+
+  const { data: events, isLoading: eventsLoading } = useQuery<SelectEvent[]>({
+    queryKey: ["/api/events"],
   });
 
-  const { data: events, isLoading: eventsLoading } = useQuery<Event[]>({
+  const { data: userEvents, isLoading: userEventsLoading } = useQuery<SelectEvent[]>({
     queryKey: ["/api/user/events"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/user/events");
-      return response.json();
-    },
     enabled: !!user,
   });
 
-  const { data: registryRecords, isLoading: registryLoading } = useQuery<RegistryRecord[]>({
-    queryKey: ["/api/user/registry"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/user/registry");
-      return response.json();
-    },
+  const { data: tickets, isLoading: ticketsLoading, refetch: refetchTickets } = useQuery<SelectTicket[]>({
+    queryKey: ["/api/user/tickets"],
     enabled: !!user,
   });
 
-  const { data: reputation } = useQuery<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>({
-    queryKey: [`/api/users/${user?.id}/reputation`],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/users/${user?.id}/reputation`);
-      return response.json();
-    },
-    enabled: !!user?.id,
-  });
-
-  const { data: validatedCount } = useQuery<{ validatedCount: number }>({
-    queryKey: [`/api/users/${user?.id}/validated-count`],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/users/${user?.id}/validated-count`);
-      return response.json();
-    },
-    enabled: !!user?.id,
-  });
-
-  const { data: balance } = useQuery<AccountBalance>({
+  const { data: balance, isLoading: balanceLoading } = useQuery<{ id: string; userId: string; balance: number; lastDailyClaimAt: string | null }>({
     queryKey: ["/api/currency/balance"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/currency/balance");
-      return response.json();
-    },
     enabled: !!user,
   });
-  
-  const { data: claimStatus } = useQuery<{ canClaim: boolean; nextClaimAt?: string }>({
+
+  const { data: claimStatus, refetch: refetchClaimStatus } = useQuery<{ canClaim: boolean; nextClaimTime: string | null; hoursUntilClaim: number }>({
     queryKey: ["/api/currency/daily-claim-status"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/currency/daily-claim-status");
-      return response.json();
-    },
     enabled: !!user,
-    refetchInterval: 60000, // Check every minute
   });
-  
+
+  const { data: registryRecords, isLoading: registryLoading } = useQuery<SelectRegistryRecord[]>({
+    queryKey: ["/api/user/registry"],
+    enabled: !!user,
+  });
+
   const claimDailyMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/currency/claim-daily");
-      return response.json();
-    },
-    onSuccess: (data) => {
+    mutationFn: () => apiRequest("/api/currency/claim-daily", { method: "POST" }),
+    onSuccess: () => {
       toast({
         title: "Daily Tickets Claimed!",
-        description: data.message,
+        description: "You've received 5 Tickets",
+        variant: "success",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       queryClient.invalidateQueries({ queryKey: ["/api/currency/daily-claim-status"] });
+      refetchClaimStatus();
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Claim Failed",
-        description: error.message || "Failed to claim daily tickets",
+        description: error.message || "Unable to claim daily tickets",
         variant: "destructive",
       });
     },
   });
 
+  const handleDailyClaim = () => {
+    if (claimStatus?.canClaim) {
+      claimDailyMutation.mutate();
+    }
+  };
+
+  const [eventSearchTerm, setEventSearchTerm] = useState("");
+  const [eventFilterType, setEventFilterType] = useState<"all" | "future" | "past" | "active">("all");
+
+  const filteredEvents = userEvents?.filter(event => {
+    const matchesSearch = event.name.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
+                          event.venue?.toLowerCase().includes(eventSearchTerm.toLowerCase());
+    
+    const now = new Date();
+    const eventStart = new Date(event.date);
+    const eventEnd = event.endDate ? new Date(event.endDate) : eventStart;
+    
+    const matchesFilter = eventFilterType === "all" ? true :
+                         eventFilterType === "future" ? eventStart > now :
+                         eventFilterType === "past" ? eventEnd < now :
+                         eventFilterType === "active" ? eventStart <= now && eventEnd >= now : true;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  const filteredTickets = tickets?.filter(ticket => {
+    const event = events?.find(e => e.id === ticket.eventId);
+    const matchesSearch = 
+      ticket.ticketNumber?.toString().includes(searchTerm) ||
+      event?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event?.venue?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = 
+      filterType === "all" ? true :
+      filterType === "validated" ? ticket.validated :
+      filterType === "golden" ? ticket.isGoldenTicket : true;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  const stats = {
+    totalEvents: userEvents?.length || 0,
+    futureEvents: userEvents?.filter(e => new Date(e.date) > new Date()).length || 0,
+    activeEvents: userEvents?.filter(e => {
+      const now = new Date();
+      const start = new Date(e.date);
+      const end = e.endDate ? new Date(e.endDate) : start;
+      return start <= now && end >= now;
+    }).length || 0,
+    totalTickets: tickets?.length || 0,
+    validatedTickets: tickets?.filter(t => t.validated).length || 0,
+    goldenTickets: tickets?.filter(t => t.isGoldenTicket).length || 0,
+  };
+
   if (!user) {
-    return null;
+    return (
+      <div className="container mt-5 text-center">
+        <h1 className="h3">Please log in to view your account</h1>
+        <p className="text-muted">You need to be logged in to access this page.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="container py-5">
+    <div className="container py-4">
       <div className="row mb-4">
         <div className="col">
-          <div className="d-flex justify-content-between align-items-center">
-            <h1 className="h3 fw-bold mb-0">My Account</h1>
-            <PastEvents />
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h1 className="h3 fw-bold mb-2">My Account</h1>
+              <p className="text-muted mb-0">Manage your events and tickets</p>
+            </div>
+            <Link href="/events/new">
+              <Button className="d-flex align-items-center gap-2">
+                <Plus size={20} />
+                <span className="d-none d-sm-inline">Create Event</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* User Info Card */}
+      {/* Currency Section */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="card">
+          <div className="card border-0 shadow-sm bg-gradient" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <div className="card-body p-4">
+              <div className="row align-items-center">
+                <div className="col-md-6 text-white">
+                  <div className="d-flex align-items-center mb-3">
+                    <Coins className="me-2" size={24} />
+                    <h5 className="mb-0 fw-bold">My Tickets Balance</h5>
+                  </div>
+                  <div className="d-flex align-items-baseline">
+                    <span className="display-4 fw-bold">{balance?.balance || 0}</span>
+                    <span className="ms-2 fs-4 opacity-75">Tickets</span>
+                  </div>
+                  <p className="mt-2 mb-0 opacity-90">
+                    Use Tickets to boost events and unlock premium features
+                  </p>
+                </div>
+                <div className="col-md-6 text-white text-md-end mt-3 mt-md-0">
+                  {claimStatus?.canClaim ? (
+                    <div>
+                      <p className="mb-2 opacity-90">Daily bonus available!</p>
+                      <Button 
+                        onClick={handleDailyClaim}
+                        disabled={claimDailyMutation.isPending}
+                        className="btn-light px-4"
+                        variant="secondary"
+                      >
+                        <Gift className="me-2" size={18} />
+                        {claimDailyMutation.isPending ? "Claiming..." : "Claim 5 Tickets"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="mb-2 opacity-90">Next claim available in:</p>
+                      <div className="d-flex align-items-center justify-content-end">
+                        <CalendarCheck className="me-2" size={20} />
+                        <span className="fs-5">
+                          {claimStatus?.hoursUntilClaim ? 
+                            `${Math.floor(claimStatus.hoursUntilClaim)} hours` : 
+                            'Tomorrow'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="row mb-4 g-3">
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
-              <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between">
-                <div className="d-flex align-items-center">
-                  <div className="me-3 d-none d-sm-block">
-                    <img src="/key-icon.png" alt="" style={{ width: '48px', height: '48px' }} />
-                  </div>
-                  <div className="me-3 d-block d-sm-none">
-                    <img src="/key-icon.png" alt="" style={{ width: '36px', height: '36px' }} />
-                  </div>
-                  <div>
-                    {user.displayName && (
-                      <h5 className="card-title mb-1">{user.displayName}</h5>
-                    )}
-                    {user.memberStatus && (
-                      <p className="text-muted small mb-1">{user.memberStatus}</p>
-                    )}
-                    <p className="text-muted mb-0">{user.email}</p>
-                    {reputation && reputation.percentage !== null && (
-                      <div className="d-flex align-items-center mt-2">
-                        <img src="/world-icon.png" alt="" style={{ width: '16px', height: '16px', marginRight: '8px' }} />
-                        <span className="text-muted small">
-                          Reputation: <strong>{reputation.percentage}%</strong>
-                          <span className="ms-2 text-secondary">
-                            ({reputation.thumbsUp} 👍 / {reputation.thumbsDown} 👎)
-                          </span>
-                        </span>
-                      </div>
-                    )}
-                    {validatedCount && (
-                      <div className="d-flex align-items-center mt-2">
-                        <img src="/validation-icon.png" alt="" style={{ width: '16px', height: '16px', marginRight: '8px' }} />
-                        <span className="text-muted small">
-                          Validated: <strong>{validatedCount.validatedCount}</strong>
-                        </span>
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-                {/* Balance Display */}
-                {balance && (
-                  <div className="mt-3 mt-sm-0">
-                    <div className="card bg-light">
-                      <div className="card-body py-2 px-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <div className="d-flex align-items-center">
-                            <Wallet className="text-primary me-2" size={24} />
-                            <div>
-                              <div className="small text-muted">Tickets Balance</div>
-                              <div className="h5 mb-0 fw-bold">{Math.floor(parseFloat(balance.balance))}</div>
-                              {parseFloat(balance.holdBalance) > 0 && (
-                                <div className="small text-warning">
-                                  {Math.floor(parseFloat(balance.holdBalance))} on hold
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {/* Daily Claim Button */}
-                          {claimStatus && (
-                            <button
-                              onClick={() => claimDailyMutation.mutate()}
-                              disabled={!claimStatus.canClaim || claimDailyMutation.isPending}
-                              className={`btn btn-sm ${claimStatus.canClaim ? 'btn-success' : 'btn-secondary'} d-flex align-items-center`}
-                              title={claimStatus.canClaim ? "Claim your daily tickets!" : `Next claim: ${claimStatus.nextClaimAt ? new Date(claimStatus.nextClaimAt).toLocaleString() : 'N/A'}`}
-                            >
-                              <Gift size={16} className="me-1" />
-                              {claimDailyMutation.isPending ? "Claiming..." : claimStatus.canClaim ? "Claim Daily" : "Claimed"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="text-muted">Total Events</span>
+                <Calendar size={20} className="text-primary" />
               </div>
+              <h3 className="h4 fw-bold mb-0">{stats.totalEvents}</h3>
+              <small className="text-muted">
+                {stats.futureEvents} upcoming, {stats.activeEvents} active
+              </small>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* My Tickets Section */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <h4 className="h5 fw-semibold mb-3">
-            <img src="/tickets-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'text-bottom' }} />
-            My Tickets
-          </h4>
-          
-          {ticketsLoading ? (
-            <div className="card">
-              <div className="card-body">
-                <div className="placeholder-glow">
-                  <div className="placeholder col-12 mb-2"></div>
-                  <div className="placeholder col-8"></div>
-                </div>
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="text-muted">Total Tickets</span>
+                <Ticket size={20} className="text-success" />
               </div>
+              <h3 className="h4 fw-bold mb-0">{stats.totalTickets}</h3>
+              <small className="text-muted">
+                {stats.validatedTickets} validated
+              </small>
             </div>
-          ) : tickets?.length === 0 ? (
-            <div className="card">
-              <div className="card-body text-center py-5">
-                <Ticket className="text-muted mb-3 mx-auto" size={48} />
-                <h6 className="text-muted">No tickets yet</h6>
-                <p className="text-muted small">Tickets you purchase will appear here</p>
+          </div>
+        </div>
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="text-muted">Golden Tickets</span>
+                <Trophy size={20} className="text-warning" />
               </div>
+              <h3 className="h4 fw-bold mb-0">{stats.goldenTickets}</h3>
+              <small className="text-muted">
+                Special edition tickets
+              </small>
             </div>
-          ) : (
-            <>
-              <div className="row g-3">
-                {tickets?.slice(0, ticketsDisplayed).map((ticket) => (
-                  <div key={ticket.id} className="col-md-4">
-                    <div 
-                      onClick={() => setLocation(`/tickets/${ticket.id}`)}
-                      style={{ 
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <TicketCard 
-                        ticket={ticket}
-                        event={ticket.event}
-                        showQR={false}
-                        showBadges={true}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {tickets && tickets.length > ticketsDisplayed && (
-                <div className="text-center mt-4">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setTicketsDisplayed(prev => Math.min(prev + 10, tickets.length))}
-                    data-testid="button-show-more-tickets"
-                  >
-                    Show {Math.min(10, tickets.length - ticketsDisplayed)} More
-                  </button>
-                  <div className="text-muted small mt-2">
-                    Showing {ticketsDisplayed} of {tickets.length} tickets
-                  </div>
-                </div>
-              )}
-              {tickets && tickets.length > 10 && ticketsDisplayed >= tickets.length && (
-                <div className="text-center mt-3">
-                  <button
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={() => setTicketsDisplayed(10)}
-                    data-testid="button-show-less-tickets"
-                  >
-                    Show Less
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+          </div>
         </div>
       </div>
 
@@ -300,20 +270,23 @@ export default function AccountPage() {
             ) : (
               <div className="row g-3">
                 {registryRecords.map((record) => {
-                  // Parse the metadata to reconstruct ticket and event data
-                  const metadata = typeof record.metadata === 'string' ? JSON.parse(record.metadata) : record.metadata || {};
-                  const originalTicket = metadata.originalTicket || {};
-                  const eventFeatures = metadata.eventFeatures || {};
-                  const ticketImageUrl = metadata.ticketImageUrl || metadata.ticketGifUrl || null;
+                  // Get the actual ticket and event from our existing data
+                  const ticket = tickets?.find(t => t.id === record.ticketId);
+                  const event = events?.find(e => e.id === record.eventId) || 
+                                userEvents?.find(e => e.id === record.eventId);
                   
-                  // If we have a captured image, show that instead of reconstructing
-                  if (ticketImageUrl) {
+                  // Parse metadata just for the GIF if we have one
+                  const metadata = typeof record.metadata === 'string' ? JSON.parse(record.metadata) : record.metadata || {};
+                  const ticketGifUrl = metadata.ticketGifUrl || null;
+                  
+                  // If we have a GIF already captured, show that
+                  if (ticketGifUrl) {
                     return (
                       <div key={record.id} className="col-md-4">
                         <div className="mb-2">
                           <div className="card" style={{ overflow: 'hidden' }}>
                             <img 
-                              src={ticketImageUrl} 
+                              src={ticketGifUrl} 
                               alt={`${record.eventName} - Ticket #${record.ticketNumber}`}
                               className="w-100" 
                               style={{ display: 'block', borderRadius: '8px' }}
@@ -339,97 +312,30 @@ export default function AccountPage() {
                     );
                   }
                   
-                  // Direct render with background
-                  const bgUrl = eventFeatures?.ticketBackgroundUrl || null;
+                  // If we don't have ticket or event data, skip
+                  if (!ticket || !event) {
+                    return null;
+                  }
                   
+                  // Show the actual ticket using TicketCard component
                   return (
                     <div key={record.id} className="col-md-4">
-                      {/* NFT Card with background from registry */}
-                      <div 
-                        className="ticket-card position-relative w-100 mb-2"
-                        style={{
-                          aspectRatio: '16/9',
-                          maxWidth: '100%',
-                          minHeight: '200px',
-                          borderRadius: '8px',
-                          overflow: 'hidden',
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                          background: bgUrl
-                            ? `url(${bgUrl}) center/cover`
-                            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          transition: 'transform 0.2s, box-shadow 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-                        }}
-                      >
-                        {/* Semi-transparent overlay for text readability */}
-                        <div 
-                          className="position-absolute w-100 h-100"
-                          style={{
-                            background: eventFeatures.ticketBackgroundUrl 
-                              ? 'rgba(0, 0, 0, 0.4)' 
-                              : 'rgba(0, 0, 0, 0.2)',
-                            backdropFilter: 'blur(1px)',
-                          }}
+                      <div className="mb-2">
+                        <TicketCard 
+                          ticket={ticket}
+                          event={event}
+                          showQR={false}
+                          showBadges={false}
                         />
-
-                        {/* Golden Ticket Glow if applicable */}
-                        {originalTicket.isGoldenTicket && (
-                          <div 
-                            className="position-absolute w-100 h-100 pointer-events-none"
-                            style={{
-                              background: 'radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.15) 70%)',
-                              boxShadow: 'inset 0 0 30px rgba(255, 215, 0, 0.225), inset 0 0 60px rgba(255, 215, 0, 0.075)',
-                              animation: 'goldenGlow 3s ease-in-out infinite',
-                              zIndex: 2,
-                            }}
-                          />
-                        )}
-
-                        {/* Color bars at bottom */}
-                        <div className="position-absolute bottom-0 w-100 d-flex" style={{ height: '4px', zIndex: 10 }}>
-                          {eventFeatures.goldenTicketEnabled && (
-                            <div style={{ flex: 1, backgroundColor: '#FFD700' }} />
-                          )}
-                          {eventFeatures.specialEffectsEnabled && (
-                            <div style={{ flex: 1, backgroundColor: '#9333EA' }} />
-                          )}
-                          {eventFeatures.enableVoting && (
-                            <div style={{ flex: 1, backgroundColor: '#10B981' }} />
-                          )}
-                          {eventFeatures.p2pValidation && (
-                            <div style={{ flex: 1, backgroundColor: '#3B82F6' }} />
-                          )}
-                        </div>
-
-                        {/* Ticket Content */}
-                        <div className="position-relative h-100 d-flex">
-                          <div className="flex-grow-1 px-3 pt-3 pb-5 text-white d-flex flex-column justify-content-between">
-                            <div>
-                              <h5 className="mb-2 fw-bold" style={{ fontSize: '18px', marginTop: '0' }}>
-                                {record.eventName}
-                              </h5>
-                              <div className="small opacity-90">
-                                <div className="mb-1">Ticket #{record.ticketNumber}</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
                       </div>
-                      
-                      {/* NFT info card below */}
                       <div className="card">
                         <div className="card-body p-2">
                           <div className="d-flex justify-content-between align-items-center">
                             <div className="small">
                               <span className="badge bg-info me-2">NFT</span>
-                              <span className="text-muted">Minted {record.mintedAt ? new Date(record.mintedAt).toLocaleDateString() : 'Unknown'}</span>
+                              <span className="text-muted">
+                                Minted {record.mintedAt ? new Date(record.mintedAt).toLocaleDateString() : 'Unknown'}
+                              </span>
                             </div>
                             {record.transferCount && record.transferCount > 0 && (
                               <span className="badge bg-secondary small">
@@ -449,14 +355,38 @@ export default function AccountPage() {
       )}
 
       {/* My Events Section */}
-      <div className="row">
+      <div className="row mb-4">
         <div className="col-12">
-          <h4 className="h5 fw-semibold mb-3">
-            <img src="/events-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px', verticalAlign: 'text-bottom' }} />
-            My Events
-          </h4>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h4 className="h5 fw-semibold mb-0">My Events</h4>
+            <div className="d-flex gap-2">
+              <div className="input-group" style={{ width: '250px' }}>
+                <span className="input-group-text bg-white">
+                  <Search size={16} />
+                </span>
+                <input
+                  type="text"
+                  className="form-control border-start-0"
+                  placeholder="Search events..."
+                  value={eventSearchTerm}
+                  onChange={(e) => setEventSearchTerm(e.target.value)}
+                />
+              </div>
+              <select 
+                className="form-select" 
+                style={{ width: 'auto' }}
+                value={eventFilterType}
+                onChange={(e) => setEventFilterType(e.target.value as any)}
+              >
+                <option value="all">All Events</option>
+                <option value="future">Upcoming</option>
+                <option value="active">Active Now</option>
+                <option value="past">Past</option>
+              </select>
+            </div>
+          </div>
           
-          {eventsLoading ? (
+          {userEventsLoading ? (
             <div className="card">
               <div className="card-body">
                 <div className="placeholder-glow">
@@ -465,40 +395,142 @@ export default function AccountPage() {
                 </div>
               </div>
             </div>
-          ) : events?.length === 0 ? (
-            <div className="card">
-              <div className="card-body text-center py-5">
-                <Calendar className="text-muted mb-3 mx-auto" size={48} />
-                <h6 className="text-muted">No events created</h6>
-                <p className="text-muted small">Events you create will appear here</p>
-              </div>
-            </div>
-          ) : (
-            <div className="card">
-              <div className="card-body p-0">
-                {events?.map((event, index) => (
-                  <div 
-                    key={event.id}
-                    className={`p-3 ${index !== events.length - 1 ? 'border-bottom' : ''}`}
-                  >
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <h6 className="mb-1">
-                          <Link href={`/events/${event.id}`} className="text-decoration-none text-dark">
-                            {event.name}
+          ) : filteredEvents && filteredEvents.length > 0 ? (
+            <div className="row g-3">
+              {filteredEvents.map(event => {
+                const eventEnd = event.endDate ? new Date(event.endDate) : new Date(event.date);
+                const daysSinceEnd = Math.floor((Date.now() - eventEnd.getTime()) / (1000 * 60 * 60 * 24));
+                const daysUntilDeletion = 69 - daysSinceEnd;
+                const showDeletionWarning = eventEnd < new Date() && daysUntilDeletion > 0;
+
+                return (
+                  <div key={event.id} className="col-md-6 col-lg-4">
+                    <div className="card h-100 border-0 shadow-sm position-relative">
+                      <EventCard event={event} />
+                      {showDeletionWarning && (
+                        <div className="position-absolute top-0 end-0 m-2">
+                          <span className="badge bg-warning text-dark" title={`This event will be deleted in ${daysUntilDeletion} days`}>
+                            <Clock size={12} className="me-1" />
+                            {daysUntilDeletion}d
+                          </span>
+                        </div>
+                      )}
+                      <div className="card-footer bg-white border-top">
+                        <div className="d-flex gap-2">
+                          <Link href={`/events/${event.id}`} className="text-decoration-none">
+                            <Button variant="outline" size="sm" className="btn-sm">
+                              <Eye size={16} className="me-1" />
+                              View
+                            </Button>
                           </Link>
-                        </h6>
-                        <p className="text-muted small mb-0">
-                          {event.date} • {event.time} • {event.venue}
-                        </p>
-                      </div>
-                      <div className="text-end">
-                        <p className="mb-0 fw-semibold">${event.ticketPrice}</p>
-                        <p className="text-muted small mb-0">per ticket</p>
+                          <Link href={`/events/${event.id}/edit`} className="text-decoration-none">
+                            <Button variant="outline" size="sm" className="btn-sm">
+                              <Edit2 size={16} className="me-1" />
+                              Edit
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="card">
+              <div className="card-body text-center py-5">
+                <Calendar size={48} className="text-muted mb-3" />
+                <h5>No events found</h5>
+                <p className="text-muted mb-3">
+                  {eventSearchTerm ? "Try adjusting your search" : "You haven't created any events yet"}
+                </p>
+                {!eventSearchTerm && (
+                  <Link href="/events/new">
+                    <Button>Create Your First Event</Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* My Tickets Section */}
+      <div className="row">
+        <div className="col-12">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h4 className="h5 fw-semibold mb-0">My Tickets</h4>
+            <div className="d-flex gap-2">
+              <div className="input-group" style={{ width: '250px' }}>
+                <span className="input-group-text bg-white">
+                  <Search size={16} />
+                </span>
+                <input
+                  type="text"
+                  className="form-control border-start-0"
+                  placeholder="Search tickets..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <select 
+                className="form-select" 
+                style={{ width: 'auto' }}
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as any)}
+              >
+                <option value="all">All Tickets</option>
+                <option value="validated">Validated</option>
+                <option value="golden">Golden</option>
+              </select>
+            </div>
+          </div>
+          
+          {ticketsLoading ? (
+            <div className="card">
+              <div className="card-body">
+                <div className="placeholder-glow">
+                  <div className="placeholder col-12 mb-2"></div>
+                  <div className="placeholder col-8"></div>
+                </div>
+              </div>
+            </div>
+          ) : filteredTickets && filteredTickets.length > 0 ? (
+            <div className="row g-3">
+              {filteredTickets.map(ticket => {
+                const event = events?.find(e => e.id === ticket.eventId);
+                if (!event) return null;
+
+                const eventEnd = event.endDate ? new Date(event.endDate) : new Date(event.date);
+                const daysSinceEnd = Math.floor((Date.now() - eventEnd.getTime()) / (1000 * 60 * 60 * 24));
+                const daysUntilDeletion = 69 - daysSinceEnd;
+                const showDeletionWarning = eventEnd < new Date() && daysUntilDeletion > 0;
+
+                return (
+                  <div key={ticket.id} className="col-md-6 col-lg-4">
+                    <div className="position-relative">
+                      {showDeletionWarning && (
+                        <div className="position-absolute top-0 end-0 m-2" style={{ zIndex: 10 }}>
+                          <span className="badge bg-warning text-dark" title={`This ticket will be deleted in ${daysUntilDeletion} days`}>
+                            <Clock size={12} className="me-1" />
+                            {daysUntilDeletion}d
+                          </span>
+                        </div>
+                      )}
+                      <TicketCard ticket={ticket} event={event} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="card">
+              <div className="card-body text-center py-5">
+                <Ticket size={48} className="text-muted mb-3" />
+                <h5>No tickets found</h5>
+                <p className="text-muted">
+                  {searchTerm ? "Try adjusting your search" : "You don't have any tickets yet"}
+                </p>
               </div>
             </div>
           )}
