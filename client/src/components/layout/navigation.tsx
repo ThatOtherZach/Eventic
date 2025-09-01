@@ -157,25 +157,16 @@ function NotificationBell({ user, location }: { user: any; location: string }) {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <li className="nav-item position-relative">
+    <li className="nav-item">
       <Link
         href="/notifications"
         className={`nav-link d-flex align-items-center ${
           location === "/notifications" ? "active" : ""
-        }`}
+        } ${unreadCount > 0 ? "text-danger" : ""}`}
         data-testid="link-nav-notifications"
       >
         <Bell className="me-1" size={18} />
         Inbox
-        {unreadCount > 0 && (
-          <span 
-            className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-            style={{ fontSize: '10px', minWidth: '18px' }}
-            data-testid="badge-notification-count"
-          >
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
       </Link>
     </li>
   );
