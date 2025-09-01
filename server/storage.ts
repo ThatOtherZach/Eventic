@@ -1015,27 +1015,27 @@ export class DatabaseStorage implements IStorage {
       // Check conditions and apply probability
       const random = Math.random();
       
-      // If ticket is charged, double the probability (cut odds in half)
-      const chargeMultiplier = currentTicket.isCharged ? 2 : 1;
+      // If ticket is charged, halve the odds denominator (double the probability)
+      const chargeDivisor = currentTicket.isCharged ? 2 : 1;
       
       // Priority order (highest to lowest)
       if (dayOfYear === 69) { // Nice day (March 10)
-        if (random < (1/69) * chargeMultiplier) specialEffect = 'nice';
+        if (random < 1/(69/chargeDivisor)) specialEffect = 'nice';
       } else if (event.name.toLowerCase().includes('pride') || event.name.toLowerCase().includes('gay')) {
-        if (random < (1/100) * chargeMultiplier) specialEffect = 'pride';
+        if (random < 1/(100/chargeDivisor)) specialEffect = 'pride';
       } else if (month === 2 && day === 14) { // Valentine's Day
-        if (random < (1/14) * chargeMultiplier) specialEffect = 'hearts';
+        if (random < 1/(14/chargeDivisor)) specialEffect = 'hearts';
       } else if (month === 10 && day === 31) { // Halloween
-        if (random < (1/88) * chargeMultiplier) specialEffect = 'spooky';
+        if (random < 1/(88/chargeDivisor)) specialEffect = 'spooky';
       } else if (month === 12 && day === 25) { // Christmas
-        if (random < (1/25) * chargeMultiplier) specialEffect = 'snowflakes';
+        if (random < 1/(25/chargeDivisor)) specialEffect = 'snowflakes';
       } else if (month === 12 && day === 31) { // New Year's Eve
-        if (random < (1/365) * chargeMultiplier) specialEffect = 'fireworks';
+        if (random < 1/(365/chargeDivisor)) specialEffect = 'fireworks';
       } else if (event.name.toLowerCase().includes('party')) {
-        if (random < (1/100) * chargeMultiplier) specialEffect = 'confetti';
+        if (random < 1/(100/chargeDivisor)) specialEffect = 'confetti';
       } else {
         // Monthly color effect (lowest priority)
-        if (random < (1/30) * chargeMultiplier) specialEffect = 'monthly';
+        if (random < 1/(30/chargeDivisor)) specialEffect = 'monthly';
       }
       
       if (specialEffect) {
@@ -1046,11 +1046,13 @@ export class DatabaseStorage implements IStorage {
     // Check for custom sticker effect
     if (!specialEffect && event.stickerUrl && event.stickerOdds) {
       const random = Math.random();
-      const chargeMultiplier = currentTicket.isCharged ? 2 : 1;
-      const odds = (event.stickerOdds / 100) * chargeMultiplier; // Convert percentage to decimal and apply charge multiplier
-      if (random < odds) {
+      const chargeDivisor = currentTicket.isCharged ? 2 : 1;
+      const odds = event.stickerOdds / 100; // Convert percentage to decimal
+      const adjustedOdds = odds * chargeDivisor; // Double the odds if charged
+      if (random < adjustedOdds) {
         specialEffect = 'sticker';
-        console.log(`🎯 Custom sticker effect assigned to ticket ${id} (${event.stickerOdds * chargeMultiplier}% chance${currentTicket.isCharged ? ' - CHARGED' : ''})`);
+        const effectivePercentage = currentTicket.isCharged ? event.stickerOdds * 2 : event.stickerOdds;
+        console.log(`🎯 Custom sticker effect assigned to ticket ${id} (${effectivePercentage}% chance${currentTicket.isCharged ? ' - CHARGED' : ''})`);
       }
     }
     
@@ -1080,10 +1082,10 @@ export class DatabaseStorage implements IStorage {
         if (remainingGoldenTickets > 0 && unvalidatedCount > 0) {
           // Calculate probability: (remaining golden tickets / remaining unvalidated tickets) / 2
           // Dividing by 2 makes golden tickets rarer and more special
-          // If ticket is charged, double the probability (cut odds in half)
-          const chargeMultiplier = currentTicket.isCharged ? 2 : 1;
+          // If ticket is charged, double the probability (halve the odds)
+          const chargeDivisor = currentTicket.isCharged ? 2 : 1;
           const baseProbability = remainingGoldenTickets / unvalidatedCount;
-          const probability = (baseProbability / 2) * chargeMultiplier;
+          const probability = baseProbability / (2 / chargeDivisor);
           
           // Generate random number between 0 and 1
           const timestamp = Date.now();
