@@ -145,25 +145,43 @@ export function LocationEventsPage() {
               isValidated: false
             };
 
-            // Create a full event object for special effects components
+            // Create a full event object for special effects components with all required properties
             const fullEvent = {
               ...event,
               description: null,
+              contactDetails: null,
               country: null,
-              maxTickets: null,
-              createdAt: new Date().toISOString(),
-              userId: '',
-              stripePaymentIntentId: null,
-              stripePriceId: null,
-              stripeProductId: null,
-              specialEffects: event.specialEffects || null,
+              endDate: event.endDate || null,
+              endTime: event.endTime || null,
               ticketBackgroundUrl: event.ticketBackgroundUrl || null,
-              organizerName: null,
-              organizerEmail: null,
-              organizerPhone: null,
-              category: null,
-              tags: null,
-              isPrivate: false
+              goldenTicketEnabled: event.goldenTicketEnabled ?? false,
+              specialEffectsEnabled: event.specialEffectsEnabled ?? false,
+              surgePricing: event.surgePricing ?? false,
+              allowMinting: event.allowMinting ?? false,
+              p2pValidation: event.p2pValidation ?? false,
+              stickerUrl: event.stickerUrl ?? null,
+              maxTickets: null,
+              userId: '',
+              imageUrl: null,
+              earlyValidation: 'Allow at Anytime' as const,
+              reentryType: 'No Reentry (Single Use)' as const,
+              maxUses: 1,
+              goldenTicketCount: null,
+              stickerOdds: 25,
+              isPrivate: false,
+              isEnabled: true,
+              ticketPurchasesEnabled: true,
+              oneTicketPerUser: false,
+              enableVoting: false,
+              latitude: null,
+              longitude: null,
+              geofence: null,
+              recurringEndDate: null,
+              parentEventId: null,
+              lastRecurrenceCreated: null,
+              timezone: 'America/New_York',
+              hashtags: [],
+              createdAt: new Date()
             };
 
             // Check for special effects
@@ -236,7 +254,7 @@ export function LocationEventsPage() {
                       <SpecialEffects event={fullEvent} ticket={mockTicket} />
 
                       {/* Event Feature Badge Bar */}
-                      <BadgeBar event={event} />
+                      <BadgeBar event={fullEvent} />
 
                       {/* Ticket Content */}
                       <div className="position-relative h-100 d-flex">
