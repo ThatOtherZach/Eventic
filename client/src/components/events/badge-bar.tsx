@@ -12,6 +12,7 @@ interface BadgeBarProps {
     enableVoting?: boolean;
     recurringType?: string | null;
     p2pValidation?: boolean;
+    maxTickets?: number | null;
   };
 }
 
@@ -48,6 +49,9 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event }) => {
   }
   if (event.p2pValidation) {
     badges.push({ color: '#3B82F6', label: 'P2P' });
+  }
+  if (event.maxTickets) {
+    badges.push({ color: '#14B8A6', label: 'Limited' });
   }
 
   // If no badges, return null

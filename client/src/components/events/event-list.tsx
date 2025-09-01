@@ -359,6 +359,12 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                               title="Multi-day Event"
                             />
                           )}
+                          {event.maxTickets && (
+                            <div 
+                              style={{ width: '5px', height: '5px', backgroundColor: '#14B8A6' }}
+                              title="Limited Tickets"
+                            />
+                          )}
                         </div>
                       )}
                       <p className="text-muted small mb-0">

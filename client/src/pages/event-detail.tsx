@@ -619,6 +619,13 @@ export default function EventDetailPage() {
                   </span>
                 </Link>
               )}
+              {event.maxTickets && (
+                <Link href="/type/limited">
+                  <span className="badge" style={{ backgroundColor: '#14B8A6', color: '#fff', cursor: 'pointer' }}>
+                    Limited
+                  </span>
+                </Link>
+              )}
             </div>
           )}
 
