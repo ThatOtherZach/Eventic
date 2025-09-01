@@ -70,6 +70,22 @@ h4 { font-size: 1.125rem; }
   z-index: 9999 !important;
 }
 
+/* Color cycling button animation - overrides Bootstrap */
+.btn-color-cycling {
+  background-color: var(--btn-color) !important;
+  border-color: var(--btn-color) !important;
+  color: #ffffff !important;
+  transition: all 0.3s ease !important;
+  opacity: 1 !important;
+}
+
+.btn-color-cycling:disabled {
+  background-color: var(--btn-color) !important;
+  border-color: var(--btn-color) !important;
+  color: #ffffff !important;
+  opacity: 0.9 !important;
+}
+
 /* Custom Select trigger styling to match Bootstrap forms */
 button[role="combobox"] {
   width: 100%;

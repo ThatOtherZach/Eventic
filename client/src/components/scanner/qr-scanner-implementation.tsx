@@ -251,19 +251,20 @@ export function QrScannerImplementation() {
               style={{ letterSpacing: "0.5rem" }}
             />
             <button
-              className="btn btn-primary btn-lg"
+              className={validateTicketMutation.isPending ? "btn btn-lg btn-color-cycling" : "btn btn-primary btn-lg"}
               onClick={handleManualCodeSubmit}
               disabled={
                 validateTicketMutation.isPending || manualCode.length !== 4
               }
               data-testid="button-submit-code"
               style={validateTicketMutation.isPending ? {
+                '--btn-color': badgeColors[buttonColorIndex],
                 backgroundColor: badgeColors[buttonColorIndex],
                 borderColor: badgeColors[buttonColorIndex],
                 color: '#ffffff',
-                transition: 'all 0.3s ease',
-                opacity: 1
-              } : {}}
+                opacity: 1,
+                boxShadow: `0 0 10px ${badgeColors[buttonColorIndex]}40`
+              } as React.CSSProperties : {}}
             >
               {validateTicketMutation.isPending ? (
                 <span
