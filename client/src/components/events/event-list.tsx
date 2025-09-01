@@ -282,9 +282,12 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                         style={{ width: '48px', height: '48px', objectFit: 'cover', cursor: 'pointer' }}
                       />
                     ) : (
-                      <div className="bg-primary bg-opacity-10 rounded p-2 me-3" style={{ cursor: 'pointer' }}>
-                        <Ticket className="text-primary" size={24} />
-                      </div>
+                      <img 
+                        src="/default-event-icon.png" 
+                        alt=""
+                        className="rounded me-3"
+                        style={{ width: '48px', height: '48px', objectFit: 'cover', cursor: 'pointer' }}
+                      />
                     )}
                     <div className="flex-grow-1">
                       <h6 className="mb-1 fw-semibold text-dark">{event.name}</h6>
