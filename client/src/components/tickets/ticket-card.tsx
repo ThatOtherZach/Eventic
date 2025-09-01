@@ -59,10 +59,14 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         borderRadius: '8px',
         overflow: 'hidden',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        background: event.ticketBackgroundUrl 
-          ? `url(${event.ticketBackgroundUrl}) center/cover no-repeat` 
-          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        backgroundColor: event.ticketBackgroundUrl ? '#f0f0f0' : 'transparent',
+        backgroundImage: event.ticketBackgroundUrl 
+          ? `url(${event.ticketBackgroundUrl})` 
+          : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: event.ticketBackgroundUrl ? '#f0f0f0' : '#667eea',
+        background: !event.ticketBackgroundUrl ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : undefined,
         transition: 'transform 0.2s, box-shadow 0.2s',
       }}
       data-testid={`ticket-card-${ticket.id}`}
