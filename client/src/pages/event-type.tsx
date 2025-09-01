@@ -73,7 +73,7 @@ const eventTypeConfig: Record<string, {
   p2p: { 
     label: 'P2P Validation Events', 
     color: '#3B82F6',
-    icon: Shield,
+    imageIcon: '/p2p-icon.png',
     checkField: (e) => !!e.p2pValidation 
   },
   collectable: { 
