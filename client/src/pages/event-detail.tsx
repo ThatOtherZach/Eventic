@@ -1035,8 +1035,8 @@ export default function EventDetailPage() {
                     
                     return (
                       <div className="mt-2">
-                        <span className="text-muted small">Reputation</span>
-                        <div className="d-flex align-items-center mt-1">
+                        <div className="text-muted small mb-1">Reputation</div>
+                        <div className="d-flex align-items-center">
                           <img 
                             src={ownerIcon} 
                             alt="Reputation" 
