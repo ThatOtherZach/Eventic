@@ -77,6 +77,12 @@ h4 { font-size: 1.125rem; }
   color: #ffffff !important;
   transition: all 0.3s ease !important;
   opacity: 1 !important;
+  /* Match Bootstrap btn-primary btn-lg sizing */
+  padding: 0.5rem 1rem !important;
+  font-size: 1.25rem !important;
+  border-radius: 0.3rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
 }
 
 .btn-color-cycling:disabled {
