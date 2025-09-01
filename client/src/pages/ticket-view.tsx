@@ -501,62 +501,6 @@ export default function TicketViewPage(): React.ReactElement {
             <div className="card-body">
               <h6 className="card-title mb-3">Ticket Details</h6>
               
-              {/* Event Feature Badges */}
-              <div className="d-flex flex-wrap gap-1 mb-3">
-                {(event as any).isAdminCreated && (
-                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
-                    Mission
-                  </span>
-                )}
-                {event.enableVoting && (
-                  <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', fontSize: '0.8em' }}>
-                    Vote
-                  </span>
-                )}
-                {event.allowMinting && (
-                  <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', fontSize: '0.8em' }}>
-                    Collectable
-                  </span>
-                )}
-                {event.p2pValidation && (
-                  <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff', fontSize: '0.8em' }}>
-                    P2P Validation
-                  </span>
-                )}
-                {event.goldenTicketEnabled && (
-                  <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', fontSize: '0.8em' }}>
-                    Golden Tickets
-                  </span>
-                )}
-                {event.specialEffectsEnabled && (
-                  <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', fontSize: '0.8em' }}>
-                    Special Effects
-                  </span>
-                )}
-                {event.surgePricing && (
-                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
-                    Surge
-                  </span>
-                )}
-                {event.stickerUrl && (
-                  <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', fontSize: '0.8em' }}>
-                    Stickers
-                  </span>
-                )}
-                {event.geofence && (
-                  <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', fontSize: '0.8em' }}>
-                    Location Lock
-                  </span>
-                )}
-                {event.recurringType && (
-                  <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', fontSize: '0.8em' }}>
-                    {event.recurringType === 'weekly' && 'Weekly'}
-                    {event.recurringType === 'monthly' && 'Monthly'}
-                    {event.recurringType === 'annually' && 'Annual'}
-                  </span>
-                )}
-              </div>
-              
               <div className="d-flex justify-content-between">
                 <div>
                   <span className="text-muted">Purchase Date:</span>
