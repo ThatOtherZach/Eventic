@@ -96,6 +96,7 @@ const eventTypeConfig: Record<string, {
   recurring: { 
     label: 'Recurring Events', 
     color: '#059669',
+    imageIcon: '/recurring-icon.png',
     checkField: (e) => !!e.recurringType 
   },
   multiday: { 
