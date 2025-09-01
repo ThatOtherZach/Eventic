@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Calendar, MapPin, Ticket as TicketIcon, Plus, Sparkles, Trophy, Clock, X, Edit2, Eye, EyeOff, AlertCircle, DollarSign, TrendingUp, Coins, Gift, CalendarCheck, Package, Search } from "lucide-react";
+import { Calendar, MapPin, Ticket, Plus, Sparkles, Trophy, Clock, X, Edit2, Eye, EyeOff, AlertCircle, DollarSign, TrendingUp, Coins, Gift, CalendarCheck, Package, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { EventCard } from "../components/EventCard";
+import { EventCard } from "@/components/EventCard";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { useToast } from "@/hooks/use-toast";
-import type { Event, Ticket, RegistryRecord } from "@shared/schema";
+import type { SelectEvent, SelectTicket, SelectRegistryRecord } from "@shared/schema";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -17,16 +18,16 @@ export default function AccountPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "validated" | "golden">("all");
 
-  const { data: events, isLoading: eventsLoading } = useQuery<Event[]>({
+  const { data: events, isLoading: eventsLoading } = useQuery<SelectEvent[]>({
     queryKey: ["/api/events"],
   });
 
-  const { data: userEvents, isLoading: userEventsLoading } = useQuery<Event[]>({
+  const { data: userEvents, isLoading: userEventsLoading } = useQuery<SelectEvent[]>({
     queryKey: ["/api/user/events"],
     enabled: !!user,
   });
 
-  const { data: tickets, isLoading: ticketsLoading, refetch: refetchTickets } = useQuery<Ticket[]>({
+  const { data: tickets, isLoading: ticketsLoading, refetch: refetchTickets } = useQuery<SelectTicket[]>({
     queryKey: ["/api/user/tickets"],
     enabled: !!user,
   });
@@ -41,22 +42,18 @@ export default function AccountPage() {
     enabled: !!user,
   });
 
-  const { data: registryRecords, isLoading: registryLoading } = useQuery<RegistryRecord[]>({
+  const { data: registryRecords, isLoading: registryLoading } = useQuery<SelectRegistryRecord[]>({
     queryKey: ["/api/user/registry"],
     enabled: !!user,
   });
 
   const claimDailyMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch("/api/currency/claim-daily", { method: "POST" });
-      if (!response.ok) throw new Error("Failed to claim daily tickets");
-      return response.json();
-    },
+    mutationFn: () => apiRequest("/api/currency/claim-daily", { method: "POST" }),
     onSuccess: () => {
       toast({
         title: "Daily Tickets Claimed!",
         description: "You've received 5 Tickets",
-        className: "bg-success text-white border-success",
+        variant: "success",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       queryClient.invalidateQueries({ queryKey: ["/api/currency/daily-claim-status"] });
@@ -105,7 +102,7 @@ export default function AccountPage() {
     
     const matchesFilter = 
       filterType === "all" ? true :
-      filterType === "validated" ? ticket.isValidated :
+      filterType === "validated" ? ticket.validated :
       filterType === "golden" ? ticket.isGoldenTicket : true;
     
     return matchesSearch && matchesFilter;
@@ -121,7 +118,7 @@ export default function AccountPage() {
       return start <= now && end >= now;
     }).length || 0,
     totalTickets: tickets?.length || 0,
-    validatedTickets: tickets?.filter(t => t.isValidated).length || 0,
+    validatedTickets: tickets?.filter(t => t.validated).length || 0,
     goldenTickets: tickets?.filter(t => t.isGoldenTicket).length || 0,
   };
 
@@ -227,7 +224,7 @@ export default function AccountPage() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="text-muted">Total Tickets</span>
-                <TicketIcon size={20} className="text-success" />
+                <Ticket size={20} className="text-success" />
               </div>
               <h3 className="h4 fw-bold mb-0">{stats.totalTickets}</h3>
               <small className="text-muted">
@@ -529,7 +526,7 @@ export default function AccountPage() {
           ) : (
             <div className="card">
               <div className="card-body text-center py-5">
-                <TicketIcon size={48} className="text-muted mb-3" />
+                <Ticket size={48} className="text-muted mb-3" />
                 <h5>No tickets found</h5>
                 <p className="text-muted">
                   {searchTerm ? "Try adjusting your search" : "You don't have any tickets yet"}
