@@ -3137,6 +3137,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.get("/api/users/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return only public information
+      res.json({
+        id: user.id,
+        displayName: user.displayName || 'Anonymous',
+        type: 'legacy' // All users are legacy type for now
+      });
+    } catch (error) {
+      await logError(error, "GET /api/users/:userId", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch user details" });
+    }
+  });
+
   app.get("/api/users/:userId/reputation", async (req, res) => {
     try {
       const { userId } = req.params;

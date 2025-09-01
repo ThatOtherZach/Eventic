@@ -72,6 +72,15 @@ export default function EventDetailPage() {
     },
   });
 
+  const { data: organizerDetails } = useQuery<{ id: string; displayName: string; type: string }>({
+    queryKey: [`/api/users/${event?.userId}`],
+    enabled: !!event?.userId,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${event?.userId}`);
+      return response.json();
+    },
+  });
+
   // Update SEO meta tags when event data loads
   useEffect(() => {
     if (event) {
@@ -1002,44 +1011,60 @@ export default function EventDetailPage() {
             <div className="card-body">
               <h5 className="card-title">Ticket Information</h5>
               
-              {/* Organizer Reputation */}
-              {organizerReputation && (() => {
-                const reputationInfo = getReputationDisplay();
-                if (!reputationInfo) return null;
-                
-                const { badge, showPercentage, percentage, totalVotes } = reputationInfo;
-                const formattedVotes = formatVoteCount(totalVotes);
-                
-                return (
-                  <div className="mb-3 p-3 bg-light rounded">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span className="text-muted small">Organizer Reputation</span>
-                      {totalVotes >= 1000 && (
-                        <span className="badge bg-warning text-dark">
-                          <Award size={14} className="me-1" />
-                          Bestie
-                        </span>
-                      )}
+              {/* Organizer Details */}
+              {(organizerDetails || organizerReputation) && (
+                <div className="mb-3 p-3 bg-light rounded">
+                  {organizerDetails && (
+                    <div className="mb-2">
+                      <div className="d-flex align-items-center justify-content-between">
+                        <span className="text-muted small">Event Creator</span>
+                        <span className="badge bg-secondary small">{organizerDetails.type}</span>
+                      </div>
+                      <div className="mt-1">
+                        <strong>{organizerDetails.displayName}</strong>
+                      </div>
                     </div>
-                    <div className="d-flex align-items-center mt-1">
-                      <img 
-                        src="/globe-icon.png" 
-                        alt="Organizer" 
-                        className="me-2"
-                        style={{ width: '16px', height: '16px' }}
-                      />
-                      {badge ? (
-                        <span className="badge bg-secondary">{badge}</span>
-                      ) : showPercentage ? (
-                        <span>
-                          <strong>{percentage}%</strong>
-                          <span className="text-muted ms-2">({formattedVotes} votes)</span>
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })()}
+                  )}
+                  
+                  {organizerReputation && (() => {
+                    const reputationInfo = getReputationDisplay();
+                    if (!reputationInfo) return null;
+                    
+                    const { badge, showPercentage, percentage, totalVotes } = reputationInfo;
+                    const formattedVotes = formatVoteCount(totalVotes);
+                    
+                    return (
+                      <>
+                        <div className="d-flex align-items-center justify-content-between mt-2">
+                          <span className="text-muted small">Reputation</span>
+                          {totalVotes >= 1000 && (
+                            <span className="badge bg-warning text-dark">
+                              <Award size={14} className="me-1" />
+                              Bestie
+                            </span>
+                          )}
+                        </div>
+                        <div className="d-flex align-items-center mt-1">
+                          <img 
+                            src="/globe-icon.png" 
+                            alt="Reputation" 
+                            className="me-2"
+                            style={{ width: '16px', height: '16px' }}
+                          />
+                          {badge ? (
+                            <span className="badge bg-secondary">{badge}</span>
+                          ) : showPercentage ? (
+                            <span>
+                              <strong>{percentage}%</strong>
+                              <span className="text-muted small ms-2" style={{ fontSize: '0.85em' }}>({formattedVotes} votes)</span>
+                            </span>
+                          ) : null}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
               
               <div className="mb-3">
                 <div className="d-flex justify-content-between mb-2">
