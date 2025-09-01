@@ -1023,17 +1023,20 @@ export class DatabaseStorage implements IStorage {
       // Calculate scarcity multiplier: fewer tickets = higher multiplier
       // 1-10 tickets: 3x multiplier
       // 11-25 tickets: 2x multiplier  
-      // 26-50 tickets: 1.5x multiplier
-      // 51-100 tickets: 1.2x multiplier
-      // 100+ tickets: 1x (no bonus)
+      // 26-50 tickets: 1.75x multiplier
+      // 51-100 tickets: 1.5x multiplier
+      // 101-200 tickets: 1.25x multiplier
+      // 200+ tickets: 1x (no bonus)
       if (totalTickets <= 10) {
         scarcityMultiplier = 3;
       } else if (totalTickets <= 25) {
         scarcityMultiplier = 2;
       } else if (totalTickets <= 50) {
-        scarcityMultiplier = 1.5;
+        scarcityMultiplier = 1.75;
       } else if (totalTickets <= 100) {
-        scarcityMultiplier = 1.2;
+        scarcityMultiplier = 1.5;
+      } else if (totalTickets <= 200) {
+        scarcityMultiplier = 1.25;
       }
       
       // If ticket is charged, halve the odds denominator (double the probability)
