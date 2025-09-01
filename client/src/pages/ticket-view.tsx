@@ -1218,7 +1218,7 @@ export default function TicketViewPage(): React.ReactElement {
             <div className="card mt-3">
               <div className="card-body">
                 <h5 className="card-title mb-3">
-                  <Shield size={20} className="me-2" />
+                  <img src="/nft-icon.png" alt="" width="20" height="20" className="me-2" style={{ verticalAlign: 'text-bottom' }} />
                   NFT Registry
                 </h5>
                 <p className="text-muted mb-3">
