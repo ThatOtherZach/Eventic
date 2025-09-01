@@ -1255,6 +1255,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Charge ticket endpoint (requires 3 tickets to charge one)
+  app.post("/api/tickets/:ticketId/charge", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+      
+      // Attempt to charge the ticket
+      const success = await storage.chargeTicket(ticketId, userId);
+      
+      if (!success) {
+        return res.status(400).json({ 
+          message: "Cannot charge this ticket. You need at least 3 tickets for this event, and the event must have special effects and stickers enabled." 
+        });
+      }
+
+      res.json({ 
+        success: true,
+        message: "Ticket charged successfully! Special effects odds have been improved."
+      });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/charge", {
+        request: req,
+        metadata: { ticketId: req.params.ticketId }
+      });
+      res.status(500).json({ message: "Failed to charge ticket" });
+    }
+  });
+
   // Resell ticket endpoint
   app.post("/api/tickets/:ticketId/resell", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

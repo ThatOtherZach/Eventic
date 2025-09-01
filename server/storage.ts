@@ -777,48 +777,63 @@ export class DatabaseStorage implements IStorage {
           
           // Debit buyer for full amount
           await tx.insert(currencyLedger).values({
-            transactionType,
+            transactionId: `resale_${ticket.id}_${Date.now()}`,
             accountId: newBuyerId,
+            accountType: 'user',
             entryType: 'debit',
             amount: ticketPrice.toString(),
+            balance: '0', // This would be calculated if we track running balance
+            transactionType,
             description: `Purchased resale ticket`,
-            metadata: {
+            metadata: JSON.stringify({
               ticketId: ticket.id,
               ticketNumber: newTicketNumber,
               sellerId: resellEntry.originalOwnerId,
-            },
+            }),
+            relatedEntityId: ticket.id,
+            relatedEntityType: 'ticket',
             createdBy: newBuyerId,
           });
           
           // Credit seller with amount minus platform fee
           await tx.insert(currencyLedger).values({
-            transactionType,
+            transactionId: `resale_${ticket.id}_${Date.now()}`,
             accountId: resellEntry.originalOwnerId,
+            accountType: 'user',
             entryType: 'credit',
             amount: sellerAmount.toString(),
+            balance: '0', // This would be calculated if we track running balance
+            transactionType,
             description: `Sold ticket - received payment`,
-            metadata: {
+            metadata: JSON.stringify({
               ticketId: ticket.id,
               ticketNumber: ticket.ticketNumber,
               buyerId: newBuyerId,
               platformFee: platformFee.toString(),
-            },
+            }),
+            relatedEntityId: ticket.id,
+            relatedEntityType: 'ticket',
             createdBy: newBuyerId,
           });
           
           // Credit platform fee to system account if there's a fee
           if (platformFee > 0) {
             await tx.insert(currencyLedger).values({
-              transactionType,
+              transactionId: `resale_${ticket.id}_${Date.now()}`,
               accountId: 'platform_fees',
+              accountType: 'system_fees',
               entryType: 'credit',
               amount: platformFee.toString(),
+              balance: '0', // This would be calculated if we track running balance
+              transactionType,
               description: `Platform fee for ticket resale`,
-              metadata: {
+              metadata: JSON.stringify({
                 ticketId: ticket.id,
                 sellerId: resellEntry.originalOwnerId,
                 buyerId: newBuyerId,
-              },
+              }),
+              relatedEntityId: ticket.id,
+              relatedEntityType: 'ticket',
               createdBy: newBuyerId,
             });
           }
@@ -1000,24 +1015,27 @@ export class DatabaseStorage implements IStorage {
       // Check conditions and apply probability
       const random = Math.random();
       
+      // If ticket is charged, double the probability (cut odds in half)
+      const chargeMultiplier = currentTicket.isCharged ? 2 : 1;
+      
       // Priority order (highest to lowest)
       if (dayOfYear === 69) { // Nice day (March 10)
-        if (random < 1/69) specialEffect = 'nice';
+        if (random < (1/69) * chargeMultiplier) specialEffect = 'nice';
       } else if (event.name.toLowerCase().includes('pride') || event.name.toLowerCase().includes('gay')) {
-        if (random < 1/100) specialEffect = 'pride';
+        if (random < (1/100) * chargeMultiplier) specialEffect = 'pride';
       } else if (month === 2 && day === 14) { // Valentine's Day
-        if (random < 1/14) specialEffect = 'hearts';
+        if (random < (1/14) * chargeMultiplier) specialEffect = 'hearts';
       } else if (month === 10 && day === 31) { // Halloween
-        if (random < 1/88) specialEffect = 'spooky';
+        if (random < (1/88) * chargeMultiplier) specialEffect = 'spooky';
       } else if (month === 12 && day === 25) { // Christmas
-        if (random < 1/25) specialEffect = 'snowflakes';
+        if (random < (1/25) * chargeMultiplier) specialEffect = 'snowflakes';
       } else if (month === 12 && day === 31) { // New Year's Eve
-        if (random < 1/365) specialEffect = 'fireworks';
+        if (random < (1/365) * chargeMultiplier) specialEffect = 'fireworks';
       } else if (event.name.toLowerCase().includes('party')) {
-        if (random < 1/100) specialEffect = 'confetti';
+        if (random < (1/100) * chargeMultiplier) specialEffect = 'confetti';
       } else {
         // Monthly color effect (lowest priority)
-        if (random < 1/30) specialEffect = 'monthly';
+        if (random < (1/30) * chargeMultiplier) specialEffect = 'monthly';
       }
       
       if (specialEffect) {
@@ -1028,10 +1046,11 @@ export class DatabaseStorage implements IStorage {
     // Check for custom sticker effect
     if (!specialEffect && event.stickerUrl && event.stickerOdds) {
       const random = Math.random();
-      const odds = event.stickerOdds / 100; // Convert percentage to decimal
+      const chargeMultiplier = currentTicket.isCharged ? 2 : 1;
+      const odds = (event.stickerOdds / 100) * chargeMultiplier; // Convert percentage to decimal and apply charge multiplier
       if (random < odds) {
         specialEffect = 'sticker';
-        console.log(`🎯 Custom sticker effect assigned to ticket ${id} (${event.stickerOdds}% chance)`);
+        console.log(`🎯 Custom sticker effect assigned to ticket ${id} (${event.stickerOdds * chargeMultiplier}% chance${currentTicket.isCharged ? ' - CHARGED' : ''})`);
       }
     }
     
@@ -1061,8 +1080,10 @@ export class DatabaseStorage implements IStorage {
         if (remainingGoldenTickets > 0 && unvalidatedCount > 0) {
           // Calculate probability: (remaining golden tickets / remaining unvalidated tickets) / 2
           // Dividing by 2 makes golden tickets rarer and more special
+          // If ticket is charged, double the probability (cut odds in half)
+          const chargeMultiplier = currentTicket.isCharged ? 2 : 1;
           const baseProbability = remainingGoldenTickets / unvalidatedCount;
-          const probability = baseProbability / 2;
+          const probability = (baseProbability / 2) * chargeMultiplier;
           
           // Generate random number between 0 and 1
           const timestamp = Date.now();
@@ -1121,6 +1142,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Reassign golden tickets based on vote counts for voting-enabled events
+  async chargeTicket(ticketId: string, userId: string): Promise<boolean> {
+    try {
+      // Get the ticket to charge
+      const ticketToCharge = await this.getTicket(ticketId);
+      if (!ticketToCharge || ticketToCharge.userId !== userId) {
+        return false;
+      }
+
+      // Check if ticket is already charged
+      if (ticketToCharge.isCharged) {
+        return false;
+      }
+
+      // Get event to verify special effects and stickers are enabled
+      const event = await this.getEvent(ticketToCharge.eventId);
+      if (!event || !event.specialEffectsEnabled || !event.stickerUrl) {
+        return false;
+      }
+
+      // Get all user's tickets for this event
+      const userTickets = await db
+        .select()
+        .from(tickets)
+        .where(and(
+          eq(tickets.eventId, ticketToCharge.eventId),
+          eq(tickets.userId, userId),
+          ne(tickets.resellStatus, "for_resale"),
+          ne(tickets.resellStatus, "sold")
+        ));
+
+      // Need at least 3 tickets total to charge one
+      if (userTickets.length < 3) {
+        return false;
+      }
+
+      // Update the ticket to charged status
+      await db
+        .update(tickets)
+        .set({ isCharged: true })
+        .where(eq(tickets.id, ticketId));
+
+      return true;
+    } catch (error) {
+      console.error("Error charging ticket:", error);
+      return false;
+    }
+  }
+
   async reassignGoldenTicketByVotes(eventId: string): Promise<void> {
     // Get the event to check if voting is enabled
     const event = await this.getEvent(eventId);

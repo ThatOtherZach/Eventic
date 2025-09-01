@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield, Users } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield, Users, Zap, HelpCircle } from "lucide-react";
 import QRCode from "qrcode";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -95,6 +95,8 @@ export default function TicketViewPage(): React.ReactElement {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isCharging, setIsCharging] = useState(false);
+  const [userTicketCount, setUserTicketCount] = useState(0);
 
   // Fetch ticket details with polling during validation
   const { data: ticketData, isLoading, error } = useQuery<{ ticket: Ticket; event: Event }>({
@@ -106,6 +108,22 @@ export default function TicketViewPage(): React.ReactElement {
     // Poll every 2 seconds while validation is active
     refetchInterval: isValidating ? 2000 : false,
   });
+
+  // Check user's ticket count for this event
+  const { data: userTickets } = useQuery({
+    queryKey: [`/api/events/${ticketData?.event.id}/user-tickets`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/events/${ticketData?.event.id}/user-tickets`);
+      return response.json();
+    },
+    enabled: !!ticketData?.event.id,
+  });
+
+  useEffect(() => {
+    if (userTickets) {
+      setUserTicketCount(userTickets.length);
+    }
+  }, [userTickets]);
 
   // Check if user has already rated
   const { data: ratingStatus } = useQuery({
@@ -537,6 +555,103 @@ export default function TicketViewPage(): React.ReactElement {
               </div>
             </div>
           </div>
+
+          {/* Charge Ticket Section - Only show if event has special effects and stickers enabled */}
+          {event.specialEffectsEnabled && event.stickerUrl && !ticket.isCharged && userTicketCount >= 3 && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <h6 className="card-title mb-3">
+                  <Zap size={18} className="me-2 text-warning" />
+                  3 Tickets to Charge
+                </h6>
+                <p className="text-muted small mb-3">
+                  Charge your ticket for better odds of special effects.
+                  <HelpCircle 
+                    size={14} 
+                    className="ms-1" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="top" 
+                    data-bs-title="Charging cuts the odds of all special effects in half, including golden tickets, monthly effects, day-driven effects, and criteria-driven special effects."
+                    style={{ cursor: 'help' }}
+                  />
+                </p>
+                <div className="alert alert-info small mb-3">
+                  <strong>How it works:</strong>
+                  <ul className="mb-0 mt-2">
+                    <li>You have {userTicketCount} tickets for this event</li>
+                    <li>Charging uses 3 tickets to improve this ticket's odds</li>
+                    <li>Special effects odds will be cut in half (better chances)</li>
+                    <li>Includes golden tickets, stickers, and all special effects</li>
+                  </ul>
+                </div>
+                <button
+                  className="btn btn-warning w-100"
+                  onClick={async () => {
+                    if (!confirm('Are you sure you want to charge this ticket? This will use 3 of your tickets to improve special effects odds.')) {
+                      return;
+                    }
+                    setIsCharging(true);
+                    try {
+                      const response = await apiRequest("POST", `/api/tickets/${ticketId}/charge`, {});
+                      if (response.ok) {
+                        toast({
+                          title: "Ticket Charged!",
+                          description: "Your ticket now has improved special effects odds.",
+                        });
+                        // Refresh ticket data
+                        queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
+                        queryClient.invalidateQueries({ queryKey: [`/api/events/${event.id}/user-tickets`] });
+                      } else {
+                        const error = await response.json();
+                        toast({
+                          title: "Failed to charge ticket",
+                          description: error.message || "Something went wrong",
+                          variant: "destructive",
+                        });
+                      }
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to charge ticket",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsCharging(false);
+                    }
+                  }}
+                  disabled={isCharging}
+                  data-testid="button-charge-ticket"
+                >
+                  {isCharging ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" />
+                      Charging...
+                    </>
+                  ) : (
+                    <>
+                      <Zap size={18} className="me-2" />
+                      Charge Ticket (Uses 3 Tickets)
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Show charged status if ticket is already charged */}
+          {ticket.isCharged && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <div className="d-flex align-items-center">
+                  <Zap size={20} className="text-warning me-2" />
+                  <div>
+                    <h6 className="mb-0">Ticket Charged!</h6>
+                    <p className="text-muted small mb-0">This ticket has improved special effects odds</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Vote Count Display - Only for voting-enabled events */}
           {event.enableVoting && (

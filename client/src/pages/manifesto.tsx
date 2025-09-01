@@ -41,9 +41,7 @@ export default function Manifesto() {
           />
           The Manifesto
         </h1>
-        <p className="lead text-muted">
-          The World's Best Ticketing Platform (Alledgely)
-        </p>
+        <p className="lead text-muted">Buy the ticket. Take the ride.</p>
       </div>
 
       <div className="card mb-4">
@@ -89,20 +87,20 @@ export default function Manifesto() {
           <p className="mb-3" style={paragraphStyle}>
             Need more? Buy a pack. Simple. Transparent. Not evil. Use them to
             create or boost events. That's it. It's a one time purchase on
-            demand should you need more tickets. Afterall, I'm trying to sell
-            some books here.
+            demand should you need more tickets.
           </p>
           <p className="mb-3" style={paragraphStyle}>
             While event organizers can set ticket prices, Eventic does not yet
-            perform as a payment procesor for the event. This means the ticket
-            price is to be paid at the event, using whatever payment system the
-            organizer chooses.
+            perform as a payment procesor for the event. The ticket price is to
+            be paid at the event, using whatever payment system the organizer
+            chooses be it cash, card, crypto, or magic beans. Eventic is just
+            gets you on the list.
           </p>
           <p className="mb-3" style={paragraphStyle}>
-            There are no refunds on this platform and the only ones paying are
-            the organizers of the event for the tickets they need. This is a
-            beta release and I'm working on payment processing to make this
-            easier and of course, optional.
+            There are no refunds on this platform and only organizers need
+            tickets to list events. Anyone can boost an event, which is
+            dynamically priced by demand. This is a beta release and I'm working
+            on payment processing to make this easier, and of course, optional.
           </p>
 
           <h5 className="mt-4 mb-3">🔐 Control With Some Chaos</h5>
