@@ -416,12 +416,14 @@ export default function EventDetailPage() {
       );
     }
     
+    // This case shouldn't happen anymore since authenticated users can view private events
+    // But keeping it as a fallback just in case
     if (isAuthError && user) {
       return (
         <div className="container py-5">
           <div className="alert alert-warning">
             <Shield size={24} className="me-2" />
-            This is a private event. You need to be the owner or have a ticket to view it.
+            There was an issue accessing this private event. Please try refreshing the page.
           </div>
           <Link href="/events" className="btn btn-primary">
             <ArrowLeft size={18} className="me-2" />

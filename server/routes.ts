@@ -770,7 +770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if event is private and user is not authenticated or not the owner
+      // Check if event is private and user is not authenticated
       if (eventWithCreator.isPrivate) {
         // Extract user ID from request (will be null if not authenticated)
         const userId = extractUserId(req as AuthenticatedRequest);
@@ -780,16 +780,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(401).json({ message: "Authentication required to view this private event" });
         }
         
-        // If user is authenticated but not the owner, check if they have a ticket
-        if (userId !== eventWithCreator.userId) {
-          // Check if user has a ticket for this private event
-          const userTickets = await storage.getTicketsByUser(userId);
-          const hasTicket = userTickets.some(ticket => ticket.eventId === req.params.id);
-          
-          if (!hasTicket) {
-            return res.status(403).json({ message: "This is a private event. You need to be the owner or have a ticket to view it." });
-          }
-        }
+        // If user is authenticated, they can view the private event
+        // The purpose of private events is just to hide them from public listings
+        // Anyone with the link who is logged in can view it
       }
       
       // Check if creator is an admin (has @saymservices.com email)
