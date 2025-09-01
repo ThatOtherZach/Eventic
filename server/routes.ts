@@ -1680,6 +1680,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public analytics dashboard API
+  app.get("/api/analytics/dashboard", async (req, res) => {
+    try {
+      const now = new Date();
+      
+      // Get basic stats
+      const basicStats = await storage.getEventStats();
+      
+      // Get events by status
+      const allEvents = await storage.getEvents();
+      const upcomingEvents = allEvents.filter(e => new Date(e.date) > now);
+      const pastEvents = allEvents.filter(e => new Date(e.date) <= now);
+      const activeEvents = upcomingEvents.filter(e => {
+        const eventDate = new Date(e.date);
+        const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        return hoursUntilEvent <= 24;
+      });
+      
+      // Get all tickets for analysis
+      const allTickets = await storage.getTickets();
+      
+      // Calculate ticket sales by month
+      const ticketsByMonth: Record<string, number> = {};
+      allTickets.forEach(ticket => {
+        if (ticket.createdAt) {
+          const month = new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+          ticketsByMonth[month] = (ticketsByMonth[month] || 0) + 1;
+        }
+      });
+      
+      // Get last 6 months of data
+      const monthLabels: string[] = [];
+      const monthData: number[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        monthLabels.push(monthKey);
+        monthData.push(ticketsByMonth[monthKey] || 0);
+      }
+      
+      // Calculate events by country
+      const eventsByCountry: Record<string, number> = {};
+      allEvents.forEach(event => {
+        const country = event.country || 'Unknown';
+        eventsByCountry[country] = (eventsByCountry[country] || 0) + 1;
+      });
+      
+      // Get top countries
+      const topCountries = Object.entries(eventsByCountry)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([country, count]) => ({ country, count }));
+      
+      // Calculate ticket validation rate
+      const validationRate = allTickets.length > 0 
+        ? Math.round((allTickets.filter(t => t.isValidated).length / allTickets.length) * 100)
+        : 0;
+      
+      // Get featured events count
+      const featuredEvents = await storage.getActiveFeaturedEvents();
+      
+      // Get resale queue stats
+      const resaleTickets = allTickets.filter(t => t.resellStatus === 'for_resale');
+      
+      // Calculate average ticket price
+      const ticketsWithPrice = allTickets.filter(t => t.purchasePrice);
+      const avgTicketPrice = ticketsWithPrice.length > 0
+        ? ticketsWithPrice.reduce((sum, t) => sum + parseFloat(t.purchasePrice), 0) / ticketsWithPrice.length
+        : 0;
+      
+      // Get events by type/hashtag analysis
+      const eventTypes: Record<string, number> = {};
+      allEvents.forEach(event => {
+        if (event.hashtags && Array.isArray(event.hashtags)) {
+          event.hashtags.forEach(tag => {
+            eventTypes[tag] = (eventTypes[tag] || 0) + 1;
+          });
+        }
+      });
+      
+      const topEventTypes = Object.entries(eventTypes)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([type, count]) => ({ type, count }));
+      
+      // Get user growth (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const allUsers = await storage.getAllUsers();
+      const newUsers = allUsers.filter(u => u.createdAt && new Date(u.createdAt) > thirtyDaysAgo);
+      
+      // Calculate daily active events
+      const todayEvents = upcomingEvents.filter(e => {
+        const eventDate = new Date(e.date);
+        return eventDate.toDateString() === now.toDateString();
+      });
+      
+      res.json({
+        overview: {
+          totalEvents: basicStats.totalEvents,
+          totalTickets: basicStats.totalTickets,
+          validatedTickets: basicStats.validatedTickets,
+          totalUsers: allUsers.length,
+          upcomingEvents: upcomingEvents.length,
+          pastEvents: pastEvents.length,
+          activeEventsNext24h: activeEvents.length,
+          todayEvents: todayEvents.length
+        },
+        ticketMetrics: {
+          validationRate,
+          avgTicketPrice: Math.round(avgTicketPrice * 100) / 100,
+          resaleTickets: resaleTickets.length,
+          goldenTickets: allTickets.filter(t => t.isGoldenTicket).length
+        },
+        eventMetrics: {
+          featuredEvents: featuredEvents.length,
+          recurringEvents: allEvents.filter(e => e.recurringType).length,
+          privateEvents: allEvents.filter(e => e.isPrivate).length,
+          p2pValidationEvents: allEvents.filter(e => e.p2pValidation).length
+        },
+        userMetrics: {
+          newUsersLast30Days: newUsers.length,
+          avgTicketsPerUser: allUsers.length > 0 ? Math.round((allTickets.length / allUsers.length) * 10) / 10 : 0
+        },
+        charts: {
+          ticketsByMonth: {
+            labels: monthLabels,
+            data: monthData
+          },
+          topCountries,
+          topEventTypes
+        }
+      });
+    } catch (error) {
+      await logError(error, "GET /api/analytics/dashboard", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   // Admin routes (protected - only for @saymservices.com emails)
   app.get("/api/admin/events", async (req: AuthenticatedRequest, res) => {
     try {
@@ -2624,6 +2766,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check user's Ticket balance
       const userBalance = await storage.getUserBalance(userId);
+      if (!userBalance) {
+        return res.status(400).json({ message: "Failed to fetch user balance" });
+      }
       const availableBalance = parseFloat(userBalance.availableBalance);
       
       if (availableBalance < price) {

@@ -23,6 +23,7 @@ import { HashtagEventsPage } from "@/pages/hashtag-events";
 import { FeaturedEventsPage } from "@/pages/featured-events";
 import { EventTypePage } from "@/pages/event-type";
 import Manifesto from "@/pages/manifesto";
+import NerdDashboard from "@/pages/nerd-dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/special-effects" component={SpecialEffectsPage} />
       <Route path="/featured" component={FeaturedEventsPage} />
       <Route path="/manifesto" component={Manifesto} />
+      <Route path="/nerd" component={NerdDashboard} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/hashtag/:hashtag">{(params) => <HashtagEventsPage />}</Route>
       <Route path="/type/:type">{(params) => <EventTypePage />}</Route>
