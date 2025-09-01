@@ -14,6 +14,7 @@ interface Event {
   endTime?: string;
   imageUrl?: string;
   ticketPrice: string;
+  currentPrice?: number;
   p2pValidation?: boolean | null;
   specialEffects?: string;
   ticketBackgroundUrl?: string;
@@ -365,9 +366,10 @@ export function EventTypePage() {
                                 <span>{event.venue}</span>
                               </div>
                               <div className="fw-bold" style={{ fontSize: '16px' }}>
-                                {event.ticketPrice && parseFloat(event.ticketPrice) > 0 
-                                  ? `$${event.ticketPrice}` 
-                                  : 'Free'}
+                                {(() => {
+                                  const price = event.currentPrice ?? parseFloat(event.ticketPrice || '0');
+                                  return price > 0 ? `$${price.toFixed(2)}` : 'Free';
+                                })()}
                               </div>
                             </div>
                           </div>

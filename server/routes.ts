@@ -466,7 +466,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return dateA - dateB;
       });
       
-      res.json(filteredEvents);
+      // Add current price with surge pricing to each event
+      const eventsWithPricing = await Promise.all(filteredEvents.map(async (event) => {
+        const currentPrice = await storage.getCurrentPrice(event.id);
+        return {
+          ...event,
+          currentPrice
+        };
+      }));
+      
+      res.json(eventsWithPricing);
     } catch (error) {
       await logError(error, "GET /api/events/location/:location", {
         request: req,
@@ -528,7 +537,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return dateA - dateB;
       });
       
-      res.json(filteredEvents);
+      // Add current price with surge pricing to each event
+      const eventsWithPricing = await Promise.all(filteredEvents.map(async (event) => {
+        const currentPrice = await storage.getCurrentPrice(event.id);
+        return {
+          ...event,
+          currentPrice
+        };
+      }));
+      
+      res.json(eventsWithPricing);
     } catch (error) {
       await logError(error, "GET /api/events/hashtag/:hashtag", {
         request: req,
