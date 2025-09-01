@@ -614,63 +614,63 @@ export default function EventDetailPage() {
           <div className="d-flex flex-wrap gap-3 mb-4">
             <div className="d-flex align-items-center text-muted">
               <img src={dateIcon} alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
-              {event.endDate ? (
-                <>
-                  {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date} - {event.endDate && event.endDate !== '' ? (() => {
-                    try {
-                      // Parse the date components to avoid timezone issues
-                      const [year, month, day] = event.endDate.split('-').map(Number);
-                      // Create date in local timezone by specifying components
-                      const endDate = new Date(year, month - 1, day);
-                      return isNaN(endDate.getTime()) ? 'Invalid end date' : format(endDate, "MMMM d, yyyy");
-                    } catch {
-                      return 'Invalid end date';
-                    }
-                  })() : 'No end date'}
-                </>
-              ) : (
-                eventDate ? format(eventDate, "MMMM d, yyyy") : event.date
-              )}
-            </div>
-            <div className="d-flex align-items-center text-muted">
-              <span className="me-1">at</span>
-              {event.endTime ? (
-                <>
-                  {event.time} - {event.endTime}
-                </>
-              ) : (
-                event.time
-              )}
-              {event.timezone && (
-                <span className="ms-1">
-                  ({(() => {
-                    const tzMap: Record<string, string> = {
-                      "America/New_York": "ET",
-                      "America/Chicago": "CT",
-                      "America/Denver": "MT",
-                      "America/Phoenix": "MST",
-                      "America/Los_Angeles": "PT",
-                      "America/Anchorage": "AKT",
-                      "Pacific/Honolulu": "HST",
-                      "Europe/London": "GMT/BST",
-                      "Europe/Paris": "CET",
-                      "Europe/Berlin": "CET",
-                      "Europe/Moscow": "MSK",
-                      "Asia/Tokyo": "JST",
-                      "Asia/Shanghai": "CST",
-                      "Asia/Hong_Kong": "HKT",
-                      "Asia/Singapore": "SGT",
-                      "Asia/Dubai": "GST",
-                      "Asia/Kolkata": "IST",
-                      "Australia/Sydney": "AEDT",
-                      "Australia/Melbourne": "AEDT",
-                      "Pacific/Auckland": "NZDT",
-                      "UTC": "UTC"
-                    };
-                    return tzMap[event.timezone] || event.timezone.split('/').pop()?.replace(/_/g, ' ');
-                  })()})
-                </span>
-              )}
+              <span>
+                {event.endDate ? (
+                  <>
+                    {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date} - {event.endDate && event.endDate !== '' ? (() => {
+                      try {
+                        // Parse the date components to avoid timezone issues
+                        const [year, month, day] = event.endDate.split('-').map(Number);
+                        // Create date in local timezone by specifying components
+                        const endDate = new Date(year, month - 1, day);
+                        return isNaN(endDate.getTime()) ? 'Invalid end date' : format(endDate, "MMMM d, yyyy");
+                      } catch {
+                        return 'Invalid end date';
+                      }
+                    })() : 'No end date'}
+                  </>
+                ) : (
+                  eventDate ? format(eventDate, "MMMM d, yyyy") : event.date
+                )}
+                {' at '}
+                {event.endTime ? (
+                  <>
+                    {event.time} - {event.endTime}
+                  </>
+                ) : (
+                  event.time
+                )}
+                {event.timezone && (
+                  <span className="ms-1">
+                    ({(() => {
+                      const tzMap: Record<string, string> = {
+                        "America/New_York": "ET",
+                        "America/Chicago": "CT",
+                        "America/Denver": "MT",
+                        "America/Phoenix": "MST",
+                        "America/Los_Angeles": "PT",
+                        "America/Anchorage": "AKT",
+                        "Pacific/Honolulu": "HST",
+                        "Europe/London": "GMT/BST",
+                        "Europe/Paris": "CET",
+                        "Europe/Berlin": "CET",
+                        "Europe/Moscow": "MSK",
+                        "Asia/Tokyo": "JST",
+                        "Asia/Shanghai": "CST",
+                        "Asia/Hong_Kong": "HKT",
+                        "Asia/Singapore": "SGT",
+                        "Asia/Dubai": "GST",
+                        "Asia/Kolkata": "IST",
+                        "Australia/Sydney": "AEDT",
+                        "Australia/Melbourne": "AEDT",
+                        "Pacific/Auckland": "NZDT",
+                        "UTC": "UTC"
+                      };
+                      return tzMap[event.timezone] || event.timezone.split('/').pop()?.replace(/_/g, ' ');
+                    })()})
+                  </span>
+                )}
+              </span>
             </div>
             <div className="d-flex align-items-center text-muted">
               <MapPin size={18} className="me-2" />
