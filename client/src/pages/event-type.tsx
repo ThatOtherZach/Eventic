@@ -35,12 +35,14 @@ interface Event {
 const eventTypeConfig: Record<string, { 
   label: string; 
   color: string; 
-  icon?: any; 
+  icon?: any;
+  imageIcon?: string; 
   checkField: (event: Event) => boolean;
 }> = {
   mission: { 
     label: 'Mission Events', 
     color: '#DC2626',
+    imageIcon: '/mission-icon.png',
     checkField: (e) => !!e.isAdminCreated 
   },
   golden: { 
@@ -182,10 +184,14 @@ export function EventTypePage() {
         <div className="d-flex align-items-start justify-content-between">
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
-              <IconComponent 
-                size={28} 
-                style={{ color: typeConfig.color }}
-              />
+              {typeConfig.imageIcon ? (
+                <img src={typeConfig.imageIcon} alt="" style={{ width: '28px', height: '28px' }} />
+              ) : (
+                <IconComponent 
+                  size={28} 
+                  style={{ color: typeConfig.color }}
+                />
+              )}
               {typeConfig.label}
             </h2>
             <p className="text-muted">
@@ -198,7 +204,11 @@ export function EventTypePage() {
       {events.length === 0 ? (
         <div className="card">
           <div className="card-body text-center py-5">
-            <IconComponent size={48} className="text-muted mb-3" />
+            {typeConfig.imageIcon ? (
+              <img src={typeConfig.imageIcon} alt="" style={{ width: '48px', height: '48px', opacity: 0.5 }} className="mb-3" />
+            ) : (
+              <IconComponent size={48} className="text-muted mb-3" />
+            )}
             <h5 className="text-muted">No {typeConfig.label.toLowerCase()} found</h5>
             <p className="text-muted">Check back later or explore other types of events</p>
             <Link href="/">
