@@ -303,6 +303,14 @@ export default function AccountPage() {
                 {registryRecords.map((record) => (
                   <div key={record.id} className="col-md-6">
                     <div className="card">
+                      {(record as any).imageUrl && (
+                        <img 
+                          src={(record as any).imageUrl} 
+                          className="card-img-top" 
+                          alt={record.title}
+                          style={{ height: '200px', objectFit: 'cover' }}
+                        />
+                      )}
                       <div className="card-body">
                         <div className="d-flex justify-content-between align-items-start mb-3">
                           <div>

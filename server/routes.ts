@@ -2349,6 +2349,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Private events are not eligible for NFT minting" });
       }
 
+      // Parse metadata to extract imageUrl
+      const parsedMetadata = JSON.parse(metadata || "{}");
+      const imageUrl = parsedMetadata.imageUrl;
+      
+      // Remove imageUrl from metadata before storing
+      const { imageUrl: _, ...cleanMetadata } = parsedMetadata;
+      
       // Create registry record
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
@@ -2358,7 +2365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: title || `${event.name} - Ticket #${ticket.ticketNumber}`,
         description: description || `NFT for ${event.name} at ${event.venue} on ${event.date}`,
         metadata: JSON.stringify({
-          ...JSON.parse(metadata || "{}"),
+          ...cleanMetadata,
           originalTicket: {
             ticketNumber: ticket.ticketNumber,
             qrData: ticket.qrData,
@@ -2366,6 +2373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             useCount: ticket.useCount
           }
         }),
+        imageUrl: imageUrl || null,
         ticketNumber: ticket.ticketNumber,
         eventName: event.name,
         eventVenue: event.venue,

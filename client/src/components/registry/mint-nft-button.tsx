@@ -6,10 +6,12 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
-import type { Ticket, RegistryRecord } from "@shared/schema";
+import { captureTicketAsGif, uploadGifToStorage } from "@/utils/ticket-to-gif";
+import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 interface MintNFTButtonProps {
   ticket: Ticket;
+  event: Event;
 }
 
 interface MintStatus {
@@ -22,7 +24,7 @@ interface MintStatus {
   registryRecord?: RegistryRecord;
 }
 
-export function MintNFTButton({ ticket }: MintNFTButtonProps) {
+export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
   const [showMintModal, setShowMintModal] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -72,7 +74,28 @@ export function MintNFTButton({ ticket }: MintNFTButtonProps) {
 
   const mintMutation = useMutation({
     mutationFn: async () => {
-      const metadata: any = {};
+      // First, capture the ticket as a GIF
+      const ticketElement = document.getElementById('ticket-card-for-nft');
+      if (!ticketElement) {
+        throw new Error('Unable to find ticket element');
+      }
+
+      // Show a loading message
+      addNotification({
+        type: "info",
+        title: "Capturing Ticket",
+        description: "Creating GIF image of your ticket...",
+      });
+
+      // Capture the ticket as GIF
+      const gifBlob = await captureTicketAsGif(ticketElement as HTMLElement);
+      
+      // Upload the GIF
+      const imageUrl = await uploadGifToStorage(gifBlob);
+
+      const metadata: any = {
+        imageUrl
+      };
       if (additionalMetadata) {
         try {
           Object.assign(metadata, JSON.parse(additionalMetadata));

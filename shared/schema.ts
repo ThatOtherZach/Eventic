@@ -345,6 +345,7 @@ export const registryRecords = pgTable("registry_records", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   metadata: text("metadata").notNull(), // JSON string with additional metadata
+  imageUrl: text("image_url"), // GIF image of the ticket
   mintedAt: timestamp("minted_at").defaultNow(),
   transferCount: integer("transfer_count").default(0),
   isListed: boolean("is_listed").default(false), // For future marketplace
