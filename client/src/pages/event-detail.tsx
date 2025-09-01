@@ -335,16 +335,7 @@ export default function EventDetailPage() {
   };
 
   const handleResell = async (ticketId: string) => {
-    const ticket = userTickets?.find(t => t.id === ticketId);
-    const originalPrice = parseFloat((ticket as any)?.purchasePrice || event?.ticketPrice || "0");
-    
-    const confirmMessage = originalPrice === 0
-      ? "Are you sure you want to return this free ticket? It will become available for others to claim."
-      : `Are you sure you want to return this ticket? The original price of $${originalPrice.toFixed(2)} will be refunded (minus a 2% platform fee), and the ticket will become available for others to purchase.`;
-    
-    if (confirm(confirmMessage)) {
-      resellTicketMutation.mutate(ticketId);
-    }
+    resellTicketMutation.mutate(ticketId);
   };
 
   const handlePurchase = () => {
