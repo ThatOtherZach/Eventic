@@ -673,7 +673,38 @@ export default function EventDetailPage() {
             </div>
             <div className="d-flex align-items-center text-muted">
               <MapPin size={18} className="me-2" />
-              {event.venue}
+              {(() => {
+                // Parse venue to extract city (usually the second-to-last part)
+                const venueParts = event.venue.split(',').map(part => part.trim());
+                if (venueParts.length >= 2) {
+                  // Assume format: "address, city, country" or "venue name, city"
+                  const cityIndex = venueParts.length >= 3 ? venueParts.length - 2 : venueParts.length - 1;
+                  const city = venueParts[cityIndex];
+                  
+                  // Reconstruct venue with clickable city
+                  return (
+                    <>
+                      {venueParts.map((part, index) => (
+                        <span key={index}>
+                          {index === cityIndex ? (
+                            <Link 
+                              href={`/${encodeURIComponent(city.replace(/\s+/g, ''))}`}
+                              className="text-muted text-decoration-underline"
+                            >
+                              {part}
+                            </Link>
+                          ) : (
+                            part
+                          )}
+                          {index < venueParts.length - 1 && ', '}
+                        </span>
+                      ))}
+                    </>
+                  );
+                }
+                // If venue format doesn't match expected pattern, display as is
+                return event.venue;
+              })()}
             </div>
           </div>
 
