@@ -64,6 +64,9 @@ export function QrScannerImplementation() {
 
   const validateTicketMutation = useMutation({
     mutationFn: async ({code, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng}: {code: string, validatorLat?: number, validatorLng?: number, ticketHolderLat?: number, ticketHolderLng?: number}) => {
+      // Add a 2.69 second delay to show the color animation
+      await new Promise(resolve => setTimeout(resolve, 2690));
+      
       const response = await apiRequest("POST", "/api/validate", {
         qrData: code,
         validatorLat,
