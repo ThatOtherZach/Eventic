@@ -1006,6 +1006,43 @@ export class DatabaseStorage implements IStorage {
     
     // Determine special effect on first validation (only if special effects are enabled)
     let specialEffect: string | null = currentTicket.specialEffect || null;
+    
+    // Calculate multipliers for special effects (used in multiple places)
+    let scarcityMultiplier = 1;
+    let totalTickets = 0;
+    let totalMultiplier = 1;
+    
+    if (!currentTicket.isValidated && event.specialEffectsEnabled) {
+      // Count total tickets for this event to apply scarcity factor
+      totalTickets = await db
+        .select({ count: sql`count(*)` })
+        .from(tickets)
+        .where(eq(tickets.eventId, event.id))
+        .then(rows => Number(rows[0]?.count || 0));
+      
+      // Calculate scarcity multiplier: fewer tickets = higher multiplier
+      // 1-10 tickets: 3x multiplier
+      // 11-25 tickets: 2x multiplier  
+      // 26-50 tickets: 1.5x multiplier
+      // 51-100 tickets: 1.2x multiplier
+      // 100+ tickets: 1x (no bonus)
+      if (totalTickets <= 10) {
+        scarcityMultiplier = 3;
+      } else if (totalTickets <= 25) {
+        scarcityMultiplier = 2;
+      } else if (totalTickets <= 50) {
+        scarcityMultiplier = 1.5;
+      } else if (totalTickets <= 100) {
+        scarcityMultiplier = 1.2;
+      }
+      
+      // If ticket is charged, halve the odds denominator (double the probability)
+      const chargeDivisor = currentTicket.isCharged ? 2 : 1;
+      
+      // Combine both multipliers for final odds boost
+      totalMultiplier = chargeDivisor * scarcityMultiplier;
+    }
+    
     if (!currentTicket.isValidated && event.specialEffectsEnabled && !specialEffect) {
       // Parse event date to check for holiday effects
       const [year, month, day] = event.date.split('-').map(Number);
@@ -1015,44 +1052,53 @@ export class DatabaseStorage implements IStorage {
       // Check conditions and apply probability
       const random = Math.random();
       
-      // If ticket is charged, halve the odds denominator (double the probability)
-      const chargeDivisor = currentTicket.isCharged ? 2 : 1;
-      
       // Priority order (highest to lowest)
       if (dayOfYear === 69) { // Nice day (March 10)
-        if (random < 1/(69/chargeDivisor)) specialEffect = 'nice';
+        if (random < 1/(69/totalMultiplier)) specialEffect = 'nice';
       } else if (event.name.toLowerCase().includes('pride') || event.name.toLowerCase().includes('gay')) {
-        if (random < 1/(100/chargeDivisor)) specialEffect = 'pride';
+        if (random < 1/(100/totalMultiplier)) specialEffect = 'pride';
       } else if (month === 2 && day === 14) { // Valentine's Day
-        if (random < 1/(14/chargeDivisor)) specialEffect = 'hearts';
+        if (random < 1/(14/totalMultiplier)) specialEffect = 'hearts';
       } else if (month === 10 && day === 31) { // Halloween
-        if (random < 1/(88/chargeDivisor)) specialEffect = 'spooky';
+        if (random < 1/(88/totalMultiplier)) specialEffect = 'spooky';
       } else if (month === 12 && day === 25) { // Christmas
-        if (random < 1/(25/chargeDivisor)) specialEffect = 'snowflakes';
+        if (random < 1/(25/totalMultiplier)) specialEffect = 'snowflakes';
       } else if (month === 12 && day === 31) { // New Year's Eve
-        if (random < 1/(365/chargeDivisor)) specialEffect = 'fireworks';
+        if (random < 1/(365/totalMultiplier)) specialEffect = 'fireworks';
       } else if (event.name.toLowerCase().includes('party')) {
-        if (random < 1/(100/chargeDivisor)) specialEffect = 'confetti';
+        if (random < 1/(100/totalMultiplier)) specialEffect = 'confetti';
       } else {
         // Monthly color effect (lowest priority)
-        if (random < 1/(30/chargeDivisor)) specialEffect = 'monthly';
+        if (random < 1/(30/totalMultiplier)) specialEffect = 'monthly';
       }
       
       if (specialEffect) {
         console.log(`✨ Special effect assigned to ticket ${id}: ${specialEffect}`);
+        if (scarcityMultiplier > 1) {
+          console.log(`   Scarcity bonus applied: ${scarcityMultiplier}x (${totalTickets} tickets in event)`);
+        }
+        if (currentTicket.isCharged) {
+          console.log(`   Charge bonus applied: 2x`);
+        }
       }
     }
     
     // Check for custom sticker effect
     if (!specialEffect && event.stickerUrl && event.stickerOdds) {
       const random = Math.random();
-      const chargeDivisor = currentTicket.isCharged ? 2 : 1;
+      // Apply the same scarcity and charge multipliers
       const odds = event.stickerOdds / 100; // Convert percentage to decimal
-      const adjustedOdds = odds * chargeDivisor; // Double the odds if charged
+      const adjustedOdds = odds * totalMultiplier; // Apply both scarcity and charge multipliers
       if (random < adjustedOdds) {
         specialEffect = 'sticker';
-        const effectivePercentage = currentTicket.isCharged ? event.stickerOdds * 2 : event.stickerOdds;
-        console.log(`🎯 Custom sticker effect assigned to ticket ${id} (${effectivePercentage}% chance${currentTicket.isCharged ? ' - CHARGED' : ''})`);
+        const effectivePercentage = event.stickerOdds * totalMultiplier;
+        console.log(`🎯 Custom sticker effect assigned to ticket ${id} (${effectivePercentage.toFixed(1)}% chance)`);
+        if (scarcityMultiplier > 1) {
+          console.log(`   Scarcity bonus: ${scarcityMultiplier}x (${totalTickets} tickets)`);
+        }
+        if (currentTicket.isCharged) {
+          console.log(`   Charge bonus: 2x`);
+        }
       }
     }
     
