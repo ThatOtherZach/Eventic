@@ -37,6 +37,7 @@ const eventTypeConfig: Record<string, {
   color: string; 
   icon?: any;
   imageIcon?: string; 
+  emoji?: string;
   checkField: (event: Event) => boolean;
 }> = {
   mission: { 
@@ -48,7 +49,7 @@ const eventTypeConfig: Record<string, {
   golden: { 
     label: 'Golden Ticket Events', 
     color: '#FFD700',
-    icon: Star,
+    emoji: '🎫',
     checkField: (e) => !!e.goldenTicketEnabled 
   },
   effects: { 
@@ -193,6 +194,8 @@ export function EventTypePage() {
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
               {typeConfig.imageIcon ? (
                 <img src={typeConfig.imageIcon} alt="" style={{ width: '28px', height: '28px' }} />
+              ) : typeConfig.emoji ? (
+                <span style={{ fontSize: '28px' }}>{typeConfig.emoji}</span>
               ) : (
                 <IconComponent 
                   size={28} 
@@ -213,6 +216,8 @@ export function EventTypePage() {
           <div className="card-body text-center py-5">
             {typeConfig.imageIcon ? (
               <img src={typeConfig.imageIcon} alt="" style={{ width: '48px', height: '48px', opacity: 0.5 }} className="mb-3" />
+            ) : typeConfig.emoji ? (
+              <span style={{ fontSize: '48px', opacity: 0.5 }} className="mb-3 d-block">{typeConfig.emoji}</span>
             ) : (
               <IconComponent size={48} className="text-muted mb-3" />
             )}
