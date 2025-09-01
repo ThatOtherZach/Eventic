@@ -206,88 +206,66 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         )}
       </div>
 
-      {/* Status Badge Bar at Bottom */}
-      {showBadges && (ticket.isValidated || (ticket as any).resellStatus === "for_resale" || event.reentryType === "Pass (Multiple Use)") && (
-        <div 
-          className="position-absolute bottom-0 start-0 w-100 d-flex"
-          style={{ 
-            height: '24px',
-            zIndex: 10,
-            borderRadius: '0 0 8px 8px',
-            overflow: 'hidden'
-          }}
-        >
-          {ticket.isValidated && (
-            <div
-              style={{
-                flex: (() => {
-                  let badgeCount = 1;
-                  if ((ticket as any).resellStatus === "for_resale") badgeCount++;
-                  if (event.reentryType === "Pass (Multiple Use)") badgeCount++;
-                  return `0 0 ${100 / badgeCount}%`;
-                })(),
-                backgroundColor: '#198754',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}
-            >
-              VALIDATED
-            </div>
-          )}
-          {(ticket as any).resellStatus === "for_resale" && (
-            <div
-              style={{
-                flex: (() => {
-                  let badgeCount = 1;
-                  if (ticket.isValidated) badgeCount++;
-                  if (event.reentryType === "Pass (Multiple Use)") badgeCount++;
-                  return `0 0 ${100 / badgeCount}%`;
-                })(),
-                backgroundColor: '#FFC107',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#000',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}
-            >
-              RETURNED
-            </div>
-          )}
-          {event.reentryType === "Pass (Multiple Use)" && (
-            <div
-              style={{
-                flex: (() => {
-                  let badgeCount = 1;
-                  if (ticket.isValidated) badgeCount++;
-                  if ((ticket as any).resellStatus === "for_resale") badgeCount++;
-                  return `0 0 ${100 / badgeCount}%`;
-                })(),
-                backgroundColor: '#0DCAF0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#000',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}
-            >
-              PASS
-            </div>
-          )}
-        </div>
-      )}
+      {/* Event Feature Badge Bar at Bottom - Always show if there are features */}
+      {(() => {
+        const features = [];
+        if ((event as any).isAdminCreated) features.push({ name: 'MISSION', bg: '#DC2626', color: '#fff' });
+        if (event.enableVoting) features.push({ name: 'VOTE', bg: '#EAB308', color: '#fff' });
+        if (event.allowMinting) features.push({ name: 'NFT', bg: '#000000', color: '#fff' });
+        if (event.p2pValidation) features.push({ name: 'P2P', bg: '#3B82F6', color: '#fff' });
+        if (event.goldenTicketEnabled) features.push({ name: 'GOLDEN', bg: '#FFD700', color: '#000' });
+        if (event.specialEffectsEnabled) features.push({ name: 'FX', bg: '#9333EA', color: '#fff' });
+        if (event.surgePricing) features.push({ name: 'SURGE', bg: '#DC2626', color: '#fff' });
+        if (event.stickerUrl) features.push({ name: 'STICKER', bg: '#EC4899', color: '#fff' });
+        if (event.geofence) features.push({ name: 'LOCK', bg: '#F59E0B', color: '#fff' });
+        if (event.recurringType) {
+          const name = event.recurringType === 'weekly' ? 'WEEKLY' : 
+                      event.recurringType === 'monthly' ? 'MONTHLY' : 'ANNUAL';
+          features.push({ name, bg: '#059669', color: '#fff' });
+        }
+
+        // Add status badges as well
+        if (showBadges) {
+          if (ticket.isValidated) features.push({ name: 'VALIDATED', bg: '#198754', color: '#fff' });
+          if ((ticket as any).resellStatus === "for_resale") features.push({ name: 'RETURNED', bg: '#FFC107', color: '#000' });
+          if (event.reentryType === "Pass (Multiple Use)") features.push({ name: 'PASS', bg: '#0DCAF0', color: '#000' });
+        }
+
+        // If no features, don't show the bar
+        if (features.length === 0) return null;
+
+        return (
+          <div 
+            className="position-absolute bottom-0 start-0 w-100 d-flex"
+            style={{ 
+              height: '20px',
+              zIndex: 10,
+              borderRadius: '0 0 8px 8px',
+              overflow: 'hidden'
+            }}
+          >
+            {features.map((feature, index) => (
+              <div
+                key={feature.name}
+                style={{
+                  flex: `0 0 ${100 / features.length}%`,
+                  backgroundColor: feature.bg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: feature.color,
+                  fontSize: '8px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.3px'
+                }}
+              >
+                {feature.name}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Special Effects Explanation Link */}
       {hasSpecialEffects && (
