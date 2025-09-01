@@ -2330,7 +2330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if can mint
       const canMint = await storage.canMintTicket(ticketId);
       if (!canMint) {
-        return res.status(400).json({ message: "Ticket cannot be minted yet. Make sure it has been validated and 72 hours have passed." });
+        return res.status(400).json({ message: "Ticket cannot be minted. Make sure it has been validated and the event allows NFT minting." });
       }
 
       // Get event details

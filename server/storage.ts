@@ -1999,13 +1999,9 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
 
-    // Check if 72 hours have passed since validation
-    const now = new Date();
-    const validatedTime = new Date(ticket.validatedAt);
-    const seventyTwoHoursMs = 72 * 60 * 60 * 1000;
-    const timeDiff = now.getTime() - validatedTime.getTime();
-    
-    return timeDiff >= seventyTwoHoursMs;
+    // Allow minting immediately after validation
+    // (tickets can be minted until the event is deleted)
+    return true;
   }
 
   async createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction> {
