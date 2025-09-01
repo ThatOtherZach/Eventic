@@ -20,7 +20,7 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body">
+        <div className="card-body" style={{ fontSize: '1.1rem', lineHeight: '1.8', fontFamily: 'Georgia, "Times New Roman", serif' }}>
           <h2 className="h4 mb-3">But... Why?</h2>
           <p className="mb-3">
             I hate Ticketmaster. Those parasitic fees. The endless spam. All for
@@ -100,6 +100,10 @@ export default function Manifesto() {
             <strong>Surge pricing:</strong> Make capitalism work for you when
             demand spikes.
           </p>
+          <p className="mb-3">
+            <strong>Private:</strong> Events can be set to private and are only
+            accessible to those with a login and the URL.
+          </p>
 
           <h5 className="mt-4 mb-3">⏳ The 69-Day Rule</h5>
           <p className="mb-3">Everything dies.</p>
@@ -111,13 +115,14 @@ export default function Manifesto() {
           <p className="mb-3">
             Digital hoarding is a disease and frankly when an event ends, why
             keep it around? Most moments are destined to fade. The internet
-            doesn't need another record of your cousin's birthday party. Did I
-            mention events can be private? only accessible by a link and login?
+            doesn't need another record of your cousin's birthday party.
           </p>
           <p className="mb-3">
-            Unless... you mint it. $2.69 turns your ticket into an eternal NFT
-            artifact. Your proof you were there when it mattered. Completely
-            optional. Zero pressure.
+            Unless... For the low, low price of $2.69 you can mint you own
+            digitial collectable. Optioanlly set by the event owner and
+            attendees don't need to buy it. But if you want to turn your ticket
+            into eternal NFT artifact, you can. A certified "proof of existance"
+            record you were there. Completely optional. No pressure.
           </p>
 
           <h5 className="mt-4 mb-3">✨ The Philosophy</h5>
@@ -152,7 +157,7 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body">
+        <div className="card-body" style={{ fontSize: '1.05rem', lineHeight: '1.7' }}>
           <h2 className="h4 mb-3 d-flex align-items-center">
             <Sparkles className="text-warning me-2" size={24} />
             The Secret Sauce: Event Settings
@@ -266,7 +271,7 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body">
+        <div className="card-body" style={{ fontSize: '1.05rem', lineHeight: '1.7' }}>
           <h2 className="h4 mb-3 d-flex align-items-center">
             <Shield className="text-primary me-2" size={24} />
             Validation: How the Magic Happens
@@ -311,7 +316,7 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body">
+        <div className="card-body" style={{ fontSize: '1.05rem', lineHeight: '1.7' }}>
           <h2 className="h4 mb-3 d-flex align-items-center">
             <TicketIcon className="text-success me-2" size={24} />
             The Life of a Ticket
@@ -356,7 +361,7 @@ export default function Manifesto() {
       </div>
 
       <div className="card">
-        <div className="card-body text-center">
+        <div className="card-body text-center" style={{ fontSize: '1.05rem', lineHeight: '1.6' }}>
           <h2 className="h4 mb-3">Ready to Start Something?</h2>
           <p className="mb-4">
             You've read the manifesto. You get it. Now go create something worth
