@@ -1368,6 +1368,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to return ticket" });
       }
 
+      // Create a notification for the user
+      await storage.createNotification({
+        userId,
+        type: "success",
+        title: "Ticket Returned",
+        description: `Your ticket has been returned and is now available for others.`,
+        metadata: JSON.stringify({
+          ticketId,
+          eventId: ticket.eventId,
+          eventName: event.name,
+          ticketNumber: ticket.ticketNumber
+        })
+      });
+
       // Log the resell listing
       await logInfo(
         "Ticket returned",

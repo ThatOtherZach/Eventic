@@ -236,17 +236,10 @@ export default function EventDetailPage() {
       return { ...await response.json(), ticketId };
     },
     onSuccess: (data) => {
-      const ticket = userTickets?.find(t => t.id === data.ticketId);
-      const price = parseFloat((ticket as any)?.purchasePrice || event?.ticketPrice || "0");
-      const isReturn = price === 0;
-      
-      toast({
-        title: "Ticket Returned",
-        description: "Your ticket has been returned and is now available for others.",
-      });
       // Refresh tickets and event data
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/user-tickets`] });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
     },
     onError: (error: any) => {
       // Extract the actual error message from the formatted error
