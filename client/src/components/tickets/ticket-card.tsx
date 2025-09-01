@@ -11,9 +11,10 @@ interface TicketCardProps {
   showQR?: boolean;
   dynamicQrUrl?: string;
   isValidating?: boolean;
+  showBadges?: boolean;
 }
 
-export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValidating = false }: TicketCardProps) {
+export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValidating = false, showBadges = false }: TicketCardProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const ticketContainerRef = useRef<HTMLDivElement>(null);
   
@@ -204,6 +205,26 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           </div>
         )}
       </div>
+
+      {/* Status Badges at Bottom */}
+      {showBadges && (ticket.isValidated || (ticket as any).resellStatus === "for_resale") && (
+        <div 
+          className="position-absolute bottom-0 start-0 w-100 d-flex justify-content-center p-2"
+          style={{ 
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(2px)',
+            borderRadius: '0 0 8px 8px',
+            zIndex: 10
+          }}
+        >
+          {ticket.isValidated && (
+            <span className="badge bg-success me-2">Validated</span>
+          )}
+          {(ticket as any).resellStatus === "for_resale" && (
+            <span className="badge bg-warning text-dark">Returned</span>
+          )}
+        </div>
+      )}
 
       {/* Special Effects Explanation Link */}
       {hasSpecialEffects && (

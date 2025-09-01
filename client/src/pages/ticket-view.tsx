@@ -471,6 +471,7 @@ export default function TicketViewPage(): React.ReactElement {
               ticket={ticket} 
               event={event} 
               showQR={false}
+              showBadges={true}
             />
           </div>
 

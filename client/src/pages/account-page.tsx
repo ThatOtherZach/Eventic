@@ -244,18 +244,9 @@ export default function AccountPage() {
                         ticket={ticket}
                         event={ticket.event}
                         showQR={false}
+                        showBadges={true}
                       />
                     </div>
-                    {(ticket.isValidated || (ticket as any).resellStatus === "for_resale") && (
-                      <div className="text-center mt-2">
-                        {ticket.isValidated && (
-                          <span className="badge bg-success me-2">Validated</span>
-                        )}
-                        {(ticket as any).resellStatus === "for_resale" && (
-                          <span className="badge bg-warning text-dark">Returned</span>
-                        )}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
