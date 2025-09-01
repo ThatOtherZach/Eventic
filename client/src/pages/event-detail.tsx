@@ -683,15 +683,16 @@ export default function EventDetailPage() {
                   
                   // Reconstruct venue with clickable city
                   return (
-                    <>
+                    <span>
                       {venueParts.map((part, index) => (
                         <span key={index}>
                           {index === cityIndex ? (
                             <Link 
                               href={`/${encodeURIComponent(city.replace(/\s+/g, ''))}`}
-                              className="text-muted text-decoration-underline"
                             >
-                              {part}
+                              <a className="text-muted" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+                                {part}
+                              </a>
                             </Link>
                           ) : (
                             part
@@ -699,7 +700,7 @@ export default function EventDetailPage() {
                           {index < venueParts.length - 1 && ', '}
                         </span>
                       ))}
-                    </>
+                    </span>
                   );
                 }
                 // If venue format doesn't match expected pattern, display as is
