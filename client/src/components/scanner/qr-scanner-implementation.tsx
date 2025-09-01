@@ -267,11 +267,14 @@ export function QrScannerImplementation() {
               } as React.CSSProperties : {}}
             >
               {validateTicketMutation.isPending ? (
-                <span
-                  className="spinner-border spinner-border-sm"
-                  role="status"
-                  aria-hidden="true"
-                ></span>
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  Validate
+                </>
               ) : (
                 "Validate"
               )}
