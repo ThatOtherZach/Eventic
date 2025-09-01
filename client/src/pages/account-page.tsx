@@ -91,7 +91,6 @@ export default function AccountPage() {
       toast({
         title: "Daily Tickets Claimed!",
         description: data.message,
-        variant: "success",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       queryClient.invalidateQueries({ queryKey: ["/api/currency/daily-claim-status"] });
@@ -305,8 +304,42 @@ export default function AccountPage() {
                   const metadata = record.metadata ? JSON.parse(record.metadata) : {};
                   const originalTicket = metadata.originalTicket || {};
                   const eventFeatures = metadata.eventFeatures || {};
+                  const ticketGifUrl = metadata.ticketGifUrl || null;
                   
-                  // Reconstruct the ticket object for display
+                  // If we have a captured GIF, show that instead of reconstructing
+                  if (ticketGifUrl) {
+                    return (
+                      <div key={record.id} className="col-md-4">
+                        <div className="mb-2">
+                          <div className="card" style={{ overflow: 'hidden' }}>
+                            <img 
+                              src={ticketGifUrl} 
+                              alt={`${record.eventName} - Ticket #${record.ticketNumber}`}
+                              className="w-100" 
+                              style={{ display: 'block', borderRadius: '8px' }}
+                            />
+                          </div>
+                        </div>
+                        <div className="card">
+                          <div className="card-body p-2">
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div className="small">
+                                <span className="badge bg-info me-2">NFT</span>
+                                <span className="text-muted">Minted {record.mintedAt ? new Date(record.mintedAt).toLocaleDateString() : 'Unknown'}</span>
+                              </div>
+                              {record.transferCount && record.transferCount > 0 && (
+                                <span className="badge bg-secondary small">
+                                  {record.transferCount} Transfer{record.transferCount !== 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  // Fallback to reconstructed ticket if no GIF
                   const reconstructedTicket = {
                     id: record.ticketId,
                     ticketNumber: record.ticketNumber,
@@ -349,7 +382,7 @@ export default function AccountPage() {
                           <div className="d-flex justify-content-between align-items-center">
                             <div className="small">
                               <span className="badge bg-info me-2">NFT</span>
-                              <span className="text-muted">Minted {new Date(record.mintedAt).toLocaleDateString()}</span>
+                              <span className="text-muted">Minted {record.mintedAt ? new Date(record.mintedAt).toLocaleDateString() : 'Unknown'}</span>
                             </div>
                             {record.transferCount && record.transferCount > 0 && (
                               <span className="badge bg-secondary small">

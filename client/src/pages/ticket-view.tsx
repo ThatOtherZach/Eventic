@@ -95,6 +95,7 @@ export default function TicketViewPage(): React.ReactElement {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ticketCardRef = useRef<HTMLDivElement>(null);
   const [isCharging, setIsCharging] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
 
@@ -466,7 +467,7 @@ export default function TicketViewPage(): React.ReactElement {
       <div className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6">
           {/* Ticket Display */}
-          <div className="mb-4">
+          <div className="mb-4" ref={ticketCardRef}>
             <TicketCard 
               ticket={ticket} 
               event={event} 
@@ -1224,7 +1225,7 @@ export default function TicketViewPage(): React.ReactElement {
                 <p className="text-muted mb-3">
                   Convert your validated ticket into a permanent NFT record. NFTs can be collected and may have value in the future marketplace.
                 </p>
-                <MintNFTButton ticket={ticket} />
+                <MintNFTButton ticket={ticket} ticketElementRef={ticketCardRef} />
               </div>
             </div>
           )}

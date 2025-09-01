@@ -1373,13 +1373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         type: "success",
         title: "Ticket Returned",
-        description: `Your ticket has been returned and is now available for others.`,
-        metadata: JSON.stringify({
-          ticketId,
-          eventId: ticket.eventId,
-          eventName: event.name,
-          ticketNumber: ticket.ticketNumber
-        })
+        description: `Your ticket #${ticket.ticketNumber} for ${event.name} has been returned and is now available for others.`
       });
 
       // Log the resell listing
@@ -2314,7 +2308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { ticketId } = req.params;
-      const { title, description, metadata } = req.body;
+      const { title, description, metadata, ticketGifUrl } = req.body;
 
       // Get the ticket details
       const ticket = await storage.getTicket(ticketId);
@@ -2359,6 +2353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: description || `NFT for ${event.name} at ${event.venue} on ${event.date}`,
         metadata: JSON.stringify({
           ...JSON.parse(metadata || "{}"),
+          ticketGifUrl: ticketGifUrl || null,  // Store the captured GIF URL
           originalTicket: {
             ticketNumber: ticket.ticketNumber,
             qrData: ticket.qrData,
@@ -2366,7 +2361,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             useCount: ticket.useCount,
             isGoldenTicket: ticket.isGoldenTicket,
             isCharged: ticket.isCharged,
-            chargedAt: ticket.chargedAt,
             voteCount: ticket.voteCount,
             purchasePrice: ticket.purchasePrice
           },
