@@ -734,7 +734,7 @@ export default function TicketViewPage(): React.ReactElement {
 
               {ticket.isValidated && event.reentryType === 'No Reentry (Single Use)' && !(event.enableVoting && event.p2pValidation) ? (
                 <div className="text-center py-4">
-                  <CheckCircle size={48} className="text-success mb-3" />
+                  <img src="/check-icon.png" alt="" width="48" height="48" className="mb-3" />
                   <h6 className="text-success">Ticket Used</h6>
                   <p className="text-muted">
                     Validated on {new Date(ticket.validatedAt!).toLocaleDateString('en-US', { 
