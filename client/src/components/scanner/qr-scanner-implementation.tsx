@@ -175,18 +175,10 @@ export function QrScannerImplementation() {
   // Cycle through colors when loading
   useEffect(() => {
     if (validateTicketMutation.isPending) {
-      console.log('Starting color animation...');
       const interval = setInterval(() => {
-        setButtonColorIndex((prev) => {
-          const next = (prev + 1) % badgeColors.length;
-          console.log('Color index:', next, 'Color:', badgeColors[next]);
-          return next;
-        });
+        setButtonColorIndex((prev) => (prev + 1) % badgeColors.length);
       }, 500); // Change color every 0.5 seconds
-      return () => {
-        console.log('Stopping color animation');
-        clearInterval(interval);
-      };
+      return () => clearInterval(interval);
     } else {
       setButtonColorIndex(0); // Reset when not loading
     }
