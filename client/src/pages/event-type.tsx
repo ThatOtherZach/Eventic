@@ -72,7 +72,7 @@ const eventTypeConfig: Record<string, {
     checkField: (e) => !!e.p2pValidation 
   },
   nft: { 
-    label: 'Collectable NFT Events', 
+    label: 'Collectable Events', 
     color: '#000000',
     checkField: (e) => !!e.allowMinting 
   },

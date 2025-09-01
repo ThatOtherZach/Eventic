@@ -36,7 +36,7 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event }) => {
     badges.push({ color: '#EC4899', label: 'Stickers' });
   }
   if (event.allowMinting) {
-    badges.push({ color: '#000000', label: 'NFT' });
+    badges.push({ color: '#000000', label: 'Collect' });
   }
   if (event.geofence) {
     badges.push({ color: '#F59E0B', label: 'Geo' });

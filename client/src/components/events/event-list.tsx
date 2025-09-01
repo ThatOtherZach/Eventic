@@ -332,7 +332,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                           {event.allowMinting && (
                             <div 
                               style={{ width: '5px', height: '5px', backgroundColor: '#000000' }}
-                              title="Collectable NFT"
+                              title="Collectable"
                             />
                           )}
                           {event.geofence && (
