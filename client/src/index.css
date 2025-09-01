@@ -80,7 +80,7 @@ h4 { font-size: 1.125rem; }
   /* Match Bootstrap btn-primary btn-lg sizing */
   padding: 0.5rem 1rem !important;
   font-size: 1.25rem !important;
-  border-radius: 0.3rem !important;
+  border-radius: 0 !important;
   font-weight: 400 !important;
   line-height: 1.5 !important;
 }
@@ -94,25 +94,22 @@ h4 { font-size: 1.125rem; }
 
 /* Rainbow text animation for validation input */
 @keyframes rainbow-text {
-  0% { color: #ff0000 !important; }
-  15% { color: #ff7f00 !important; }
-  30% { color: #ffff00 !important; }
-  45% { color: #00ff00 !important; }
-  60% { color: #0000ff !important; }
-  75% { color: #4b0082 !important; }
-  90% { color: #9400d3 !important; }
-  100% { color: #ff0000 !important; }
+  0% { color: #ff0000; }
+  14% { color: #ff7f00; }
+  28% { color: #ffff00; }
+  42% { color: #00ff00; }
+  57% { color: #0000ff; }
+  71% { color: #4b0082; }
+  85% { color: #9400d3; }
+  100% { color: #ff0000; }
 }
 
-.rainbow-text {
+.form-control.rainbow-text {
   animation: rainbow-text 1.5s linear infinite !important;
-  font-weight: bold !important;
-  color: #ff0000 !important; /* Initial color */
 }
 
-.rainbow-text:disabled {
+.form-control.rainbow-text:disabled {
   animation: rainbow-text 1.5s linear infinite !important;
-  color: #ff0000 !important; /* Initial color */
 }
 
 /* Custom Select trigger styling to match Bootstrap forms */
