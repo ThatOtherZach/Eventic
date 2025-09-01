@@ -626,6 +626,13 @@ export default function EventDetailPage() {
                   </span>
                 </Link>
               )}
+              {event.endDate && (
+                <Link href="/type/multiday">
+                  <span className="badge" style={{ backgroundColor: '#6B7280', color: '#fff', cursor: 'pointer' }}>
+                    Multi-day
+                  </span>
+                </Link>
+              )}
             </div>
           )}
 
