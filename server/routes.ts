@@ -352,6 +352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Object Storage routes
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
     try {
       const file = await objectStorageService.searchPublicObject(filePath);
       if (!file) {
