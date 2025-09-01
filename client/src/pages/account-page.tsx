@@ -304,6 +304,7 @@ export default function AccountPage() {
                   const metadata = record.metadata ? JSON.parse(record.metadata) : {};
                   const originalTicket = metadata.originalTicket || {};
                   const eventFeatures = metadata.eventFeatures || {};
+                  console.log('NFT eventFeatures:', eventFeatures);
                   const ticketImageUrl = metadata.ticketImageUrl || metadata.ticketGifUrl || null;
                   
                   // If we have a captured image, show that instead of reconstructing
@@ -352,9 +353,16 @@ export default function AccountPage() {
                           borderRadius: '8px',
                           overflow: 'hidden',
                           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                          background: eventFeatures.ticketBackgroundUrl 
-                            ? `url(${eventFeatures.ticketBackgroundUrl}) center/cover` 
-                            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          backgroundColor: '#667eea',
+                          backgroundImage: eventFeatures?.ticketBackgroundUrl 
+                            ? `url(${eventFeatures.ticketBackgroundUrl})` 
+                            : undefined,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundRepeat: 'no-repeat',
+                          background: !eventFeatures?.ticketBackgroundUrl 
+                            ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                            : undefined,
                           transition: 'transform 0.2s, box-shadow 0.2s',
                         }}
                         onMouseEnter={(e) => {
