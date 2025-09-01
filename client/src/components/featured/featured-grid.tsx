@@ -100,6 +100,12 @@ export function FeaturedGrid() {
                       </span>
                     </div>
                   )}
+                  
+                  <div className="position-absolute bottom-0 end-0 m-2">
+                    <span className="badge bg-primary" style={{ fontSize: '0.95rem', padding: '0.5rem 0.75rem' }}>
+                      {parseFloat(featuredEvent.event.ticketPrice) === 0 ? 'Free' : `$${parseFloat(featuredEvent.event.ticketPrice).toFixed(2)}`}
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="card-body py-3">
@@ -174,17 +180,12 @@ export function FeaturedGrid() {
                     {featuredEvent.event.venue}
                   </div>
                   
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="small text-muted">
-                      <Clock size={14} className="me-1" />
-                      {(() => {
-                        const [year, month, day] = featuredEvent.event.date.split('-').map(Number);
-                        return new Date(year, month - 1, day).toLocaleDateString();
-                      })()} at {featuredEvent.event.time}
-                    </div>
-                    <span className="badge bg-primary" style={{ fontSize: '0.95rem', padding: '0.5rem 0.75rem' }}>
-                      {parseFloat(featuredEvent.event.ticketPrice) === 0 ? 'Free' : `$${parseFloat(featuredEvent.event.ticketPrice).toFixed(2)}`}
-                    </span>
+                  <div className="small text-muted">
+                    <Clock size={14} className="me-1" />
+                    {(() => {
+                      const [year, month, day] = featuredEvent.event.date.split('-').map(Number);
+                      return new Date(year, month - 1, day).toLocaleDateString();
+                    })()} at {featuredEvent.event.time}
                   </div>
                 </div>
               </div>
