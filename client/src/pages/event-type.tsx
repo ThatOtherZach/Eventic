@@ -108,6 +108,7 @@ const eventTypeConfig: Record<string, {
   limited: { 
     label: 'Limited Tickets Events', 
     color: '#14B8A6',
+    imageIcon: '/limited-icon.png',
     checkField: (e) => !!e.maxTickets 
   },
 };
