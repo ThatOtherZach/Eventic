@@ -1046,7 +1046,7 @@ export default function EventDetailPage() {
                         </div>
                         <div className="d-flex align-items-center mt-1">
                           <img 
-                            src="/globe-icon.png" 
+                            src={ownerIcon} 
                             alt="Reputation" 
                             className="me-2"
                             style={{ width: '16px', height: '16px' }}
