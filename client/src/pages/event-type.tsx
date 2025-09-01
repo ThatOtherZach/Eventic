@@ -60,6 +60,7 @@ const eventTypeConfig: Record<string, {
   surge: { 
     label: 'Surge Pricing Events', 
     color: '#DC2626',
+    imageIcon: '/surge-icon.png',
     checkField: (e) => !!e.surgePricing 
   },
   stickers: { 
