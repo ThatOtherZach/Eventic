@@ -102,6 +102,7 @@ const eventTypeConfig: Record<string, {
   multiday: { 
     label: 'Multi-day Events', 
     color: '#6B7280',
+    imageIcon: '/multiday-icon.png',
     checkField: (e) => !!e.endDate 
   },
   limited: { 
