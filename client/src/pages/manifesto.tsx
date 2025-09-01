@@ -14,25 +14,36 @@ import manifestoIcon from "@assets/image_1756696153574.png";
 
 export default function Manifesto() {
   const paragraphStyle = {
-    fontSize: '1.125rem',
-    lineHeight: '1.8',
+    fontSize: "1.125rem",
+    lineHeight: "1.8",
     fontFamily: 'Georgia, "Times New Roman", serif',
-    color: '#333'
+    color: "#333",
   };
 
   const sectionStyle = {
-    fontSize: '1.05rem',
-    lineHeight: '1.7'
+    fontSize: "1.05rem",
+    lineHeight: "1.7",
   };
 
   return (
     <div className="container py-5" style={{ maxWidth: "800px" }}>
       <div className="mb-5 text-center">
         <h1 className="display-4 mb-3">
-          <img src={manifestoIcon} alt="Manifesto" style={{ width: '48px', height: '48px', marginRight: '12px', verticalAlign: 'middle' }} />
+          <img
+            src={manifestoIcon}
+            alt="Manifesto"
+            style={{
+              width: "48px",
+              height: "48px",
+              marginRight: "12px",
+              verticalAlign: "middle",
+            }}
+          />
           The Manifesto
         </h1>
-        <p className="lead text-muted">Welcome to the revolution.</p>
+        <p className="lead text-muted">
+          The World's Best Ticketing Platform (Alledgely)
+        </p>
       </div>
 
       <div className="card mb-4">
@@ -130,13 +141,13 @@ export default function Manifesto() {
 
           <h5 className="mt-4 mb-3">✨ The Philosophy</h5>
           <p className="mb-3" style={paragraphStyle}>
-            No engagement metrics. No influencer tiers. No algorithmic 
-            manipulation. Just tickets to things that actually happen. In 
-            places that actually exist. For people who actually show up.
+            No engagement metrics. No influencer tiers. No algorithmic
+            manipulation. Just tickets to things that actually happen. In places
+            that actually exist. For people who actually show up.
           </p>
           <p className="mb-3" style={paragraphStyle}>
-            We built this for the underground comedy show. The warehouse rave. 
-            The popup restaurant. The anarchist book club. The rooftop ritual. 
+            We built this for the underground comedy show. The warehouse rave.
+            The popup restaurant. The anarchist book club. The rooftop ritual.
             Things that matter because they don't last forever.
           </p>
 
@@ -148,9 +159,6 @@ export default function Manifesto() {
           <p className="mb-3" style={paragraphStyle}>
             This is Eventic. We're not disrupting anything. We're not the future
             of anything. We're just making tickets that don't suck.
-          </p>
-          <p className="text-muted small mt-3">
-            <em>Buy the ticket. Take the ride. Let it burn.</em>
           </p>
         </div>
       </div>
@@ -170,13 +178,15 @@ export default function Manifesto() {
               masterpiece. No chocolate factory required.
             </p>
             <small className="text-muted">
-              Stack it with rainbow effects for DOUBLE GOLDEN status. It's
-              unnecessarily awesome.
+              Stack it with rainbow effects for Super RGB status. It's
+              unnecessary, but very gamer.
             </small>
           </div>
 
           <div className="mb-4">
-            <h5 className="text-purple">✨ Special Effects (Date-Based Magic)</h5>
+            <h5 className="text-purple">
+              ✨ Special Effects (Date-Based Magic)
+            </h5>
             <p style={sectionStyle}>Your validated tickets can:</p>
             <ul style={sectionStyle}>
               <li>
@@ -372,7 +382,10 @@ export default function Manifesto() {
               </a>
             </Link>
             <Link href="/">
-              <a className="btn btn-outline-secondary" data-testid="button-browse-events">
+              <a
+                className="btn btn-outline-secondary"
+                data-testid="button-browse-events"
+              >
                 Browse Events
               </a>
             </Link>
