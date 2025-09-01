@@ -682,7 +682,7 @@ export default function EventDetailPage() {
                   const location = venueParts[0];
                   return (
                     <Link href={`/${encodeURIComponent(location.replace(/\s+/g, ''))}`}>
-                      <a className="text-muted" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+                      <a className="text-primary" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
                         {location}
                       </a>
                     </Link>
@@ -698,7 +698,7 @@ export default function EventDetailPage() {
                         <span key={index}>
                           {index === cityIndex ? (
                             <Link href={`/${encodeURIComponent(city.replace(/\s+/g, ''))}`}>
-                              <a className="text-muted" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+                              <a className="text-primary" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
                                 {part}
                               </a>
                             </Link>
