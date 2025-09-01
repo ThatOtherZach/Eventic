@@ -15,6 +15,7 @@ import ownerIcon from "@assets/image_1756532723922.png";
 import calendarIcon from "@assets/image_1756578631464.png";
 import googleCalendarIcon from "@assets/calendar-3_1756578696542.png";
 import globeIcon from "@assets/image_1756578828379.png";
+import dateIcon from "@assets/image_1756751150943.png";
 import { LocationPicker } from "@/components/location-picker";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
@@ -612,7 +613,7 @@ export default function EventDetailPage() {
 
           <div className="d-flex flex-wrap gap-3 mb-4">
             <div className="d-flex align-items-center text-muted">
-              <Calendar size={18} className="me-2" />
+              <img src={dateIcon} alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
               {event.endDate ? (
                 <>
                   {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date} - {event.endDate && event.endDate !== '' ? (() => {
