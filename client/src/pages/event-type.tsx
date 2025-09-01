@@ -85,7 +85,7 @@ const eventTypeConfig: Record<string, {
   geofenced: { 
     label: 'Location Locked Events', 
     color: '#F59E0B',
-    icon: MapPin,
+    imageIcon: '/geofenced-icon.png',
     checkField: (e) => !!e.geofence 
   },
   voting: { 
