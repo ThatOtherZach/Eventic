@@ -419,6 +419,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all public events only - private events must never appear in location listings
       let events = (await storage.getEvents()).filter(event => !event.isPrivate);
       
+      // Get featured events to check which events are boosted
+      const featuredEvents = await storage.getActiveFeaturedEvents();
+      const featuredEventIds = new Set(featuredEvents.map(fe => fe.eventId));
+      
       // Filter out past events (only if more than 24 hours past)
       const now = new Date();
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -459,8 +463,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return venueParts.some(part => part.includes(location) || location.includes(part));
       });
       
-      // Sort by date
+      // Sort events: boosted events first (sorted by position), then regular events by date
       filteredEvents.sort((a, b) => {
+        const aIsBoosted = featuredEventIds.has(a.id);
+        const bIsBoosted = featuredEventIds.has(b.id);
+        
+        // If both are boosted, sort by position
+        if (aIsBoosted && bIsBoosted) {
+          const aFeatured = featuredEvents.find(fe => fe.eventId === a.id);
+          const bFeatured = featuredEvents.find(fe => fe.eventId === b.id);
+          return (aFeatured?.position || 999) - (bFeatured?.position || 999);
+        }
+        
+        // Boosted events come first
+        if (aIsBoosted && !bIsBoosted) return -1;
+        if (!aIsBoosted && bIsBoosted) return 1;
+        
+        // Both regular events, sort by date
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return dateA - dateB;
@@ -492,6 +511,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all public events only - private events must never appear in hashtag listings
       let events = (await storage.getEvents()).filter(event => !event.isPrivate);
+      
+      // Get featured events to check which events are boosted
+      const featuredEvents = await storage.getActiveFeaturedEvents();
+      const featuredEventIds = new Set(featuredEvents.map(fe => fe.eventId));
       
       // Filter out past events (only if more than 24 hours past)
       const now = new Date();
@@ -530,8 +553,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return false;
       });
       
-      // Sort by date
+      // Sort events: boosted events first (sorted by position), then regular events by date
       filteredEvents.sort((a, b) => {
+        const aIsBoosted = featuredEventIds.has(a.id);
+        const bIsBoosted = featuredEventIds.has(b.id);
+        
+        // If both are boosted, sort by position
+        if (aIsBoosted && bIsBoosted) {
+          const aFeatured = featuredEvents.find(fe => fe.eventId === a.id);
+          const bFeatured = featuredEvents.find(fe => fe.eventId === b.id);
+          return (aFeatured?.position || 999) - (bFeatured?.position || 999);
+        }
+        
+        // Boosted events come first
+        if (aIsBoosted && !bIsBoosted) return -1;
+        if (!aIsBoosted && bIsBoosted) return 1;
+        
+        // Both regular events, sort by date
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return dateA - dateB;
@@ -725,6 +763,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter out private events from general listing
       let publicEvents = events.filter(event => !event.isPrivate);
       
+      // Get featured events to check which events are boosted
+      const featuredEvents = await storage.getActiveFeaturedEvents();
+      const featuredEventIds = new Set(featuredEvents.map(fe => fe.eventId));
+      
 
       
       // Filter out past events (only if more than 24 hours past) and sort by date (soonest first)
@@ -745,8 +787,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Sort events by date and time, prioritizing events in next 24 hours
+      // Sort events: boosted events first (sorted by position), then by date/time with 24-hour prioritization
       const sortedEvents = activeEvents.sort((a, b) => {
+        const aIsBoosted = featuredEventIds.has(a.id);
+        const bIsBoosted = featuredEventIds.has(b.id);
+        
+        // If both are boosted, sort by position
+        if (aIsBoosted && bIsBoosted) {
+          const aFeatured = featuredEvents.find(fe => fe.eventId === a.id);
+          const bFeatured = featuredEvents.find(fe => fe.eventId === b.id);
+          return (aFeatured?.position || 999) - (bFeatured?.position || 999);
+        }
+        
+        // Boosted events come first
+        if (aIsBoosted && !bIsBoosted) return -1;
+        if (!aIsBoosted && bIsBoosted) return 1;
+        
+        // Both are regular events, apply normal sorting logic
         try {
           // Parse dates properly
           const [yearA, monthA, dayA] = a.date.split('-').map(Number);
