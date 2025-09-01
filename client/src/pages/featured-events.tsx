@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Calendar, Clock, Star, Shield, Sparkles } from "lucide-react";
 import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "@/components/tickets/special-effects";
+import BadgeBar from "@/components/events/badge-bar";
 
 interface Event {
   id: string;
@@ -220,61 +221,13 @@ export function FeaturedEventsPage() {
                       {/* Special Effects Animation (for particles) */}
                       <SpecialEffects event={fullEvent} ticket={mockTicket} />
 
-                      {/* Event Feature Badges */}
-                      <div className="position-absolute top-0 start-0 p-2 d-flex flex-wrap gap-1" style={{ zIndex: 10 }}>
-                        {event.isAdminCreated && (
-                          <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
-                            Mission
-                          </span>
-                        )}
-                        {event.goldenTicketEnabled && (
-                          <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', fontSize: '0.8em' }}>
-                            Golden Tickets
-                          </span>
-                        )}
-                        {event.specialEffectsEnabled && (
-                          <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', fontSize: '0.8em' }}>
-                            Special Effects
-                          </span>
-                        )}
-                        {event.surgePricing && (
-                          <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', fontSize: '0.8em' }}>
-                            Surge
-                          </span>
-                        )}
-                        {event.stickerUrl && (
-                          <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', fontSize: '0.8em' }}>
-                            Stickers
-                          </span>
-                        )}
-                        {event.allowMinting && (
-                          <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', fontSize: '0.8em' }}>
-                            Collectable
-                          </span>
-                        )}
-                        {event.geofence && (
-                          <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', fontSize: '0.8em' }}>
-                            Location Lock
-                          </span>
-                        )}
-                        {event.enableVoting && (
-                          <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', fontSize: '0.8em' }}>
-                            Vote
-                          </span>
-                        )}
-                        {event.recurringType && (
-                          <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', fontSize: '0.8em' }}>
-                            {event.recurringType === 'weekly' && 'Weekly'}
-                            {event.recurringType === 'monthly' && 'Monthly'}
-                            {event.recurringType === 'annually' && 'Annual'}
-                          </span>
-                        )}
-                      </div>
+                      {/* Event Feature Badge Bar */}
+                      <BadgeBar event={event} />
 
                       {/* Ticket Content */}
                       <div className="position-relative h-100 d-flex">
                         {/* Event Details */}
-                        <div className="flex-grow-1 px-3 pt-3 pb-4 text-white d-flex flex-column justify-content-between">
+                        <div className="flex-grow-1 px-3 pt-3 pb-5 text-white d-flex flex-column justify-content-between">
                           <div>
                             <h5 className="mb-2 fw-bold" style={{ fontSize: '18px', marginTop: '24px' }}>
                               {mockTicket.isGoldenTicket ? (
@@ -335,13 +288,6 @@ export function FeaturedEventsPage() {
                                   : 'Free'}
                               </div>
                             </div>
-                          </div>
-                          <div className="d-flex justify-content-end align-items-end">
-                            {event.p2pValidation && (
-                              <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff' }}>
-                                P2P Validation
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
