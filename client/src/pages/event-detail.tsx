@@ -1089,12 +1089,11 @@ export default function EventDetailPage() {
                       {event.currentPrice === 0 ? 'Free' : `$${event.currentPrice.toFixed(2)}`}
                       {event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
                         <small className="text-muted ms-2">
-                          (was ${parseFloat(event.ticketPrice).toFixed(2)} 
-                          {(() => {
+                          ({(() => {
                             const basePrice = parseFloat(event.ticketPrice);
                             const increase = event.currentPrice - basePrice;
                             const increasePercent = Math.round((increase / basePrice) * 100);
-                            return ` +${increasePercent}%`;
+                            return `+${increasePercent}%`;
                           })()})
                         </small>
                       )}
@@ -1103,7 +1102,7 @@ export default function EventDetailPage() {
                 </div>
                 
                 {event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
-                  <div>
+                  <div className="text-end" style={{ paddingBottom: '10px' }}>
                     <span className="badge bg-danger">Surge Activated</span>
                   </div>
                 )}
