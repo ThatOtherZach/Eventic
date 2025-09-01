@@ -10,6 +10,7 @@ import {
   Ticket as TicketIcon,
   Zap,
 } from "lucide-react";
+import manifestoIcon from "@assets/image_1756696153574.png";
 
 export default function Manifesto() {
   const paragraphStyle = {
@@ -27,7 +28,10 @@ export default function Manifesto() {
   return (
     <div className="container py-5" style={{ maxWidth: "800px" }}>
       <div className="mb-5 text-center">
-        <h1 className="display-4 mb-3">🎭 The Manifesto</h1>
+        <h1 className="display-4 mb-3">
+          <img src={manifestoIcon} alt="Manifesto" style={{ width: '48px', height: '48px', marginRight: '12px', verticalAlign: 'middle' }} />
+          The Manifesto
+        </h1>
         <p className="lead text-muted">Welcome to the revolution.</p>
       </div>
 
