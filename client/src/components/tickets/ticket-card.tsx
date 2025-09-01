@@ -211,7 +211,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         const features = [];
         if ((event as any).isAdminCreated) features.push({ name: 'MISSION', bg: '#DC2626', color: '#fff' });
         if (event.enableVoting) features.push({ name: 'VOTE', bg: '#EAB308', color: '#fff' });
-        if (event.allowMinting) features.push({ name: 'NFT', bg: '#000000', color: '#fff' });
+        if (event.allowMinting) features.push({ name: 'COLLECT', bg: '#000000', color: '#fff' });
         if (event.p2pValidation) features.push({ name: 'P2P', bg: '#3B82F6', color: '#fff' });
         if (event.goldenTicketEnabled) features.push({ name: 'GOLDEN', bg: '#FFD700', color: '#000' });
         if (event.specialEffectsEnabled) features.push({ name: 'FX', bg: '#9333EA', color: '#fff' });
