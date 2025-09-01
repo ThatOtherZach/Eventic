@@ -66,6 +66,7 @@ const eventTypeConfig: Record<string, {
   stickers: { 
     label: 'Events with Stickers', 
     color: '#EC4899',
+    imageIcon: '/stickers-icon.png',
     checkField: (e) => !!e.stickerUrl 
   },
   p2p: { 
