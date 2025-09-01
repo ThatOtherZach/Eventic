@@ -566,70 +566,70 @@ export default function EventDetailPage() {
             event.geofence || event.enableVoting) && (
             <div className="d-flex flex-wrap gap-2 mb-2">
               {event.isAdminCreated && (
-                <Link href="/missions">
+                <Link href="/type/mission">
                   <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', cursor: 'pointer' }}>
                     Mission
                   </span>
                 </Link>
               )}
               {event.goldenTicketEnabled && (
-                <Link href="/golden-tickets">
+                <Link href="/type/golden">
                   <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', cursor: 'pointer' }}>
                     Golden Tickets
                   </span>
                 </Link>
               )}
               {event.specialEffectsEnabled && (
-                <Link href="/special-effects">
+                <Link href="/type/effects">
                   <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', cursor: 'pointer' }}>
                     Special Effects
                   </span>
                 </Link>
               )}
               {event.surgePricing && (
-                <Link href="/surge">
+                <Link href="/type/surge">
                   <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', cursor: 'pointer' }}>
                     Surge
                   </span>
                 </Link>
               )}
               {event.stickerUrl && (
-                <Link href="/stickers">
+                <Link href="/type/stickers">
                   <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', cursor: 'pointer' }}>
                     Custom Stickers ({event.stickerOdds || 50}%)
                   </span>
                 </Link>
               )}
               {event.p2pValidation && (
-                <Link href="/p2p">
+                <Link href="/type/p2p">
                   <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff', cursor: 'pointer' }}>
                     P2P Validation
                   </span>
                 </Link>
               )}
               {event.allowMinting && (
-                <Link href="/collectables">
+                <Link href="/type/collectable">
                   <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', cursor: 'pointer' }}>
                     Collectable
                   </span>
                 </Link>
               )}
               {event.geofence && (
-                <Link href="/location-lock">
+                <Link href="/type/geofence">
                   <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', cursor: 'pointer' }}>
                     Location Lock
                   </span>
                 </Link>
               )}
               {event.enableVoting && (
-                <Link href="/vote">
+                <Link href="/type/vote">
                   <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', cursor: 'pointer' }}>
                     Vote
                   </span>
                 </Link>
               )}
               {event.recurringType && (
-                <Link href="/recurring">
+                <Link href="/type/recurring">
                   <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', cursor: 'pointer' }}>
                     {event.recurringType === 'weekly' && 'Weekly Recurring'}
                     {event.recurringType === 'monthly' && 'Monthly Recurring'}
