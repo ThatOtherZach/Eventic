@@ -229,7 +229,7 @@ export function QrScannerImplementation() {
           <div className="input-group input-group-lg mb-2">
             <input
               type="text"
-              className="form-control text-center font-monospace fw-bold fs-3"
+              className={validateTicketMutation.isPending ? "form-control text-center font-monospace fw-bold fs-3 rainbow-text" : "form-control text-center font-monospace fw-bold fs-3"}
               placeholder="0000"
               value={manualCode}
               onChange={(e) => {
@@ -266,18 +266,7 @@ export function QrScannerImplementation() {
                 boxShadow: `0 0 10px ${badgeColors[buttonColorIndex]}40`
               } as React.CSSProperties : {}}
             >
-              {validateTicketMutation.isPending ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                  Validate
-                </>
-              ) : (
-                "Validate"
-              )}
+              Validate
             </button>
           </div>
 

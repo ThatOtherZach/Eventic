@@ -92,6 +92,27 @@ h4 { font-size: 1.125rem; }
   opacity: 0.9 !important;
 }
 
+/* Rainbow text animation for validation input */
+@keyframes rainbow-text {
+  0% { color: #ff0000; }
+  15% { color: #ff7f00; }
+  30% { color: #ffff00; }
+  45% { color: #00ff00; }
+  60% { color: #0000ff; }
+  75% { color: #4b0082; }
+  90% { color: #9400d3; }
+  100% { color: #ff0000; }
+}
+
+.rainbow-text {
+  animation: rainbow-text 1.5s linear infinite !important;
+  font-weight: bold !important;
+}
+
+.rainbow-text:disabled {
+  animation: rainbow-text 1.5s linear infinite !important;
+}
+
 /* Custom Select trigger styling to match Bootstrap forms */
 button[role="combobox"] {
   width: 100%;
