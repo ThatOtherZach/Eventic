@@ -597,14 +597,14 @@ export default function EventDetailPage() {
                 </Link>
               )}
               {event.geofence && (
-                <Link href="/type/geofence">
+                <Link href="/type/geofenced">
                   <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', cursor: 'pointer' }}>
                     Location Lock
                   </span>
                 </Link>
               )}
               {event.enableVoting && (
-                <Link href="/type/vote">
+                <Link href="/type/voting">
                   <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', cursor: 'pointer' }}>
                     Vote
                   </span>
