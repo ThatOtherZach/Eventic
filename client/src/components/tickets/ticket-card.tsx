@@ -18,6 +18,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const ticketContainerRef = useRef<HTMLDivElement>(null);
   
+  
   // Check if this ticket has any special effects
   // For preview tickets with previewEffectType, use that directly
   const ticketWithPreview = ticket as any;
@@ -59,8 +60,9 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         overflow: 'hidden',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         background: event.ticketBackgroundUrl 
-          ? `url(${event.ticketBackgroundUrl}) center/cover` 
+          ? `url(${event.ticketBackgroundUrl}) center/cover no-repeat` 
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        backgroundColor: event.ticketBackgroundUrl ? '#f0f0f0' : 'transparent',
         transition: 'transform 0.2s, box-shadow 0.2s',
       }}
       data-testid={`ticket-card-${ticket.id}`}
