@@ -1034,30 +1034,28 @@ export default function EventDetailPage() {
                     const formattedVotes = formatVoteCount(totalVotes);
                     
                     return (
-                      <div className="mt-2">
-                        <div className="text-muted small mb-1">Reputation</div>
-                        <div className="d-flex align-items-center">
-                          <img 
-                            src={ownerIcon} 
-                            alt="Reputation" 
-                            className="me-2"
-                            style={{ width: '16px', height: '16px' }}
-                          />
-                          {badge ? (
-                            <span className="badge bg-secondary">{badge}</span>
-                          ) : showPercentage ? (
-                            <>
-                              <strong>{percentage}%</strong>
-                              <span className="text-muted small ms-2" style={{ fontSize: '0.85em' }}>({formattedVotes} votes)</span>
-                            </>
-                          ) : null}
-                          {totalVotes >= 1000 && (
-                            <span className="badge bg-warning text-dark ms-2">
-                              <Award size={14} className="me-1" />
-                              Bestie
-                            </span>
-                          )}
-                        </div>
+                      <div className="d-flex align-items-center mt-2">
+                        <span className="text-muted small me-2">Reputation</span>
+                        <img 
+                          src={ownerIcon} 
+                          alt="Reputation" 
+                          className="me-2"
+                          style={{ width: '16px', height: '16px' }}
+                        />
+                        {badge ? (
+                          <span className="badge bg-secondary">{badge}</span>
+                        ) : showPercentage ? (
+                          <>
+                            <strong>{percentage}%</strong>
+                            <span className="text-muted small ms-2" style={{ fontSize: '0.85em' }}>({formattedVotes} votes)</span>
+                          </>
+                        ) : null}
+                        {totalVotes >= 1000 && (
+                          <span className="badge bg-warning text-dark ms-2">
+                            <Award size={14} className="me-1" />
+                            Bestie
+                          </span>
+                        )}
                       </div>
                     );
                   })()}
