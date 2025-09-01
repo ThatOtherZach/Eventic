@@ -63,6 +63,16 @@ export default function AccountPage() {
     enabled: !!user?.id,
   });
 
+  // Fetch user details to ensure displayName and memberStatus are loaded
+  const { data: userDetails } = useQuery<{ id: string; email: string; displayName?: string; memberStatus?: string }>({
+    queryKey: [`/api/users/${user?.id}`],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${user?.id}`);
+      return response.json();
+    },
+    enabled: !!user?.id,
+  });
+
   const { data: balance } = useQuery<AccountBalance>({
     queryKey: ["/api/currency/balance"],
     queryFn: async () => {
@@ -134,13 +144,13 @@ export default function AccountPage() {
                     <img src="/key-icon.png" alt="" style={{ width: '36px', height: '36px' }} />
                   </div>
                   <div>
-                    {user.displayName && (
-                      <h5 className="card-title mb-1">{user.displayName}</h5>
+                    {(userDetails?.displayName || user.displayName) && (
+                      <h5 className="card-title mb-1">{userDetails?.displayName || user.displayName}</h5>
                     )}
-                    {user.memberStatus && (
-                      <p className="text-muted small mb-1">{user.memberStatus}</p>
+                    {(userDetails?.memberStatus || user.memberStatus) && (
+                      <p className="text-muted small mb-1">{userDetails?.memberStatus || user.memberStatus}</p>
                     )}
-                    <p className="text-muted mb-0">{user.email}</p>
+                    <p className="text-muted mb-0">{userDetails?.email || user.email}</p>
                     {reputation && reputation.percentage !== null && (
                       <div className="d-flex align-items-center mt-2">
                         <img src="/world-icon.png" alt="" style={{ width: '16px', height: '16px', marginRight: '8px' }} />
