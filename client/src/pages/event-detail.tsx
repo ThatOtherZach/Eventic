@@ -639,12 +639,12 @@ export default function EventDetailPage() {
                         return 'Invalid end date';
                       }
                     })() : 'No end date'}
-                    <img src={clockIcon} alt="" style={{ width: '14px', height: '14px', marginLeft: '6px', marginRight: '6px' }} />
+                    <img src={clockIcon} alt="" style={{ width: '14px', height: '14px', marginLeft: '6px', marginRight: '6px', verticalAlign: 'middle' }} />
                   </>
                 ) : (
                   <>
                     {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date}
-                    <img src={clockIcon} alt="" style={{ width: '14px', height: '14px', marginLeft: '6px', marginRight: '6px' }} />
+                    <img src={clockIcon} alt="" style={{ width: '14px', height: '14px', marginLeft: '6px', marginRight: '6px', verticalAlign: 'middle' }} />
                   </>
                 )}
                 {event.endTime ? (
