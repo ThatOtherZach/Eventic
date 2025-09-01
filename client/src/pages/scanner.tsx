@@ -1,5 +1,5 @@
 import { QrScannerImplementation } from "@/components/scanner/qr-scanner-implementation";
-import { Check } from "lucide-react";
+import validateIcon from "@assets/image_1756750240853.png";
 
 export default function Scanner() {
   return (
@@ -10,9 +10,9 @@ export default function Scanner() {
             className="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
             style={{ width: "64px", height: "64px" }}
           >
-            <Check className="text-white" size={32} />
+            <img src={validateIcon} alt="Validate" style={{ width: "32px", height: "32px" }} />
           </div>
-          <h2 className="h3 fw-semibold text-dark mb-2">Validation</h2>
+          <h2 className="h3 fw-semibold text-dark mb-2">Validate</h2>
         </div>
 
         <QrScannerImplementation />
