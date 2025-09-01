@@ -69,7 +69,7 @@ export function FeaturedGrid() {
   }
 
   return (
-    <div className="mb-5">
+    <div className="mb-5" style={{ paddingTop: '20px' }}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="h4 fw-semibold text-dark mb-0">Discover Events</h3>
         <Link href="/featured" className="btn btn-secondary">
