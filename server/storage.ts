@@ -1223,6 +1223,35 @@ export class DatabaseStorage implements IStorage {
           return false;
         }
 
+        // Count how many tickets have already been charged for this event
+        const chargedTicketCount = await tx
+          .select({ count: sql`count(*)` })
+          .from(tickets)
+          .where(and(
+            eq(tickets.eventId, ticketToCharge.eventId),
+            eq(tickets.isCharged, true)
+          ))
+          .then(rows => Number(rows[0]?.count || 0));
+
+        // Calculate dynamic charge cost based on how many tickets are already charged
+        // 0-1 charged: 3 credits
+        // 2-4 charged: 4 credits
+        // 5-9 charged: 5 credits
+        // 10-19 charged: 6 credits
+        // 20+ charged: 7 credits
+        let chargeCost = 3;
+        if (chargedTicketCount >= 20) {
+          chargeCost = 7;
+        } else if (chargedTicketCount >= 10) {
+          chargeCost = 6;
+        } else if (chargedTicketCount >= 5) {
+          chargeCost = 5;
+        } else if (chargedTicketCount >= 2) {
+          chargeCost = 4;
+        }
+
+        console.log(`Event ${event.id} has ${chargedTicketCount} charged tickets. Charge cost: ${chargeCost} credits`);
+
         // Check user's currency balance
         const userBalance = await tx
           .select({ balance: sql`COALESCE(SUM(CASE WHEN entry_type = 'credit' THEN amount ELSE -amount END), 0)` })
@@ -1230,29 +1259,31 @@ export class DatabaseStorage implements IStorage {
           .where(eq(currencyLedger.accountId, userId))
           .then(rows => Number(rows[0]?.balance || 0));
 
-        // Check if user has at least 3 credits
-        if (userBalance < 3) {
-          console.log(`User ${userId} has insufficient credits: ${userBalance} < 3`);
+        // Check if user has enough credits
+        if (userBalance < chargeCost) {
+          console.log(`User ${userId} has insufficient credits: ${userBalance} < ${chargeCost}`);
           return false;
         }
 
         // Create a unique transaction ID for this charge operation
         const transactionId = `charge_${ticketId}_${Date.now()}`;
 
-        // Debit 3 credits from user's account
+        // Debit credits from user's account
         await tx.insert(currencyLedger).values({
           transactionId,
           accountId: userId,
           accountType: 'user',
           entryType: 'debit',
-          amount: '3.00',
-          balance: (userBalance - 3).toString(),
+          amount: chargeCost.toFixed(2),
+          balance: (userBalance - chargeCost).toString(),
           transactionType: 'TICKET_CHARGE',
-          description: 'Charged ticket for improved special effects odds',
+          description: `Charged ticket for improved special effects odds (${chargeCost} credits)`,
           metadata: JSON.stringify({
             ticketId: ticketId,
             eventId: ticketToCharge.eventId,
-            eventName: event.name
+            eventName: event.name,
+            chargeCost: chargeCost,
+            chargedTicketCount: chargedTicketCount
           }),
           relatedEntityId: ticketId,
           relatedEntityType: 'ticket',
@@ -1265,14 +1296,16 @@ export class DatabaseStorage implements IStorage {
           accountId: 'system_rewards',
           accountType: 'system_rewards',
           entryType: 'credit',
-          amount: '3.00',
+          amount: chargeCost.toFixed(2),
           balance: '0', // System accounts don't track balance
           transactionType: 'TICKET_CHARGE',
-          description: 'Received payment for ticket charge',
+          description: `Received payment for ticket charge (${chargeCost} credits)`,
           metadata: JSON.stringify({
             ticketId: ticketId,
             userId: userId,
-            eventId: ticketToCharge.eventId
+            eventId: ticketToCharge.eventId,
+            chargeCost: chargeCost,
+            chargedTicketCount: chargedTicketCount
           }),
           relatedEntityId: ticketId,
           relatedEntityType: 'ticket',
