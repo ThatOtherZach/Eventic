@@ -2349,7 +2349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Private events are not eligible for NFT minting" });
       }
 
-      // Create registry record
+      // Create registry record with ALL ticket and event attributes preserved
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
         eventId: ticket.eventId,
@@ -2363,7 +2363,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ticketNumber: ticket.ticketNumber,
             qrData: ticket.qrData,
             validatedAt: ticket.validatedAt,
-            useCount: ticket.useCount
+            useCount: ticket.useCount,
+            isGoldenTicket: ticket.isGoldenTicket,
+            isCharged: ticket.isCharged,
+            chargedAt: ticket.chargedAt,
+            voteCount: ticket.voteCount,
+            purchasePrice: ticket.purchasePrice
+          },
+          eventFeatures: {
+            ticketBackgroundUrl: event.ticketBackgroundUrl,
+            goldenTicketEnabled: event.goldenTicketEnabled,
+            specialEffectsEnabled: event.specialEffectsEnabled,
+            stickerUrl: event.stickerUrl,
+            enableVoting: event.enableVoting,
+            p2pValidation: event.p2pValidation,
+            surgePricing: event.surgePricing,
+            allowMinting: event.allowMinting,
+            isAdminCreated: event.isAdminCreated,
+            recurringType: event.recurringType,
+            maxTickets: event.maxTickets,
+            geofence: event.geofence,
+            reentryType: event.reentryType,
+            maxUses: event.maxUses,
+            endDate: event.endDate,
+            time: event.time
           }
         }),
         ticketNumber: ticket.ticketNumber,

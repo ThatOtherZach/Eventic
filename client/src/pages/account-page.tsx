@@ -300,50 +300,68 @@ export default function AccountPage() {
               </div>
             ) : (
               <div className="row g-3">
-                {registryRecords.map((record) => (
-                  <div key={record.id} className="col-md-6">
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-start mb-3">
-                          <div>
-                            <h6 className="card-title mb-1">{record.title}</h6>
-                            <p className="text-muted small mb-0">
-                              {record.eventName} • {record.eventDate}
-                            </p>
+                {registryRecords.map((record) => {
+                  // Parse the metadata to reconstruct ticket and event data
+                  const metadata = record.metadata ? JSON.parse(record.metadata) : {};
+                  const originalTicket = metadata.originalTicket || {};
+                  const eventFeatures = metadata.eventFeatures || {};
+                  
+                  // Reconstruct the ticket object for display
+                  const reconstructedTicket = {
+                    id: record.ticketId,
+                    ticketNumber: record.ticketNumber,
+                    qrData: originalTicket.qrData || '',
+                    isValidated: true,
+                    validatedAt: record.validatedAt,
+                    isGoldenTicket: originalTicket.isGoldenTicket || false,
+                    isCharged: originalTicket.isCharged || false,
+                    useCount: originalTicket.useCount || 1,
+                    voteCount: originalTicket.voteCount || 0
+                  };
+                  
+                  // Reconstruct the event object for display
+                  const reconstructedEvent = {
+                    id: record.eventId,
+                    name: record.eventName,
+                    venue: record.eventVenue,
+                    date: record.eventDate,
+                    time: eventFeatures.time || '00:00',
+                    ticketBackgroundUrl: eventFeatures.ticketBackgroundUrl || null,
+                    goldenTicketEnabled: eventFeatures.goldenTicketEnabled || false,
+                    specialEffectsEnabled: eventFeatures.specialEffectsEnabled || false,
+                    stickerUrl: eventFeatures.stickerUrl || null,
+                    enableVoting: eventFeatures.enableVoting || false,
+                    reentryType: eventFeatures.reentryType || 'No Reentry (Single Use)'
+                  };
+                  
+                  return (
+                    <div key={record.id} className="col-md-4">
+                      <div className="mb-2">
+                        <TicketCard 
+                          ticket={reconstructedTicket as any}
+                          event={reconstructedEvent as any}
+                          showQR={false}
+                          showBadges={false}
+                        />
+                      </div>
+                      <div className="card">
+                        <div className="card-body p-2">
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div className="small">
+                              <span className="badge bg-info me-2">NFT</span>
+                              <span className="text-muted">Minted {new Date(record.mintedAt).toLocaleDateString()}</span>
+                            </div>
+                            {record.transferCount && record.transferCount > 0 && (
+                              <span className="badge bg-secondary small">
+                                {record.transferCount} Transfer{record.transferCount !== 1 ? 's' : ''}
+                              </span>
+                            )}
                           </div>
-                          <span className="badge bg-info">NFT</span>
                         </div>
-                        
-                        <p className="card-text small">{record.description}</p>
-                        
-                        <div className="border-top pt-2 mt-2">
-                          <div className="row g-2 text-muted small">
-                            <div className="col-6">
-                              <strong>Ticket #:</strong> {record.ticketNumber}
-                            </div>
-                            <div className="col-6">
-                              <strong>Venue:</strong> {record.eventVenue}
-                            </div>
-                            <div className="col-6">
-                              <strong>Validated:</strong> {record.validatedAt ? new Date(record.validatedAt).toLocaleDateString() : 'N/A'}
-                            </div>
-                            <div className="col-6">
-                              <strong>Minted:</strong> {record.mintedAt ? new Date(record.mintedAt).toLocaleDateString() : 'N/A'}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {record.transferCount && record.transferCount > 0 && (
-                          <div className="mt-2">
-                            <span className="badge bg-secondary">
-                              {record.transferCount} Transfer{record.transferCount !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
