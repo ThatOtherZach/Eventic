@@ -674,22 +674,30 @@ export default function EventDetailPage() {
             <div className="d-flex align-items-center text-muted">
               <MapPin size={18} className="me-2" />
               {(() => {
-                // Parse venue to extract city (usually the second-to-last part)
+                // Parse venue to extract city
                 const venueParts = event.venue.split(',').map(part => part.trim());
-                if (venueParts.length >= 2) {
-                  // Assume format: "address, city, country" or "venue name, city"
+                
+                if (venueParts.length === 1) {
+                  // Single location name (e.g., "Vancouver")
+                  const location = venueParts[0];
+                  return (
+                    <Link href={`/${encodeURIComponent(location.replace(/\s+/g, ''))}`}>
+                      <a className="text-muted" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+                        {location}
+                      </a>
+                    </Link>
+                  );
+                } else if (venueParts.length >= 2) {
+                  // Multi-part venue (e.g., "address, city, country")
                   const cityIndex = venueParts.length >= 3 ? venueParts.length - 2 : venueParts.length - 1;
                   const city = venueParts[cityIndex];
                   
-                  // Reconstruct venue with clickable city
                   return (
                     <span>
                       {venueParts.map((part, index) => (
                         <span key={index}>
                           {index === cityIndex ? (
-                            <Link 
-                              href={`/${encodeURIComponent(city.replace(/\s+/g, ''))}`}
-                            >
+                            <Link href={`/${encodeURIComponent(city.replace(/\s+/g, ''))}`}>
                               <a className="text-muted" style={{ textDecoration: 'underline', cursor: 'pointer' }}>
                                 {part}
                               </a>
@@ -703,7 +711,7 @@ export default function EventDetailPage() {
                     </span>
                   );
                 }
-                // If venue format doesn't match expected pattern, display as is
+                // Fallback - shouldn't reach here
                 return event.venue;
               })()}
             </div>
