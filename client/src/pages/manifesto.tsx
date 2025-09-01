@@ -12,6 +12,18 @@ import {
 } from "lucide-react";
 
 export default function Manifesto() {
+  const paragraphStyle = {
+    fontSize: '1.125rem',
+    lineHeight: '1.8',
+    fontFamily: 'Georgia, "Times New Roman", serif',
+    color: '#333'
+  };
+
+  const sectionStyle = {
+    fontSize: '1.05rem',
+    lineHeight: '1.7'
+  };
+
   return (
     <div className="container py-5" style={{ maxWidth: "800px" }}>
       <div className="mb-5 text-center">
@@ -20,61 +32,58 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body" style={{ fontSize: '1.1rem', lineHeight: '1.8', fontFamily: 'Georgia, "Times New Roman", serif' }}>
+        <div className="card-body">
           <h2 className="h4 mb-3">But... Why?</h2>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             I hate Ticketmaster. Those parasitic fees. The endless spam. All for
             a lousy PDF that costs more in "convenience charges" than actual
             convenience.
           </p>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             Eventbrite? A spreadsheet with delusions of grandeur, skimming 10%
             to generate the world's most boring tickets.
           </p>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             These companies are digital toll collectors at the gates of fun.
-            Gatekeepers nobody asked for. Middlemen in an age that doesn't need
-            them.
-          </p>
-          <p className="mb-3">
-            <strong>So I built Eventic.</strong>
+            Gatekeepers nobody asked for. Middleware... So here's my silly
+            solution, Eventic!
           </p>
 
           <h5 className="mt-4 mb-3">🎟 Tickets That Don't Suck</h5>
-          <p className="mb-3">
-            Your ticket can glow golden. It can explode with confetti. It can
-            transform based on the month, your birthday, or other random chaos.
+          <p className="mb-3" style={paragraphStyle}>
+            Your ticket can glow golden. It can transform based on the day, the
+            month, your birthday, or other random chaos.
           </p>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             Drop custom stickers on tickets. Enable peer-to-peer validation for
             your underground warehouse rave. Lock tickets to GPS coordinates for
             that secret rooftop show. Enable voting for your anarcho-syndicated
             commune's bi-weekly internal affairs meeting.
           </p>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             This isn't just ticketing, it's digital metaphysical alchemy! Yes,
             I'm being serious. No I'm not drunk, stop asking.
           </p>
 
           <h5 className="mt-4 mb-3">💸 The Economics of Fun</h5>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             Every event needs tickets for attendees. New users start with 10
             free tickets. Log in daily for 2 (morning) or 4 (evening) tickets
             every 24 hours.
           </p>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             Need more? Buy a pack. Simple. Transparent. Not evil. Use them to
-            create or boost events. That's it. Its a one time purchase on demand
-            should you need more tickets. Afterall, I'm trying to sell some
-            books here.
+            create or boost events. That's it. It's a one time purchase on
+            demand should you need more tickets. Afterall, I'm trying to sell
+            some books here.
           </p>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             While event organizers can set ticket prices, Eventic does not yet
             perform as a payment procesor for the event. This means the ticket
             price is to be paid at the event, using whatever payment system the
             organizer chooses.
           </p>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             There are no refunds on this platform and the only ones paying are
             the organizers of the event for the tickets they need. This is a
             beta release and I'm working on payment processing to make this
@@ -82,73 +91,59 @@ export default function Manifesto() {
           </p>
 
           <h5 className="mt-4 mb-3">🔐 Control With Some Chaos</h5>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             <strong>Validation:</strong> Works in any browser. No app downloads.
             Simply Login and get validated at the event. Some questions may be
-            asked.
+            asked for security.
           </p>
-          <p className="mb-3">
-            <strong>Geofencing:</strong> Lock ticket validation to a 300 meter
-            radius. Perfect for speakeasies and flash mobs. You can only get
-            validated if you are there.
+          <p className="mb-3" style={paragraphStyle}>
+            <strong>Geofencing:</strong> If enabled, your ticket becomes
+            location aware. It's only valid within a 690-meter radius. If
+            disabled, users can enter from wherever they want. Defaults: off.
           </p>
-          <p className="mb-3">
-            <strong>Multi-pass:</strong> One ticket, multiple entries. Because
-            some parties need bathroom breaks.
+          <p className="mb-3" style={paragraphStyle}>
+            <strong>Multi-pass:</strong> Enable if one ticket allows multiple
+            entries. Perfect for conferences or multi-day festivals. All event
+            creation settings are permanent.
           </p>
-          <p className="mb-3">
-            <strong>Surge pricing:</strong> Make capitalism work for you when
-            demand spikes.
-          </p>
-          <p className="mb-3">
-            <strong>Private:</strong> Events can be set to private and are only
-            accessible to those with a login and the URL.
+          <p className="mb-3" style={paragraphStyle}>
+            <strong>Surge pricing:</strong> Let capitalism work when demand
+            spikes, like ride-sharing apps, you set the multiplier, 1.5x to 5x.
           </p>
 
           <h5 className="mt-4 mb-3">⏳ The 69-Day Rule</h5>
-          <p className="mb-3">Everything dies.</p>
-          <p className="mb-3">
-            69 days after your event ends aaannnnnnd its gone. A minimal archive
-            lingers for a year as a CSV for you to download, then that vanishes
-            too after one year.
+          <p className="mb-3" style={paragraphStyle}>
+            Most moments are meant to fade. Event and ticket data self-destructs
+            69 days after your event ends. A minimal archive survives up to a
+            year, then vanishes too.
           </p>
-          <p className="mb-3">
-            Digital hoarding is a disease and frankly when an event ends, why
-            keep it around? Most moments are destined to fade. The internet
-            doesn't need another record of your cousin's birthday party.
-          </p>
-          <p className="mb-3">
-            Unless... For the low, low price of $2.69 you can mint you own
-            digitial collectable. Optioanlly set by the event owner and
-            attendees don't need to buy it. But if you want to turn your ticket
-            into eternal NFT artifact, you can. A certified "proof of existance"
-            record you were there. Completely optional. No pressure.
+          <p className="mb-3" style={paragraphStyle}>
+            Until I ship the NFT feature. $2.69 turns your ticket into an
+            eternal proof-of-experience. Optional. Zero pressure. Proof. You.
+            Were. There. Stuck in the blockchain forever. Or until the world
+            ends. Whichever comes first.
           </p>
 
           <h5 className="mt-4 mb-3">✨ The Philosophy</h5>
-          <p className="mb-3">
-            No algorithms deciding what you see. No engagement metrics. No
-            influencer tiers. No algorithmic timeline manipulation.
+          <p className="mb-3" style={paragraphStyle}>
+            No engagement metrics. No influencer tiers. No algorithmic 
+            manipulation. Just tickets to things that actually happen. In 
+            places that actually exist. For people who actually show up.
           </p>
-          <p className="mb-3">
-            Just tickets to things that actually happen, in places that actually
-            exist, with people who actually show up.
-          </p>
-          <p className="mb-3">
-            We built this for the underground comedy show, the warehouse rave,
-            the popup restaurant, the secret screening, the anarchist book club,
-            the rooftop ritual, the things that matter because they don't last
-            forever.
+          <p className="mb-3" style={paragraphStyle}>
+            We built this for the underground comedy show. The warehouse rave. 
+            The popup restaurant. The anarchist book club. The rooftop ritual. 
+            Things that matter because they don't last forever.
           </p>
 
           <h5 className="mt-4 mb-3">🏁 The Promise</h5>
-          <p className="mb-3">
+          <p className="mb-3" style={paragraphStyle}>
             Create weird events. Validate real moments. Let most things
-            disappear.
+            disappear. And when something truly matters? Mint it.
           </p>
-          <p className="mb-3">
-            This is Eventic. We're not disrupting anything. We're just making
-            tickets fun again.
+          <p className="mb-3" style={paragraphStyle}>
+            This is Eventic. We're not disrupting anything. We're not the future
+            of anything. We're just making tickets that don't suck.
           </p>
           <p className="text-muted small mt-3">
             <em>Buy the ticket. Take the ride. Let it burn.</em>
@@ -157,7 +152,7 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body" style={{ fontSize: '1.05rem', lineHeight: '1.7' }}>
+        <div className="card-body">
           <h2 className="h4 mb-3 d-flex align-items-center">
             <Sparkles className="text-warning me-2" size={24} />
             The Secret Sauce: Event Settings
@@ -165,7 +160,7 @@ export default function Manifesto() {
 
           <div className="mb-4">
             <h5 className="text-warning">🎫 Golden Tickets (10% Chance)</h5>
-            <p>
+            <p style={sectionStyle}>
               Pure Wonka energy. When someone validates, they might strike
               gold—literally. Their ticket transforms into a shimmering golden
               masterpiece. No chocolate factory required.
@@ -177,11 +172,9 @@ export default function Manifesto() {
           </div>
 
           <div className="mb-4">
-            <h5 className="text-purple">
-              ✨ Special Effects (Date-Based Magic)
-            </h5>
-            <p>Your validated tickets can:</p>
-            <ul>
+            <h5 className="text-purple">✨ Special Effects (Date-Based Magic)</h5>
+            <p style={sectionStyle}>Your validated tickets can:</p>
+            <ul style={sectionStyle}>
               <li>
                 <strong>Explode with confetti</strong> on New Year's or
                 birthdays
@@ -215,7 +208,7 @@ export default function Manifesto() {
 
           <div className="mb-4">
             <h5 className="text-danger">📈 Surge Pricing (1.5x - 5x)</h5>
-            <p>
+            <p style={sectionStyle}>
               When you hit 50% capacity, prices can multiply. Supply, meet
               demand. Demand, meet capitalism. It's like Uber but for fun.
             </p>
@@ -226,8 +219,8 @@ export default function Manifesto() {
 
           <div className="mb-4">
             <h5 className="text-success">🔄 Recurring Events</h5>
-            <p>Your event can resurrect itself:</p>
-            <ul>
+            <p style={sectionStyle}>Your event can resurrect itself:</p>
+            <ul style={sectionStyle}>
               <li>
                 <strong>Weekly:</strong> Every Tuesday fight club
               </li>
@@ -246,7 +239,7 @@ export default function Manifesto() {
 
           <div className="mb-4">
             <h5 className="text-pink">🎨 Custom Stickers</h5>
-            <p>
+            <p style={sectionStyle}>
               Upload any image. Set the probability. Watch it randomly appear on
               validated tickets. Pizza slices, crying Jordan, your ex's face—we
               don't judge your artistic choices.
@@ -258,7 +251,7 @@ export default function Manifesto() {
 
           <div className="mb-4">
             <h5 className="text-info">🤝 P2P Validation</h5>
-            <p>
+            <p style={sectionStyle}>
               Democratize the door. Any ticket holder becomes a validator.
               Perfect for events where "organized" is a loose concept. Flash
               mobs, raves, revolutionary meetings—you get it.
@@ -271,19 +264,19 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body" style={{ fontSize: '1.05rem', lineHeight: '1.7' }}>
+        <div className="card-body">
           <h2 className="h4 mb-3 d-flex align-items-center">
             <Shield className="text-primary me-2" size={24} />
             Validation: How the Magic Happens
           </h2>
 
-          <p className="mb-3">
+          <p className="mb-3" style={sectionStyle}>
             Forget QR codes. We use 6-digit PINs because simplicity beats
             complexity every time.
           </p>
 
           <h5>The Flow:</h5>
-          <ol>
+          <ol style={sectionStyle}>
             <li className="mb-2">
               <strong>Attendee generates PIN</strong> — Good for 5 minutes.
               Shows it to the door person.
@@ -304,7 +297,7 @@ export default function Manifesto() {
 
           <div className="alert alert-info mt-3">
             <strong>The Rules:</strong>
-            <ul className="mb-0 mt-2">
+            <ul className="mb-0 mt-2" style={sectionStyle}>
               <li>PINs expire in 5 minutes (security through ephemerality)</li>
               <li>Unlimited PIN generation until validated</li>
               <li>Event creators always have validation power</li>
@@ -316,7 +309,7 @@ export default function Manifesto() {
       </div>
 
       <div className="card mb-4">
-        <div className="card-body" style={{ fontSize: '1.05rem', lineHeight: '1.7' }}>
+        <div className="card-body">
           <h2 className="h4 mb-3 d-flex align-items-center">
             <TicketIcon className="text-success me-2" size={24} />
             The Life of a Ticket
@@ -324,7 +317,7 @@ export default function Manifesto() {
 
           <div className="mb-3">
             <h5>From Birth to Glory:</h5>
-            <ol>
+            <ol style={sectionStyle}>
               <li className="mb-2">
                 <strong>Creation:</strong> Someone claims a ticket. A digital
                 soul is born.
@@ -350,7 +343,7 @@ export default function Manifesto() {
 
           <div className="alert alert-info">
             <strong>Ticket Economics:</strong>
-            <ul className="mb-0 mt-2">
+            <ul className="mb-0 mt-2" style={sectionStyle}>
               <li>Resale allowed at original price (2% platform fee)</li>
               <li>Free tickets can be returned to the pool</li>
               <li>Resale window closes 1 hour before showtime</li>
@@ -361,9 +354,9 @@ export default function Manifesto() {
       </div>
 
       <div className="card">
-        <div className="card-body text-center" style={{ fontSize: '1.05rem', lineHeight: '1.6' }}>
+        <div className="card-body text-center">
           <h2 className="h4 mb-3">Ready to Start Something?</h2>
-          <p className="mb-4">
+          <p className="mb-4" style={sectionStyle}>
             You've read the manifesto. You get it. Now go create something worth
             remembering (for 69 days).
           </p>
@@ -375,10 +368,7 @@ export default function Manifesto() {
               </a>
             </Link>
             <Link href="/">
-              <a
-                className="btn btn-outline-secondary"
-                data-testid="button-browse-events"
-              >
+              <a className="btn btn-outline-secondary" data-testid="button-browse-events">
                 Browse Events
               </a>
             </Link>
