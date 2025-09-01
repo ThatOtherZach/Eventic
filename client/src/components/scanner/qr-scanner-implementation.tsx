@@ -175,10 +175,18 @@ export function QrScannerImplementation() {
   // Cycle through colors when loading
   useEffect(() => {
     if (validateTicketMutation.isPending) {
+      console.log('Starting color animation...');
       const interval = setInterval(() => {
-        setButtonColorIndex((prev) => (prev + 1) % badgeColors.length);
+        setButtonColorIndex((prev) => {
+          const next = (prev + 1) % badgeColors.length;
+          console.log('Color index:', next, 'Color:', badgeColors[next]);
+          return next;
+        });
       }, 500); // Change color every 0.5 seconds
-      return () => clearInterval(interval);
+      return () => {
+        console.log('Stopping color animation');
+        clearInterval(interval);
+      };
     } else {
       setButtonColorIndex(0); // Reset when not loading
     }
@@ -254,15 +262,13 @@ export function QrScannerImplementation() {
                 validateTicketMutation.isPending || manualCode.length !== 4
               }
               data-testid="button-submit-code"
-              style={{
-                backgroundColor: validateTicketMutation.isPending 
-                  ? badgeColors[buttonColorIndex] 
-                  : '',
-                borderColor: validateTicketMutation.isPending 
-                  ? badgeColors[buttonColorIndex] 
-                  : '',
-                transition: 'background-color 0.3s ease, border-color 0.3s ease'
-              }}
+              style={validateTicketMutation.isPending ? {
+                backgroundColor: badgeColors[buttonColorIndex],
+                borderColor: badgeColors[buttonColorIndex],
+                color: '#ffffff',
+                transition: 'all 0.3s ease',
+                opacity: 1
+              } : {}}
             >
               {validateTicketMutation.isPending ? (
                 <span
