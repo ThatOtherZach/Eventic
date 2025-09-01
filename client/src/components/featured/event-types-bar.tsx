@@ -27,7 +27,7 @@ const badgeTypes = [
   { key: 'surgePricing', color: '#DC2626', label: 'Surge Pricing', searchParam: 'surge' },
   { key: 'stickerUrl', color: '#EC4899', label: 'Custom Stickers', searchParam: 'stickers' },
   { key: 'p2pValidation', color: '#3B82F6', label: 'P2P Validation', searchParam: 'p2p' },
-  { key: 'allowMinting', color: '#000000', label: 'Collectable', searchParam: 'nft' },
+  { key: 'allowMinting', color: '#000000', label: 'Collectable', searchParam: 'collectable' },
   { key: 'geofence', color: '#F59E0B', label: 'Location Lock', searchParam: 'geofenced' },
   { key: 'enableVoting', color: '#EAB308', label: 'Voting Enabled', searchParam: 'voting' },
   { key: 'recurringType', color: '#059669', label: 'Recurring', searchParam: 'recurring' },
