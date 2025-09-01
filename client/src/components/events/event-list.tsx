@@ -368,9 +368,22 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     </div>
                     <div className="text-end ms-auto">
                       <p className="mb-0 fw-semibold text-dark" style={{ cursor: 'pointer' }}>
-                        {parseFloat(event.ticketPrice) === 0 ? 'Free' : `$${parseFloat(event.ticketPrice).toFixed(2)}`}
+                        {event.currentPrice === 0 ? 'Free' : `$${event.currentPrice.toFixed(2)}`}
+                        {event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
+                          <small className="text-danger ms-1">
+                            ({(() => {
+                              const basePrice = parseFloat(event.ticketPrice);
+                              const increase = event.currentPrice - basePrice;
+                              const increasePercent = Math.round((increase / basePrice) * 100);
+                              return `+${increasePercent}%`;
+                            })()})
+                          </small>
+                        )}
                       </p>
-                      {parseFloat(event.ticketPrice) !== 0 && (
+                      {event.currentPrice !== 0 && event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
+                        <span className="badge bg-danger small">Surge</span>
+                      )}
+                      {event.currentPrice !== 0 && event.currentPrice === parseFloat(event.ticketPrice) && (
                         <p className="text-muted small mb-0">at door</p>
                       )}
                     </div>
