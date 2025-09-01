@@ -242,7 +242,7 @@ export function LocationEventsPage() {
                         {/* Event Details */}
                         <div className="flex-grow-1 px-3 pt-3 pb-5 text-white d-flex flex-column justify-content-between">
                           <div>
-                            <h5 className="mb-2 fw-bold" style={{ fontSize: '18px', marginTop: '24px' }}>
+                            <h5 className="mb-2 fw-bold" style={{ fontSize: '18px', marginTop: '0' }}>
                               {mockTicket.isGoldenTicket ? (
                                 // Golden ticket takes priority
                                 <span 
