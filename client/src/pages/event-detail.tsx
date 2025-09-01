@@ -1021,7 +1021,7 @@ export default function EventDetailPage() {
                         <strong>{organizerDetails.displayName}</strong>
                       </div>
                       <div className="d-flex align-items-center mt-1">
-                        <span className="badge bg-secondary small me-3" style={{ textTransform: 'capitalize' }}>{organizerDetails.type}</span>
+                        <span className="badge bg-secondary small me-2" style={{ textTransform: 'capitalize' }}>{organizerDetails.type}</span>
                         {organizerReputation && (() => {
                           const reputationInfo = getReputationDisplay();
                           if (!reputationInfo) return null;
