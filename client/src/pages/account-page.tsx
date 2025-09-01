@@ -339,7 +339,7 @@ export default function AccountPage() {
                     );
                   }
                   
-                  // Fallback to reconstructed ticket if no GIF
+                  // Fallback to reconstructed ticket if no GIF/image
                   const reconstructedTicket = {
                     id: record.ticketId,
                     ticketNumber: record.ticketNumber,
@@ -349,7 +349,11 @@ export default function AccountPage() {
                     isGoldenTicket: originalTicket.isGoldenTicket || false,
                     isCharged: originalTicket.isCharged || false,
                     useCount: originalTicket.useCount || 1,
-                    voteCount: originalTicket.voteCount || 0
+                    voteCount: originalTicket.voteCount || 0,
+                    specialEffect: originalTicket.specialEffect || null,
+                    purchasePrice: originalTicket.purchasePrice || '0.00',
+                    eventId: record.eventId,
+                    userId: record.ownerId
                   };
                   
                   // Reconstruct the event object for display
@@ -364,7 +368,16 @@ export default function AccountPage() {
                     specialEffectsEnabled: eventFeatures.specialEffectsEnabled || false,
                     stickerUrl: eventFeatures.stickerUrl || null,
                     enableVoting: eventFeatures.enableVoting || false,
-                    reentryType: eventFeatures.reentryType || 'No Reentry (Single Use)'
+                    reentryType: eventFeatures.reentryType || 'No Reentry (Single Use)',
+                    maxUses: eventFeatures.maxUses || 1,
+                    endDate: eventFeatures.endDate || null,
+                    endTime: eventFeatures.endTime || null,
+                    isAdminCreated: eventFeatures.isAdminCreated || false,
+                    recurringType: eventFeatures.recurringType || null,
+                    geofence: eventFeatures.geofence || false,
+                    p2pValidation: eventFeatures.p2pValidation || false,
+                    surgePricing: eventFeatures.surgePricing || false,
+                    allowMinting: eventFeatures.allowMinting || true
                   };
                   
                   return (
