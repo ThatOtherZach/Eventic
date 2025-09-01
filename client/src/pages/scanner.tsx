@@ -10,7 +10,7 @@ export default function Scanner() {
             className="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
             style={{ width: "64px", height: "64px" }}
           >
-            <img src={validateIcon} alt="Validate" style={{ width: "32px", height: "32px" }} />
+            <img src={validateIcon} alt="Validate" style={{ width: "40px", height: "40px" }} />
           </div>
           <h2 className="h3 fw-semibold text-dark mb-2">Validate</h2>
         </div>
