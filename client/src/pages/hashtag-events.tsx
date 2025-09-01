@@ -106,7 +106,7 @@ export function HashtagEventsPage() {
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
               <img src="/hashtag-icon.png" alt="" style={{ width: '28px', height: '28px' }} />
-              #{processedHashtag.toUpperCase()} Events
+              #{processedHashtag.charAt(0).toUpperCase() + processedHashtag.slice(1)} Events
             </h2>
             <p className="text-muted">
               {events.length} {events.length === 1 ? 'event' : 'events'} found
