@@ -96,7 +96,7 @@ export default function TicketViewPage(): React.ReactElement {
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCharging, setIsCharging] = useState(false);
-  const [userTicketCount, setUserTicketCount] = useState(0);
+  const [userCredits, setUserCredits] = useState(0);
 
   // Fetch ticket details with polling during validation
   const { data: ticketData, isLoading, error } = useQuery<{ ticket: Ticket; event: Event }>({
@@ -109,21 +109,21 @@ export default function TicketViewPage(): React.ReactElement {
     refetchInterval: isValidating ? 2000 : false,
   });
 
-  // Check user's ticket count for this event
-  const { data: userTickets } = useQuery({
-    queryKey: [`/api/events/${ticketData?.event.id}/user-tickets`],
+  // Check user's credit balance
+  const { data: userBalance } = useQuery({
+    queryKey: [`/api/currency/balance`],
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/events/${ticketData?.event.id}/user-tickets`);
+      const response = await apiRequest("GET", `/api/currency/balance`);
       return response.json();
     },
-    enabled: !!ticketData?.event.id,
+    enabled: !!ticketData?.ticket.userId,
   });
 
   useEffect(() => {
-    if (userTickets) {
-      setUserTicketCount(userTickets.length);
+    if (userBalance) {
+      setUserCredits(userBalance.balance || 0);
     }
-  }, [userTickets]);
+  }, [userBalance]);
 
   // Check if user has already rated
   const { data: ratingStatus } = useQuery({
@@ -556,8 +556,8 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           </div>
 
-          {/* Charge Ticket Section - Only show if event has special effects and stickers enabled */}
-          {event.specialEffectsEnabled && event.stickerUrl && !ticket.isCharged && userTicketCount >= 3 && (
+          {/* Charge Ticket Section - Only show if event has special effects and stickers enabled, ticket not validated */}
+          {event.specialEffectsEnabled && event.stickerUrl && !ticket.isCharged && !ticket.isValidated && (
             <div className="card mb-4">
               <div className="card-body">
                 <h6 className="card-title mb-3">
@@ -578,8 +578,8 @@ export default function TicketViewPage(): React.ReactElement {
                 <div className="alert alert-info small mb-3">
                   <strong>How it works:</strong>
                   <ul className="mb-0 mt-2">
-                    <li>You have {userTicketCount} tickets for this event</li>
-                    <li>Charging uses 3 tickets to improve this ticket's odds</li>
+                    <li>You have {userCredits} credits available</li>
+                    <li>Charging costs 3 credits to improve this ticket's odds</li>
                     <li>Special effects odds will be cut in half (better chances)</li>
                     <li>Includes golden tickets, stickers, and all special effects</li>
                   </ul>
@@ -587,7 +587,7 @@ export default function TicketViewPage(): React.ReactElement {
                 <button
                   className="btn btn-warning w-100"
                   onClick={async () => {
-                    if (!confirm('Are you sure you want to charge this ticket? This will use 3 of your tickets to improve special effects odds.')) {
+                    if (!confirm('Are you sure you want to charge this ticket? This will cost 3 credits to improve special effects odds.')) {
                       return;
                     }
                     setIsCharging(true);
@@ -598,9 +598,9 @@ export default function TicketViewPage(): React.ReactElement {
                           title: "Ticket Charged!",
                           description: "Your ticket now has improved special effects odds.",
                         });
-                        // Refresh ticket data
+                        // Refresh ticket data and balance
                         queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
-                        queryClient.invalidateQueries({ queryKey: [`/api/events/${event.id}/user-tickets`] });
+                        queryClient.invalidateQueries({ queryKey: [`/api/currency/balance`] });
                       } else {
                         const error = await response.json();
                         toast({
@@ -619,7 +619,7 @@ export default function TicketViewPage(): React.ReactElement {
                       setIsCharging(false);
                     }
                   }}
-                  disabled={isCharging}
+                  disabled={isCharging || userCredits < 3}
                   data-testid="button-charge-ticket"
                 >
                   {isCharging ? (
@@ -627,10 +627,15 @@ export default function TicketViewPage(): React.ReactElement {
                       <span className="spinner-border spinner-border-sm me-2" />
                       Charging...
                     </>
+                  ) : userCredits < 3 ? (
+                    <>
+                      <Zap size={18} className="me-2" />
+                      Insufficient Credits
+                    </>
                   ) : (
                     <>
                       <Zap size={18} className="me-2" />
-                      Charge Ticket (Uses 3 Tickets)
+                      Charge Ticket (3 Credits)
                     </>
                   )}
                 </button>

@@ -1144,46 +1144,99 @@ export class DatabaseStorage implements IStorage {
   // Reassign golden tickets based on vote counts for voting-enabled events
   async chargeTicket(ticketId: string, userId: string): Promise<boolean> {
     try {
-      // Get the ticket to charge
-      const ticketToCharge = await this.getTicket(ticketId);
-      if (!ticketToCharge || ticketToCharge.userId !== userId) {
-        return false;
-      }
+      return await db.transaction(async (tx) => {
+        // Get the ticket to charge
+        const ticketToCharge = await tx
+          .select()
+          .from(tickets)
+          .where(eq(tickets.id, ticketId))
+          .then(rows => rows[0]);
+          
+        if (!ticketToCharge || ticketToCharge.userId !== userId) {
+          return false;
+        }
 
-      // Check if ticket is already charged
-      if (ticketToCharge.isCharged) {
-        return false;
-      }
+        // Check if ticket is already charged or validated
+        if (ticketToCharge.isCharged || ticketToCharge.isValidated) {
+          return false;
+        }
 
-      // Get event to verify special effects and stickers are enabled
-      const event = await this.getEvent(ticketToCharge.eventId);
-      if (!event || !event.specialEffectsEnabled || !event.stickerUrl) {
-        return false;
-      }
+        // Get event to verify special effects and stickers are enabled
+        const event = await tx
+          .select()
+          .from(events)
+          .where(eq(events.id, ticketToCharge.eventId))
+          .then(rows => rows[0]);
+          
+        if (!event || !event.specialEffectsEnabled || !event.stickerUrl) {
+          return false;
+        }
 
-      // Get all user's tickets for this event
-      const userTickets = await db
-        .select()
-        .from(tickets)
-        .where(and(
-          eq(tickets.eventId, ticketToCharge.eventId),
-          eq(tickets.userId, userId),
-          ne(tickets.resellStatus, "for_resale"),
-          ne(tickets.resellStatus, "sold")
-        ));
+        // Check user's currency balance
+        const userBalance = await tx
+          .select({ balance: sql`COALESCE(SUM(CASE WHEN entry_type = 'credit' THEN amount ELSE -amount END), 0)` })
+          .from(currencyLedger)
+          .where(eq(currencyLedger.accountId, userId))
+          .then(rows => Number(rows[0]?.balance || 0));
 
-      // Need at least 3 tickets total to charge one
-      if (userTickets.length < 3) {
-        return false;
-      }
+        // Check if user has at least 3 credits
+        if (userBalance < 3) {
+          console.log(`User ${userId} has insufficient credits: ${userBalance} < 3`);
+          return false;
+        }
 
-      // Update the ticket to charged status
-      await db
-        .update(tickets)
-        .set({ isCharged: true })
-        .where(eq(tickets.id, ticketId));
+        // Create a unique transaction ID for this charge operation
+        const transactionId = `charge_${ticketId}_${Date.now()}`;
 
-      return true;
+        // Debit 3 credits from user's account
+        await tx.insert(currencyLedger).values({
+          transactionId,
+          accountId: userId,
+          accountType: 'user',
+          entryType: 'debit',
+          amount: '3.00',
+          balance: (userBalance - 3).toString(),
+          transactionType: 'TICKET_CHARGE',
+          description: 'Charged ticket for improved special effects odds',
+          metadata: JSON.stringify({
+            ticketId: ticketId,
+            eventId: ticketToCharge.eventId,
+            eventName: event.name
+          }),
+          relatedEntityId: ticketId,
+          relatedEntityType: 'ticket',
+          createdBy: userId,
+        });
+
+        // Credit the system rewards account
+        await tx.insert(currencyLedger).values({
+          transactionId,
+          accountId: 'system_rewards',
+          accountType: 'system_rewards',
+          entryType: 'credit',
+          amount: '3.00',
+          balance: '0', // System accounts don't track balance
+          transactionType: 'TICKET_CHARGE',
+          description: 'Received payment for ticket charge',
+          metadata: JSON.stringify({
+            ticketId: ticketId,
+            userId: userId,
+            eventId: ticketToCharge.eventId
+          }),
+          relatedEntityId: ticketId,
+          relatedEntityType: 'ticket',
+          createdBy: userId,
+        });
+
+        // Update the ticket to charged status
+        await tx
+          .update(tickets)
+          .set({ isCharged: true })
+          .where(eq(tickets.id, ticketId));
+
+        console.log(`✨ Ticket ${ticketId} charged successfully. User ${userId} debited 3 credits.`);
+        return true;
+      });
     } catch (error) {
       console.error("Error charging ticket:", error);
       return false;
