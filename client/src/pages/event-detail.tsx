@@ -391,6 +391,46 @@ export default function EventDetailPage() {
   }
 
   if (error || !event) {
+    // Check if it's an authentication error for a private event
+    const errorMessage = (error as any)?.message || '';
+    const isAuthError = errorMessage.includes('Authentication required') || 
+                        errorMessage.includes('private event');
+    
+    if (isAuthError && !user) {
+      return (
+        <div className="container py-5">
+          <div className="alert alert-warning">
+            <Shield size={24} className="me-2" />
+            This is a private event. Please sign in to view it.
+          </div>
+          <div className="mt-3">
+            <Link href={`/auth?redirect=/events/${id}`} className="btn btn-primary me-2">
+              Sign In to View Event
+            </Link>
+            <Link href="/events" className="btn btn-outline-secondary">
+              <ArrowLeft size={18} className="me-2" />
+              Back to Events
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    
+    if (isAuthError && user) {
+      return (
+        <div className="container py-5">
+          <div className="alert alert-warning">
+            <Shield size={24} className="me-2" />
+            This is a private event. You need to be the owner or have a ticket to view it.
+          </div>
+          <Link href="/events" className="btn btn-primary">
+            <ArrowLeft size={18} className="me-2" />
+            Back to Events
+          </Link>
+        </div>
+      );
+    }
+    
     return (
       <div className="container py-5">
         <div className="alert alert-danger">
