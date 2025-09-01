@@ -13,6 +13,7 @@ interface BadgeBarProps {
     recurringType?: string | null;
     p2pValidation?: boolean;
     maxTickets?: number | null;
+    endDate?: string | null;
   };
 }
 
@@ -52,6 +53,9 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event }) => {
   }
   if (event.maxTickets) {
     badges.push({ color: '#14B8A6', label: 'Limited' });
+  }
+  if (event.endDate) {
+    badges.push({ color: '#6B7280', label: 'Multi-day' });
   }
 
   // If no badges, return null
