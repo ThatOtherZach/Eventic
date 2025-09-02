@@ -21,6 +21,7 @@ import {
 import starIcon from "@assets/world_star-0_1756849251180.png";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
 import p2pIcon from "@assets/users_green-4_1756849357200.png";
+import gpsIcon from "@assets/gps-1_1756849430189.png";
 
 export default function NerdStats() {
 
@@ -274,7 +275,7 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="card shadow-sm">
                 <div className="card-body text-center">
-                  <Hash className="text-secondary mb-2" size={24} />
+                  <img src={gpsIcon} alt="Location Specific" className="mb-2" style={{ width: 24, height: 24 }} />
                   <div className="h5 fw-bold mb-1">{advancedStats?.locationSpecificEvents || 0}</div>
                   <div className="text-muted small">Location Specific</div>
                 </div>
