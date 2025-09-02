@@ -721,7 +721,7 @@ export default function AccountPage() {
                       >
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
-                            <div className="fw-semibold">Standard Part II: Electric Boogaloo</div>
+                            <div className="fw-semibold">Standard II: Electric Boogaloo</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '100' : '50'} Tickets
                               {calculateBonus(100) > 0 && (
