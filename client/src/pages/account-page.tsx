@@ -512,11 +512,29 @@ export default function AccountPage() {
                               )}
                             </small>
                           </div>
-                          <div>
-                            <div className="fw-bold">
-                              ${multiplyAndSave ? (24 * 0.29 * 0.9).toFixed(2) : '3.48'}
-                            </div>
-                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          <div className="text-end">
+                            {reputationDiscount > 0 ? (
+                              <>
+                                <div className="fw-bold">
+                                  ${(() => {
+                                    let price = (multiplyAndSave ? 24 : 12) * 0.29;
+                                    if (multiplyAndSave) price *= 0.9;
+                                    price *= (1 - reputationDiscount / 100);
+                                    return price.toFixed(2);
+                                  })()}
+                                </div>
+                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                  ${multiplyAndSave ? (24 * 0.29 * 0.9).toFixed(2) : '3.48'}
+                                </small>
+                              </>
+                            ) : (
+                              <>
+                                <div className="fw-bold">
+                                  ${multiplyAndSave ? (24 * 0.29 * 0.9).toFixed(2) : '3.48'}
+                                </div>
+                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                              </>
+                            )}
                           </div>
                         </div>
                       </button>
@@ -536,11 +554,29 @@ export default function AccountPage() {
                               )}
                             </small>
                           </div>
-                          <div>
-                            <div className="fw-bold">
-                              ${multiplyAndSave ? (48 * 0.29 * 0.9).toFixed(2) : '6.96'}
-                            </div>
-                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          <div className="text-end">
+                            {reputationDiscount > 0 ? (
+                              <>
+                                <div className="fw-bold">
+                                  ${(() => {
+                                    let price = (multiplyAndSave ? 48 : 24) * 0.29;
+                                    if (multiplyAndSave) price *= 0.9;
+                                    price *= (1 - reputationDiscount / 100);
+                                    return price.toFixed(2);
+                                  })()}
+                                </div>
+                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                  ${multiplyAndSave ? (48 * 0.29 * 0.9).toFixed(2) : '6.96'}
+                                </small>
+                              </>
+                            ) : (
+                              <>
+                                <div className="fw-bold">
+                                  ${multiplyAndSave ? (48 * 0.29 * 0.9).toFixed(2) : '6.96'}
+                                </div>
+                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                              </>
+                            )}
                           </div>
                         </div>
                         <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style={{ fontSize: '0.65rem' }}>
@@ -563,11 +599,29 @@ export default function AccountPage() {
                               )}
                             </small>
                           </div>
-                          <div>
-                            <div className="fw-bold">
-                              ${multiplyAndSave ? (100 * 0.29 * 0.9).toFixed(2) : '14.50'}
-                            </div>
-                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          <div className="text-end">
+                            {reputationDiscount > 0 ? (
+                              <>
+                                <div className="fw-bold">
+                                  ${(() => {
+                                    let price = (multiplyAndSave ? 100 : 50) * 0.29;
+                                    if (multiplyAndSave) price *= 0.9;
+                                    price *= (1 - reputationDiscount / 100);
+                                    return price.toFixed(2);
+                                  })()}
+                                </div>
+                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                  ${multiplyAndSave ? (100 * 0.29 * 0.9).toFixed(2) : '14.50'}
+                                </small>
+                              </>
+                            ) : (
+                              <>
+                                <div className="fw-bold">
+                                  ${multiplyAndSave ? (100 * 0.29 * 0.9).toFixed(2) : '14.50'}
+                                </div>
+                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                              </>
+                            )}
                           </div>
                         </div>
                       </button>
@@ -587,11 +641,29 @@ export default function AccountPage() {
                               )}
                             </small>
                           </div>
-                          <div>
-                            <div className="fw-bold">
-                              ${multiplyAndSave ? (200 * 0.29 * 0.9).toFixed(2) : '29.00'}
-                            </div>
-                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          <div className="text-end">
+                            {reputationDiscount > 0 ? (
+                              <>
+                                <div className="fw-bold">
+                                  ${(() => {
+                                    let price = (multiplyAndSave ? 200 : 100) * 0.29;
+                                    if (multiplyAndSave) price *= 0.9;
+                                    price *= (1 - reputationDiscount / 100);
+                                    return price.toFixed(2);
+                                  })()}
+                                </div>
+                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                  ${multiplyAndSave ? (200 * 0.29 * 0.9).toFixed(2) : '29.00'}
+                                </small>
+                              </>
+                            ) : (
+                              <>
+                                <div className="fw-bold">
+                                  ${multiplyAndSave ? (200 * 0.29 * 0.9).toFixed(2) : '29.00'}
+                                </div>
+                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                              </>
+                            )}
                           </div>
                         </div>
                       </button>
