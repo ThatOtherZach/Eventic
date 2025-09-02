@@ -1017,76 +1017,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "NFT minting is not enabled for this event" });
       }
       
-      const captureService = getTicketCaptureService();
-      const objectStorageService = new ObjectStorageService();
-      let mediaPath: string | null = null;
-      let mediaUrl: string | null = null;
-      let mediaType: string = 'text/html';
+      // Client handles media generation and upload directly
+      // This endpoint now just returns success for compatibility
+      console.log('Client-side media generation - skipping server-side processing');
       
-      // For now, fallback to GIF since HTML capture has issues
-      try {
-        console.log('Generating GIF for NFT...');
-        mediaPath = await captureService.captureTicketAsVideo({
-          ticket,
-          event,
-          format: 'gif'
-        });
-        mediaType = 'image/gif';
-        console.log('GIF capture successful:', mediaPath);
-      } catch (gifError) {
-        console.error("GIF generation failed:", gifError);
-        
-        // Fallback to static image if GIF fails
-        try {
-          mediaPath = await captureService.captureTicketAsImage({
-            ticket,
-            event
-          });
-          mediaType = 'image/png';
-        } catch (imageError) {
-          console.error("All media generation attempts failed:", imageError);
-          throw new Error("Failed to generate any media format");
-        }
-      }
-      
-      if (!mediaPath) {
-        throw new Error("No media generated");
-      }
-      
-      // Upload media to object storage
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      
-      // Read the media file
-      const mediaBuffer = fs.readFileSync(mediaPath);
-      
-      // Upload to storage
-      const uploadResponse = await fetch(uploadURL, {
-        method: 'PUT',
-        body: mediaBuffer,
-        headers: {
-          'Content-Type': mediaType,
-        },
+      res.json({ 
+        mediaUrl: null,
+        mediaType: 'text/html',
+        cached: false,
+        message: 'Client will handle media generation'
       });
-      
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload MP4 to storage');
-      }
-      
-      // Get the public URL
-      const baseUrl = uploadURL.split('?')[0];
-      const parts = baseUrl.split('/');
-      const filename = parts[parts.length - 1];
-      const publicUrl = `/public-objects/uploads/${filename}`;
-      
-      // Clean up temporary file
-      if (mediaPath) {
-        fs.unlinkSync(mediaPath);
-      }
-      
-      // Update ticket with media URL
-      await storage.updateTicketNftMediaUrl(req.params.ticketId, publicUrl);
-      
-      res.json({ mediaUrl: publicUrl, cached: false });
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/generate-nft-media", {
         request: req,
