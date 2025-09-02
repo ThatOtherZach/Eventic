@@ -478,6 +478,25 @@ export default function AccountPage() {
                           </div>
                         </div>
                       </button>
+                      
+                      {/* Ultimate Pack Button */}
+                      <button
+                        className={`btn btn-sm ${ticketQuantity === (multiplyAndSave ? 200 : 100) ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
+                        onClick={() => setTicketQuantity(multiplyAndSave ? 200 : 100)}
+                      >
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div className="fw-semibold">Ultimate</div>
+                            <small className="text-muted">{multiplyAndSave ? '200' : '100'} tickets</small>
+                          </div>
+                          <div>
+                            <div className="fw-bold">
+                              ${multiplyAndSave ? (200 * 0.29 * 0.9).toFixed(2) : '29.00'}
+                            </div>
+                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          </div>
+                        </div>
+                      </button>
                     </div>
                     
                     {/* Selected Total */}
