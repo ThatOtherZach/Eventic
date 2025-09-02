@@ -82,15 +82,15 @@ export class TicketCaptureService {
       // Generate the HTML for the ticket
       const ticketHTML = this.generateTicketHTML(ticket, event);
       
-      // Set the content
-      await page.setContent(ticketHTML, { waitUntil: 'networkidle0' });
+      // Set the content with faster wait
+      await page.setContent(ticketHTML, { waitUntil: 'domcontentloaded' });
 
-      // Wait for animations to be ready
-      await page.waitForSelector('.ticket-card', { visible: true });
+      // Wait briefly for initial render
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Capture frames for animation (2 seconds at 15fps = 30 frames for faster generation)
-      const frameCount = 30;
-      const fps = 15;
+      // Capture fewer frames for faster generation (1 second at 10fps = 10 frames)
+      const frameCount = 10;
+      const fps = 10;
       
       for (let i = 0; i < frameCount; i++) {
         // Take screenshot
@@ -98,11 +98,11 @@ export class TicketCaptureService {
         await page.screenshot({ 
           path: framePath as `${string}.png`,
           type: 'png',
-          timeout: 30000 // 30 second timeout per screenshot
+          timeout: 10000 // 10 second timeout per screenshot
         });
 
-        // Wait for next frame (66ms for 15fps)
-        await new Promise(resolve => setTimeout(resolve, 66));
+        // Wait for next frame (100ms for 10fps)
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       // Close the page
