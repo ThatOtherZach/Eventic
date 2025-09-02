@@ -111,7 +111,7 @@ export function LocationEventsPage() {
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
               <MapPin className="text-primary" size={28} />
-              Events in {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events
             </h2>
             <p className="text-muted">
               {events.length} {events.length === 1 ? 'event' : 'events'} found
@@ -124,7 +124,7 @@ export function LocationEventsPage() {
         <div className="card">
           <div className="card-body text-center py-5">
             <MapPin size={48} className="text-muted mb-3" />
-            <h5 className="text-muted">No events found in {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h5>
+            <h5 className="text-muted">No {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events found</h5>
             <p className="text-muted">Check back later or explore events in other locations</p>
             <Link href="/">
               <a className="btn btn-primary mt-3" style={{ textDecoration: 'none' }} data-testid="button-go-home">
