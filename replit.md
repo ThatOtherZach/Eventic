@@ -29,7 +29,7 @@ The system includes client-side QR code generation for tickets and server-side v
 - **Smart Event Sorting**: Home page displays active events only, prioritizing those within the next 24 hours, then chronologically.
 - **Simplified Location & Image Systems**: Single country selection for user preference, and a single featured image for events serving as ticket background. Supports JPEG, JPG, PNG, and GIF formats (max 5MB).
 - **P2P Validation**: Optional setting allowing any ticket holder to validate others' tickets for the same event, enabled only at event creation.
-- **Event Reputation System**: Attendees can rate events (thumbs up/down); event owners' reputation is displayed with badges and formatted vote counts.
+- **Event Reputation System**: Attendees can rate events (thumbs up/down); event owners' reputation is displayed with badges and formatted vote counts. Users earn 1 ticket reward when rating an event for the first time.
 - **Ticket Resale System**: Replaces refunds, allowing tickets to be resold at original price (2% fee for paid tickets). Resale queue ensures automatic matching with new purchases.
 - **Error Logging**: Comprehensive server error logging to a `system_logs` table with 90-day retention, categorizing errors by severity.
 - **Toast Notifications**: Bootstrap-style success, error, and system fault toasts for immediate visual feedback.

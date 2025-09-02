@@ -3198,7 +3198,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Failed to submit rating" });
         }
 
-        res.json({ success: true, rating: eventRating, updated: false });
+        // Credit user with 1 ticket for rating the event
+        await storage.creditUserAccount(
+          userId,
+          1,
+          `Event rating reward for ${event.name}`,
+          { 
+            type: 'rating_reward',
+            eventId: ticket.eventId,
+            ticketId: ticketId
+          }
+        );
+
+        res.json({ success: true, rating: eventRating, updated: false, rewardCredited: true });
       }
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/rate", {

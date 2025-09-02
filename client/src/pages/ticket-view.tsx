@@ -148,10 +148,14 @@ export default function TicketViewPage(): React.ReactElement {
       setHasRated(true);
       toast({
         title: data.updated ? "Rating Updated" : "Rating Submitted",
-        description: data.updated ? "Your rating has been updated!" : "Thank you for rating this event!",
+        description: data.updated ? "Your rating has been updated!" : data.rewardCredited ? "Thank you! You've earned 1 ticket for rating this event!" : "Thank you for rating this event!",
       });
       // Invalidate rating queries to sync across tickets
       queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}/rating`] });
+      // Invalidate balance query if reward was credited
+      if (data.rewardCredited) {
+        queryClient.invalidateQueries({ queryKey: ['/api/currency/balance'] });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -1082,7 +1086,7 @@ export default function TicketViewPage(): React.ReactElement {
                   <div>
                     <h5 className="card-title mb-1">Rate Event</h5>
                     <p className="text-muted mb-0 small">
-                      {hasRated ? 'You can change your rating' : 'How is the event?'}
+                      {hasRated ? 'You can change your rating' : 'Share your experience and earn 1 ticket!'}
                     </p>
                   </div>
                   
