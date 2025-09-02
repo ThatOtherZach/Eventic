@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star, Filter } from "lucide-react";
 import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "@/components/tickets/special-effects";
 import BadgeBar from "@/components/events/badge-bar";
+import specialEffectsIcon from "@assets/image_1756849316138.png";
 
 interface Event {
   id: string;
@@ -55,7 +56,7 @@ const eventTypeConfig: Record<string, {
   effects: { 
     label: 'Special Effects Events', 
     color: '#9333EA',
-    emoji: '✨',
+    imageIcon: specialEffectsIcon,
     checkField: (e) => !!e.specialEffectsEnabled 
   },
   surge: { 

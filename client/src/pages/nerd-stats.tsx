@@ -19,6 +19,7 @@ import {
   Hash
 } from "lucide-react";
 import starIcon from "@assets/world_star-0_1756849251180.png";
+import specialEffectsIcon from "@assets/image_1756849316138.png";
 
 export default function NerdStats() {
 
@@ -254,7 +255,7 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="card shadow-sm">
                 <div className="card-body text-center">
-                  <Zap className="text-info mb-2" size={24} />
+                  <img src={specialEffectsIcon} alt="Special Effects" className="mb-2" style={{ width: 24, height: 24 }} />
                   <div className="h5 fw-bold mb-1">{advancedStats?.specialEffectsEvents || 0}</div>
                   <div className="text-muted small">Special Effects</div>
                 </div>
