@@ -23,9 +23,6 @@ The project is configured for seamless development using Vite dev server (with H
 ### QR Code System
 The system includes client-side QR code generation for tickets and server-side validation through QR data lookup, complemented by a web-based QR scanner interface.
 
-### Recent Changes
-- **Home Page Discover Section Update (Latest)**: Updated the home page's Discover section to use ticket-style cards matching the main Discover events page, complete with special effects overlays, badges, and animations. The grid now shows at least 3 cards when there are fewer than 6 featured events.
-
 ### Key Features & Design Decisions
 - **Location-Based Routing**: Dynamic URL routing for filtering events by city/country (/NewYork, /UnitedStates), with automatic space conversion and visual effects (Golden Ticket, Monthly Colors). Includes RSS feed functionality for location-based event subscriptions.
 - **Unified Event Form**: A single `event-form.tsx` for creation and editing, intelligently detecting mode and validating ownership.
