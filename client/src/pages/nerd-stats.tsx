@@ -176,10 +176,6 @@ export default function NerdStats() {
                     <div>
                       <div className="text-muted small mb-1">Total Events</div>
                       <div className="h4 fw-bold mb-1">{formatNumber(stats?.totalEvents || 0)}</div>
-                      <div className="text-success small">
-                        <TrendingUp size={14} className="me-1" />
-                        {advancedStats?.activeEvents || 0} active
-                      </div>
                     </div>
                     <img src={calendarIcon} alt="Calendar" style={{ width: 32, height: 32 }} />
                   </div>
@@ -210,10 +206,6 @@ export default function NerdStats() {
                     <div>
                       <div className="text-muted small mb-1">Validation Rate</div>
                       <div className="h4 fw-bold mb-1">{advancedStats?.validationRate || 0}%</div>
-                      <div className="text-warning small">
-                        <Trophy size={14} className="me-1" />
-                        {stats?.validatedTickets || 0} validated
-                      </div>
                     </div>
                     <img src={checkIcon} alt="Validation" style={{ width: 32, height: 32 }} />
                   </div>
@@ -225,7 +217,7 @@ export default function NerdStats() {
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small mb-1">Current Demand</div>
+                      <div className="text-muted small mb-1">Ticket Demand</div>
                       <div className="h4 fw-bold mb-1">{demandData?.demand || 0}</div>
                       <div className="text-success small">
                         <Zap size={14} className="me-1" />
