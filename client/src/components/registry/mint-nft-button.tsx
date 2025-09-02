@@ -171,52 +171,33 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           imageUrl = data.url;
           mediaType = 'text/html';
         } catch (htmlError) {
-          console.error("HTML capture failed, trying server-side generation:", htmlError);
+          console.error("HTML capture failed, falling back to static image:", htmlError);
           
-          // Fallback: Try to generate media server-side
-          try {
-            addNotification({
-              type: "info",
-              title: "Generating NFT Media",
-              description: "Creating media for your NFT...",
-            });
-            
-            const mediaResponse = await apiRequest("POST", `/api/tickets/${ticket.id}/generate-nft-media`, {});
-            const mediaData = await mediaResponse.json();
-            
-            if (mediaData.mediaUrl) {
-              imageUrl = mediaData.mediaUrl;
-              mediaType = mediaData.mediaType || 'image/gif';
-            }
-          } catch (error) {
-            console.error("Server-side generation failed, falling back to static capture:", error);
-            
-            // Final fallback: capture as static image
-            const ticketElement = document.getElementById('ticket-card-for-nft');
-            if (!ticketElement) {
-              throw new Error('Unable to find ticket element');
-            }
-            
-            addNotification({
-              type: "info",
-              title: "Capturing Ticket",
-              description: "Creating static image of your ticket...",
-            });
-            
-            const canvas = await html2canvas(ticketElement as HTMLElement);
-            const pngBlob = await new Promise<Blob>((resolve) => {
-              canvas.toBlob((blob) => resolve(blob!), 'image/png');
-            });
-            
-            // Upload the PNG
-            const formData = new FormData();
-            formData.append('file', pngBlob, 'ticket.png');
-            
-            const response = await apiRequest("POST", "/api/upload", formData);
-            const data = await response.json();
-            imageUrl = data.url;
-            mediaType = 'image/png';
+          // Final fallback: capture as static image
+          const ticketElement = document.getElementById('ticket-card-for-nft');
+          if (!ticketElement) {
+            throw new Error('Unable to find ticket element');
           }
+          
+          addNotification({
+            type: "info",
+            title: "Capturing Ticket",
+            description: "Creating static image of your ticket...",
+          });
+          
+          const canvas = await html2canvas(ticketElement as HTMLElement);
+          const pngBlob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((blob) => resolve(blob!), 'image/png');
+          });
+          
+          // Upload the PNG
+          const formData = new FormData();
+          formData.append('file', pngBlob, 'ticket.png');
+          
+          const response = await apiRequest("POST", "/api/upload", formData);
+          const data = await response.json();
+          imageUrl = data.url;
+          mediaType = 'image/png';
         }
       }
 

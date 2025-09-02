@@ -619,12 +619,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // In production, enforce this strictly
       }
       
-      const ticketData = await storage.getTicketById(ticketId);
+      const ticketData = await storage.getTicket(ticketId);
       if (!ticketData) {
         return res.status(404).send("Ticket not found");
       }
 
-      const event = await storage.getEventById(ticketData.ticket.eventId);
+      const event = await storage.getEvent(ticketData.eventId);
       if (!event) {
         return res.status(404).send("Event not found");
       }
