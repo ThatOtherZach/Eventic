@@ -3632,8 +3632,8 @@ export class DatabaseStorage implements IStorage {
       // First 12 hours (0-11) = 2 tickets, last 12 hours (12-23) = 4 tickets
       const amount = hour < 12 ? 2 : 4;
       
-      // Calculate next claim time (24 hours from now)
-      const nextClaimAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      // Calculate next claim time (12 hours from now)
+      const nextClaimAt = new Date(now.getTime() + 12 * 60 * 60 * 1000);
       
       // Record the claim
       await db.insert(dailyClaims).values({

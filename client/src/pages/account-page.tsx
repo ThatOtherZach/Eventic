@@ -427,18 +427,6 @@ export default function AccountPage() {
                       )}
                     </div>
                   </div>
-                  {/* Daily Claim Button */}
-                  {claimStatus && (
-                    <button
-                      onClick={() => claimDailyMutation.mutate()}
-                      disabled={!claimStatus.canClaim || claimDailyMutation.isPending}
-                      className={`btn ${claimStatus.canClaim ? 'btn-success' : 'btn-secondary'} d-flex align-items-center`}
-                      title={claimStatus.canClaim ? "Claim your daily tickets!" : `Next claim: ${claimStatus.nextClaimAt ? new Date(claimStatus.nextClaimAt).toLocaleString() : 'N/A'}`}
-                    >
-                      <Gift size={20} className="me-2" />
-                      {claimDailyMutation.isPending ? "Claiming..." : claimStatus.canClaim ? "Claim Daily" : "Claimed"}
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -471,9 +459,21 @@ export default function AccountPage() {
                 </div>
                 <div className="mt-2">
                   <small className="text-muted" style={{ fontSize: '0.85rem' }}>
-                    Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. You can collect free tickets every 24 hours.
+                    Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. You can collect free tickets every 12 hours.
                   </small>
                 </div>
+                {/* Daily Claim Button - Show only when not claimed */}
+                {claimStatus && claimStatus.canClaim && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => claimDailyMutation.mutate()}
+                      disabled={claimDailyMutation.isPending}
+                      className="btn btn-success btn-sm"
+                    >
+                      {claimDailyMutation.isPending ? "Claiming..." : "Claim Tickets"}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Secret Code Section - Collapsible */}
