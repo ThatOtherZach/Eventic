@@ -332,6 +332,7 @@ export class TicketCaptureService {
       </div>
     </div>
     ${ticket.isGoldenTicket === true ? '<div class="golden-badge">✨ Golden Ticket</div>' : ''}
+    ${this.generateStickerOverlay(event, ticket)}
   </div>
 </body>
 </html>`;
@@ -428,6 +429,71 @@ export class TicketCaptureService {
     ];
     
     return monthColors[month];
+  }
+
+  private generateStickerOverlay(event: Event, ticket: Ticket): string {
+    // Only show sticker if ticket is validated and event has a sticker URL
+    if (!ticket.isValidated || !event.stickerUrl) {
+      return '';
+    }
+
+    // Format the sticker URL properly
+    let stickerUrl = event.stickerUrl;
+    if (!stickerUrl.startsWith('http')) {
+      // If it's a relative path like /objects/..., prepend the base URL
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : 'http://localhost:5000';
+      stickerUrl = baseUrl + stickerUrl;
+    }
+
+    // Generate multiple floating sticker elements
+    const stickerElements = [];
+    for (let i = 0; i < 4; i++) {
+      const left = Math.random() * 80 + 10; // 10% to 90%
+      const top = Math.random() * 60 + 20;  // 20% to 80%
+      const size = Math.random() * 20 + 20; // 20px to 40px
+      const delay = Math.random() * 6;      // 0s to 6s delay
+      
+      stickerElements.push(`
+        <img 
+          src="${stickerUrl}" 
+          style="
+            position: absolute;
+            left: ${left}%;
+            top: ${top}%;
+            width: ${size}px;
+            height: auto;
+            z-index: 15;
+            pointer-events: none;
+            animation: floatSticker 6s ease-in-out ${delay}s infinite;
+            opacity: 0.8;
+          "
+        />
+      `);
+    }
+
+    // Add the CSS animation for floating stickers
+    const styles = `
+      <style>
+        @keyframes floatSticker {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          25% {
+            transform: translateY(-10px) rotate(5deg);
+          }
+          50% {
+            transform: translateY(0px) rotate(-5deg);
+          }
+          75% {
+            transform: translateY(-5px) rotate(3deg);
+          }
+        }
+      </style>
+    `;
+
+    return styles + stickerElements.join('');
   }
 
   private createMP4FromFrames(framesDir: string, outputPath: string, fps: number): Promise<void> {
