@@ -26,6 +26,7 @@ import calendarIcon from "@assets/calendar-0_1756849638733.png";
 import ticketsIcon from "@assets/certificate_multiple-1_1756849669534.png";
 import checkIcon from "@assets/check-0_1756849706987.png";
 import demandIcon from "@assets/image_1756849793480.png";
+import coreMetricsIcon from "@assets/image_1756850088693.png";
 
 export default function NerdStats() {
 
@@ -165,7 +166,7 @@ export default function NerdStats() {
       <div className="row mb-4">
         <div className="col-12">
           <h5 className="fw-semibold mb-3">
-            <Activity size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
+            <img src={coreMetricsIcon} alt="Core Metrics" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
             Core Metrics
           </h5>
           <div className="row g-3">
