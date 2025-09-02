@@ -546,7 +546,7 @@ export default function AccountPage() {
                                       <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
-                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                      <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
                                     )}
                                   </>
                                 );
@@ -599,7 +599,7 @@ export default function AccountPage() {
                                       <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
-                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                      <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
                                     )}
                                   </>
                                 );
@@ -655,7 +655,7 @@ export default function AccountPage() {
                                       <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
-                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                      <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
                                     )}
                                   </>
                                 );
@@ -708,7 +708,7 @@ export default function AccountPage() {
                                       <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
-                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                      <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
                                     )}
                                   </>
                                 );
