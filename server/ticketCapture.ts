@@ -54,7 +54,7 @@ export class TicketCaptureService {
     }
   }
 
-  async captureTicketAsVideo(options: CaptureOptions & { format?: 'mp4' | 'webm' }): Promise<string> {
+  async captureTicketAsVideo(options: CaptureOptions & { format?: 'mp4' | 'webm' | 'gif' }): Promise<string> {
     const { ticket, event, format = 'mp4' } = options;
     const sessionId = uuidv4();
     const framesDir = path.join(this.tempDir, sessionId);
@@ -79,13 +79,15 @@ export class TicketCaptureService {
         height: 600   // 2 * 300 DPI
       });
 
-      // Generate the HTML for the ticket
-      const ticketHTML = this.generateTicketHTML(ticket, event);
+      // Navigate to the render route
+      const renderUrl = `http://localhost:5000/api/tickets/${ticket.id}/render`;
+      console.log(`Navigating to render route: ${renderUrl}`);
+      await page.goto(renderUrl, { waitUntil: 'networkidle2' });
       
-      // Set the content - no wait to be faster
-      await page.setContent(ticketHTML);
+      // Wait for the ticket element to be present
+      await page.waitForSelector('#ticket', { visible: true });
 
-      // Very brief pause to let DOM settle
+      // Small delay for animations to start
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Capture 3 seconds at 30fps = 90 frames
@@ -94,18 +96,21 @@ export class TicketCaptureService {
       const frameInterval = 1000 / fps; // 33.33ms per frame
       
       // Capture frames sequentially with precise timing
+      console.log(`Capturing ${frameCount} frames at ${fps}fps...`);
       for (let i = 0; i < frameCount; i++) {
         const startTime = Date.now();
-        const framePath = path.join(framesDir, `frame-${String(i).padStart(4, '0')}.png`);
+        const framePath = path.join(framesDir, `f${String(i).padStart(4, '0')}.png`);
         
-        // Take screenshot without any timeout
-        await page.screenshot({ 
+        // Take screenshot of the ticket element
+        const ticketElement = await page.$('#ticket');
+        if (!ticketElement) throw new Error('Ticket element not found');
+        
+        await ticketElement.screenshot({ 
           path: framePath as `${string}.png`,
-          type: 'png',
-          clip: { x: 0, y: 0, width: 1050, height: 600 } // Explicit clip area for speed
+          type: 'png'
         });
         
-        // Calculate how long to wait for next frame
+        // Calculate timing for next frame
         const elapsed = Date.now() - startTime;
         const waitTime = Math.max(0, frameInterval - elapsed);
         
@@ -116,15 +121,19 @@ export class TicketCaptureService {
 
       // Close the page
       await page.close();
+      console.log('Frame capture complete');
 
       // Convert frames to video using FFmpeg
       if (format === 'mp4') {
         await this.createMP4FromFrames(framesDir, outputPath, fps);
       } else if (format === 'webm') {
         await this.createWebMFromFrames(framesDir, outputPath, fps);
+      } else if (format === 'gif') {
+        await this.createGIFFromFrames(framesDir, outputPath);
       }
 
       // Clean up frames directory
+      console.log('Cleaning up frames...');
       this.cleanupDirectory(framesDir);
 
       return outputPath;
@@ -515,36 +524,93 @@ export class TicketCaptureService {
 
   private createMP4FromFrames(framesDir: string, outputPath: string, fps: number): Promise<void> {
     return new Promise((resolve, reject) => {
+      console.log('Encoding MP4 with FFmpeg...');
       ffmpeg()
-        .input(path.join(framesDir, 'frame-%04d.png'))
-        .inputFPS(fps)
+        .input(path.join(framesDir, 'f%04d.png'))
+        .inputFPS(30)
         .output(outputPath)
         .outputOptions([
           '-c:v libx264',
+          '-crf 20',
+          '-preset veryslow',
           '-pix_fmt yuv420p',
-          '-crf 23',
-          '-preset medium'
+          '-movflags +faststart'
         ])
-        .on('end', () => resolve())
-        .on('error', (err: Error) => reject(err))
+        .on('end', () => {
+          console.log('MP4 encoding complete');
+          resolve();
+        })
+        .on('error', (err: Error) => {
+          console.error('FFmpeg MP4 error:', err);
+          reject(err);
+        })
         .run();
     });
   }
 
   private createWebMFromFrames(framesDir: string, outputPath: string, fps: number): Promise<void> {
     return new Promise((resolve, reject) => {
+      console.log('Encoding WebM with FFmpeg...');
       ffmpeg()
-        .input(path.join(framesDir, 'frame-%04d.png'))
-        .inputFPS(fps)
+        .input(path.join(framesDir, 'f%04d.png'))
+        .inputFPS(30)
         .output(outputPath)
         .outputOptions([
           '-c:v libvpx-vp9',
-          '-pix_fmt yuv420p',
+          '-b:v 0',
           '-crf 30',
-          '-b:v 0'
+          '-pix_fmt yuv420p'
         ])
-        .on('end', () => resolve())
-        .on('error', (err: Error) => reject(err))
+        .on('end', () => {
+          console.log('WebM encoding complete');
+          resolve();
+        })
+        .on('error', (err: Error) => {
+          console.error('FFmpeg WebM error:', err);
+          reject(err);
+        })
+        .run();
+    });
+  }
+
+  private createGIFFromFrames(framesDir: string, outputPath: string): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      console.log('Creating GIF with FFmpeg...');
+      const palettePath = path.join(path.dirname(outputPath), 'palette.png');
+      
+      // First generate palette
+      await new Promise((res, rej) => {
+        ffmpeg()
+          .input(path.join(framesDir, 'f%04d.png'))
+          .outputOptions([
+            '-vf fps=15,scale=480:-1:flags=lanczos,palettegen'
+          ])
+          .output(palettePath)
+          .on('end', () => res(null))
+          .on('error', rej)
+          .run();
+      });
+      
+      // Then create GIF using palette
+      ffmpeg()
+        .input(path.join(framesDir, 'f%04d.png'))
+        .input(palettePath)
+        .outputOptions([
+          '-lavfi fps=15,scale=480:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer'
+        ])
+        .output(outputPath)
+        .on('end', () => {
+          // Clean up palette file
+          if (fs.existsSync(palettePath)) {
+            fs.unlinkSync(palettePath);
+          }
+          console.log('GIF encoding complete');
+          resolve();
+        })
+        .on('error', (err: Error) => {
+          console.error('FFmpeg GIF error:', err);
+          reject(err);
+        })
         .run();
     });
   }

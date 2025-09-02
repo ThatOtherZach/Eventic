@@ -598,6 +598,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ticket routes
+  // Ticket render route for NFT capture (must be before :ticketId route)
+  app.get("/api/tickets/:ticketId/render", async (req, res, next) => {
+    try {
+      const ticketData = await storage.getTicketById(req.params.ticketId);
+      if (!ticketData) {
+        return res.status(404).send("Ticket not found");
+      }
+
+      const event = await storage.getEventById(ticketData.ticket.eventId);
+      if (!event) {
+        return res.status(404).send("Event not found");
+      }
+
+      // Generate deterministic HTML for the ticket
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      width: 1050px; 
+      height: 600px; 
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    #ticket {
+      width: 1050px;
+      height: 600px;
+      position: relative;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ticket-content {
+      text-align: center;
+      color: white;
+      padding: 40px;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .event-title {
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .ticket-id {
+      font-size: 24px;
+      opacity: 0.9;
+      margin-bottom: 10px;
+    }
+    .validated-badge {
+      display: inline-block;
+      background: #10b981;
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    .sticker-overlay {
+      position: absolute;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    .sticker-1 { top: 10%; left: 10%; width: 120px; height: 120px; animation-delay: 0s; }
+    .sticker-2 { top: 15%; right: 15%; width: 100px; height: 100px; animation-delay: 0.5s; }
+    .sticker-3 { bottom: 20%; left: 20%; width: 110px; height: 110px; animation-delay: 1s; }
+    .sticker-4 { bottom: 10%; right: 10%; width: 130px; height: 130px; animation-delay: 1.5s; }
+  </style>
+</head>
+<body>
+  <div id="ticket">
+    ${event.specialEffects && ticketData.ticket.stickerUrl ? `
+      <img class="sticker-overlay sticker-1" src="${ticketData.ticket.stickerUrl}" alt="">
+      <img class="sticker-overlay sticker-2" src="${ticketData.ticket.stickerUrl}" alt="">
+      <img class="sticker-overlay sticker-3" src="${ticketData.ticket.stickerUrl}" alt="">
+      <img class="sticker-overlay sticker-4" src="${ticketData.ticket.stickerUrl}" alt="">
+    ` : ''}
+    <div class="ticket-content">
+      <div class="event-title">${event.name}</div>
+      <div class="ticket-id">Ticket #${ticketData.ticket.ticketNumber || '001'}</div>
+      ${ticketData.ticket.isValidated ? '<div class="validated-badge">✓ VALIDATED</div>' : ''}
+    </div>
+  </div>
+</body>
+</html>`;
+
+      res.type('text/html').send(html);
+    } catch (error: any) {
+      next(error);
+    }
+  });
+
   app.get("/api/tickets/:ticketId", async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id || null;
@@ -748,7 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let mediaUrl: string | null = null;
       let mediaType: string = 'video/mp4';
       
-      // Try MP4 video capture with simplified generation
+      // Try MP4 video capture first
       try {
         mediaPath = await captureService.captureTicketAsVideo({
           ticket,
@@ -757,18 +857,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         mediaType = 'video/mp4';
       } catch (mp4Error) {
-        console.error("MP4 generation failed, falling back to static image:", mp4Error);
+        console.error("MP4 generation failed, trying WebM:", mp4Error);
         
-        // Fallback to static PNG if video fails
+        // Try WebM as fallback
         try {
-          mediaPath = await captureService.captureTicketAsImage({
+          mediaPath = await captureService.captureTicketAsVideo({
             ticket,
-            event
+            event,
+            format: 'webm'
           });
-          mediaType = 'image/png';
-        } catch (imageError) {
-          console.error("All media generation attempts failed:", imageError);
-          throw new Error("Failed to generate any media format");
+          mediaType = 'video/webm';
+        } catch (webmError) {
+          console.error("WebM generation failed, trying GIF:", webmError);
+          
+          // Try GIF as secondary fallback
+          try {
+            mediaPath = await captureService.captureTicketAsVideo({
+              ticket,
+              event,
+              format: 'gif'
+            });
+            mediaType = 'image/gif';
+          } catch (gifError) {
+            console.error("GIF generation failed, falling back to static PNG:", gifError);
+            
+            // Final fallback to static PNG
+            try {
+              mediaPath = await captureService.captureTicketAsImage({
+                ticket,
+                event
+              });
+              mediaType = 'image/png';
+            } catch (imageError) {
+              console.error("All media generation attempts failed:", imageError);
+              throw new Error("Failed to generate any media format");
+            }
+          }
         }
       }
       
