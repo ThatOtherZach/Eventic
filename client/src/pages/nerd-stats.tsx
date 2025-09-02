@@ -1,6 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -51,6 +60,17 @@ export default function NerdStats() {
     },
     // No auto-refresh
   });
+
+  const { data: analyticsData } = useQuery({
+    queryKey: ["/api/analytics/dashboard"],
+  });
+
+  // Prepare chart data for ticket sales trend
+  const monthlyData = analyticsData?.charts?.ticketsByMonth ? 
+    analyticsData.charts.ticketsByMonth.labels.map((label: string, index: number) => ({
+      month: label,
+      tickets: analyticsData.charts.ticketsByMonth.data[index]
+    })) : [];
 
   const { data: events } = useQuery({
     queryKey: ["/api/events"],
@@ -339,6 +359,37 @@ export default function NerdStats() {
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Sales Trend */}
+      {monthlyData.length > 0 && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <h5 className="fw-semibold mb-3">
+              <img src={statsIcon} alt="Trend" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+              Ticket Sales Trend
+            </h5>
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="tickets" 
+                      stroke="#0d6efd" 
+                      strokeWidth={2}
+                      dot={{ fill: '#0d6efd' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
