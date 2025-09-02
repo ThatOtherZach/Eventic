@@ -66,10 +66,10 @@ export default function NerdStats() {
   });
 
   // Prepare chart data for ticket sales trend (2-day periods)
-  const periodData = analyticsData?.charts?.ticketsByMonth ? 
-    analyticsData.charts.ticketsByMonth.labels.map((label: string, index: number) => ({
+  const periodData = (analyticsData as any)?.charts?.ticketsByMonth ? 
+    (analyticsData as any).charts.ticketsByMonth.labels.map((label: string, index: number) => ({
       period: label,
-      tickets: analyticsData.charts.ticketsByMonth.data[index]
+      tickets: (analyticsData as any).charts.ticketsByMonth.data[index]
     })) : [];
 
   const { data: events } = useQuery({
