@@ -345,6 +345,11 @@ export default function NerdStats() {
         </div>
       )}
 
+      {/* Footer */}
+      <div className="text-center mt-5 pt-4 border-top">
+        <p className="text-muted small">Designed by Saym Services Inc.</p>
+      </div>
+
     </div>
   );
 }
