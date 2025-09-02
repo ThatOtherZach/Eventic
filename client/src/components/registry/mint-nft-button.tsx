@@ -11,10 +11,10 @@ import html2canvas from "html2canvas";
 import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 // Helper function to capture ticket HTML with all assets
-async function captureTicketHTML(): Promise<string> {
-  // Find the ticket card element directly
-  const ticketElement = document.getElementById('ticket-card-for-nft');
-  if (!ticketElement) throw new Error('Ticket element not found');
+async function captureTicketHTML(ticketId: string): Promise<string> {
+  // Find the actual ticket card component by its data-testid
+  const ticketElement = document.querySelector(`[data-testid="ticket-card-${ticketId}"]`) as HTMLElement;
+  if (!ticketElement) throw new Error('Ticket card element not found');
   
   // Clone the ticket element
   const clone = ticketElement.cloneNode(true) as HTMLElement;
@@ -154,7 +154,7 @@ async function captureTicketHTML(): Promise<string> {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFT Ticket #${ticket.id}</title>
+  <title>NFT Ticket #${ticketId}</title>
   <style>${criticalCSS}</style>
 </head>
 <body>
@@ -257,7 +257,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
             description: "Preserving your ticket with all effects and animations...",
           });
           
-          const htmlContent = await captureTicketHTML();
+          const htmlContent = await captureTicketHTML(ticket.id);
           
           // Upload HTML as a file
           const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
