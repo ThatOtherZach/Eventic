@@ -95,24 +95,11 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
             description: "Creating video for your NFT...",
           });
           
-          const mediaResponse = await apiRequest("POST", `/api/tickets/${ticket.id}/capture/claim`, {
-            idempotency_key: `mint-${ticket.id}-${Date.now()}`
-          });
+          const mediaResponse = await apiRequest("POST", `/api/tickets/${ticket.id}/generate-nft-media`, {});
           const mediaData = await mediaResponse.json();
           
-          if (mediaData.status === 'already_captured' && mediaData.media_url) {
-            imageUrl = mediaData.media_url;
-          } else if (mediaData.status === 'enqueued') {
-            // Wait a bit for processing
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            // Try to get the result
-            const retryResponse = await apiRequest("POST", `/api/tickets/${ticket.id}/capture/claim`, {
-              idempotency_key: `mint-${ticket.id}-${Date.now()}`
-            });
-            const retryData = await retryResponse.json();
-            if (retryData.media_url) {
-              imageUrl = retryData.media_url;
-            }
+          if (mediaData.mediaUrl) {
+            imageUrl = mediaData.mediaUrl;
           }
         } catch (error) {
           console.error("Failed to generate media server-side, falling back to client-side capture:", error);
