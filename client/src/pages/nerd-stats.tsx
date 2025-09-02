@@ -23,6 +23,7 @@ import specialEffectsIcon from "@assets/image_1756849316138.png";
 import p2pIcon from "@assets/users_green-4_1756849357200.png";
 import gpsIcon from "@assets/gps-1_1756849430189.png";
 import calendarIcon from "@assets/calendar-0_1756849638733.png";
+import ticketsIcon from "@assets/certificate_multiple-1_1756849669534.png";
 
 export default function NerdStats() {
 
@@ -195,7 +196,7 @@ export default function NerdStats() {
                         {advancedStats?.avgTicketsPerEvent || 0} avg/event
                       </div>
                     </div>
-                    <Ticket className="text-info opacity-50" size={32} />
+                    <img src={ticketsIcon} alt="Tickets" className="opacity-50" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
