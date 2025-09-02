@@ -229,6 +229,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
           if (ticket.isValidated) features.push({ name: 'VALIDATED', bg: '#198754', color: '#fff' });
           if ((ticket as any).resellStatus === "for_resale") features.push({ name: 'RETURNED', bg: '#FFC107', color: '#000' });
           if (event.reentryType === "Pass (Multiple Use)") features.push({ name: 'PASS', bg: '#0DCAF0', color: '#000' });
+          if (ticket.nftMediaUrl) features.push({ name: 'NFT', bg: '#17a2b8', color: '#fff' });
         }
 
         // If no features, don't show the bar

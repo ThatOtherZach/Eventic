@@ -144,7 +144,7 @@ export function RegistryTicketPage() {
               ticket={preservedTicket} 
               event={preservedEvent} 
               showQR={false}
-              showBadges={false}
+              showBadges={true}
             />
           </div>
 
