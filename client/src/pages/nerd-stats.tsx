@@ -27,6 +27,7 @@ import ticketsIcon from "@assets/certificate_multiple-1_1756849669534.png";
 import checkIcon from "@assets/check-0_1756849706987.png";
 import demandIcon from "@assets/image_1756849793480.png";
 import coreMetricsIcon from "@assets/image_1756850088693.png";
+import distributionIcon from "@assets/image_1756850111300.png";
 
 export default function NerdStats() {
 
@@ -309,8 +310,8 @@ export default function NerdStats() {
         <div className="row mb-4">
           <div className="col-12">
             <h5 className="fw-semibold mb-3">
-              <Calendar size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
-              Event Distribution by Day
+              <img src={distributionIcon} alt="Event Distribution" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+              Event Distribution
             </h5>
             <div className="card shadow-sm">
               <div className="card-body">
@@ -323,7 +324,7 @@ export default function NerdStats() {
                     return (
                       <div key={day} className="col">
                         <div className="text-center">
-                          <div className="text-muted small mb-1">{day.slice(0, 3)}</div>
+                          <div className="text-muted small mb-1">{day}</div>
                           <div className="h5 fw-bold mb-2">{count}</div>
                           <div className="progress" style={{ height: '6px' }}>
                             <div 
