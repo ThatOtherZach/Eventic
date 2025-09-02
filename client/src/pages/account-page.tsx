@@ -796,10 +796,12 @@ export default function AccountPage() {
                         {/* Price */}
                         <div className="h3 mb-2 text-primary fw-bold">
                         ${(() => {
-                          let price = ticketQuantity * 0.29;
-                          if (multiplyAndSave) price *= 0.9; // 10% multiply discount
-                          if (reputationDiscount > 0) price *= (1 - reputationDiscount / 100); // Reputation discount
-                          return price.toFixed(2);
+                          const basePrice = ticketQuantity * 0.29;
+                          const volumeDiscount = calculateVolumeDiscount(ticketQuantity);
+                          const multiplyDiscount = multiplyAndSave ? 10 : 0;
+                          const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max
+                          const finalPrice = basePrice * (1 - totalDiscount / 100);
+                          return finalPrice.toFixed(2);
                         })()}
                         </div>
                         
@@ -809,26 +811,26 @@ export default function AccountPage() {
                         </div>
                         
                         {/* Total discount if any discounts apply */}
-                        {(multiplyAndSave || reputationDiscount > 0) && (
-                          <div className="mb-2">
-                            <span className="text-dark">
-                              -${(() => {
-                                const baseTotal = ticketQuantity * 0.29;
-                                let finalPrice = baseTotal;
-                                if (multiplyAndSave) finalPrice *= 0.9;
-                                if (reputationDiscount > 0) finalPrice *= (1 - reputationDiscount / 100);
-                                return (baseTotal - finalPrice).toFixed(2);
-                              })()} 
-                              <span className="text-muted"> ({Math.round((() => {
-                                const baseTotal = ticketQuantity * 0.29;
-                                let finalPrice = baseTotal;
-                                if (multiplyAndSave) finalPrice *= 0.9;
-                                if (reputationDiscount > 0) finalPrice *= (1 - reputationDiscount / 100);
-                                return ((baseTotal - finalPrice) / baseTotal) * 100;
-                              })())}% Off)</span> Discount Applied
-                            </span>
-                          </div>
-                        )}
+                        {(() => {
+                          const volumeDiscount = calculateVolumeDiscount(ticketQuantity);
+                          const multiplyDiscount = multiplyAndSave ? 10 : 0;
+                          const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30);
+                          
+                          if (totalDiscount > 0) {
+                            const baseTotal = ticketQuantity * 0.29;
+                            const discountAmount = baseTotal * (totalDiscount / 100);
+                            
+                            return (
+                              <div className="mb-2">
+                                <span className="text-dark">
+                                  -${discountAmount.toFixed(2)} 
+                                  <span className="text-muted"> ({totalDiscount}% Off)</span> Discount Applied
+                                </span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                         
                         {/* Demand bonus badge */}
                         {calculateBonus(ticketQuantity) > 0 && (
