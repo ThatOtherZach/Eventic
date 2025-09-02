@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star } from "lucide-react";
 import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "@/components/tickets/special-effects";
 import BadgeBar from "@/components/events/badge-bar";
+import globeIcon from "@assets/globe_map-5_1756847514357.png";
 
 interface Event {
   id: string;
@@ -110,7 +111,7 @@ export function LocationEventsPage() {
         <div className="d-flex align-items-start justify-content-between">
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
-              <MapPin className="text-primary" size={28} />
+              <img src={globeIcon} alt="Globe" style={{ width: 28, height: 28 }} />
               {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events
             </h2>
             <p className="text-muted">
@@ -123,7 +124,7 @@ export function LocationEventsPage() {
       {events.length === 0 ? (
         <div className="card">
           <div className="card-body text-center py-5">
-            <MapPin size={48} className="text-muted mb-3" />
+            <img src={globeIcon} alt="Globe" className="mb-3" style={{ width: 48, height: 48, opacity: 0.5 }} />
             <h5 className="text-muted">No {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events found</h5>
             <p className="text-muted">Check back later or explore events in other locations</p>
             <Link href="/">
