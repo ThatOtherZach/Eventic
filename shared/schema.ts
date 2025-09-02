@@ -155,6 +155,7 @@ export const tickets = pgTable("tickets", {
   resellStatus: text("resell_status").default("not_for_resale"), // not_for_resale, for_resale, sold
   originalOwnerId: varchar("original_owner_id").references(() => users.id), // Original owner for resell tracking
   isCharged: boolean("is_charged").default(false), // Whether ticket is charged for better special effects odds
+  nftMediaUrl: text("nft_media_url"), // URL to the pre-generated MP4 file for NFT minting
   createdAt: timestamp("created_at").defaultNow(),
 });
 

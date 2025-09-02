@@ -2015,6 +2015,15 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
+  async updateTicketNftMediaUrl(ticketId: string, mediaUrl: string): Promise<Ticket | undefined> {
+    const [updatedTicket] = await db
+      .update(tickets)
+      .set({ nftMediaUrl: mediaUrl })
+      .where(eq(tickets.id, ticketId))
+      .returning();
+    return updatedTicket || undefined;
+  }
+
   async createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction> {
     const [newTransaction] = await db.insert(registryTransactions).values(transaction).returning();
     return newTransaction;

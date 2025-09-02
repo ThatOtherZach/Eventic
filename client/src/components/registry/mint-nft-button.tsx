@@ -74,27 +74,55 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
 
   const mintMutation = useMutation({
     mutationFn: async () => {
-      // First, capture the ticket as a GIF
-      const ticketElement = document.getElementById('ticket-card-for-nft');
-      if (!ticketElement) {
-        throw new Error('Unable to find ticket element');
+      let imageUrl = '';
+      
+      // Check if MP4 is already generated
+      if (ticket.nftMediaUrl) {
+        // Use pre-generated MP4
+        imageUrl = ticket.nftMediaUrl;
+        addNotification({
+          type: "info",
+          title: "Preparing NFT",
+          description: "Using pre-generated media for your NFT...",
+        });
+      } else {
+        // Fallback: Try to generate MP4 first
+        try {
+          addNotification({
+            type: "info",
+            title: "Generating NFT Media",
+            description: "Creating video for your NFT...",
+          });
+          
+          const mediaResponse = await apiRequest("POST", `/api/tickets/${ticket.id}/generate-nft-media`, {});
+          const mediaData = await mediaResponse.json();
+          
+          if (mediaData.mediaUrl) {
+            imageUrl = mediaData.mediaUrl;
+          }
+        } catch (error) {
+          console.error("Failed to generate MP4, falling back to GIF:", error);
+          
+          // Fallback to GIF generation if MP4 fails
+          const ticketElement = document.getElementById('ticket-card-for-nft');
+          if (!ticketElement) {
+            throw new Error('Unable to find ticket element');
+          }
+
+          addNotification({
+            type: "info",
+            title: "Capturing Ticket",
+            description: "Creating image of your ticket...",
+          });
+
+          const gifBlob = await captureTicketAsGif(ticketElement as HTMLElement);
+          imageUrl = await uploadGifToStorage(gifBlob);
+        }
       }
 
-      // Show a loading message
-      addNotification({
-        type: "info",
-        title: "Capturing Ticket",
-        description: "Creating GIF image of your ticket...",
-      });
-
-      // Capture the ticket as GIF
-      const gifBlob = await captureTicketAsGif(ticketElement as HTMLElement);
-      
-      // Upload the GIF
-      const imageUrl = await uploadGifToStorage(gifBlob);
-
       const metadata: any = {
-        imageUrl
+        imageUrl,
+        mediaType: imageUrl.includes('.mp4') ? 'video/mp4' : 'image/gif'
       };
       if (additionalMetadata) {
         try {

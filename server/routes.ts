@@ -9,6 +9,9 @@ import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, Authenti
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
+import { getTicketCaptureService } from "./ticketCapture";
+import path from 'path';
+import fs from 'fs';
 
 // Rate limiter configuration for ticket purchases
 const purchaseRateLimiter = rateLimit({
@@ -700,6 +703,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { ticketId: req.params.ticketId }
       });
       res.status(500).json({ message: "Failed to generate validation token" });
+    }
+  });
+
+  // Generate MP4 for NFT minting (called when user views ticket after validation)
+  app.post("/api/tickets/:ticketId/generate-nft-media", async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id || null;
+      const ticket = await storage.getTicket(req.params.ticketId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      // Check if user owns the ticket
+      if (ticket.userId && ticket.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Check if ticket is validated
+      if (!ticket.isValidated) {
+        return res.status(400).json({ message: "Ticket must be validated before generating NFT media" });
+      }
+      
+      // Check if MP4 already exists
+      if (ticket.nftMediaUrl) {
+        return res.json({ mediaUrl: ticket.nftMediaUrl, cached: true });
+      }
+      
+      // Get event details
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Check if event allows NFT minting
+      if (!event.allowMinting) {
+        return res.status(400).json({ message: "NFT minting is not enabled for this event" });
+      }
+      
+      // Generate MP4 using Puppeteer
+      const captureService = getTicketCaptureService();
+      const mp4Path = await captureService.captureTicketAsMP4({
+        ticket,
+        event
+      });
+      
+      // Upload MP4 to object storage
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      
+      // Read the MP4 file
+      const mp4Buffer = fs.readFileSync(mp4Path);
+      
+      // Upload to storage
+      const uploadResponse = await fetch(uploadURL, {
+        method: 'PUT',
+        body: mp4Buffer,
+        headers: {
+          'Content-Type': 'video/mp4',
+        },
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload MP4 to storage');
+      }
+      
+      // Get the public URL
+      const baseUrl = uploadURL.split('?')[0];
+      const parts = baseUrl.split('/');
+      const filename = parts[parts.length - 1];
+      const publicUrl = `/public-objects/uploads/${filename}`;
+      
+      // Clean up temporary file
+      fs.unlinkSync(mp4Path);
+      
+      // Update ticket with MP4 URL
+      await storage.updateTicketNftMediaUrl(req.params.ticketId, publicUrl);
+      
+      res.json({ mediaUrl: publicUrl, cached: false });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/generate-nft-media", {
+        request: req,
+        metadata: { ticketId: req.params.ticketId }
+      });
+      res.status(500).json({ message: "Failed to generate NFT media" });
     }
   });
 

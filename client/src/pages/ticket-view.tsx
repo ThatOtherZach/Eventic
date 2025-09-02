@@ -307,6 +307,34 @@ export default function TicketViewPage(): React.ReactElement {
     }
   }, [ticketData?.ticket?.isValidated]);
 
+  // Generate MP4 for NFT minting if ticket is validated and event allows minting
+  useEffect(() => {
+    const generateNftMedia = async () => {
+      if (!ticketData?.ticket || !ticketData?.event) return;
+      
+      // Check if conditions are met for MP4 generation
+      if (ticketData.ticket.isValidated && 
+          ticketData.event.allowMinting && 
+          !ticketData.ticket.nftMediaUrl) {
+        
+        try {
+          // Call API to generate MP4
+          const response = await apiRequest("POST", `/api/tickets/${ticketId}/generate-nft-media`, {});
+          const data = await response.json();
+          
+          if (data.mediaUrl && !data.cached) {
+            console.log("NFT media generated successfully:", data.mediaUrl);
+          }
+        } catch (error) {
+          console.error("Failed to generate NFT media:", error);
+          // Silent failure - don't show error to user as this is a background operation
+        }
+      }
+    };
+    
+    generateNftMedia();
+  }, [ticketData?.ticket?.isValidated, ticketData?.event?.allowMinting, ticketId]);
+
   // Check if within rating period (before event OR within 24 hours after start)
   const isWithinRatingPeriod = () => {
     if (!ticketData?.event) return false;
