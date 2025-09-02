@@ -292,24 +292,7 @@ export default function NerdStats() {
           <div className="card shadow-sm">
             <div className="card-body">
               <div className="row g-3">
-                <div className="col-md-3">
-                  <div className="border-end pe-3">
-                    <div className="d-flex align-items-center mb-2">
-                      <DollarSign className="text-success me-2" size={20} />
-                      <div>
-                        <div className="text-muted small">Revenue</div>
-                        <div className="h5 fw-bold mb-0">${advancedStats?.totalRevenue || 0}</div>
-                      </div>
-                    </div>
-                    <div className="progress" style={{ height: '4px' }}>
-                      <div 
-                        className="progress-bar bg-success" 
-                        style={{ width: '100%' }}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3">
+                <div className="col-md-4">
                   <div className="border-end pe-3">
                     <div className="d-flex align-items-center mb-2">
                       <Gift className="text-info me-2" size={20} />
@@ -331,7 +314,7 @@ export default function NerdStats() {
                     </div>
                   </div>
                 </div>
-                <div className="col-md-3">
+                <div className="col-md-4">
                   <div className="d-flex align-items-center mb-2">
                     <RefreshCw className="text-secondary me-2" size={20} />
                     <div>
