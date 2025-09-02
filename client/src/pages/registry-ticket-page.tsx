@@ -60,7 +60,7 @@ export function RegistryTicketPage() {
     ticketNumber: record.ticketNumber,
     qrData: record.ticketQrCode,
     status: record.ticketStatus,
-    isValidated: record.ticketStatus === 'validated',
+    isValidated: record.ticketValidatedAt ? true : false,
     validatedAt: record.ticketValidatedAt,
     validatedBy: record.ticketValidatedBy,
     createdAt: record.ticketCreatedAt,
