@@ -739,12 +739,9 @@ export default function AccountPage() {
                         })()}
                         </div>
                         
-                        {/* Ticket count with bonus */}
+                        {/* Total ticket count */}
                         <div className="mb-2" style={{ fontSize: '1.1rem' }}>
-                          <span className="fw-semibold">{ticketQuantity} tickets</span>
-                          {calculateBonus(ticketQuantity) > 0 && (
-                            <span className="text-success fw-bold"> +{calculateBonus(ticketQuantity)} bonus</span>
-                          )}
+                          <span className="fw-semibold text-success">{ticketQuantity + calculateBonus(ticketQuantity)} Tickets</span>
                         </div>
                         
                         {/* Total discount if any discounts apply */}
