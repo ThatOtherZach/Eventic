@@ -11,6 +11,7 @@ import { PastEvents } from "@/components/archive/past-events";
 import { HTMLViewer } from "@/components/nft/html-viewer";
 import type { Ticket as TicketType, Event, RegistryRecord, AccountBalance } from "@shared/schema";
 import { loadStripe } from "@stripe/stripe-js";
+import smileyIcon from "@assets/image_1756856574950.png";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -919,8 +920,9 @@ export default function AccountPage() {
                             
                             return (
                               <div className="mb-2">
-                                <span className="text-dark">
-                                  -${discountAmount.toFixed(2)} Discount Applied 😊
+                                <span className="text-dark d-flex align-items-center gap-1">
+                                  -${discountAmount.toFixed(2)} Discount Applied 
+                                  <img src={smileyIcon} alt="" style={{ width: '16px', height: '16px' }} />
                                 </span>
                               </div>
                             );
