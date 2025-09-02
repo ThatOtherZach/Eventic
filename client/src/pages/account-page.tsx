@@ -334,108 +334,142 @@ export default function AccountPage() {
       {/* My Wallet - Purchase and Redeem Tickets */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="card">
-            <div className="card-header bg-primary text-white">
-              <h5 className="mb-0">My Wallet</h5>
-            </div>
+          <div className="card border-0 shadow-sm">
             <div className="card-body">
+              <div className="d-flex align-items-center mb-4">
+                <Wallet className="text-primary me-2" size={24} />
+                <h5 className="mb-0 fw-semibold">My Wallet</h5>
+              </div>
+              
               {/* Balance Display */}
-              <div className="mb-3">
-                <label className="form-label text-muted">Balance</label>
-                <div className="d-flex align-items-center">
-                  <div className="text-danger fw-bold h5 mb-0">
-                    {balance ? Math.floor(parseFloat(balance.balance)) : 0} Tickets
+              <div className="bg-light rounded-3 p-3 mb-4">
+                <div className="row align-items-center">
+                  <div className="col-auto">
+                    <small className="text-muted text-uppercase fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>Balance</small>
+                    <div className="d-flex align-items-baseline">
+                      <span className="h2 mb-0 fw-bold text-danger">{balance ? Math.floor(parseFloat(balance.balance)) : 0}</span>
+                      <span className="ms-2 text-muted">Tickets</span>
+                    </div>
                   </div>
-                  {claimStatus?.canClaim && (
-                    <span className="badge bg-success ms-2">claimed</span>
+                  {!claimStatus?.canClaim && claimStatus?.nextClaimAt && (
+                    <div className="col text-end">
+                      <span className="badge bg-success-subtle text-success">
+                        <CheckCircle size={12} className="me-1" />
+                        claimed
+                      </span>
+                    </div>
                   )}
                 </div>
-                <small className="text-muted">
-                  Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. 
-                  Tickets are not required for RVSPing to events. You can collect a free 2 or 4 tickets every 24 hours (you get more in the evening).
-                </small>
-              </div>
-
-              {/* Secret Code Section */}
-              <div className="mb-4">
-                <label className="form-label">Secret code</label>
-                <div className="input-group">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="enter code"
-                    value={secretCode}
-                    onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => e.key === 'Enter' && handleRedeemCode()}
-                    disabled={isRedeeming}
-                  />
-                  <button 
-                    className="btn btn-outline-secondary"
-                    onClick={handleRedeemCode}
-                    disabled={isRedeeming || !secretCode.trim()}
-                  >
-                    {isRedeeming ? "Redeeming..." : "Execute"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Add Tickets Section */}
-              <div className="mb-3">
-                <label className="form-label">Add tickets</label>
-                <div className="d-flex align-items-center gap-2">
-                  <button
-                    className="btn btn-outline-secondary"
-                    onClick={() => setTicketQuantity(Math.max(12, ticketQuantity - 1))}
-                    disabled={ticketQuantity <= 12}
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <input
-                    type="number"
-                    className="form-control text-center"
-                    style={{ width: '80px' }}
-                    value={ticketQuantity}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 12;
-                      setTicketQuantity(Math.max(12, val));
-                    }}
-                    min="12"
-                  />
-                  <button
-                    className="btn btn-outline-secondary"
-                    onClick={() => setTicketQuantity(ticketQuantity + 3)}
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-                <div className="mt-2">
-                  <div className="h5 mb-0">
-                    Total: ${(ticketQuantity * 0.29).toFixed(2)}
-                  </div>
-                  <small className="text-muted">
-                    ${(0.29).toFixed(2)} per ticket • Minimum 12 tickets
+                <div className="mt-3">
+                  <small className="text-muted d-block" style={{ lineHeight: '1.5' }}>
+                    Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. 
+                    You can collect free tickets every 24 hours.
                   </small>
                 </div>
               </div>
 
+              <div className="row g-4">
+                {/* Secret Code Section */}
+                <div className="col-md-6">
+                  <div className="border rounded-3 p-3 h-100">
+                    <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Secret Code</label>
+                    <div className="input-group mb-2">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Enter code"
+                        value={secretCode}
+                        onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => e.key === 'Enter' && handleRedeemCode()}
+                        disabled={isRedeeming}
+                        style={{ textTransform: 'uppercase' }}
+                      />
+                      <button 
+                        className="btn btn-outline-primary"
+                        onClick={handleRedeemCode}
+                        disabled={isRedeeming || !secretCode.trim()}
+                      >
+                        {isRedeeming ? "Redeeming..." : "Execute"}
+                      </button>
+                    </div>
+                    <small className="text-muted">Redeem codes for free tickets</small>
+                  </div>
+                </div>
+
+                {/* Add Tickets Section */}
+                <div className="col-md-6">
+                  <div className="border rounded-3 p-3 h-100">
+                    <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Add Tickets</label>
+                    <div className="d-flex align-items-center mb-3">
+                      <button
+                        className="btn btn-sm btn-outline-secondary rounded-circle p-0"
+                        style={{ width: '32px', height: '32px' }}
+                        onClick={() => setTicketQuantity(Math.max(12, ticketQuantity - 1))}
+                        disabled={ticketQuantity <= 12}
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm text-center mx-2 fw-bold"
+                        style={{ width: '70px' }}
+                        value={ticketQuantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 12;
+                          setTicketQuantity(Math.max(12, val));
+                        }}
+                        min="12"
+                      />
+                      <button
+                        className="btn btn-sm btn-outline-secondary rounded-circle p-0"
+                        style={{ width: '32px', height: '32px' }}
+                        onClick={() => setTicketQuantity(ticketQuantity + 3)}
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                    <div className="bg-light rounded-2 p-2 text-center">
+                      <div className="fw-bold h5 mb-0 text-dark">
+                        Total: <span className="text-primary">${(ticketQuantity * 0.29).toFixed(2)}</span>
+                      </div>
+                      <small className="text-muted">
+                        $0.29 per ticket • Min 12 tickets
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Payment Buttons */}
-              <div className="d-flex gap-2">
-                <button 
-                  className="btn btn-primary flex-fill d-flex align-items-center justify-content-center"
-                  onClick={handlePurchaseTickets}
-                  disabled={isPurchasing || ticketQuantity < 12}
-                >
-                  <img src="/stripe-icon.png" alt="Stripe" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
-                  {isPurchasing ? "Processing..." : "Stripe"}
-                </button>
-                <button 
-                  className="btn btn-secondary flex-fill d-flex align-items-center justify-content-center"
-                  disabled
-                  title="Coinbase payment coming soon"
-                >
-                  <img src="/coinbase-icon.png" alt="Coinbase" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
-                  Coinbase
-                </button>
+              <div className="border-top mt-4 pt-4">
+                <div className="row g-2">
+                  <div className="col-6">
+                    <button 
+                      className="btn btn-outline-primary w-100 py-2"
+                      onClick={handlePurchaseTickets}
+                      disabled={isPurchasing || ticketQuantity < 12}
+                    >
+                      {isPurchasing ? (
+                        <>Processing...</>
+                      ) : (
+                        <>
+                          <img src="/stripe-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+                          Stripe
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="col-6">
+                    <button 
+                      className="btn btn-outline-secondary w-100 py-2"
+                      disabled
+                      title="Coinbase payment coming soon"
+                    >
+                      <img src="/coinbase-icon.png" alt="" style={{ width: '20px', height: '20px', marginRight: '8px', opacity: 0.5 }} />
+                      <span className="text-muted">Coinbase</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
