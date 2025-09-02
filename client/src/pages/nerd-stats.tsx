@@ -297,7 +297,7 @@ export default function NerdStats() {
                     <div className="d-flex align-items-center mb-2">
                       <DollarSign className="text-success me-2" size={20} />
                       <div>
-                        <div className="text-muted small">Platform Revenue</div>
+                        <div className="text-muted small">Revenue</div>
                         <div className="h5 fw-bold mb-0">${advancedStats?.totalRevenue || 0}</div>
                       </div>
                     </div>
@@ -318,9 +318,6 @@ export default function NerdStats() {
                         <div className="h5 fw-bold mb-0">{advancedStats?.freeEvents || 0}</div>
                       </div>
                     </div>
-                    <div className="text-muted small">
-                      vs {advancedStats?.paidEvents || 0} paid events
-                    </div>
                   </div>
                 </div>
                 <div className="col-md-3">
@@ -332,7 +329,6 @@ export default function NerdStats() {
                         <div className="h5 fw-bold mb-0">{advancedStats?.goldenTickets || 0}</div>
                       </div>
                     </div>
-                    <div className="text-muted small">Special edition</div>
                   </div>
                 </div>
                 <div className="col-md-3">
@@ -343,7 +339,6 @@ export default function NerdStats() {
                       <div className="h5 fw-bold mb-0">{advancedStats?.resaleTickets || 0}</div>
                     </div>
                   </div>
-                  <div className="text-muted small">In marketplace</div>
                 </div>
               </div>
             </div>
