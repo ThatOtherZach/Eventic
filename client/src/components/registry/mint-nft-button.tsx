@@ -12,29 +12,30 @@ import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 // Helper function to capture ticket HTML with all assets
 async function captureTicketHTML(): Promise<string> {
-  // Find the actual ticket card element - it's inside the div with id ticket-card-for-nft
+  // Find the ticket card element
   const container = document.getElementById('ticket-card-for-nft');
-  const ticketElement = container?.querySelector('.ticket-card') as HTMLElement;
-  if (!ticketElement) throw new Error('Ticket element not found');
+  if (!container) throw new Error('Container not found');
   
-  // Get the computed styles for the ticket element
-  const computedStyles = window.getComputedStyle(ticketElement);
-  const allStyles = Array.from(computedStyles).map(prop => 
-    `${prop}: ${computedStyles.getPropertyValue(prop)}`
-  ).join('; ');
+  const ticketElement = container.querySelector('.ticket-card') as HTMLElement;
+  if (!ticketElement) throw new Error('Ticket element not found');
   
   // Clone the ticket element
   const clone = ticketElement.cloneNode(true) as HTMLElement;
-  clone.setAttribute('style', allStyles);
   
-  // Convert background images and regular images to base64
-  const elementsWithBg = clone.querySelectorAll('*');
-  for (let i = 0; i < elementsWithBg.length; i++) {
-    const el = elementsWithBg[i] as HTMLElement;
-    const bgImage = window.getComputedStyle(el).backgroundImage;
-    if (bgImage && bgImage !== 'none') {
-      const urlMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
-      if (urlMatch && urlMatch[1]) {
+  // Get inline styles from the original
+  const originalStyle = ticketElement.getAttribute('style');
+  if (originalStyle) {
+    clone.setAttribute('style', originalStyle);
+  }
+  
+  // Convert background images in elements with inline style
+  const allElements = clone.querySelectorAll('*');
+  for (let i = 0; i < allElements.length; i++) {
+    const el = allElements[i] as HTMLElement;
+    const style = el.getAttribute('style');
+    if (style && style.includes('background')) {
+      const urlMatch = style.match(/url\(["']?([^"')]+)["']?\)/);
+      if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('data:')) {
         try {
           const response = await fetch(urlMatch[1]);
           const blob = await response.blob();
@@ -45,27 +46,29 @@ async function captureTicketHTML(): Promise<string> {
           });
           el.style.backgroundImage = `url(${base64})`;
         } catch (err) {
-          console.warn('Failed to convert background image:', urlMatch[1]);
+          console.warn('Failed to convert background:', urlMatch[1]);
         }
       }
     }
   }
   
-  // Convert all img elements to base64
+  // Convert img elements to base64
   const images = clone.querySelectorAll('img');
   for (let i = 0; i < images.length; i++) {
     const img = images[i];
-    try {
-      const response = await fetch(img.src);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-      img.src = base64;
-    } catch (err) {
-      console.warn('Failed to convert image:', img.src);
+    if (!img.src.startsWith('data:')) {
+      try {
+        const response = await fetch(img.src);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+        img.src = base64;
+      } catch (err) {
+        console.warn('Failed to convert image:', img.src);
+      }
     }
   }
   
