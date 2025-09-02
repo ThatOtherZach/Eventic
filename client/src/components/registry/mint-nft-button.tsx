@@ -12,11 +12,8 @@ import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 // Helper function to capture ticket HTML with all assets
 async function captureTicketHTML(): Promise<string> {
-  // Find the ticket card element
-  const container = document.getElementById('ticket-card-for-nft');
-  if (!container) throw new Error('Container not found');
-  
-  const ticketElement = container.querySelector('.ticket-card') as HTMLElement;
+  // Find the ticket card element directly
+  const ticketElement = document.getElementById('ticket-card-for-nft');
   if (!ticketElement) throw new Error('Ticket element not found');
   
   // Clone the ticket element
@@ -151,17 +148,19 @@ async function captureTicketHTML(): Promise<string> {
     }
   `;
   
-  // Create standalone HTML document
+  // Create standalone HTML document with just the ticket card content
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFT Ticket</title>
+  <title>NFT Ticket #${ticket.id}</title>
   <style>${criticalCSS}</style>
 </head>
 <body>
-  ${clone.outerHTML}
+  <div class="ticket-card">
+    ${clone.innerHTML}
+  </div>
 </body>
 </html>`;
   
