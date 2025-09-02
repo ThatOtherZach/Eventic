@@ -279,39 +279,31 @@ export default function NerdStats() {
               </div>
             </div>
           </div>
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <div className="row g-3">
-                <div className="col-md-4">
-                  <div className="border-end pe-3">
-                    <div className="d-flex align-items-center mb-2">
-                      <Gift className="text-info me-2" size={20} />
-                      <div>
-                        <div className="text-muted small">Free Events</div>
-                        <div className="h5 fw-bold mb-0">{advancedStats?.freeEvents || 0}</div>
-                      </div>
-                    </div>
-                  </div>
+          <div className="row g-3 mt-2">
+            <div className="col-md-4">
+              <div className="card shadow-sm">
+                <div className="card-body text-center">
+                  <Gift className="text-info mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">{advancedStats?.freeEvents || 0}</div>
+                  <div className="text-muted small">Free Events</div>
                 </div>
-                <div className="col-md-4">
-                  <div className="border-end pe-3">
-                    <div className="d-flex align-items-center mb-2">
-                      <Trophy className="text-warning me-2" size={20} />
-                      <div>
-                        <div className="text-muted small">Golden Tickets</div>
-                        <div className="h5 fw-bold mb-0">{advancedStats?.goldenTickets || 0}</div>
-                      </div>
-                    </div>
-                  </div>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="card shadow-sm">
+                <div className="card-body text-center">
+                  <Trophy className="text-warning mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">{advancedStats?.goldenTickets || 0}</div>
+                  <div className="text-muted small">Golden Tickets</div>
                 </div>
-                <div className="col-md-4">
-                  <div className="d-flex align-items-center mb-2">
-                    <DollarSign className="text-primary me-2" size={20} />
-                    <div>
-                      <div className="text-muted small">Average Price</div>
-                      <div className="h5 fw-bold mb-0">${advancedStats?.avgPrice || 0}</div>
-                    </div>
-                  </div>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="card shadow-sm">
+                <div className="card-body text-center">
+                  <DollarSign className="text-primary mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">${advancedStats?.avgPrice || 0}</div>
+                  <div className="text-muted small">Average Price</div>
                 </div>
               </div>
             </div>
