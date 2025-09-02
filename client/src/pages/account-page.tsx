@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift } from "lucide-react";
+import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift, Info, AlertTriangle } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -726,15 +726,15 @@ export default function AccountPage() {
                     {/* Reputation Discount Info Message */}
                     {reputation && reputation.totalRatings === 0 && (
                       <div className="mt-2 p-2 bg-info bg-opacity-10 rounded-2">
-                        <small className="text-muted">
-                          <i className="text-info">ℹ</i> Host an event and get rated to unlock reputation discounts up to 20% off
+                        <small className="text-muted d-flex align-items-center gap-1">
+                          <Info size={14} className="text-info" /> Host an event and get rated to unlock reputation discounts up to 20% off
                         </small>
                       </div>
                     )}
                     {reputation && reputation.totalRatings > 0 && reputation.reputation < 55 && (
                       <div className="mt-2 p-2 bg-warning bg-opacity-10 rounded-2">
-                        <small className="text-muted">
-                          <i className="text-warning">⚠</i> Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
+                        <small className="text-muted d-flex align-items-center gap-1">
+                          <AlertTriangle size={14} className="text-warning" /> Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
                         </small>
                       </div>
                     )}
