@@ -233,6 +233,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
 
   const mintMutation = useMutation({
     mutationFn: async () => {
+      console.log("Starting mint process...");
       let imageUrl = '';
       let mediaType = 'text/html';
       
@@ -332,11 +333,13 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
         }
       }
 
+      console.log("Sending mint request with metadata:", metadata);
       const response = await apiRequest("POST", `/api/tickets/${ticket.id}/mint`, {
         title: title || undefined,
         description: description || undefined,
         metadata: JSON.stringify(metadata)
       });
+      console.log("Mint response received");
       return response.json();
     },
     onSuccess: () => {
