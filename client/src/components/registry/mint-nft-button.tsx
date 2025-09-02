@@ -279,8 +279,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           imageUrl = data.url;
           mediaType = 'text/html';
         } catch (htmlError) {
-          console.error("HTML capture failed:", htmlError);
-          alert(`HTML capture error: ${htmlError}`);  // Debug: show error
+          console.error("HTML capture failed, falling back to static image:", htmlError);
           
           // Final fallback: capture as static image
           const ticketElement = document.getElementById('ticket-card-for-nft');

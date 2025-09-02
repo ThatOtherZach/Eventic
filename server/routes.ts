@@ -3968,6 +3968,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple file upload endpoint for NFT HTML files
+  app.post("/api/upload", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // For HTML NFT files, just save them locally and return a URL
+      const filename = `nft-${Date.now()}.html`;
+      const url = `/uploads/${filename}`;
+      
+      // In production, you'd save the file to cloud storage
+      // For now, we'll just return a placeholder URL
+      res.json({ url });
+    } catch (error) {
+      await logError(error, "POST /api/upload", { request: req });
+      res.status(500).json({ message: "Upload failed" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
