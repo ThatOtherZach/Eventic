@@ -2811,6 +2811,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventRecurringType: event.recurringType || null,
         eventRecurringEndDate: event.recurringEndDate || null,
         eventCreatedAt: event.createdAt || new Date(),
+        eventStickerUrl: (event as any).stickerUrl || null,
+        eventSpecialEffectsEnabled: (event as any).specialEffectsEnabled || false,
+        eventGeofence: (event as any).geofence ? JSON.stringify((event as any).geofence) : null,
+        eventIsAdminCreated: (event as any).isAdminCreated || false,
         
         // User data preservation
         creatorUsername: creator?.username || "unknown",

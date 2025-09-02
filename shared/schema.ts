@@ -394,6 +394,10 @@ export const registryRecords = pgTable("registry_records", {
   eventRecurringType: text("event_recurring_type"),
   eventRecurringEndDate: text("event_recurring_end_date"),
   eventCreatedAt: timestamp("event_created_at").notNull(),
+  eventStickerUrl: text("event_sticker_url"), // GIF sticker URL for the event
+  eventSpecialEffectsEnabled: boolean("event_special_effects_enabled").default(false),
+  eventGeofence: text("event_geofence"), // JSON string with geofence data
+  eventIsAdminCreated: boolean("event_is_admin_created").default(false),
   
   // User data preservation
   creatorUsername: text("creator_username").notNull(),

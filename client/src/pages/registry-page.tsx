@@ -102,6 +102,10 @@ export function RegistryPage() {
               recurringType: record.eventRecurringType,
               recurringEndDate: record.eventRecurringEndDate,
               createdAt: record.eventCreatedAt,
+              stickerUrl: record.eventStickerUrl,
+              specialEffectsEnabled: record.eventSpecialEffectsEnabled,
+              geofence: record.eventGeofence ? JSON.parse(record.eventGeofence) : null,
+              isAdminCreated: record.eventIsAdminCreated,
             };
 
             return (
