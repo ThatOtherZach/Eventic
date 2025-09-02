@@ -809,7 +809,7 @@ export default function AccountPage() {
                             <Info size={20} className="text-success" strokeWidth={2} />
                           </div>
                           <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
-                            You're receiving a {reputationDiscount.toFixed(1)}% reputation discount! This reward is based on your {reputation.reputation}% positive rating from hosting events.
+                            Your reputation is impressive! You're now getting {reputationDiscount.toFixed(1)}% off on tickets! Keep hosting awesome events :)
                           </small>
                         </div>
                       </div>
