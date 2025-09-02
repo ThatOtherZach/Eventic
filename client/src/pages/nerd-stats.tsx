@@ -95,8 +95,8 @@ export default function NerdStats() {
 
     // Badge statistics
     const featuredEvents = 0; // Featured events are tracked separately in featuredEvents table
-    const recurringEvents = events.filter((e: any) => e.recurringType).length;
-    const privateEvents = events.filter((e: any) => e.isPrivate).length;
+    const specialEffectsEvents = events.filter((e: any) => e.specialEffectsEnabled).length;
+    const locationSpecificEvents = events.filter((e: any) => e.geofence).length;
     const p2pEvents = events.filter((e: any) => e.p2pValidation).length;
 
     // Ticket economy stats
@@ -116,8 +116,8 @@ export default function NerdStats() {
       minPrice,
       totalRevenue: Math.round(stats.totalTickets * 0.29 * 100) / 100,
       featuredEvents,
-      recurringEvents,
-      privateEvents,
+      specialEffectsEvents,
+      locationSpecificEvents,
       p2pEvents,
       freeEvents,
       paidEvents,
@@ -254,9 +254,9 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="card shadow-sm">
                 <div className="card-body text-center">
-                  <RefreshCw className="text-info mb-2" size={24} />
-                  <div className="h5 fw-bold mb-1">{advancedStats?.recurringEvents || 0}</div>
-                  <div className="text-muted small">Recurring Events</div>
+                  <Zap className="text-info mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">{advancedStats?.specialEffectsEvents || 0}</div>
+                  <div className="text-muted small">Special Effects</div>
                 </div>
               </div>
             </div>
@@ -273,8 +273,8 @@ export default function NerdStats() {
               <div className="card shadow-sm">
                 <div className="card-body text-center">
                   <Hash className="text-secondary mb-2" size={24} />
-                  <div className="h5 fw-bold mb-1">{advancedStats?.privateEvents || 0}</div>
-                  <div className="text-muted small">Private Events</div>
+                  <div className="h5 fw-bold mb-1">{advancedStats?.locationSpecificEvents || 0}</div>
+                  <div className="text-muted small">Location Specific</div>
                 </div>
               </div>
             </div>
