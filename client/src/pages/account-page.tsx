@@ -67,6 +67,10 @@ export default function AccountPage() {
     if (bonus > 0 && bonus < 5) {
       bonus += 3;
     }
+    // If ticket count is over 50, add another 10 bonus tickets
+    if (baseTickets > 50) {
+      bonus += 10;
+    }
     return bonus;
   };
   
