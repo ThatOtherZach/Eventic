@@ -73,6 +73,11 @@ export function RegistryTicketPage() {
     maxUses: record.ticketMaxUses,
     isGolden: record.ticketIsGolden,
     isGoldenTicket: record.ticketIsGolden,
+    isDoubleGolden: record.ticketIsDoubleGolden,
+    specialEffect: record.ticketSpecialEffect,
+    voteCount: record.ticketVoteCount,
+    isCharged: record.ticketIsCharged,
+    validationCode: record.ticketValidationCode,
     nftMediaUrl: record.ticketNftMediaUrl,
   };
 
