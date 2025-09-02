@@ -543,7 +543,7 @@ export default function AccountPage() {
                                       ${basePrice.toFixed(2)}
                                     </small>
                                     {isMaxDiscount && (
-                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
+                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>Best Rate</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
@@ -596,7 +596,7 @@ export default function AccountPage() {
                                       ${basePrice.toFixed(2)}
                                     </small>
                                     {isMaxDiscount && (
-                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
+                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>Best Rate</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
@@ -652,7 +652,7 @@ export default function AccountPage() {
                                       ${basePrice.toFixed(2)}
                                     </small>
                                     {isMaxDiscount && (
-                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
+                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>Best Rate</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
@@ -705,7 +705,7 @@ export default function AccountPage() {
                                       ${basePrice.toFixed(2)}
                                     </small>
                                     {isMaxDiscount && (
-                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>30% Off</span>
+                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>Best Rate</span>
                                     )}
                                     {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
