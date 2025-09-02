@@ -23,6 +23,7 @@ import { HashtagEventsPage } from "@/pages/hashtag-events";
 import { FeaturedEventsPage } from "@/pages/featured-events";
 import { EventTypePage } from "@/pages/event-type";
 import Manifesto from "@/pages/manifesto";
+import NerdDashboard from "@/pages/nerd-dashboard";
 import NerdStats from "@/pages/nerd-stats";
 import { RegistryPage } from "@/pages/registry-page";
 import { RegistryTicketPage } from "@/pages/registry-ticket-page";
@@ -45,7 +46,8 @@ function Router() {
       <Route path="/special-effects" component={SpecialEffectsPage} />
       <Route path="/featured" component={FeaturedEventsPage} />
       <Route path="/manifesto" component={Manifesto} />
-      <Route path="/nerd" component={NerdStats} />
+      <Route path="/nerd" component={NerdDashboard} />
+      <Route path="/sys/nerd" component={NerdStats} />
       <Route path="/registry" component={RegistryPage} />
       <Route path="/registry/:id" component={RegistryTicketPage} />
       <Route path="/auth" component={AuthPage} />

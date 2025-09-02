@@ -799,7 +799,7 @@ export default function AccountPage() {
               {/* Stats for nerds link */}
               <div className="text-end mt-3">
                 <Link 
-                  to="/nerd" 
+                  to="/sys/nerd" 
                   className="text-muted small text-decoration-none"
                   style={{ fontSize: '0.8rem' }}
                   data-testid="link-stats-nerds"
