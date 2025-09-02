@@ -553,7 +553,7 @@ export default function AccountPage() {
                               } else {
                                 return (
                                   <>
-                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
                                   </>
                                 );
@@ -581,10 +581,10 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 48 : 24);
-                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
+                              const multiplyDiscount = multiplyAndSave ? 10 : 0;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 48 : 24) * 0.29;
-                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
@@ -606,7 +606,7 @@ export default function AccountPage() {
                               } else {
                                 return (
                                   <>
-                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
                                   </>
                                 );
@@ -637,10 +637,10 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 100 : 50);
-                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
+                              const multiplyDiscount = multiplyAndSave ? 10 : 0;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 100 : 50) * 0.29;
-                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
@@ -662,7 +662,7 @@ export default function AccountPage() {
                               } else {
                                 return (
                                   <>
-                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
                                   </>
                                 );
@@ -690,10 +690,10 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 200 : 100);
-                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
+                              const multiplyDiscount = multiplyAndSave ? 10 : 0;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 200 : 100) * 0.29;
-                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
@@ -715,7 +715,7 @@ export default function AccountPage() {
                               } else {
                                 return (
                                   <>
-                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
                                   </>
                                 );
