@@ -2750,6 +2750,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const creator = await storage.getUser(event.userId || userId);
       const owner = await storage.getUser(userId);
       
+      // Copy images to permanent registry folder to survive 69-day deletion
+      const objectStorageService = new ObjectStorageService();
+      const permanentEventImageUrl = await objectStorageService.copyImageToRegistry(event.imageUrl);
+      const permanentStickerUrl = await objectStorageService.copyImageToRegistry(event.stickerUrl);
+      const permanentNftMediaUrl = await objectStorageService.copyImageToRegistry(ticket.nftMediaUrl);
+      const permanentUserImageUrl = imageUrl ? await objectStorageService.copyImageToRegistry(imageUrl) : null;
+      
       // Create registry record with COMPLETE data preservation
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
@@ -2767,7 +2774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             useCount: ticket.useCount
           }
         }),
-        imageUrl: imageUrl || null,
+        imageUrl: permanentUserImageUrl || null,
         
         // Complete ticket data preservation
         ticketNumber: ticket.ticketNumber,
@@ -2783,7 +2790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketUsageCount: ticket.useCount || 0,
         ticketMaxUses: ticket.maxUses || 1,
         ticketIsGolden: ticket.isGolden || false,
-        ticketNftMediaUrl: ticket.nftMediaUrl || null,
+        ticketNftMediaUrl: permanentNftMediaUrl || null,
         ticketQrCode: ticket.qrData,
         ticketValidationCode: ticket.validationCode || null,
         
@@ -2795,7 +2802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventTime: event.time,
         eventEndDate: event.endDate || null,
         eventEndTime: event.endTime || null,
-        eventImageUrl: event.imageUrl || null,
+        eventImageUrl: permanentEventImageUrl || null,
         eventMaxTickets: event.maxTickets || null,
         eventTicketsSold: event.ticketsSold || 0,
         eventTicketPrice: event.ticketPrice || null,
@@ -2812,7 +2819,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventRecurringType: event.recurringType || null,
         eventRecurringEndDate: event.recurringEndDate || null,
         eventCreatedAt: event.createdAt || new Date(),
-        eventStickerUrl: (event as any).stickerUrl || null,
+        eventStickerUrl: permanentStickerUrl || null,
         eventSpecialEffectsEnabled: (event as any).specialEffectsEnabled || false,
         eventGeofence: (event as any).geofence ? JSON.stringify((event as any).geofence) : null,
         eventIsAdminCreated: (event as any).isAdminCreated || false,

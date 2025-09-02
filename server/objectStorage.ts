@@ -141,6 +141,61 @@ export class ObjectStorageService {
     const entityId = rawObjectPath.slice(objectEntityDir.length);
     return `/objects/${entityId}`;
   }
+
+  /**
+   * Copies an image to the permanent registry folder.
+   * This ensures the image survives the 69-day deletion cycle.
+   * @param sourceImageUrl The original image URL to copy
+   * @returns The new permanent registry image URL
+   */
+  async copyImageToRegistry(sourceImageUrl: string | null): Promise<string | null> {
+    if (!sourceImageUrl) return null;
+    
+    try {
+      // Parse the source image path
+      let sourcePath: string;
+      if (sourceImageUrl.startsWith('/public-objects/')) {
+        // Extract path after /public-objects/
+        sourcePath = sourceImageUrl.replace('/public-objects/', '');
+      } else if (sourceImageUrl.includes('/uploads/')) {
+        // Extract just the filename from the uploads path
+        const parts = sourceImageUrl.split('/uploads/');
+        sourcePath = 'uploads/' + parts[parts.length - 1];
+      } else {
+        // Return as-is if not an object storage path
+        return sourceImageUrl;
+      }
+
+      // Find the source file in public directories
+      const sourceFile = await this.searchPublicObject(sourcePath);
+      if (!sourceFile) {
+        console.error('Source image not found:', sourceImageUrl);
+        return sourceImageUrl; // Return original URL if can't find source
+      }
+
+      // Generate a unique ID for the registry copy
+      const registryId = randomUUID();
+      const fileExtension = sourcePath.split('.').pop() || 'jpg';
+      const registryFileName = `registry/${registryId}.${fileExtension}`;
+      
+      // Get the first public path for the registry destination
+      const publicPath = this.getPublicObjectSearchPaths()[0];
+      const { bucketName, objectName: destObjectName } = parseObjectPath(`${publicPath}/${registryFileName}`);
+      
+      // Copy the file to the registry folder
+      const destBucket = objectStorageClient.bucket(bucketName);
+      const destFile = destBucket.file(destObjectName);
+      
+      // Copy the file
+      await sourceFile.copy(destFile);
+      
+      // Return the new registry image URL
+      return `/public-objects/${registryFileName}`;
+    } catch (error) {
+      console.error('Error copying image to registry:', error);
+      return sourceImageUrl; // Return original URL on error
+    }
+  }
 }
 
 function parseObjectPath(path: string): {
