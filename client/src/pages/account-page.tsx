@@ -773,7 +773,7 @@ export default function AccountPage() {
                         {calculateBonus(ticketQuantity) > 0 && (
                           <div className="mt-2">
                             <span className="badge bg-success px-3 py-2" style={{ fontSize: '0.85rem' }}>
-                              {bonusPercentage}% Demand Bonus Applied
+                              {bonusPercentage}% Bonus Applied
                             </span>
                           </div>
                         )}
