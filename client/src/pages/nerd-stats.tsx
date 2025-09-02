@@ -241,7 +241,7 @@ export default function NerdStats() {
             <Award size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
             Event Badges & Types
           </h5>
-          <div className="row g-3">
+          <div className="row g-3 mb-3">
             <div className="col-md-3">
               <div className="card shadow-sm">
                 <div className="card-body text-center">
@@ -279,16 +279,6 @@ export default function NerdStats() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Ticket Economy */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <h5 className="fw-semibold mb-3">
-            <Coins size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
-            Ticket Economy
-          </h5>
           <div className="card shadow-sm">
             <div className="card-body">
               <div className="row g-3">
