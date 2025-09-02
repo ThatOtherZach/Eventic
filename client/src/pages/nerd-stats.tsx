@@ -28,6 +28,7 @@ import checkIcon from "@assets/check-0_1756849706987.png";
 import demandIcon from "@assets/image_1756849793480.png";
 import coreMetricsIcon from "@assets/image_1756850088693.png";
 import distributionIcon from "@assets/image_1756850111300.png";
+import statsIcon from "@assets/chart1-4_1756850194937.png";
 
 export default function NerdStats() {
 
@@ -156,7 +157,7 @@ export default function NerdStats() {
               Back
             </Link>
             <h1 className="h3 fw-bold mb-0 flex-grow-1">
-              <BarChart3 className="me-2 text-primary" size={28} style={{ verticalAlign: 'text-bottom' }} />
+              <img src={statsIcon} alt="Stats" className="me-2" style={{ width: 28, height: 28, verticalAlign: 'text-bottom' }} />
               Stats for Nerds
             </h1>
           </div>
