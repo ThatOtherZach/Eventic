@@ -2,8 +2,27 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
-import { BarChart3, TrendingUp, Users, Ticket, Calendar, Zap, ChevronLeft, Activity, Database, Clock, Server } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { 
+  BarChart3, 
+  TrendingUp, 
+  Users, 
+  Ticket, 
+  Calendar, 
+  Zap, 
+  ChevronLeft, 
+  Activity, 
+  Database, 
+  Clock, 
+  Server,
+  Award,
+  DollarSign,
+  Gift,
+  RefreshCw,
+  Coins,
+  Trophy,
+  Star,
+  Hash
+} from "lucide-react";
 
 export default function NerdStats() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -44,6 +63,15 @@ export default function NerdStats() {
     refetchInterval: 60000,
   });
 
+  const { data: tickets } = useQuery({
+    queryKey: ["/api/user/tickets"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/user/tickets");
+      return response.json();
+    },
+    refetchInterval: 60000,
+  });
+
   // Calculate advanced stats
   const calculateStats = () => {
     if (!events || !stats) return null;
@@ -78,6 +106,18 @@ export default function NerdStats() {
     const maxPrice = Math.max(...ticketPrices, 0);
     const minPrice = ticketPrices.length > 0 ? Math.min(...ticketPrices) : 0;
 
+    // Badge statistics
+    const featuredEvents = events.filter((e: any) => e.isFeatured).length;
+    const recurringEvents = events.filter((e: any) => e.isRecurring).length;
+    const privateEvents = events.filter((e: any) => e.isPrivate).length;
+    const p2pEvents = events.filter((e: any) => e.allowPeerValidation).length;
+
+    // Ticket economy stats
+    const freeEvents = events.filter((e: any) => e.ticketPrice === 0).length;
+    const paidEvents = events.filter((e: any) => e.ticketPrice > 0).length;
+    const goldenTickets = tickets?.filter((t: any) => t.isGolden).length || 0;
+    const resaleTickets = tickets?.filter((t: any) => t.isResale).length || 0;
+
     return {
       activeEvents: activeEvents.length,
       pastEvents: pastEvents.length,
@@ -88,6 +128,14 @@ export default function NerdStats() {
       maxPrice,
       minPrice,
       totalRevenue: Math.round(stats.totalTickets * 0.29 * 100) / 100,
+      featuredEvents,
+      recurringEvents,
+      privateEvents,
+      p2pEvents,
+      freeEvents,
+      paidEvents,
+      goldenTickets,
+      resaleTickets,
     };
   };
 
@@ -106,166 +154,287 @@ export default function NerdStats() {
   const uptimeHours = Math.floor((uptime % 86400) / 3600);
 
   return (
-    <div className="container py-5">
+    <div className="container py-4">
       {/* Header */}
       <div className="row mb-4">
         <div className="col">
-          <div className="d-flex align-items-center gap-3 mb-4">
+          <div className="d-flex align-items-center gap-3 mb-3">
             <Link to="/account" className="btn btn-sm btn-outline-secondary" data-testid="link-back-account">
               <ChevronLeft size={16} className="me-1" />
               Back
             </Link>
             <h1 className="h3 fw-bold mb-0 flex-grow-1">
-              <BarChart3 className="me-2" size={28} style={{ verticalAlign: 'text-bottom' }} />
+              <BarChart3 className="me-2 text-primary" size={28} style={{ verticalAlign: 'text-bottom' }} />
               Stats for Nerds
             </h1>
           </div>
         </div>
       </div>
 
-      {/* System Status */}
+      {/* System Status Card */}
       <div className="row mb-4">
         <div className="col-12">
-          <Card>
-            <CardHeader>
-              <CardTitle className="d-flex align-items-center gap-2">
-                <Server size={20} />
+          <div className="card shadow-sm">
+            <div className="card-header bg-white">
+              <h5 className="mb-0 d-flex align-items-center gap-2">
+                <Server size={20} className="text-primary" />
                 System Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h5>
+            </div>
+            <div className="card-body">
               <div className="row g-3">
                 <div className="col-md-3">
-                  <div className="text-muted small">Server Time</div>
-                  <div className="fw-semibold font-monospace">
+                  <div className="text-muted small mb-1">Server Time</div>
+                  <div className="fw-semibold font-monospace small">
                     {currentTime.toISOString()}
                   </div>
                 </div>
                 <div className="col-md-3">
-                  <div className="text-muted small">Unix Timestamp</div>
+                  <div className="text-muted small mb-1">Unix Timestamp</div>
                   <div className="fw-semibold font-monospace">
                     {Math.floor(currentTime.getTime() / 1000)}
                   </div>
                 </div>
                 <div className="col-md-3">
-                  <div className="text-muted small">Uptime</div>
-                  <div className="fw-semibold font-monospace">
+                  <div className="text-muted small mb-1">Uptime</div>
+                  <div className="fw-semibold">
                     {uptimeDays}d {uptimeHours}h
                   </div>
                 </div>
                 <div className="col-md-3">
-                  <div className="text-muted small">API Version</div>
-                  <div className="fw-semibold font-monospace">v2.0.0</div>
+                  <div className="text-muted small mb-1">API Version</div>
+                  <div className="fw-semibold">v2.0.0</div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Core Metrics */}
       <div className="row mb-4">
         <div className="col-12">
-          <h5 className="fw-semibold mb-3">Core Metrics</h5>
+          <h5 className="fw-semibold mb-3">
+            <Activity size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
+            Core Metrics
+          </h5>
           <div className="row g-3">
             <div className="col-md-3">
-              <Card>
-                <CardContent className="pt-3">
+              <div className="card shadow-sm h-100">
+                <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small">Total Events</div>
-                      <div className="h4 fw-bold mb-0">{formatNumber(stats?.totalEvents || 0)}</div>
+                      <div className="text-muted small mb-1">Total Events</div>
+                      <div className="h4 fw-bold mb-1">{formatNumber(stats?.totalEvents || 0)}</div>
                       <div className="text-success small">
+                        <TrendingUp size={14} className="me-1" />
                         {advancedStats?.activeEvents || 0} active
                       </div>
                     </div>
-                    <Calendar className="text-primary" size={24} />
+                    <Calendar className="text-primary opacity-50" size={32} />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
             <div className="col-md-3">
-              <Card>
-                <CardContent className="pt-3">
+              <div className="card shadow-sm h-100">
+                <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small">Total Tickets</div>
-                      <div className="h4 fw-bold mb-0">{formatNumber(stats?.totalTickets || 0)}</div>
+                      <div className="text-muted small mb-1">Total Tickets</div>
+                      <div className="h4 fw-bold mb-1">{formatNumber(stats?.totalTickets || 0)}</div>
                       <div className="text-info small">
+                        <Activity size={14} className="me-1" />
                         {advancedStats?.avgTicketsPerEvent || 0} avg/event
                       </div>
                     </div>
-                    <Ticket className="text-info" size={24} />
+                    <Ticket className="text-info opacity-50" size={32} />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
             <div className="col-md-3">
-              <Card>
-                <CardContent className="pt-3">
+              <div className="card shadow-sm h-100">
+                <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small">Validation Rate</div>
-                      <div className="h4 fw-bold mb-0">{advancedStats?.validationRate || 0}%</div>
+                      <div className="text-muted small mb-1">Validation Rate</div>
+                      <div className="h4 fw-bold mb-1">{advancedStats?.validationRate || 0}%</div>
                       <div className="text-warning small">
+                        <Trophy size={14} className="me-1" />
                         {stats?.validatedTickets || 0} validated
                       </div>
                     </div>
-                    <Activity className="text-warning" size={24} />
+                    <Award className="text-warning opacity-50" size={32} />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
             <div className="col-md-3">
-              <Card>
-                <CardContent className="pt-3">
+              <div className="card shadow-sm h-100">
+                <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small">Current Demand</div>
-                      <div className="h4 fw-bold mb-0">{demandData?.demand || 0}</div>
+                      <div className="text-muted small mb-1">Current Demand</div>
+                      <div className="h4 fw-bold mb-1">{demandData?.demand || 0}</div>
                       <div className="text-success small">
+                        <Zap size={14} className="me-1" />
                         Tickets/hour
                       </div>
                     </div>
-                    <Zap className="text-success" size={24} />
+                    <Zap className="text-success opacity-50" size={32} />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Financial Metrics */}
+      {/* Badge & Event Type Statistics */}
       <div className="row mb-4">
         <div className="col-12">
-          <h5 className="fw-semibold mb-3">Financial Metrics</h5>
-          <Card>
-            <CardContent>
-              <div className="row g-3">
-                <div className="col-md-3">
-                  <div className="text-muted small">Total Revenue (Est.)</div>
-                  <div className="h5 fw-bold">${advancedStats?.totalRevenue || 0}</div>
-                  <div className="text-muted small font-monospace">@ $0.29/ticket</div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-muted small">Avg Ticket Price</div>
-                  <div className="h5 fw-bold">${advancedStats?.avgPrice || 0}</div>
-                  <div className="text-muted small">Per event</div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-muted small">Price Range</div>
-                  <div className="h5 fw-bold">${advancedStats?.minPrice || 0} - ${advancedStats?.maxPrice || 0}</div>
-                  <div className="text-muted small">Min - Max</div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-muted small">NFTs Minted</div>
-                  <div className="h5 fw-bold">{stats?.nftMinted || 0}</div>
-                  <div className="text-muted small">Validated tickets</div>
+          <h5 className="fw-semibold mb-3">
+            <Award size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
+            Event Badges & Types
+          </h5>
+          <div className="row g-3">
+            <div className="col-md-3">
+              <div className="card shadow-sm">
+                <div className="card-body text-center">
+                  <Star className="text-warning mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">{advancedStats?.featuredEvents || 0}</div>
+                  <div className="text-muted small">Featured Events</div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="col-md-3">
+              <div className="card shadow-sm">
+                <div className="card-body text-center">
+                  <RefreshCw className="text-info mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">{advancedStats?.recurringEvents || 0}</div>
+                  <div className="text-muted small">Recurring Events</div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-3">
+              <div className="card shadow-sm">
+                <div className="card-body text-center">
+                  <Users className="text-success mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">{advancedStats?.p2pEvents || 0}</div>
+                  <div className="text-muted small">P2P Validation</div>
+                </div>
+              </div>
+            </div>
+            <div className="col-md-3">
+              <div className="card shadow-sm">
+                <div className="card-body text-center">
+                  <Hash className="text-secondary mb-2" size={24} />
+                  <div className="h5 fw-bold mb-1">{advancedStats?.privateEvents || 0}</div>
+                  <div className="text-muted small">Private Events</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ticket Economy */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <h5 className="fw-semibold mb-3">
+            <Coins size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
+            Ticket Economy
+          </h5>
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <div className="row g-3">
+                <div className="col-md-3">
+                  <div className="border-end pe-3">
+                    <div className="d-flex align-items-center mb-2">
+                      <DollarSign className="text-success me-2" size={20} />
+                      <div>
+                        <div className="text-muted small">Platform Revenue</div>
+                        <div className="h5 fw-bold mb-0">${advancedStats?.totalRevenue || 0}</div>
+                      </div>
+                    </div>
+                    <div className="progress" style={{ height: '4px' }}>
+                      <div 
+                        className="progress-bar bg-success" 
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="border-end pe-3">
+                    <div className="d-flex align-items-center mb-2">
+                      <Gift className="text-info me-2" size={20} />
+                      <div>
+                        <div className="text-muted small">Free Events</div>
+                        <div className="h5 fw-bold mb-0">{advancedStats?.freeEvents || 0}</div>
+                      </div>
+                    </div>
+                    <div className="text-muted small">
+                      vs {advancedStats?.paidEvents || 0} paid events
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="border-end pe-3">
+                    <div className="d-flex align-items-center mb-2">
+                      <Trophy className="text-warning me-2" size={20} />
+                      <div>
+                        <div className="text-muted small">Golden Tickets</div>
+                        <div className="h5 fw-bold mb-0">{advancedStats?.goldenTickets || 0}</div>
+                      </div>
+                    </div>
+                    <div className="text-muted small">Special edition</div>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="d-flex align-items-center mb-2">
+                    <RefreshCw className="text-secondary me-2" size={20} />
+                    <div>
+                      <div className="text-muted small">Resale Tickets</div>
+                      <div className="h5 fw-bold mb-0">{advancedStats?.resaleTickets || 0}</div>
+                    </div>
+                  </div>
+                  <div className="text-muted small">In marketplace</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Price Analytics */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <h5 className="fw-semibold mb-3">
+            <DollarSign size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
+            Price Analytics
+          </h5>
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <div className="row text-center">
+                <div className="col-md-4">
+                  <div className="text-muted small mb-1">Average Price</div>
+                  <div className="h3 fw-bold text-primary">${advancedStats?.avgPrice || 0}</div>
+                </div>
+                <div className="col-md-4">
+                  <div className="text-muted small mb-1">Price Range</div>
+                  <div className="h5 fw-semibold">
+                    ${advancedStats?.minPrice || 0} - ${advancedStats?.maxPrice || 0}
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="text-muted small mb-1">NFTs Minted</div>
+                  <div className="h3 fw-bold text-info">{stats?.nftMinted || 0}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -273,31 +442,36 @@ export default function NerdStats() {
       {advancedStats?.dayStats && (
         <div className="row mb-4">
           <div className="col-12">
-            <h5 className="fw-semibold mb-3">Event Distribution by Day</h5>
-            <Card>
-              <CardContent>
+            <h5 className="fw-semibold mb-3">
+              <Calendar size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
+              Event Distribution by Day
+            </h5>
+            <div className="card shadow-sm">
+              <div className="card-body">
                 <div className="row g-2">
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                    <div key={day} className="col">
-                      <div className="text-center">
-                        <div className="text-muted small">{day.slice(0, 3)}</div>
-                        <div className="h4 fw-bold mb-0">
-                          {advancedStats.dayStats[day] || 0}
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                    const count = advancedStats.dayStats[day] || 0;
+                    const maxCount = Math.max(...Object.values(advancedStats.dayStats).map(v => Number(v)), 1);
+                    const percentage = (count / maxCount) * 100;
+                    
+                    return (
+                      <div key={day} className="col">
+                        <div className="text-center">
+                          <div className="text-muted small mb-1">{day.slice(0, 3)}</div>
+                          <div className="h5 fw-bold mb-2">{count}</div>
+                          <div className="progress" style={{ height: '6px' }}>
+                            <div 
+                              className="progress-bar bg-primary" 
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
                         </div>
-                        <div 
-                          className="bg-primary mt-2" 
-                          style={{ 
-                            height: '4px', 
-                            width: '100%',
-                            opacity: Math.min((advancedStats.dayStats[day] || 0) / Math.max(...Object.values(advancedStats.dayStats).map(v => Number(v)), 1), 1)
-                          }}
-                        />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -305,41 +479,44 @@ export default function NerdStats() {
       {/* Technical Details */}
       <div className="row mb-4">
         <div className="col-12">
-          <h5 className="fw-semibold mb-3">Technical Details</h5>
-          <Card>
-            <CardContent>
+          <h5 className="fw-semibold mb-3">
+            <Database size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
+            Technical Details
+          </h5>
+          <div className="card shadow-sm">
+            <div className="card-body">
               <div className="font-monospace small">
                 <div className="row mb-2">
-                  <div className="col-4 text-muted">Database</div>
-                  <div className="col-8">PostgreSQL (Neon)</div>
+                  <div className="col-5 col-md-4 text-muted">Database</div>
+                  <div className="col-7 col-md-8">PostgreSQL (Neon)</div>
                 </div>
                 <div className="row mb-2">
-                  <div className="col-4 text-muted">ORM</div>
-                  <div className="col-8">Drizzle ORM</div>
+                  <div className="col-5 col-md-4 text-muted">ORM</div>
+                  <div className="col-7 col-md-8">Drizzle ORM</div>
                 </div>
                 <div className="row mb-2">
-                  <div className="col-4 text-muted">Backend</div>
-                  <div className="col-8">Express.js + TypeScript</div>
+                  <div className="col-5 col-md-4 text-muted">Backend</div>
+                  <div className="col-7 col-md-8">Express.js + TypeScript</div>
                 </div>
                 <div className="row mb-2">
-                  <div className="col-4 text-muted">Frontend</div>
-                  <div className="col-8">React 18 + Vite</div>
+                  <div className="col-5 col-md-4 text-muted">Frontend</div>
+                  <div className="col-7 col-md-8">React 18 + Vite</div>
                 </div>
                 <div className="row mb-2">
-                  <div className="col-4 text-muted">Data Retention</div>
-                  <div className="col-8">69 days post-event</div>
+                  <div className="col-5 col-md-4 text-muted">Data Retention</div>
+                  <div className="col-7 col-md-8">69 days post-event</div>
                 </div>
                 <div className="row mb-2">
-                  <div className="col-4 text-muted">Cache TTL</div>
-                  <div className="col-8">30s (stats), 60s (events)</div>
+                  <div className="col-5 col-md-4 text-muted">Cache TTL</div>
+                  <div className="col-7 col-md-8">30s (stats), 60s (events)</div>
                 </div>
                 <div className="row mb-2">
-                  <div className="col-4 text-muted">Rate Limits</div>
-                  <div className="col-8">100 req/min (general), 10 req/min (auth)</div>
+                  <div className="col-5 col-md-4 text-muted">Rate Limits</div>
+                  <div className="col-7 col-md-8">100 req/min (general), 10 req/min (auth)</div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -347,6 +524,7 @@ export default function NerdStats() {
       <div className="row">
         <div className="col-12">
           <p className="text-muted text-center small">
+            <Clock size={14} className="me-1" style={{ verticalAlign: 'text-bottom' }} />
             Last refresh: {new Date().toLocaleTimeString()} | Auto-refresh: 30s
           </p>
         </div>
