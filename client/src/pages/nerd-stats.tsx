@@ -148,16 +148,7 @@ export default function NerdStats() {
 
 
   return (
-    <div 
-      className="container py-4" 
-      style={{
-        backgroundImage: `url(${tealBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        minHeight: '100vh'
-      }}
-    >
+    <div className="container py-4">
       {/* Header */}
       <div className="row mb-4">
         <div className="col">
