@@ -64,6 +64,139 @@ export class TicketCaptureService {
     }
   }
 
+  async captureTicketAsHTML(options: CaptureOptions): Promise<string> {
+    const { ticket, event } = options;
+    const sessionId = uuidv4();
+    const outputPath = options.outputPath || path.join(this.tempDir, `${sessionId}.html`);
+
+    try {
+      // Initialize browser if not already done
+      await this.initialize();
+
+      // Create a new page
+      const page = await this.browser!.newPage();
+      
+      // Set viewport to fixed dimensions
+      await page.setViewport({ 
+        width: 512,
+        height: 768
+      });
+
+      // Generate snapshot token
+      const crypto = require('crypto');
+      const snapshotToken = crypto.createHash('sha256')
+        .update(`${ticket.id}-snapshot-${new Date().toISOString().split('T')[0]}`)
+        .digest('hex')
+        .substring(0, 16);
+
+      // Navigate to the render route with snapshot token
+      const renderUrl = `http://localhost:5000/api/tickets/${ticket.id}/render?snapshot_token=${snapshotToken}`;
+      console.log(`Capturing HTML from: ${renderUrl}`);
+      await page.goto(renderUrl, { waitUntil: 'networkidle0' });
+      
+      // Wait for the ticket element to be present
+      await page.waitForSelector('#ticket', { visible: true });
+      
+      // Wait a bit for animations to initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Get the complete HTML of the ticket element including styles
+      const ticketHTML = await page.evaluate(() => {
+        const ticketEl = document.getElementById('ticket');
+        if (!ticketEl) return null;
+
+        // Get all stylesheets
+        const styles: string[] = [];
+        Array.from(document.styleSheets).forEach(sheet => {
+          try {
+            if (sheet.cssRules) {
+              Array.from(sheet.cssRules).forEach(rule => {
+                styles.push(rule.cssText);
+              });
+            }
+          } catch (e) {
+            // Skip cross-origin stylesheets
+          }
+        });
+
+        // Get computed styles for the ticket element
+        const computedStyles = window.getComputedStyle(ticketEl);
+        
+        // Create a standalone HTML document
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFT Ticket - ${document.title}</title>
+  <style>
+    /* Reset styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    /* Include all captured styles */
+    ${styles.join('\n')}
+    
+    /* Ensure ticket is centered and sized correctly */
+    #ticket {
+      width: ${computedStyles.width};
+      height: ${computedStyles.height};
+      position: relative;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  ${ticketEl.outerHTML}
+  <script>
+    // Re-initialize any animations
+    document.addEventListener('DOMContentLoaded', function() {
+      // Restart CSS animations
+      const animatedElements = document.querySelectorAll('[style*="animation"]');
+      animatedElements.forEach(el => {
+        const style = el.getAttribute('style');
+        el.setAttribute('style', '');
+        setTimeout(() => el.setAttribute('style', style), 10);
+      });
+    });
+  </script>
+</body>
+</html>`;
+        
+        return html;
+      });
+
+      if (!ticketHTML) {
+        throw new Error('Failed to capture ticket HTML');
+      }
+
+      // Save HTML to file
+      fs.writeFileSync(outputPath, ticketHTML);
+      console.log(`HTML saved to: ${outputPath}`);
+
+      // Close the page
+      await page.close();
+
+      return outputPath;
+    } catch (error) {
+      console.error('Error capturing ticket as HTML:', error);
+      throw error;
+    }
+  }
+
   async captureTicketAsVideo(options: CaptureOptions & { format?: 'mp4' | 'webm' | 'gif' }): Promise<string> {
     const { ticket, event, format = 'mp4' } = options;
     const sessionId = uuidv4();

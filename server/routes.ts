@@ -1021,53 +1021,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectStorageService = new ObjectStorageService();
       let mediaPath: string | null = null;
       let mediaUrl: string | null = null;
-      let mediaType: string = 'video/mp4';
+      let mediaType: string = 'text/html';
       
-      // Try MP4 video capture first
+      // Capture ticket as HTML
       try {
-        mediaPath = await captureService.captureTicketAsVideo({
+        console.log('Capturing ticket as HTML...');
+        mediaPath = await captureService.captureTicketAsHTML({
           ticket,
-          event,
-          format: 'mp4'
+          event
         });
-        mediaType = 'video/mp4';
-      } catch (mp4Error) {
-        console.error("MP4 generation failed, trying WebM:", mp4Error);
+        mediaType = 'text/html';
+        console.log('HTML capture successful:', mediaPath);
+      } catch (htmlError) {
+        console.error("HTML generation failed:", htmlError);
         
-        // Try WebM as fallback
+        // Fallback to static image if HTML fails
         try {
-          mediaPath = await captureService.captureTicketAsVideo({
+          mediaPath = await captureService.captureTicketAsImage({
             ticket,
-            event,
-            format: 'webm'
+            event
           });
-          mediaType = 'video/webm';
-        } catch (webmError) {
-          console.error("WebM generation failed, trying GIF:", webmError);
-          
-          // Try GIF as secondary fallback
-          try {
-            mediaPath = await captureService.captureTicketAsVideo({
-              ticket,
-              event,
-              format: 'gif'
-            });
-            mediaType = 'image/gif';
-          } catch (gifError) {
-            console.error("GIF generation failed, falling back to static PNG:", gifError);
-            
-            // Final fallback to static PNG
-            try {
-              mediaPath = await captureService.captureTicketAsImage({
-                ticket,
-                event
-              });
-              mediaType = 'image/png';
-            } catch (imageError) {
-              console.error("All media generation attempts failed:", imageError);
-              throw new Error("Failed to generate any media format");
-            }
-          }
+          mediaType = 'image/png';
+        } catch (imageError) {
+          console.error("All media generation attempts failed:", imageError);
+          throw new Error("Failed to generate any media format");
         }
       }
       
@@ -1105,7 +1082,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fs.unlinkSync(mediaPath);
       }
       
-      // Update ticket with MP4 URL
+      // Update ticket with media URL
       await storage.updateTicketNftMediaUrl(req.params.ticketId, publicUrl);
       
       res.json({ mediaUrl: publicUrl, cached: false });

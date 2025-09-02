@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
+import { HTMLViewer } from "@/components/nft/html-viewer";
 import type { Ticket as TicketType, Event, RegistryRecord, AccountBalance } from "@shared/schema";
 import { loadStripe } from "@stripe/stripe-js";
 
@@ -577,12 +578,21 @@ export default function AccountPage() {
                   const metadata = record.metadata as any;
                   const mediaType = metadata?.mediaType || 'image/gif';
                   const isVideo = mediaType === 'video/mp4' || mediaUrl?.endsWith('.mp4');
+                  const isHTML = mediaType === 'text/html' || mediaUrl?.endsWith('.html');
                   
                   return (
                     <div key={record.id} className="col-md-6">
                       <div className="card">
                         {mediaUrl && (
-                          isVideo ? (
+                          isHTML ? (
+                            <div style={{ height: '400px', overflow: 'hidden' }}>
+                              <HTMLViewer 
+                                htmlUrl={mediaUrl}
+                                title={record.title}
+                                className="w-100 h-100"
+                              />
+                            </div>
+                          ) : isVideo ? (
                             <video 
                               src={mediaUrl}
                               className="card-img-top" 
