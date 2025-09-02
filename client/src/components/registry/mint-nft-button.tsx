@@ -12,7 +12,10 @@ import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 // Helper function to capture ticket HTML with all assets
 async function captureTicketHTML(): Promise<string> {
-  const ticketElement = document.querySelector('.ticket-container');
+  // Try to find the ticket element by different selectors
+  const ticketElement = document.querySelector('#ticket-card-for-nft') || 
+                        document.querySelector('.ticket-card') || 
+                        document.querySelector('.ticket-container');
   if (!ticketElement) throw new Error('Ticket element not found');
   
   // Clone the ticket element

@@ -609,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Simple token validation (in production, use proper JWT or time-limited tokens)
       // For now, we'll accept a token that's the ticket ID hashed
       if (snapshotToken) {
-        const crypto = require('crypto');
+        const crypto = await import('crypto');
         const expectedToken = crypto.createHash('sha256')
           .update(`${ticketId}-snapshot-${new Date().toISOString().split('T')[0]}`)
           .digest('hex')
