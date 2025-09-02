@@ -240,10 +240,6 @@ export default function NerdStats() {
       {/* Badge & Event Type Statistics */}
       <div className="row mb-4">
         <div className="col-12">
-          <h5 className="fw-semibold mb-3">
-            <Award size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
-            Event Badges & Types
-          </h5>
           <div className="row g-3 mb-3">
             <div className="col-md-3">
               <div className="card shadow-sm">
