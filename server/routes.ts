@@ -3908,7 +3908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const { quantity, hasDiscount, reputationDiscount = 0 } = req.body;
+      const { quantity, hasDiscount, reputationDiscount = 0, volumeDiscount = 0 } = req.body;
       
       if (!quantity || quantity < 12) {
         return res.status(400).json({ message: "Minimum purchase is 12 tickets" });
@@ -3925,6 +3925,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Apply reputation discount (up to 20%)
       if (reputationDiscount > 0 && reputationDiscount <= 20) {
         effectiveUnitPrice *= (1 - reputationDiscount / 100);
+      }
+      
+      // Apply volume discount (for users with <5 ratings when no x2 multiplier)
+      if (volumeDiscount > 0 && !hasDiscount) {
+        effectiveUnitPrice *= (1 - volumeDiscount / 100);
       }
       
       const totalAmount = quantity * effectiveUnitPrice;
@@ -3951,7 +3956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currency: 'usd',
             product_data: {
               name: 'Event Tickets',
-              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}`,
+              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}${volumeDiscount > 0 && !hasDiscount ? ` (${volumeDiscount}% volume discount applied)` : ''}`,
             },
             unit_amount: Math.round(effectiveUnitPrice * 100), // Convert to cents
           },

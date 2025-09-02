@@ -189,6 +189,17 @@ export default function AccountPage() {
     }
   }, [reputation]);
   
+  // Calculate volume discount for users with less than 5 ratings
+  const calculateVolumeDiscount = (quantity: number): number => {
+    // Only apply if user has less than 5 total ratings and x2 multiplier is NOT active
+    if (!multiplyAndSave && reputation && reputation.totalRatings < 5) {
+      // 5% discount for every 50 tickets
+      const discountTiers = Math.floor(quantity / 50);
+      return discountTiers * 5; // 5% per 50 tickets
+    }
+    return 0;
+  };
+  
   // Handle secret code redemption
   const handleRedeemCode = async () => {
     if (!secretCode.trim()) {
@@ -257,10 +268,12 @@ export default function AccountPage() {
         finalQuantity = ticketQuantity + bonusTickets;
       }
       
+      const volumeDiscount = calculateVolumeDiscount(ticketQuantity);
       const response = await apiRequest("POST", "/api/currency/create-purchase", {
         quantity: finalQuantity,
         hasDiscount: multiplyAndSave,
-        reputationDiscount: reputationDiscount
+        reputationDiscount: reputationDiscount,
+        volumeDiscount: volumeDiscount
       });
       const data = await response.json();
       
@@ -513,28 +526,34 @@ export default function AccountPage() {
                             </small>
                           </div>
                           <div className="text-end">
-                            {reputationDiscount > 0 ? (
-                              <>
-                                <div className="fw-bold">
-                                  ${(() => {
-                                    let price = (multiplyAndSave ? 24 : 12) * 0.29;
-                                    if (multiplyAndSave) price *= 0.9;
-                                    price *= (1 - reputationDiscount / 100);
-                                    return price.toFixed(2);
-                                  })()}
-                                </div>
-                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                  ${multiplyAndSave ? (24 * 0.29 * 0.9).toFixed(2) : '3.48'}
-                                </small>
-                              </>
-                            ) : (
-                              <>
-                                <div className="fw-bold">
-                                  ${multiplyAndSave ? (24 * 0.29 * 0.9).toFixed(2) : '3.48'}
-                                </div>
-                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
-                              </>
-                            )}
+                            {(() => {
+                              const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 24 : 12);
+                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const basePrice = (multiplyAndSave ? 24 : 12) * 0.29;
+                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
+                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              
+                              if (totalDiscount > 0) {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
+                                    <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                      ${discountedPrice.toFixed(2)}
+                                    </small>
+                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                    )}
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                                  </>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                       </button>
@@ -555,28 +574,34 @@ export default function AccountPage() {
                             </small>
                           </div>
                           <div className="text-end">
-                            {reputationDiscount > 0 ? (
-                              <>
-                                <div className="fw-bold">
-                                  ${(() => {
-                                    let price = (multiplyAndSave ? 48 : 24) * 0.29;
-                                    if (multiplyAndSave) price *= 0.9;
-                                    price *= (1 - reputationDiscount / 100);
-                                    return price.toFixed(2);
-                                  })()}
-                                </div>
-                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                  ${multiplyAndSave ? (48 * 0.29 * 0.9).toFixed(2) : '6.96'}
-                                </small>
-                              </>
-                            ) : (
-                              <>
-                                <div className="fw-bold">
-                                  ${multiplyAndSave ? (48 * 0.29 * 0.9).toFixed(2) : '6.96'}
-                                </div>
-                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
-                              </>
-                            )}
+                            {(() => {
+                              const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 48 : 24);
+                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const basePrice = (multiplyAndSave ? 48 : 24) * 0.29;
+                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
+                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              
+                              if (totalDiscount > 0) {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
+                                    <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                      ${discountedPrice.toFixed(2)}
+                                    </small>
+                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                    )}
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                                  </>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                         <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style={{ fontSize: '0.65rem' }}>
@@ -600,28 +625,34 @@ export default function AccountPage() {
                             </small>
                           </div>
                           <div className="text-end">
-                            {reputationDiscount > 0 ? (
-                              <>
-                                <div className="fw-bold">
-                                  ${(() => {
-                                    let price = (multiplyAndSave ? 100 : 50) * 0.29;
-                                    if (multiplyAndSave) price *= 0.9;
-                                    price *= (1 - reputationDiscount / 100);
-                                    return price.toFixed(2);
-                                  })()}
-                                </div>
-                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                  ${multiplyAndSave ? (100 * 0.29 * 0.9).toFixed(2) : '14.50'}
-                                </small>
-                              </>
-                            ) : (
-                              <>
-                                <div className="fw-bold">
-                                  ${multiplyAndSave ? (100 * 0.29 * 0.9).toFixed(2) : '14.50'}
-                                </div>
-                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
-                              </>
-                            )}
+                            {(() => {
+                              const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 100 : 50);
+                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const basePrice = (multiplyAndSave ? 100 : 50) * 0.29;
+                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
+                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              
+                              if (totalDiscount > 0) {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
+                                    <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                      ${discountedPrice.toFixed(2)}
+                                    </small>
+                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                    )}
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                                  </>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                       </button>
@@ -642,28 +673,34 @@ export default function AccountPage() {
                             </small>
                           </div>
                           <div className="text-end">
-                            {reputationDiscount > 0 ? (
-                              <>
-                                <div className="fw-bold">
-                                  ${(() => {
-                                    let price = (multiplyAndSave ? 200 : 100) * 0.29;
-                                    if (multiplyAndSave) price *= 0.9;
-                                    price *= (1 - reputationDiscount / 100);
-                                    return price.toFixed(2);
-                                  })()}
-                                </div>
-                                <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                  ${multiplyAndSave ? (200 * 0.29 * 0.9).toFixed(2) : '29.00'}
-                                </small>
-                              </>
-                            ) : (
-                              <>
-                                <div className="fw-bold">
-                                  ${multiplyAndSave ? (200 * 0.29 * 0.9).toFixed(2) : '29.00'}
-                                </div>
-                                {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
-                              </>
-                            )}
+                            {(() => {
+                              const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 200 : 100);
+                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const basePrice = (multiplyAndSave ? 200 : 100) * 0.29;
+                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
+                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              
+                              if (totalDiscount > 0) {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
+                                    <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                      ${discountedPrice.toFixed(2)}
+                                    </small>
+                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                      <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
+                                    )}
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${discountedPrice.toFixed(2)}</div>
+                                    {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                                  </>
+                                );
+                              }
+                            })()}
                           </div>
                         </div>
                       </button>
