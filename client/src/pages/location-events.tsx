@@ -112,7 +112,7 @@ export function LocationEventsPage() {
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
               <img src={globeIcon} alt="Globe" style={{ width: 28, height: 28 }} />
-              {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events
+              <span>{processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events</span>
             </h2>
             <p className="text-muted">
               {events.length} {events.length === 1 ? 'event' : 'events'} found
