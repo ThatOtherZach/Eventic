@@ -1,49 +1,53 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { Card, CardContent } from "@/components/ui/card";
-import { Trophy } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Sparkles } from "lucide-react";
 
 export function RegistryPage() {
+  const [, setLocation] = useLocation();
   const { data: registryRecords, isLoading } = useQuery({
     queryKey: ["/api/registry"],
   });
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">NFT Registry</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full" />
-          ))}
+      <div className="container py-5">
+        <div className="row mb-4">
+          <div className="col">
+            <h1 className="h3 fw-bold mb-0">NFT Registry</h1>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-body">
+            <div className="placeholder-glow">
+              <div className="placeholder col-12 mb-2"></div>
+              <div className="placeholder col-8"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">NFT Registry</h1>
-        <p className="text-muted-foreground">
-          Permanently preserved event tickets
-        </p>
+    <div className="container py-5">
+      <div className="row mb-4">
+        <div className="col">
+          <h1 className="h3 fw-bold mb-0">NFT Registry</h1>
+          <p className="text-muted">Permanently preserved event tickets</p>
+        </div>
       </div>
 
       {!registryRecords || registryRecords.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-lg text-muted-foreground mb-2">No NFTs in the registry yet</p>
-            <p className="text-sm text-muted-foreground">
-              Validated tickets that have been minted as NFTs will appear here
-            </p>
-          </CardContent>
-        </Card>
+        <div className="card">
+          <div className="card-body text-center py-5">
+            <Sparkles className="text-muted mb-3 mx-auto" size={48} />
+            <h6 className="text-muted">No NFTs in the registry yet</h6>
+            <p className="text-muted small">Validated tickets that have been minted as NFTs will appear here</p>
+          </div>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="row g-3">
           {registryRecords.map((record: any) => {
             // Reconstruct ticket object from preserved data
             const preservedTicket = {
@@ -101,19 +105,21 @@ export function RegistryPage() {
             };
 
             return (
-              <Link key={record.id} href={`/registry/${record.id}`}>
-                <div className="cursor-pointer">
+              <div key={record.id} className="col-md-4">
+                <div 
+                  onClick={() => setLocation(`/registry/${record.id}`)}
+                  style={{ 
+                    cursor: 'pointer'
+                  }}
+                >
                   <TicketCard
                     ticket={preservedTicket}
                     event={preservedEvent}
                     showQR={false}
                     showBadges={true}
                   />
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Minted by @{record.ownerUsername}
-                  </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

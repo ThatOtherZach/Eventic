@@ -1,52 +1,53 @@
+import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  ArrowLeft,
-  Trophy,
-  User,
-  Clock,
-  CheckCircle,
-  Calendar,
-  MapPin
-} from "lucide-react";
-import { format } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, Sparkles } from "lucide-react";
+import { Link } from "wouter";
 
 export function RegistryTicketPage() {
   const { id } = useParams();
+  
   const { data: record, isLoading } = useQuery({
     queryKey: [`/api/registry/${id}`],
   });
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Skeleton className="h-8 w-32 mb-6" />
-        <Skeleton className="h-64 w-full" />
+      <div className="container py-5">
+        <div className="d-flex align-items-center mb-4">
+          <Link href="/registry" className="btn btn-link p-0 text-decoration-none">
+            <ArrowLeft size={20} className="me-2" />
+            Back to Registry
+          </Link>
+        </div>
+        <div className="card">
+          <div className="card-body">
+            <div className="placeholder-glow">
+              <div className="placeholder col-12 mb-2"></div>
+              <div className="placeholder col-8"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!record) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Link href="/registry">
-          <Button variant="ghost" className="mb-6">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+      <div className="container py-5">
+        <div className="d-flex align-items-center mb-4">
+          <Link href="/registry" className="btn btn-link p-0 text-decoration-none">
+            <ArrowLeft size={20} className="me-2" />
             Back to Registry
-          </Button>
-        </Link>
-        <Card>
-          <CardContent className="text-center py-12">
-            <Trophy className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-lg text-muted-foreground">NFT not found</p>
-          </CardContent>
-        </Card>
+          </Link>
+        </div>
+        <div className="card">
+          <div className="card-body text-center py-5">
+            <Sparkles className="text-muted mb-3 mx-auto" size={48} />
+            <h6 className="text-muted">NFT not found</h6>
+            <p className="text-muted small">This NFT may have been removed from the registry</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -107,151 +108,93 @@ export function RegistryTicketPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/registry">
-        <Button variant="ghost" className="mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />
+    <div className="container py-5">
+      {/* Navigation Header */}
+      <div className="d-flex align-items-center mb-4">
+        <Link href="/registry" className="btn btn-link p-0 text-decoration-none">
+          <ArrowLeft size={20} className="me-2" />
           Back to Registry
-        </Button>
-      </Link>
-
-      {/* NFT Title and Description */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-2xl">{record.title}</CardTitle>
-          <p className="text-muted-foreground">{record.description}</p>
-        </CardHeader>
-      </Card>
-
-      {/* The Actual Ticket with All Effects */}
-      <div className="mb-6">
-        <TicketCard
-          ticket={preservedTicket}
-          event={preservedEvent}
-          showQR={true}
-          showBadges={true}
-        />
+        </Link>
       </div>
 
-      {/* NFT Metadata */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Trophy className="w-5 h-5" />
-            NFT Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Event Info */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Event</p>
-              <p className="font-medium">{record.eventName}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Venue</p>
-              <p className="font-medium flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                {record.eventVenue}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Date</p>
-              <p className="font-medium flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {record.eventDate} at {record.eventTime}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Ticket #</p>
-              <p className="font-medium">{record.ticketNumber}</p>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Ownership Info */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Owner</p>
-              <p className="font-medium flex items-center gap-1">
-                <User className="w-3 h-3" />
-                @{record.ownerUsername}
-                {record.ownerDisplayName && ` (${record.ownerDisplayName})`}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Event Creator</p>
-              <p className="font-medium flex items-center gap-1">
-                <User className="w-3 h-3" />
-                @{record.creatorUsername}
-                {record.creatorDisplayName && ` (${record.creatorDisplayName})`}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Minted</p>
-              <p className="font-medium flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {format(new Date(record.mintedAt), "PPp")}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Validated</p>
-              <p className="font-medium flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" />
-                {format(new Date(record.ticketValidatedAt || record.validatedAt), "PPp")}
-              </p>
-            </div>
-          </div>
-
-          {/* Event Types */}
-          {record.eventEventTypes && record.eventEventTypes.length > 0 && (
-            <>
-              <Separator />
+      {/* NFT Registry Header */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="alert alert-info">
+            <div className="d-flex align-items-center">
+              <Sparkles size={20} className="me-2" />
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Event Categories</p>
-                <div className="flex flex-wrap gap-2">
-                  {record.eventEventTypes.map((type: string) => (
-                    <Badge
-                      key={type}
-                      variant="secondary"
-                      style={{
-                        backgroundColor: getEventTypeColor(type),
-                        color: "white",
-                      }}
-                    >
-                      {type}
-                    </Badge>
-                  ))}
-                </div>
+                <h6 className="mb-1">NFT Registry Record</h6>
+                <p className="mb-0 small">
+                  This ticket has been preserved as an NFT and will remain in the registry permanently.
+                  Minted on {new Date(record.createdAt).toLocaleDateString()}
+                </p>
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Registry ID Footer */}
-      <div className="text-center text-xs text-muted-foreground mt-6">
-        Registry ID: {record.id}
+      {/* Ticket Display - Same structure as ticket-view.tsx */}
+      <div className="row justify-content-center">
+        <div className="col-12 col-md-8 col-lg-6">
+          {/* Ticket Display */}
+          <div className="mb-4">
+            <TicketCard 
+              ticket={preservedTicket} 
+              event={preservedEvent} 
+              showQR={false}
+              showBadges={false}
+            />
+          </div>
+
+          {/* Ticket Status Badge */}
+          {preservedTicket.isValidated && (
+            <div className="d-flex justify-content-center gap-2 mb-3">
+              <span className="badge" style={{ backgroundColor: '#198754', color: '#fff', fontSize: '0.9em', padding: '6px 12px' }}>
+                VALIDATED
+              </span>
+            </div>
+          )}
+
+          {/* NFT Details Card */}
+          <div className="card">
+            <div className="card-body">
+              <h6 className="card-title mb-3">NFT Details</h6>
+              <div className="row g-3">
+                <div className="col-6">
+                  <div className="text-muted small">Token ID</div>
+                  <div className="font-monospace small">{record.id}</div>
+                </div>
+                <div className="col-6">
+                  <div className="text-muted small">Owner</div>
+                  <div className="small">{record.ownerEmail || 'Anonymous'}</div>
+                </div>
+                <div className="col-6">
+                  <div className="text-muted small">Event</div>
+                  <div className="small">{record.eventName}</div>
+                </div>
+                <div className="col-6">
+                  <div className="text-muted small">Event Date</div>
+                  <div className="small">{record.eventDate}</div>
+                </div>
+                {record.ticketNumber && (
+                  <div className="col-6">
+                    <div className="text-muted small">Ticket Number</div>
+                    <div className="small">#{record.ticketNumber}</div>
+                  </div>
+                )}
+                {record.ticketSeatNumber && (
+                  <div className="col-6">
+                    <div className="text-muted small">Seat</div>
+                    <div className="small">{record.ticketSeatNumber}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
-
-function getEventTypeColor(type: string): string {
-  const colors: Record<string, string> = {
-    "Music": "#dc2626",
-    "Sports": "#ea580c",
-    "Comedy": "#ca8a04",
-    "Theater": "#65a30d",
-    "Art": "#16a34a",
-    "Conference": "#059669",
-    "Workshop": "#0891b2",
-    "Festival": "#0284c7",
-    "Party": "#2563eb",
-    "Networking": "#4f46e5",
-    "Charity": "#7c3aed",
-    "Other": "#9333ea",
-  };
-  return colors[type] || "#6b7280";
 }
