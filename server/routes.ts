@@ -3944,7 +3944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Minimum purchase is 12 tickets" });
       }
       
-      const unitPrice = 0.29;
+      const unitPrice = 0.23;
       let effectiveUnitPrice = unitPrice;
       let totalDiscountPercentage = 0;
       

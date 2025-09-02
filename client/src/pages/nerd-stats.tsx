@@ -146,7 +146,7 @@ export default function NerdStats() {
       avgPrice,
       maxPrice,
       minPrice,
-      totalRevenue: Math.round(stats.totalTickets * 0.29 * 100) / 100,
+      totalRevenue: Math.round(stats.totalTickets * 0.23 * 100) / 100,
       featuredEvents,
       specialEffectsEvents,
       locationSpecificEvents,
