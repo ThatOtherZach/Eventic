@@ -3908,15 +3908,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const { quantity, hasDiscount } = req.body;
+      const { quantity, hasDiscount, reputationDiscount = 0 } = req.body;
       
       if (!quantity || quantity < 12) {
         return res.status(400).json({ message: "Minimum purchase is 12 tickets" });
       }
       
       const unitPrice = 0.29;
-      const discountMultiplier = hasDiscount ? 0.9 : 1; // 10% discount if hasDiscount is true
-      const effectiveUnitPrice = unitPrice * discountMultiplier;
+      let effectiveUnitPrice = unitPrice;
+      
+      // Apply multiply discount first (10%)
+      if (hasDiscount) {
+        effectiveUnitPrice *= 0.9;
+      }
+      
+      // Apply reputation discount (up to 30%)
+      if (reputationDiscount > 0 && reputationDiscount <= 30) {
+        effectiveUnitPrice *= (1 - reputationDiscount / 100);
+      }
+      
       const totalAmount = quantity * effectiveUnitPrice;
       
       // Create purchase record
@@ -3929,7 +3939,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Create Stripe checkout session
-      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+        apiVersion: '2024-12-18.acacia'
+      });
       
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
@@ -3938,7 +3951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currency: 'usd',
             product_data: {
               name: 'Event Tickets',
-              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}`,
+              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}`,
             },
             unit_amount: Math.round(effectiveUnitPrice * 100), // Convert to cents
           },
@@ -3971,7 +3984,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Handle Stripe webhook for successful payments
   app.post("/api/stripe/webhook", async (req, res) => {
     try {
-      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+        apiVersion: '2024-12-18.acacia'
+      });
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
       let event;

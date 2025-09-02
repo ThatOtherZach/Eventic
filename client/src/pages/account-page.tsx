@@ -24,6 +24,7 @@ export default function AccountPage() {
   const [multiplyAndSave, setMultiplyAndSave] = useState(false);
   const [demandLevel, setDemandLevel] = useState<'low' | 'medium' | 'high' | 'very-high'>('low');
   const [bonusPercentage, setBonusPercentage] = useState(0);
+  const [reputationDiscount, setReputationDiscount] = useState(0);
 
   const { toast } = useToast();
   const { addNotification } = useNotifications();
@@ -57,6 +58,7 @@ export default function AccountPage() {
       }
     }
   }, [demandData]);
+  
   
   // Helper function to calculate bonus tickets
   const calculateBonus = (baseTickets: number): number => {
@@ -101,7 +103,7 @@ export default function AccountPage() {
     enabled: !!user,
   });
 
-  const { data: reputation } = useQuery<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>({
+  const { data: reputation } = useQuery<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }>({
     queryKey: [`/api/users/${user?.id}/reputation`],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/users/${user?.id}/reputation`);
@@ -170,6 +172,22 @@ export default function AccountPage() {
       });
     },
   });
+  
+  // Calculate reputation discount
+  useEffect(() => {
+    if (reputation && reputation.totalRatings > 0) {
+      const rep = reputation.reputation;
+      if (rep >= 55) {
+        // Scale from 5% at 55 reputation to 30% at 100 reputation
+        const discount = 5 + ((rep - 55) / 45) * 25;
+        setReputationDiscount(Math.round(discount * 100) / 100); // Round to 2 decimals
+      } else {
+        setReputationDiscount(0);
+      }
+    } else {
+      setReputationDiscount(0);
+    }
+  }, [reputation]);
   
   // Handle secret code redemption
   const handleRedeemCode = async () => {
@@ -241,7 +259,8 @@ export default function AccountPage() {
       
       const response = await apiRequest("POST", "/api/currency/create-purchase", {
         quantity: finalQuantity,
-        hasDiscount: multiplyAndSave
+        hasDiscount: multiplyAndSave,
+        reputationDiscount: reputationDiscount
       });
       const data = await response.json();
       
@@ -587,11 +606,27 @@ export default function AccountPage() {
                         )}
                       </small>
                       <div className="fw-bold text-primary">
-                        ${(ticketQuantity * 0.29 * (multiplyAndSave ? 0.9 : 1)).toFixed(2)}
+                        ${(() => {
+                          let price = ticketQuantity * 0.29;
+                          if (multiplyAndSave) price *= 0.9; // 10% multiply discount
+                          if (reputationDiscount > 0) price *= (1 - reputationDiscount / 100); // Reputation discount
+                          return price.toFixed(2);
+                        })()}
                       </div>
-                      {multiplyAndSave && (
+                      {(multiplyAndSave || reputationDiscount > 0) && (
                         <>
-                          <small className="text-success d-block">You save ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
+                          {multiplyAndSave && (
+                            <small className="text-success d-block">Multiply discount: ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
+                          )}
+                          {reputationDiscount > 0 && (
+                            <small className="text-success d-block">
+                              Reputation discount ({reputationDiscount}%): ${(() => {
+                                let basePrice = ticketQuantity * 0.29;
+                                if (multiplyAndSave) basePrice *= 0.9;
+                                return (basePrice * (reputationDiscount / 100)).toFixed(2);
+                              })()}
+                            </small>
+                          )}
                           {calculateBonus(ticketQuantity) > 0 && (
                             <small className="text-info d-block">
                               {demandLevel === 'low' && 'Low demand'}
@@ -599,6 +634,17 @@ export default function AccountPage() {
                               {demandLevel === 'high' && 'High demand!'}
                               {demandLevel === 'very-high' && 'Very high demand!'}
                               {' - '}{bonusPercentage}% bonus
+                            </small>
+                          )}
+                          {(multiplyAndSave || reputationDiscount > 0) && (
+                            <small className="text-muted d-block mt-1">
+                              Total savings: ${(() => {
+                                const baseTotal = ticketQuantity * 0.29;
+                                let finalPrice = baseTotal;
+                                if (multiplyAndSave) finalPrice *= 0.9;
+                                if (reputationDiscount > 0) finalPrice *= (1 - reputationDiscount / 100);
+                                return (baseTotal - finalPrice).toFixed(2);
+                              })()}
                             </small>
                           )}
                         </>
