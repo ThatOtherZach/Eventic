@@ -281,7 +281,7 @@ export default function NerdStats() {
           </div>
           <div className="row g-3 mt-2">
             <div className="col-md-4">
-              <div className="card shadow-sm bg-primary text-white border-0">
+              <div className="card shadow-sm bg-primary text-dark border-0">
                 <div className="card-body text-center">
                   <div className="h4 fw-bold mb-1">{advancedStats?.freeEvents || 0}</div>
                   <div className="small">Free Events</div>
@@ -297,7 +297,7 @@ export default function NerdStats() {
               </div>
             </div>
             <div className="col-md-4">
-              <div className="card shadow-sm bg-success text-white border-0">
+              <div className="card shadow-sm bg-success text-dark border-0">
                 <div className="card-body text-center">
                   <div className="h4 fw-bold mb-1">${(advancedStats?.avgPrice || 0).toFixed(2)}</div>
                   <div className="small">Average Price</div>
