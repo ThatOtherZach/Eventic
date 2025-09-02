@@ -339,8 +339,8 @@ export const dailyClaims = pgTable("daily_claims", {
 // NFT Registry table for minted tickets
 export const registryRecords = pgTable("registry_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  ticketId: varchar("ticket_id").references(() => tickets.id).unique(), // One registry record per ticket
-  eventId: varchar("event_id").references(() => events.id).notNull(),
+  ticketId: varchar("ticket_id").references(() => tickets.id, { onDelete: "set null" }).unique(), // Can be null after ticket deletion
+  eventId: varchar("event_id").references(() => events.id, { onDelete: "set null" }), // Can be null after event deletion
   ownerId: varchar("owner_id").references(() => users.id).notNull(), // Current owner
   creatorId: varchar("creator_id").references(() => users.id).notNull(), // Original event creator
   title: text("title").notNull(),
