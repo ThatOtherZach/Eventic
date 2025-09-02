@@ -25,6 +25,7 @@ import gpsIcon from "@assets/gps-1_1756849430189.png";
 import calendarIcon from "@assets/calendar-0_1756849638733.png";
 import ticketsIcon from "@assets/certificate_multiple-1_1756849669534.png";
 import checkIcon from "@assets/check-0_1756849706987.png";
+import demandIcon from "@assets/image_1756849793480.png";
 
 export default function NerdStats() {
 
@@ -231,7 +232,7 @@ export default function NerdStats() {
                         Tickets/hour
                       </div>
                     </div>
-                    <Zap className="text-success opacity-50" size={32} />
+                    <img src={demandIcon} alt="Demand" className="opacity-50" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
