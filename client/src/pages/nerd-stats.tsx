@@ -65,10 +65,10 @@ export default function NerdStats() {
     queryKey: ["/api/analytics/dashboard"],
   });
 
-  // Prepare chart data for ticket sales trend (daily data)
-  const dailyData = analyticsData?.charts?.ticketsByMonth ? 
+  // Prepare chart data for ticket sales trend (2-day periods)
+  const periodData = analyticsData?.charts?.ticketsByMonth ? 
     analyticsData.charts.ticketsByMonth.labels.map((label: string, index: number) => ({
-      day: label,
+      period: label,
       tickets: analyticsData.charts.ticketsByMonth.data[index]
     })) : [];
 
@@ -366,32 +366,27 @@ export default function NerdStats() {
       )}
 
       {/* Ticket Sales Trend */}
-      {dailyData.length > 0 && (
+      {periodData.length > 0 && (
         <div className="row mb-4">
           <div className="col-12">
             <h5 className="fw-semibold mb-3">
               <img src={statsIcon} alt="Trend" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
-              Ticket Sales Trend (Last 68 Days)
+              Ticket Sales Trend (2-Day Periods)
             </h5>
             <div className="card shadow-sm">
               <div className="card-body">
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={dailyData}>
+                  <LineChart data={periodData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
-                      dataKey="day" 
+                      dataKey="period" 
                       tick={{ fontSize: 12 }}
                       interval="preserveStartEnd"
-                      tickFormatter={(value) => {
-                        // Show only month/day for readability
-                        const date = new Date(value);
-                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                      }}
                     />
                     <YAxis />
                     <Tooltip 
-                      labelFormatter={(value) => `Date: ${value}`}
-                      formatter={(value) => [`${value} tickets`, 'Sales']}
+                      labelFormatter={(value) => `Period ending: ${value}`}
+                      formatter={(value) => [`${value} tickets`, '2-Day Total']}
                     />
                     <Line 
                       type="monotone" 

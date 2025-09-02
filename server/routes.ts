@@ -2188,15 +2188,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Get last 68 days of data
-      const dayLabels: string[] = [];
-      const dayData: number[] = [];
-      for (let i = 67; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dayKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-        dayLabels.push(dayKey);
-        dayData.push(ticketsByDay[dayKey] || 0);
+      // Aggregate data every 2 days for cleaner chart (34 data points)
+      const periodLabels: string[] = [];
+      const periodData: number[] = [];
+      for (let i = 33; i >= 0; i--) {
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() - (i * 2));
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - 1);
+        
+        // Sum tickets for this 2-day period
+        let periodTotal = 0;
+        for (let j = 0; j < 2; j++) {
+          const checkDate = new Date(startDate);
+          checkDate.setDate(checkDate.getDate() + j);
+          const dayKey = checkDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          periodTotal += ticketsByDay[dayKey] || 0;
+        }
+        
+        const periodLabel = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        periodLabels.push(periodLabel);
+        periodData.push(periodTotal);
       }
       
       // Calculate events by country
@@ -2285,8 +2297,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         charts: {
           ticketsByMonth: {
-            labels: dayLabels,
-            data: dayData
+            labels: periodLabels,
+            data: periodData
           },
           topCountries,
           topEventTypes
