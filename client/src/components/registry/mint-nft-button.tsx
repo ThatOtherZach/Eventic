@@ -6,182 +6,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
-import { captureTicketAsGif, uploadGifToStorage } from "@/utils/ticket-to-gif";
-import html2canvas from "html2canvas";
 import type { Ticket, Event, RegistryRecord } from "@shared/schema";
-
-// Helper function to capture ticket HTML with all assets
-async function captureTicketHTML(ticketId: string): Promise<string> {
-  // Find the actual ticket card component by its data-testid
-  const ticketElement = document.querySelector(`[data-testid="ticket-card-${ticketId}"]`) as HTMLElement;
-  if (!ticketElement) throw new Error('Ticket card element not found');
-  
-  // Clone the ticket element
-  const clone = ticketElement.cloneNode(true) as HTMLElement;
-  
-  console.log("Found ticket element:", ticketElement);
-  console.log("Ticket element HTML:", ticketElement.outerHTML.substring(0, 500));
-  
-  // Get inline styles from the original
-  const originalStyle = ticketElement.getAttribute('style');
-  if (originalStyle) {
-    clone.setAttribute('style', originalStyle);
-  }
-  
-  // Convert background images in elements with inline style
-  const allElements = clone.querySelectorAll('*');
-  for (let i = 0; i < allElements.length; i++) {
-    const el = allElements[i] as HTMLElement;
-    const style = el.getAttribute('style');
-    if (style && style.includes('background')) {
-      const urlMatch = style.match(/url\(["']?([^"')]+)["']?\)/);
-      if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('data:')) {
-        try {
-          const response = await fetch(urlMatch[1]);
-          const blob = await response.blob();
-          const reader = new FileReader();
-          const base64 = await new Promise<string>((resolve) => {
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
-          el.style.backgroundImage = `url(${base64})`;
-        } catch (err) {
-          console.warn('Failed to convert background:', urlMatch[1]);
-        }
-      }
-    }
-  }
-  
-  // Convert img elements to base64
-  const images = clone.querySelectorAll('img');
-  for (let i = 0; i < images.length; i++) {
-    const img = images[i];
-    if (!img.src.startsWith('data:')) {
-      try {
-        const response = await fetch(img.src);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        const base64 = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-        img.src = base64;
-      } catch (err) {
-        console.warn('Failed to convert image:', img.src);
-      }
-    }
-  }
-  
-  // Get all the CSS we need
-  const criticalCSS = `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    
-    .ticket-card {
-      position: relative;
-      width: 100%;
-      max-width: 512px;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Preserve all the Bootstrap classes used in the ticket */
-    .position-relative { position: relative !important; }
-    .position-absolute { position: absolute !important; }
-    .d-flex { display: flex !important; }
-    .flex-column { flex-direction: column !important; }
-    .align-items-center { align-items: center !important; }
-    .justify-content-center { justify-content: center !important; }
-    .text-center { text-align: center !important; }
-    .text-white { color: white !important; }
-    .fw-bold { font-weight: 700 !important; }
-    .badge { display: inline-block; padding: 0.25em 0.6em; font-size: .75em; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.375rem; }
-    .bg-warning { background-color: #ffc107 !important; }
-    .bg-danger { background-color: #dc3545 !important; }
-    .bg-success { background-color: #198754 !important; }
-    .bg-info { background-color: #0dcaf0 !important; }
-    .bg-primary { background-color: #0d6efd !important; }
-    .opacity-75 { opacity: 0.75 !important; }
-    .opacity-90 { opacity: 0.9 !important; }
-    
-    /* Animations and effects */
-    @keyframes shimmer {
-      0% { background-position: -1000px 0; }
-      100% { background-position: 1000px 0; }
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    
-    .shimmer {
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      background-size: 1000px 100%;
-      animation: shimmer 2s infinite;
-    }
-    
-    .pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    .float {
-      animation: float 3s ease-in-out infinite;
-    }
-  `;
-  
-  // Create standalone HTML document with just the ticket card content
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFT Ticket #${ticketId}</title>
-  <style>${criticalCSS}</style>
-</head>
-<body>
-  <div class="ticket-card">
-    ${clone.innerHTML}
-  </div>
-</body>
-</html>`;
-  
-  // Debug: Log the captured HTML to see what we're getting
-  console.log("Captured HTML length:", html.length);
-  console.log("First 1000 chars of HTML:", html.substring(0, 1000));
-  
-  // Create a download link for debugging
-  const debugBlob = new Blob([html], { type: 'text/html' });
-  const debugUrl = URL.createObjectURL(debugBlob);
-  const debugLink = document.createElement('a');
-  debugLink.href = debugUrl;
-  debugLink.download = `ticket-${ticketId}-debug.html`;
-  debugLink.click();
-  URL.revokeObjectURL(debugUrl);
-  
-  return html;
-}
 
 interface MintNFTButtonProps {
   ticket: Ticket;
@@ -248,127 +73,25 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
 
   const mintMutation = useMutation({
     mutationFn: async () => {
-      console.log("Starting mint process...");
-      let imageUrl = '';
-      let mediaType = 'text/html';
-      
-      // Check if media is already generated
-      if (ticket.nftMediaUrl) {
-        // Use pre-generated media
-        imageUrl = ticket.nftMediaUrl;
-        mediaType = ticket.nftMediaUrl.includes('.mp4') ? 'video/mp4' : 
-                   ticket.nftMediaUrl.includes('.gif') ? 'image/gif' : 
-                   ticket.nftMediaUrl.includes('.html') ? 'text/html' : 'image/png';
-        addNotification({
-          type: "info",
-          title: "Preparing NFT",
-          description: "Using pre-generated media for your NFT...",
-        });
-      } else {
-        // Try client-side HTML capture first
-        try {
-          addNotification({
-            type: "info",
-            title: "Capturing Ticket",
-            description: "Preserving your ticket with all effects and animations...",
-          });
-          
-          const htmlContent = await captureTicketHTML(ticket.id);
-          
-          // Upload HTML as a file
-          const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-          const formData = new FormData();
-          formData.append('file', htmlBlob, 'ticket-nft.html');
-          
-          // Get auth token for upload
-          const { supabase } = await import("@/lib/supabase");
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          // Use fetch directly for file upload with auth header
-          const response = await fetch("/api/upload", {
-            method: "POST",
-            body: formData,
-            credentials: "include",
-            headers: {
-              ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {})
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Upload failed: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          imageUrl = data.url;
-          mediaType = 'text/html';
-        } catch (htmlError) {
-          console.error("HTML capture failed, falling back to static image:", htmlError);
-          
-          // Final fallback: capture as static image
-          const ticketElement = document.getElementById('ticket-card-for-nft');
-          if (!ticketElement) {
-            throw new Error('Unable to find ticket element');
-          }
-          
-          addNotification({
-            type: "info",
-            title: "Capturing Ticket",
-            description: "Creating static image of your ticket...",
-          });
-          
-          const canvas = await html2canvas(ticketElement as HTMLElement);
-          const pngBlob = await new Promise<Blob>((resolve) => {
-            canvas.toBlob((blob) => resolve(blob!), 'image/png');
-          });
-          
-          // Upload the PNG
-          const formData = new FormData();
-          formData.append('file', pngBlob, 'ticket.png');
-          
-          // Get auth token for upload
-          const { supabase } = await import("@/lib/supabase");
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          // Use fetch directly for file upload with auth header
-          const response = await fetch("/api/upload", {
-            method: "POST",
-            body: formData,
-            credentials: "include",
-            headers: {
-              ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {})
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Upload failed: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          imageUrl = data.url;
-          mediaType = 'image/png';
-        }
-      }
-
+      // Simple mint - just save to registry without any media generation
       const metadata: any = {
-        imageUrl,
-        mediaType
+        imageUrl: event.imageUrl || '',  // Use event image as placeholder
+        mediaType: 'image/png'
       };
+      
       if (additionalMetadata) {
         try {
           Object.assign(metadata, JSON.parse(additionalMetadata));
         } catch (e) {
-          // If not valid JSON, treat as plain text metadata
           metadata.notes = additionalMetadata;
         }
       }
 
-      console.log("Sending mint request with metadata:", metadata);
       const response = await apiRequest("POST", `/api/tickets/${ticket.id}/mint`, {
         title: title || undefined,
         description: description || undefined,
         metadata: JSON.stringify(metadata)
       });
-      console.log("Mint response received");
       return response.json();
     },
     onSuccess: () => {
