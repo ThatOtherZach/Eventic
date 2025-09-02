@@ -1023,19 +1023,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let mediaUrl: string | null = null;
       let mediaType: string = 'text/html';
       
-      // Capture ticket as HTML
+      // For now, fallback to GIF since HTML capture has issues
       try {
-        console.log('Capturing ticket as HTML...');
-        mediaPath = await captureService.captureTicketAsHTML({
+        console.log('Generating GIF for NFT...');
+        mediaPath = await captureService.captureTicketAsVideo({
           ticket,
-          event
+          event,
+          format: 'gif'
         });
-        mediaType = 'text/html';
-        console.log('HTML capture successful:', mediaPath);
-      } catch (htmlError) {
-        console.error("HTML generation failed:", htmlError);
+        mediaType = 'image/gif';
+        console.log('GIF capture successful:', mediaPath);
+      } catch (gifError) {
+        console.error("GIF generation failed:", gifError);
         
-        // Fallback to static image if HTML fails
+        // Fallback to static image if GIF fails
         try {
           mediaPath = await captureService.captureTicketAsImage({
             ticket,

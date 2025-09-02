@@ -10,6 +10,63 @@ import { captureTicketAsGif, uploadGifToStorage } from "@/utils/ticket-to-gif";
 import html2canvas from "html2canvas";
 import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
+// Helper function to capture ticket HTML with all assets
+async function captureTicketHTML(): Promise<string> {
+  const ticketElement = document.querySelector('.ticket-container');
+  if (!ticketElement) throw new Error('Ticket element not found');
+  
+  // Clone the ticket element
+  const clone = ticketElement.cloneNode(true) as HTMLElement;
+  
+  // Convert all images to base64
+  const images = clone.querySelectorAll('img');
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i];
+    try {
+      const response = await fetch(img.src);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+      img.src = base64;
+    } catch (err) {
+      console.warn('Failed to convert image:', img.src, err);
+    }
+  }
+  
+  // Get all stylesheets
+  const styles = Array.from(document.styleSheets)
+    .map(sheet => {
+      try {
+        return Array.from(sheet.cssRules)
+          .map(rule => rule.cssText)
+          .join('\n');
+      } catch {
+        return '';
+      }
+    })
+    .filter(Boolean)
+    .join('\n');
+  
+  // Create standalone HTML document
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFT Ticket</title>
+  <style>${styles}</style>
+</head>
+<body style="margin: 0; padding: 20px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+  ${clone.outerHTML}
+</body>
+</html>`;
+  
+  return html;
+}
+
 interface MintNFTButtonProps {
   ticket: Ticket;
   event: Event;
@@ -76,54 +133,67 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
   const mintMutation = useMutation({
     mutationFn: async () => {
       let imageUrl = '';
+      let mediaType = 'text/html';
       
-      // Check if MP4 is already generated
+      // Check if media is already generated
       if (ticket.nftMediaUrl) {
-        // Use pre-generated MP4
+        // Use pre-generated media
         imageUrl = ticket.nftMediaUrl;
+        mediaType = ticket.nftMediaUrl.includes('.mp4') ? 'video/mp4' : 
+                   ticket.nftMediaUrl.includes('.gif') ? 'image/gif' : 
+                   ticket.nftMediaUrl.includes('.html') ? 'text/html' : 'image/png';
         addNotification({
           type: "info",
           title: "Preparing NFT",
           description: "Using pre-generated media for your NFT...",
         });
       } else {
-        // Fallback: Try to generate MP4 first
+        // Try client-side HTML capture first
         try {
           addNotification({
             type: "info",
-            title: "Generating NFT Media",
-            description: "Creating video for your NFT...",
+            title: "Capturing Ticket",
+            description: "Preserving your ticket with all effects and animations...",
           });
           
-          const mediaResponse = await apiRequest("POST", `/api/tickets/${ticket.id}/generate-nft-media`, {});
-          const mediaData = await mediaResponse.json();
+          const htmlContent = await captureTicketHTML();
           
-          if (mediaData.mediaUrl) {
-            imageUrl = mediaData.mediaUrl;
-          }
-        } catch (error) {
-          console.error("Failed to generate media server-side, falling back to client-side capture:", error);
+          // Upload HTML as a file
+          const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+          const formData = new FormData();
+          formData.append('file', htmlBlob, 'ticket-nft.html');
           
-          // Fallback to client-side capture
-          const ticketElement = document.getElementById('ticket-card-for-nft');
-          if (!ticketElement) {
-            throw new Error('Unable to find ticket element');
-          }
-
+          const response = await apiRequest("POST", "/api/upload", formData);
+          const data = await response.json();
+          imageUrl = data.url;
+          mediaType = 'text/html';
+        } catch (htmlError) {
+          console.error("HTML capture failed, trying server-side generation:", htmlError);
+          
+          // Fallback: Try to generate media server-side
           try {
-            // Try GIF generation first
             addNotification({
               type: "info",
-              title: "Capturing Ticket",
-              description: "Creating animated image of your ticket...",
+              title: "Generating NFT Media",
+              description: "Creating media for your NFT...",
             });
-
-            const gifBlob = await captureTicketAsGif(ticketElement as HTMLElement);
-            imageUrl = await uploadGifToStorage(gifBlob);
-          } catch (gifError) {
-            console.error("GIF generation failed, capturing static image:", gifError);
+            
+            const mediaResponse = await apiRequest("POST", `/api/tickets/${ticket.id}/generate-nft-media`, {});
+            const mediaData = await mediaResponse.json();
+            
+            if (mediaData.mediaUrl) {
+              imageUrl = mediaData.mediaUrl;
+              mediaType = mediaData.mediaType || 'image/gif';
+            }
+          } catch (error) {
+            console.error("Server-side generation failed, falling back to static capture:", error);
             
             // Final fallback: capture as static image
+            const ticketElement = document.getElementById('ticket-card-for-nft');
+            if (!ticketElement) {
+              throw new Error('Unable to find ticket element');
+            }
+            
             addNotification({
               type: "info",
               title: "Capturing Ticket",
@@ -142,15 +212,14 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
             const response = await apiRequest("POST", "/api/upload", formData);
             const data = await response.json();
             imageUrl = data.url;
+            mediaType = 'image/png';
           }
         }
       }
 
       const metadata: any = {
         imageUrl,
-        mediaType: imageUrl.includes('.mp4') ? 'video/mp4' : 
-                  imageUrl.includes('.webm') ? 'video/webm' :
-                  imageUrl.includes('.png') ? 'image/png' : 'image/gif'
+        mediaType
       };
       if (additionalMetadata) {
         try {
