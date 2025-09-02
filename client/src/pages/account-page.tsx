@@ -202,6 +202,25 @@ export default function AccountPage() {
     return 0;
   };
   
+  // Round price to nearest .69
+  const roundToNice = (price: number): number => {
+    const base = Math.floor(price);
+    const decimal = price - base;
+    
+    // If decimal is less than 0.35, round down to X.69 (previous dollar)
+    // If decimal is between 0.35 and 0.85, round to current X.69
+    // If decimal is above 0.85, round up to (X+1).69
+    if (base === 0 && price < 1) {
+      return 0.69;
+    } else if (decimal < 0.35 && base > 0) {
+      return base - 0.31; // X-1.69
+    } else if (decimal > 0.85) {
+      return base + 1.69; // X+1.69
+    } else {
+      return base + 0.69; // X.69
+    }
+  };
+  
   // Handle secret code redemption
   const handleRedeemCode = async () => {
     if (!secretCode.trim()) {
@@ -596,7 +615,7 @@ export default function AccountPage() {
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 24 : 12) * 0.23;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
-                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
+                              const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
                                 const isMaxDiscount = cappedDiscount >= 30;
@@ -649,7 +668,7 @@ export default function AccountPage() {
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 48 : 24) * 0.29;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
-                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
+                              const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
                                 const isMaxDiscount = cappedDiscount >= 30;
@@ -705,7 +724,7 @@ export default function AccountPage() {
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 100 : 50) * 0.23;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
-                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
+                              const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
                                 const isMaxDiscount = cappedDiscount >= 30;
@@ -758,7 +777,7 @@ export default function AccountPage() {
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 200 : 100) * 0.23;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
-                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
+                              const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
                                 const isMaxDiscount = cappedDiscount >= 30;
@@ -811,7 +830,7 @@ export default function AccountPage() {
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 400 : 200) * 0.23;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
-                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
+                              const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
                                 const isMaxDiscount = cappedDiscount >= 30;
@@ -853,7 +872,7 @@ export default function AccountPage() {
                           const volumeDiscount = calculateVolumeDiscount(ticketQuantity);
                           const multiplyDiscount = multiplyAndSave ? 10 : 0;
                           const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max
-                          const finalPrice = basePrice * (1 - totalDiscount / 100);
+                          const finalPrice = roundToNice(basePrice * (1 - totalDiscount / 100));
                           return finalPrice.toFixed(2);
                         })()}
                         </div>
@@ -871,7 +890,8 @@ export default function AccountPage() {
                           
                           if (totalDiscount > 0) {
                             const baseTotal = ticketQuantity * 0.23;
-                            const discountAmount = baseTotal * (totalDiscount / 100);
+                            const finalPrice = roundToNice(baseTotal * (1 - totalDiscount / 100));
+                            const discountAmount = baseTotal - finalPrice;
                             
                             return (
                               <div className="mb-2">
