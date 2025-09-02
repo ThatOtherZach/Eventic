@@ -2746,7 +2746,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove imageUrl from metadata before storing
       const { imageUrl: _, ...cleanMetadata } = parsedMetadata;
       
-      // Create registry record
+      // Get user details for preservation
+      const creator = await storage.getUser(event.userId || userId);
+      const owner = await storage.getUser(userId);
+      
+      // Create registry record with COMPLETE data preservation
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
         eventId: ticket.eventId,
@@ -2764,10 +2768,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }),
         imageUrl: imageUrl || null,
+        
+        // Complete ticket data preservation
         ticketNumber: ticket.ticketNumber,
+        ticketStatus: ticket.status || "validated",
+        ticketValidatedAt: ticket.validatedAt || null,
+        ticketValidatedBy: ticket.validatedBy || null,
+        ticketCreatedAt: ticket.createdAt || new Date(),
+        ticketRecipientName: ticket.recipientName,
+        ticketRecipientEmail: ticket.recipientEmail,
+        ticketSeatNumber: ticket.seatNumber || null,
+        ticketType: ticket.ticketType || null,
+        ticketTransferable: ticket.transferable || false,
+        ticketUsageCount: ticket.useCount || 0,
+        ticketMaxUses: ticket.maxUses || 1,
+        ticketIsGolden: ticket.isGolden || false,
+        ticketNftMediaUrl: ticket.nftMediaUrl || null,
+        ticketQrCode: ticket.qrData,
+        
+        // Complete event data preservation
         eventName: event.name,
+        eventDescription: event.description || "",
         eventVenue: event.venue,
         eventDate: event.date,
+        eventTime: event.time,
+        eventEndDate: event.endDate || null,
+        eventEndTime: event.endTime || null,
+        eventImageUrl: event.imageUrl || null,
+        eventMaxTickets: event.maxTickets || null,
+        eventTicketsSold: event.ticketsSold || 0,
+        eventTicketPrice: event.ticketPrice || null,
+        eventEventTypes: event.eventTypes || [],
+        eventReentryType: event.reentryType || "No Reentry (Single Use)",
+        eventGoldenTicketEnabled: event.goldenTicketEnabled || false,
+        eventGoldenTicketCount: event.goldenTicketCount || null,
+        eventAllowMinting: event.allowMinting || false,
+        eventIsPrivate: event.isPrivate || false,
+        eventOneTicketPerUser: event.oneTicketPerUser || false,
+        eventSurgePricing: event.surgePricing || false,
+        eventP2pValidation: event.p2pValidation || false,
+        eventEnableVoting: event.enableVoting || false,
+        eventRecurringType: event.recurringType || null,
+        eventRecurringEndDate: event.recurringEndDate || null,
+        eventCreatedAt: event.createdAt || new Date(),
+        
+        // User data preservation
+        creatorUsername: creator?.username || "unknown",
+        creatorDisplayName: creator?.displayName || null,
+        ownerUsername: owner?.username || "unknown",
+        ownerDisplayName: owner?.displayName || null,
+        
         validatedAt: ticket.validatedAt!,
       });
 
@@ -2870,6 +2920,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         request: req
       });
       res.status(500).json({ message: "Failed to fetch registry records" });
+    }
+  });
+
+  // Public registry endpoints - no auth required
+  app.get("/api/registry", async (req: AuthenticatedRequest, res) => {
+    try {
+      const registryRecords = await storage.getAllRegistryRecords();
+      res.json(registryRecords);
+    } catch (error) {
+      await logError(error, "GET /api/registry", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch registry records" });
+    }
+  });
+
+  app.get("/api/registry/:id", async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const registryRecord = await storage.getRegistryRecord(id);
+      
+      if (!registryRecord) {
+        return res.status(404).json({ message: "Registry record not found" });
+      }
+      
+      res.json(registryRecord);
+    } catch (error) {
+      await logError(error, "GET /api/registry/:id", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch registry record" });
     }
   });
 

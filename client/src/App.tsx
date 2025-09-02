@@ -24,6 +24,8 @@ import { FeaturedEventsPage } from "@/pages/featured-events";
 import { EventTypePage } from "@/pages/event-type";
 import Manifesto from "@/pages/manifesto";
 import NerdDashboard from "@/pages/nerd-dashboard";
+import { RegistryPage } from "@/pages/registry-page";
+import { RegistryTicketPage } from "@/pages/registry-ticket-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -44,6 +46,8 @@ function Router() {
       <Route path="/featured" component={FeaturedEventsPage} />
       <Route path="/manifesto" component={Manifesto} />
       <Route path="/nerd" component={NerdDashboard} />
+      <Route path="/registry" component={RegistryPage} />
+      <Route path="/registry/:id" component={RegistryTicketPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/hashtag/:hashtag">{(params) => <HashtagEventsPage />}</Route>
       <Route path="/type/:type">{(params) => <EventTypePage />}</Route>

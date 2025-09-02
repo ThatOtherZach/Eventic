@@ -95,6 +95,7 @@ export interface IStorage {
   getRegistryRecord(id: string): Promise<RegistryRecord | undefined>;
   getRegistryRecordByTicket(ticketId: string): Promise<RegistryRecord | undefined>;
   getRegistryRecordsByUser(userId: string): Promise<RegistryRecord[]>;
+  getAllRegistryRecords(): Promise<RegistryRecord[]>;
   canMintTicket(ticketId: string): Promise<boolean>;
   createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction>;
   
@@ -1988,6 +1989,13 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(registryRecords)
       .where(eq(registryRecords.ownerId, userId))
+      .orderBy(desc(registryRecords.mintedAt));
+  }
+
+  async getAllRegistryRecords(): Promise<RegistryRecord[]> {
+    return db
+      .select()
+      .from(registryRecords)
       .orderBy(desc(registryRecords.mintedAt));
   }
 

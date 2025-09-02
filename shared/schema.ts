@@ -352,12 +352,56 @@ export const registryRecords = pgTable("registry_records", {
   isListed: boolean("is_listed").default(false), // For future marketplace
   listPrice: decimal("list_price", { precision: 10, scale: 2 }),
   
-  // Original ticket data
+  // Complete ticket data preservation
   ticketNumber: text("ticket_number").notNull(),
+  ticketStatus: text("ticket_status").notNull(), // validated, pending, etc
+  ticketValidatedAt: timestamp("ticket_validated_at"), // When ticket was validated
+  ticketValidatedBy: varchar("ticket_validated_by"), // Who validated it
+  ticketCreatedAt: timestamp("ticket_created_at").notNull(),
+  ticketRecipientName: text("ticket_recipient_name").notNull(),
+  ticketRecipientEmail: text("ticket_recipient_email").notNull(),
+  ticketSeatNumber: text("ticket_seat_number"),
+  ticketType: text("ticket_type"),
+  ticketTransferable: boolean("ticket_transferable").default(false),
+  ticketUsageCount: integer("ticket_usage_count").default(0),
+  ticketMaxUses: integer("ticket_max_uses").default(1),
+  ticketIsGolden: boolean("ticket_is_golden").default(false),
+  ticketNftMediaUrl: text("ticket_nft_media_url"),
+  ticketQrCode: text("ticket_qr_code"),
+  
+  // Complete event data preservation  
   eventName: text("event_name").notNull(),
+  eventDescription: text("event_description").notNull(),
   eventVenue: text("event_venue").notNull(),
   eventDate: text("event_date").notNull(),
-  validatedAt: timestamp("validated_at").notNull(), // When ticket was first validated
+  eventTime: text("event_time").notNull(),
+  eventEndDate: text("event_end_date"),
+  eventEndTime: text("event_end_time"),
+  eventImageUrl: text("event_image_url"),
+  eventMaxTickets: integer("event_max_tickets"),
+  eventTicketsSold: integer("event_tickets_sold"),
+  eventTicketPrice: decimal("event_ticket_price", { precision: 10, scale: 2 }),
+  eventEventTypes: text("event_event_types").array(), // Event type badges
+  eventReentryType: text("event_reentry_type"),
+  eventGoldenTicketEnabled: boolean("event_golden_ticket_enabled").default(false),
+  eventGoldenTicketCount: integer("event_golden_ticket_count"),
+  eventAllowMinting: boolean("event_allow_minting").default(false),
+  eventIsPrivate: boolean("event_is_private").default(false),
+  eventOneTicketPerUser: boolean("event_one_ticket_per_user").default(false),
+  eventSurgePricing: boolean("event_surge_pricing").default(false),
+  eventP2pValidation: boolean("event_p2p_validation").default(false),
+  eventEnableVoting: boolean("event_enable_voting").default(false),
+  eventRecurringType: text("event_recurring_type"),
+  eventRecurringEndDate: text("event_recurring_end_date"),
+  eventCreatedAt: timestamp("event_created_at").notNull(),
+  
+  // User data preservation
+  creatorUsername: text("creator_username").notNull(),
+  creatorDisplayName: text("creator_display_name"),
+  ownerUsername: text("owner_username").notNull(),
+  ownerDisplayName: text("owner_display_name"),
+  
+  validatedAt: timestamp("validated_at").notNull(), // Preserved for backward compat
 });
 
 // Registry transactions for tracking NFT transfers and royalties
