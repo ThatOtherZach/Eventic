@@ -29,6 +29,7 @@ import demandIcon from "@assets/image_1756849793480.png";
 import coreMetricsIcon from "@assets/image_1756850088693.png";
 import distributionIcon from "@assets/image_1756850111300.png";
 import statsIcon from "@assets/chart1-4_1756850194937.png";
+import tealBg from "@assets/win98-teal_1756850231196.png";
 
 export default function NerdStats() {
 
@@ -147,7 +148,16 @@ export default function NerdStats() {
 
 
   return (
-    <div className="container py-4">
+    <div 
+      className="container py-4" 
+      style={{
+        backgroundImage: `url(${tealBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh'
+      }}
+    >
       {/* Header */}
       <div className="row mb-4">
         <div className="col">
