@@ -748,6 +748,18 @@ export default function AccountPage() {
                         </div>
                       </div>
                     )}
+                    {reputation && reputation.totalRatings > 0 && reputation.reputation >= 55 && reputationDiscount > 0 && (
+                      <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(40, 167, 69, 0.08)', border: '1px solid rgba(40, 167, 69, 0.2)' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <div style={{ minWidth: '20px' }}>
+                            <Info size={20} className="text-success" strokeWidth={2} />
+                          </div>
+                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
+                            You're receiving a {reputationDiscount.toFixed(1)}% reputation discount! This reward is based on your {reputation.reputation}% positive rating from hosting events.
+                          </small>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
