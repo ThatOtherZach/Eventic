@@ -1,5 +1,15 @@
 import puppeteer, { Browser } from 'puppeteer';
 import ffmpeg from 'fluent-ffmpeg';
+import { execFile as execFileCallback } from 'child_process';
+import { promisify } from 'util';
+
+const execFile = promisify(execFileCallback);
+
+// Export helper to get ffmpeg binary path
+export async function getFFmpegPath(): Promise<string> {
+  // In production, this would return the actual ffmpeg binary path
+  return 'ffmpeg';
+}
 import { path as ffmpegPath } from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs';
 import path from 'path';

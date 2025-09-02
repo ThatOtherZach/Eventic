@@ -9,7 +9,8 @@ import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, Authenti
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
-import { getTicketCaptureService } from "./ticketCapture";
+import { getTicketCaptureService, getFFmpegPath } from "./ticketCapture";
+import { execFile } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
@@ -629,10 +630,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate deterministic HTML for the ticket (fixed 512x768 size)
+      // Use ticket ID as seed for deterministic positioning
+      const seed = ticketData.ticket.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const random = (index: number) => {
+        const x = Math.sin(seed + index) * 10000;
+        return x - Math.floor(x);
+      };
+      
       const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
+  <script>
+    // Freeze time for deterministic rendering
+    const FIXED_TIME = 1609459200000; // Fixed timestamp
+    Date.now = () => FIXED_TIME;
+    Date.prototype.getTime = () => FIXED_TIME;
+    
+    // Seed Math.random for deterministic behavior
+    let seed = ${seed};
+    Math.random = function() {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    };
+  </script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
@@ -640,6 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       height: 768px; 
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: white;
     }
     #ticket {
       width: 512px;
@@ -658,15 +680,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       border: 2px solid rgba(255, 255, 255, 0.3);
+      z-index: 10;
     }
     .event-title {
-      font-size: 48px;
+      font-size: 36px;
       font-weight: bold;
       margin-bottom: 20px;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     .ticket-id {
-      font-size: 24px;
+      font-size: 20px;
       opacity: 0.9;
       margin-bottom: 10px;
     }
@@ -675,30 +698,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       background: #10b981;
       padding: 8px 20px;
       border-radius: 50px;
-      font-size: 18px;
+      font-size: 16px;
       margin-top: 20px;
     }
     .sticker-overlay {
       position: absolute;
-      animation: float 3s ease-in-out infinite;
+      animation: float 3s linear infinite;
+      animation-play-state: running;
     }
     @keyframes float {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-20px) rotate(5deg); }
+      0% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-15px) rotate(5deg); }
+      50% { transform: translateY(0px) rotate(0deg); }
+      75% { transform: translateY(-15px) rotate(-5deg); }
+      100% { transform: translateY(0px) rotate(0deg); }
     }
-    .sticker-1 { top: 10%; left: 10%; width: 120px; height: 120px; animation-delay: 0s; }
-    .sticker-2 { top: 15%; right: 15%; width: 100px; height: 100px; animation-delay: 0.5s; }
-    .sticker-3 { bottom: 20%; left: 20%; width: 110px; height: 110px; animation-delay: 1s; }
-    .sticker-4 { bottom: 10%; right: 10%; width: 130px; height: 130px; animation-delay: 1.5s; }
+    .sticker-1 { 
+      top: ${10 + random(1) * 20}%; 
+      left: ${10 + random(2) * 20}%; 
+      width: 100px; 
+      height: 100px; 
+      animation-delay: 0s; 
+    }
+    .sticker-2 { 
+      top: ${15 + random(3) * 20}%; 
+      right: ${15 + random(4) * 20}%; 
+      width: 90px; 
+      height: 90px; 
+      animation-delay: 0.75s; 
+    }
+    .sticker-3 { 
+      bottom: ${20 + random(5) * 20}%; 
+      left: ${20 + random(6) * 20}%; 
+      width: 95px; 
+      height: 95px; 
+      animation-delay: 1.5s; 
+    }
+    .sticker-4 { 
+      bottom: ${10 + random(7) * 20}%; 
+      right: ${10 + random(8) * 20}%; 
+      width: 105px; 
+      height: 105px; 
+      animation-delay: 2.25s; 
+    }
   </style>
 </head>
 <body>
   <div id="ticket">
     ${event.specialEffects && ticketData.ticket.stickerUrl ? `
-      <img class="sticker-overlay sticker-1" src="${ticketData.ticket.stickerUrl}" alt="">
-      <img class="sticker-overlay sticker-2" src="${ticketData.ticket.stickerUrl}" alt="">
-      <img class="sticker-overlay sticker-3" src="${ticketData.ticket.stickerUrl}" alt="">
-      <img class="sticker-overlay sticker-4" src="${ticketData.ticket.stickerUrl}" alt="">
+      <img class="sticker-overlay sticker-1" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
+      <img class="sticker-overlay sticker-2" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
+      <img class="sticker-overlay sticker-3" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
+      <img class="sticker-overlay sticker-4" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
     ` : ''}
     <div class="ticket-content">
       <div class="event-title">${event.name}</div>
@@ -820,6 +871,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { ticketId: req.params.ticketId }
       });
       res.status(500).json({ message: "Failed to generate validation token" });
+    }
+  });
+
+  // Capture/claim endpoint for idempotent media generation
+  app.post("/api/tickets/:ticketId/capture/claim", async (req: AuthenticatedRequest, res) => {
+    try {
+      const ticketId = req.params.ticketId;
+      const { idempotency_key } = req.body;
+      
+      // Get ticket details
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      // Check if already captured (idempotency)
+      if (ticket.nftMediaUrl) {
+        const mediaType = ticket.nftMediaType || 'video/mp4';
+        const pngUrl = ticket.nftMediaUrl.replace(/\.(mp4|webm|gif)$/, '.png');
+        
+        return res.json({
+          status: "already_captured",
+          mp4_url: ticket.nftMediaUrl,
+          png_url: pngUrl,
+          media_type: mediaType
+        });
+      }
+      
+      // Enqueue capture job (in production, use a proper job queue)
+      res.json({
+        status: "enqueued",
+        job_id: `job_${idempotency_key || Date.now()}`
+      });
+      
+      // Trigger media generation in background
+      // In production, this would be handled by a worker
+      process.nextTick(async () => {
+        try {
+          const event = await storage.getEvent(ticket.eventId);
+          if (!event) return;
+          
+          const captureService = getTicketCaptureService();
+          const objectStorageService = new ObjectStorageService();
+          
+          // Generate MP4
+          const mediaPath = await captureService.captureTicketAsVideo({
+            ticket,
+            event,
+            format: 'mp4'
+          });
+          
+          // Generate PNG preview (first frame)
+          const pngPath = mediaPath.replace('.mp4', '-preview.png');
+          const ffmpegPath = await getFFmpegPath();
+          await new Promise((resolve, reject) => {
+            execFile(ffmpegPath, [
+              '-i', mediaPath,
+              '-vframes', '1',
+              '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+              pngPath
+            ], (error) => {
+              if (error) reject(error);
+              else resolve(null);
+            });
+          });
+          
+          // Upload both files
+          const mp4Buffer = fs.readFileSync(mediaPath);
+          const pngBuffer = fs.readFileSync(pngPath);
+          
+          const mp4UploadURL = await objectStorageService.getObjectEntityUploadURL();
+          const pngUploadURL = await objectStorageService.getObjectEntityUploadURL();
+          
+          await fetch(mp4UploadURL, {
+            method: 'PUT',
+            body: mp4Buffer,
+            headers: { 'Content-Type': 'video/mp4' }
+          });
+          
+          await fetch(pngUploadURL, {
+            method: 'PUT', 
+            body: pngBuffer,
+            headers: { 'Content-Type': 'image/png' }
+          });
+          
+          // Get public URLs
+          const mp4PublicUrl = `/public-objects/uploads/${mp4UploadURL.split('/').pop()?.split('?')[0]}`;
+          const pngPublicUrl = `/public-objects/uploads/${pngUploadURL.split('/').pop()?.split('?')[0]}`;
+          
+          // Update ticket
+          await storage.updateTicketNftMediaUrl(ticketId, mp4PublicUrl);
+          
+          // Clean up temp files
+          fs.unlinkSync(mediaPath);
+          fs.unlinkSync(pngPath);
+        } catch (error) {
+          console.error('Background capture failed:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Capture claim error:', error);
+      res.status(500).json({ message: "Failed to process capture claim" });
     }
   });
 

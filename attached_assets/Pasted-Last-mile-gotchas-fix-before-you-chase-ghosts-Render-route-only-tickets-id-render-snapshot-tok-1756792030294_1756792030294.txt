@@ -1,0 +1,89 @@
+Last-mile gotchas (fix before you chase ghosts)
+
+Render route only: /tickets/:id/render?snapshot_token=… must return just the ticket (fixed size), all CSS/JS inlined or same-origin. No redirects, no auth.
+
+Seeded + deterministic: inject the saved seed/state; start animations from t=0 so two runs look the same.
+
+Frame padding: use f0000.png … f0089.png exactly (you already told it to).
+
+Timing: 30 FPS × 90 frames = 3.00s. Sleep 1000/30 ms between screenshots; don’t “optimize” with Promise.all.
+
+FFmpeg flags: MP4 must be H.264 + yuv420p + +faststart or some wallets/markets won’t play it.
+
+Cleanup: delete frames/ after upload; idempotent capture returns existing URLs.
+
+CORS: if any images/fonts aren’t inlined, ensure same origin or CORS headers—blank frames = tainted canvas / blocked loads.
+
+Instant smoke test (copy/paste)
+
+Run these on the worker box after a capture job says “done”.
+
+# 1) Frames present & padded?
+ls frames | head -5
+ls frames | tail -3
+ls frames | wc -l    # expect: 90
+
+# 2) MP4 exists and is web-friendly?
+ffprobe -v error -select_streams v:0 \
+  -show_entries stream=codec_name,pix_fmt,avg_frame_rate \
+  -show_entries format=duration \
+  -of default=nw=1 ticket.mp4
+# expect:
+# codec_name=h264
+# pix_fmt=yuv420p
+# avg_frame_rate=30/1   (or 30000/1001)
+# duration≈3.0
+
+# 3) PNG preview exists?
+test -f ticket.png && echo "PNG OK"
+
+# 4) File actually plays?
+python - <<'PY'
+import sys, subprocess
+def ok(cmd): 
+    return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode==0
+print("MP4 playable:", ok(["ffmpeg","-v","error","-i","ticket.mp4","-f","null","-"]))
+PY
+
+Quick POST/GET contracts (so you can eyeball responses)
+
+Claim capture
+
+POST /tickets/:id/capture/claim
+Content-Type: application/json
+{"idempotency_key":"<uuid>"}
+
+
+Responses
+
+{"status":"already_captured","mp4_url":"https://cdn/.../ticket.mp4","png_url":"https://cdn/.../ticket.png"}
+{"status":"enqueued","job_id":"job_123"}
+{"status":"processing"}
+
+
+Render route (no auth)
+
+GET /tickets/:id/render?snapshot_token=...  -> 200 HTML
+# fixed size, #ticket present, all assets inline/same-origin
+
+Snapshot-token hygiene
+
+One-time use, expires in ~10 min.
+
+Scoped to ticket ID (and optionally worker IP/range).
+
+Log: ticket_id, issued_at, used_at, job_id.
+
+Determinism cheats (if visuals still drift)
+
+Freeze time via Date.now = () => <seeded start> inside render route.
+
+Start CSS animations from a known offset (animation-delay: 0s; animation-play-state: running).
+
+If you use RNG in JS, seed a PRNG (e.g., seedrandom) and replace Math.random.
+
+Success = green light
+
+90 frames, MP4 passes ffprobe, preview PNG saved, URLs returned, frames cleaned up.
+
+Re-running claim returns the same URLs immediately.
