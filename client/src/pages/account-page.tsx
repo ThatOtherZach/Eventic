@@ -591,15 +591,22 @@ export default function AccountPage() {
                       </div>
                       {multiplyAndSave && (
                         <>
-                          <small className="text-success d-block">You save ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
+                          <small className="text-success d-block">
+                            You save ${(ticketQuantity * 0.29 * 0.1 + calculateBonus(ticketQuantity) * 0.29).toFixed(2)}
+                          </small>
                           {calculateBonus(ticketQuantity) > 0 && (
-                            <small className="text-info d-block">
-                              {demandLevel === 'low' && 'Low demand'}
-                              {demandLevel === 'medium' && 'Medium demand'}
-                              {demandLevel === 'high' && 'High demand!'}
-                              {demandLevel === 'very-high' && 'Very high demand!'}
-                              {' - '}{bonusPercentage}% bonus
-                            </small>
+                            <>
+                              <small className="text-muted" style={{ fontSize: '0.7rem' }}>
+                                10% discount: ${(ticketQuantity * 0.29 * 0.1).toFixed(2)} + Bonus tickets: ${(calculateBonus(ticketQuantity) * 0.29).toFixed(2)}
+                              </small>
+                              <small className="text-info d-block">
+                                {demandLevel === 'low' && 'Low demand'}
+                                {demandLevel === 'medium' && 'Medium demand'}
+                                {demandLevel === 'high' && 'High demand!'}
+                                {demandLevel === 'very-high' && 'Very high demand!'}
+                                {' - '}{bonusPercentage}% bonus
+                              </small>
+                            </>
                           )}
                         </>
                       )}
