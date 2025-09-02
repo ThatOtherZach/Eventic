@@ -912,13 +912,13 @@ export default function AccountPage() {
                 <div className="text-center mt-4">
                   <button
                     className="btn btn-secondary"
-                    onClick={() => setTicketsDisplayed(prev => Math.min(prev + 10, tickets.length))}
+                    onClick={() => setTicketsDisplayed(prev => Math.min(prev + 10, tickets!.length))}
                     data-testid="button-show-more-tickets"
                   >
-                    Show {Math.min(10, tickets.length - ticketsDisplayed)} More
+                    Show {Math.min(10, tickets!.length - ticketsDisplayed)} More
                   </button>
                   <div className="text-muted small mt-2">
-                    Showing {ticketsDisplayed} of {tickets.length} tickets
+                    Showing {ticketsDisplayed} of {tickets!.length} tickets
                   </div>
                 </div>
               )}
@@ -958,7 +958,7 @@ export default function AccountPage() {
               </div>
             ) : (
               <div className="row g-3">
-                {registryRecords.map((record) => {
+                {registryRecords!.map((record) => {
                   const mediaUrl = (record as any).imageUrl;
                   const metadata = record.metadata as any;
                   const mediaType = metadata?.mediaType || 'image/gif';
@@ -1036,7 +1036,6 @@ export default function AccountPage() {
                       </div>
                     </div>
                   </div>
-                  );
                 })}
               </div>
             )}
@@ -1075,7 +1074,7 @@ export default function AccountPage() {
                 {events?.map((event, index) => (
                   <div 
                     key={event.id}
-                    className={`p-3 ${index !== events.length - 1 ? 'border-bottom' : ''}`}
+                    className={`p-3 ${index !== events!.length - 1 ? 'border-bottom' : ''}`}
                   >
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
