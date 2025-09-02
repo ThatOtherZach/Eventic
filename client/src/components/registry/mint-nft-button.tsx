@@ -19,6 +19,9 @@ async function captureTicketHTML(ticketId: string): Promise<string> {
   // Clone the ticket element
   const clone = ticketElement.cloneNode(true) as HTMLElement;
   
+  console.log("Found ticket element:", ticketElement);
+  console.log("Ticket element HTML:", ticketElement.outerHTML.substring(0, 500));
+  
   // Get inline styles from the original
   const originalStyle = ticketElement.getAttribute('style');
   if (originalStyle) {
@@ -163,6 +166,19 @@ async function captureTicketHTML(ticketId: string): Promise<string> {
   </div>
 </body>
 </html>`;
+  
+  // Debug: Log the captured HTML to see what we're getting
+  console.log("Captured HTML length:", html.length);
+  console.log("First 1000 chars of HTML:", html.substring(0, 1000));
+  
+  // Create a download link for debugging
+  const debugBlob = new Blob([html], { type: 'text/html' });
+  const debugUrl = URL.createObjectURL(debugBlob);
+  const debugLink = document.createElement('a');
+  debugLink.href = debugUrl;
+  debugLink.download = `ticket-${ticketId}-debug.html`;
+  debugLink.click();
+  URL.revokeObjectURL(debugUrl);
   
   return html;
 }
