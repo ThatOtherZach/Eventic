@@ -722,6 +722,22 @@ export default function AccountPage() {
                         </>
                       )}
                     </div>
+                    
+                    {/* Reputation Discount Info Message */}
+                    {reputation && reputation.totalRatings === 0 && (
+                      <div className="mt-2 p-2 bg-info bg-opacity-10 rounded-2">
+                        <small className="text-muted">
+                          <i className="text-info">ℹ</i> Host an event and get rated to unlock reputation discounts up to 20% off
+                        </small>
+                      </div>
+                    )}
+                    {reputation && reputation.totalRatings > 0 && reputation.reputation < 55 && (
+                      <div className="mt-2 p-2 bg-warning bg-opacity-10 rounded-2">
+                        <small className="text-muted">
+                          <i className="text-warning">⚠</i> Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
+                        </small>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
