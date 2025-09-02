@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift, Minus, Plus } from "lucide-react";
+import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -397,45 +397,63 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Add Tickets Section */}
+                {/* Ticket Packs Section */}
                 <div className="col-md-6">
                   <div className="border rounded-3 p-3 h-100">
-                    <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Add Tickets</label>
-                    <div className="d-flex align-items-center mb-3">
+                    <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Choose Pack</label>
+                    <div className="d-flex flex-column gap-2">
+                      {/* Starter Pack Button */}
                       <button
-                        className="btn btn-sm btn-outline-secondary rounded-circle p-0"
-                        style={{ width: '32px', height: '32px' }}
-                        onClick={() => setTicketQuantity(Math.max(12, ticketQuantity - 1))}
-                        disabled={ticketQuantity <= 12}
+                        className={`btn btn-sm ${ticketQuantity === 12 ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
+                        onClick={() => setTicketQuantity(12)}
                       >
-                        <Minus size={16} />
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div className="fw-semibold">Starter</div>
+                            <small className="text-muted">12 tickets</small>
+                          </div>
+                          <div className="fw-bold">$3.48</div>
+                        </div>
                       </button>
-                      <input
-                        type="number"
-                        className="form-control form-control-sm text-center mx-2 fw-bold"
-                        style={{ width: '70px' }}
-                        value={ticketQuantity}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 12;
-                          setTicketQuantity(Math.max(12, val));
-                        }}
-                        min="12"
-                      />
+                      
+                      {/* Standard Pack Button */}
                       <button
-                        className="btn btn-sm btn-outline-secondary rounded-circle p-0"
-                        style={{ width: '32px', height: '32px' }}
-                        onClick={() => setTicketQuantity(ticketQuantity + 3)}
+                        className={`btn btn-sm ${ticketQuantity === 24 ? 'btn-primary' : 'btn-outline-primary'} text-start p-2 position-relative`}
+                        onClick={() => setTicketQuantity(24)}
                       >
-                        <Plus size={16} />
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div className="fw-semibold">Standard</div>
+                            <small className="text-muted">24 tickets</small>
+                          </div>
+                          <div className="fw-bold">$6.96</div>
+                        </div>
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style={{ fontSize: '0.65rem' }}>
+                          Popular
+                        </span>
+                      </button>
+                      
+                      {/* Premium Pack Button */}
+                      <button
+                        className={`btn btn-sm ${ticketQuantity === 50 ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
+                        onClick={() => setTicketQuantity(50)}
+                      >
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div className="fw-semibold">Premium</div>
+                            <small className="text-muted">50 tickets</small>
+                          </div>
+                          <div className="fw-bold">$14.50</div>
+                        </div>
                       </button>
                     </div>
-                    <div className="bg-light rounded-2 p-2 text-center">
-                      <div className="fw-bold h5 mb-0 text-dark">
-                        Total: <span className="text-primary">${(ticketQuantity * 0.29).toFixed(2)}</span>
+                    
+                    {/* Selected Total */}
+                    <div className="mt-2 bg-light rounded-2 p-2 text-center">
+                      <small className="text-muted d-block">{ticketQuantity} tickets</small>
+                      <div className="fw-bold text-primary">
+                        ${(ticketQuantity * 0.29).toFixed(2)}
                       </div>
-                      <small className="text-muted">
-                        $0.29 per ticket • Min 12 tickets
-                      </small>
                     </div>
                   </div>
                 </div>
