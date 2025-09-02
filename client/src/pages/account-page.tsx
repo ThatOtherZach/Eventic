@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift, Info, AlertTriangle } from "lucide-react";
+import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift, Info, AlertTriangle, ChevronDown, Lock } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,8 @@ export default function AccountPage() {
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [secretCode, setSecretCode] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState(12);
+  const [purchaseExpanded, setPurchaseExpanded] = useState(true);
+  const [secretCodeExpanded, setSecretCodeExpanded] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [multiplyAndSave, setMultiplyAndSave] = useState(false);
@@ -428,50 +430,56 @@ export default function AccountPage() {
       {/* My Wallet - Purchase and Redeem Tickets */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body">
-              <div className="d-flex align-items-center mb-4">
-                <Wallet className="text-primary me-2" size={24} />
-                <h5 className="mb-0 fw-semibold">My Wallet</h5>
-              </div>
+          <div className="card shadow-sm">
+            <div className="card-body py-3">
+              <h5 className="card-title mb-2 d-flex align-items-center gap-2" style={{ fontSize: '1.1rem' }}>
+                <Wallet size={18} />
+                My Wallet
+              </h5>
               
               {/* Balance Display */}
-              <div className="bg-light rounded-3 p-3 mb-4">
-                <div className="row align-items-center">
-                  <div className="col-auto">
-                    <small className="text-muted text-uppercase fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>Balance</small>
-                    <div className="d-flex align-items-baseline">
-                      <span className="h2 mb-0 fw-bold text-danger">{balance ? Math.floor(parseFloat(balance.balance)) : 0}</span>
-                      <span className="ms-2 text-muted">Tickets</span>
-                    </div>
-                  </div>
+              <div className="mb-3">
+                <div className="text-muted text-uppercase small" style={{ fontSize: '0.75rem' }}>Balance</div>
+                <div className="d-flex align-items-baseline gap-2">
+                  <h3 className="mb-0 text-danger">{balance ? Math.floor(parseFloat(balance.balance)) : 0}</h3>
+                  <span className="text-muted" style={{ fontSize: '0.9rem' }}>Tickets</span>
                   {!claimStatus?.canClaim && claimStatus?.nextClaimAt && (
-                    <div className="col text-end">
-                      <span className="badge bg-success-subtle text-success">
-                        <CheckCircle size={12} className="me-1" />
-                        claimed
-                      </span>
-                    </div>
+                    <span className="badge bg-success ms-2">
+                      <CheckCircle size={12} className="me-1" />
+                      claimed
+                    </span>
                   )}
                 </div>
-                <div className="mt-3">
-                  <small className="text-muted d-block" style={{ lineHeight: '1.5' }}>
-                    Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. 
-                    You can collect free tickets every 24 hours.
+                <div className="mt-2">
+                  <small className="text-muted" style={{ fontSize: '0.8rem', lineHeight: '1.3' }}>
+                    Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. You can collect free tickets every 24 hours.
                   </small>
                 </div>
               </div>
 
-              <div className="row g-4">
-                {/* Secret Code Section */}
-                <div className="col-md-6">
-                  <div className="border rounded-3 p-3 h-100">
-                    <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Secret Code</label>
-                    <div className="input-group mb-2">
+              {/* Secret Code Section - Collapsible */}
+              <div className="border-top pt-2">
+                <div 
+                  className="d-flex align-items-center justify-content-between mb-2" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setSecretCodeExpanded(!secretCodeExpanded)}
+                >
+                  <h6 className="mb-0" style={{ fontSize: '0.9rem' }}>SECRET CODE</h6>
+                  <ChevronDown 
+                    size={16} 
+                    style={{ 
+                      transform: secretCodeExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s'
+                    }} 
+                  />
+                </div>
+                {secretCodeExpanded && (
+                  <div className="mb-3">
+                    <div className="input-group input-group-sm">
                       <input
                         type="text"
                         className="form-control"
-                        placeholder="Enter code"
+                        placeholder="ENTER CODE"
                         value={secretCode}
                         onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
                         onKeyDown={(e) => e.key === 'Enter' && handleRedeemCode()}
@@ -479,21 +487,39 @@ export default function AccountPage() {
                         style={{ textTransform: 'uppercase' }}
                       />
                       <button 
-                        className="btn btn-outline-primary"
+                        className="btn btn-outline-primary btn-sm"
                         onClick={handleRedeemCode}
                         disabled={isRedeeming || !secretCode.trim()}
                       >
                         {isRedeeming ? "Redeeming..." : "Execute"}
                       </button>
                     </div>
-                    <small className="text-muted">Redeem codes for free tickets</small>
+                    <small className="text-muted mt-1 d-block" style={{ fontSize: '0.75rem' }}>
+                      <Lock size={12} className="me-1" />
+                      Redeem codes for free tickets
+                    </small>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Ticket Packs Section */}
-                <div className="col-md-6">
-                  <div className="border rounded-3 p-3 h-100">
-                    <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Choose Pack</label>
+              {/* Ticket Purchase Section - Collapsible */}
+              <div className="border-top pt-2 mt-2">
+                <div 
+                  className="d-flex align-items-center justify-content-between mb-2" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setPurchaseExpanded(!purchaseExpanded)}
+                >
+                  <h6 className="mb-0" style={{ fontSize: '0.9rem' }}>CHOOSE PACK</h6>
+                  <ChevronDown 
+                    size={16} 
+                    style={{ 
+                      transform: purchaseExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s'
+                    }} 
+                  />
+                </div>
+                {purchaseExpanded && (
+                  <div>
                     
                     {/* Multiply and Save Checkbox */}
                     <div className="form-check mb-2">
@@ -827,7 +853,7 @@ export default function AccountPage() {
                       </Link>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Payment Buttons */}
