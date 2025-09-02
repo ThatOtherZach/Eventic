@@ -58,6 +58,18 @@ export default function AccountPage() {
     }
   }, [demandData]);
   
+  // Helper function to calculate bonus tickets
+  const calculateBonus = (baseTickets: number): number => {
+    if (!multiplyAndSave || bonusPercentage === 0) return 0;
+    
+    let bonus = Math.floor(baseTickets * (bonusPercentage / 100));
+    // If bonus is less than 5 but greater than 0, add 3 extra tickets
+    if (bonus > 0 && bonus < 5) {
+      bonus += 3;
+    }
+    return bonus;
+  };
+  
   const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
     queryKey: ["/api/user/tickets"],
     queryFn: async () => {
@@ -215,7 +227,11 @@ export default function AccountPage() {
       // Calculate actual quantity including bonus
       let finalQuantity = ticketQuantity;
       if (multiplyAndSave && bonusPercentage > 0) {
-        const bonusTickets = Math.floor(ticketQuantity * (bonusPercentage / 100));
+        let bonusTickets = Math.floor(ticketQuantity * (bonusPercentage / 100));
+        // If bonus is less than 5, add 3 extra tickets
+        if (bonusTickets > 0 && bonusTickets < 5) {
+          bonusTickets += 3;
+        }
         finalQuantity = ticketQuantity + bonusTickets;
       }
       
@@ -468,8 +484,8 @@ export default function AccountPage() {
                             <div className="fw-semibold">Starter</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '24' : '12'} tickets
-                              {multiplyAndSave && bonusPercentage > 0 && (
-                                <span className="text-success"> +{Math.floor(24 * (bonusPercentage / 100))} bonus</span>
+                              {calculateBonus(24) > 0 && (
+                                <span className="text-success"> +{calculateBonus(24)} bonus</span>
                               )}
                             </small>
                           </div>
@@ -492,8 +508,8 @@ export default function AccountPage() {
                             <div className="fw-semibold">Standard</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '48' : '24'} tickets
-                              {multiplyAndSave && bonusPercentage > 0 && (
-                                <span className="text-success"> +{Math.floor(48 * (bonusPercentage / 100))} bonus</span>
+                              {calculateBonus(48) > 0 && (
+                                <span className="text-success"> +{calculateBonus(48)} bonus</span>
                               )}
                             </small>
                           </div>
@@ -519,8 +535,8 @@ export default function AccountPage() {
                             <div className="fw-semibold">Premium</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '100' : '50'} tickets
-                              {multiplyAndSave && bonusPercentage > 0 && (
-                                <span className="text-success"> +{Math.floor(100 * (bonusPercentage / 100))} bonus</span>
+                              {calculateBonus(100) > 0 && (
+                                <span className="text-success"> +{calculateBonus(100)} bonus</span>
                               )}
                             </small>
                           </div>
@@ -543,8 +559,8 @@ export default function AccountPage() {
                             <div className="fw-semibold">Ultimate</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '200' : '100'} tickets
-                              {multiplyAndSave && bonusPercentage > 0 && (
-                                <span className="text-success"> +{Math.floor(200 * (bonusPercentage / 100))} bonus</span>
+                              {calculateBonus(200) > 0 && (
+                                <span className="text-success"> +{calculateBonus(200)} bonus</span>
                               )}
                             </small>
                           </div>
@@ -562,8 +578,8 @@ export default function AccountPage() {
                     <div className="mt-2 bg-light rounded-2 p-2 text-center">
                       <small className="text-muted d-block">
                         {ticketQuantity} tickets
-                        {multiplyAndSave && bonusPercentage > 0 && (
-                          <span className="text-success"> +{Math.floor(ticketQuantity * (bonusPercentage / 100))} bonus</span>
+                        {calculateBonus(ticketQuantity) > 0 && (
+                          <span className="text-success"> +{calculateBonus(ticketQuantity)} bonus</span>
                         )}
                       </small>
                       <div className="fw-bold text-primary">
@@ -572,7 +588,7 @@ export default function AccountPage() {
                       {multiplyAndSave && (
                         <>
                           <small className="text-success d-block">You save ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
-                          {bonusPercentage > 0 && (
+                          {calculateBonus(ticketQuantity) > 0 && (
                             <small className="text-info d-block">
                               {demandLevel === 'low' && 'Low demand'}
                               {demandLevel === 'medium' && 'Medium demand'}
