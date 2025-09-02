@@ -528,19 +528,24 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 24 : 12);
-                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 24 : 12) * 0.29;
                               const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
-                              if (totalDiscount > 0) {
+                              if (totalDiscount > 0 || cappedDiscount > 0) {
+                                const isMaxDiscount = cappedDiscount >= 30;
                                 return (
                                   <>
                                     <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                      ${discountedPrice.toFixed(2)}
+                                      ${basePrice.toFixed(2)}
                                     </small>
-                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                    {isMaxDiscount && (
+                                      <small className="text-warning d-block" style={{ fontSize: '0.65rem' }}>Max 30% off!</small>
+                                    )}
+                                    {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
                                     )}
                                   </>
@@ -576,19 +581,24 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 48 : 24);
-                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 48 : 24) * 0.29;
                               const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
-                              if (totalDiscount > 0) {
+                              if (totalDiscount > 0 || cappedDiscount > 0) {
+                                const isMaxDiscount = cappedDiscount >= 30;
                                 return (
                                   <>
                                     <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                      ${discountedPrice.toFixed(2)}
+                                      ${basePrice.toFixed(2)}
                                     </small>
-                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                    {isMaxDiscount && (
+                                      <small className="text-warning d-block" style={{ fontSize: '0.65rem' }}>Max 30% off!</small>
+                                    )}
+                                    {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
                                     )}
                                   </>
@@ -627,19 +637,24 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 100 : 50);
-                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 100 : 50) * 0.29;
                               const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
-                              if (totalDiscount > 0) {
+                              if (totalDiscount > 0 || cappedDiscount > 0) {
+                                const isMaxDiscount = cappedDiscount >= 30;
                                 return (
                                   <>
                                     <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                      ${discountedPrice.toFixed(2)}
+                                      ${basePrice.toFixed(2)}
                                     </small>
-                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                    {isMaxDiscount && (
+                                      <small className="text-warning d-block" style={{ fontSize: '0.65rem' }}>Max 30% off!</small>
+                                    )}
+                                    {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
                                     )}
                                   </>
@@ -675,19 +690,24 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 200 : 100);
-                              const totalDiscount = reputationDiscount + volumeDiscount;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 200 : 100) * 0.29;
                               const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const finalPrice = discountedPrice * (1 - totalDiscount / 100);
+                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
-                              if (totalDiscount > 0) {
+                              if (totalDiscount > 0 || cappedDiscount > 0) {
+                                const isMaxDiscount = cappedDiscount >= 30;
                                 return (
                                   <>
                                     <div className="fw-bold">${finalPrice.toFixed(2)}</div>
                                     <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
-                                      ${discountedPrice.toFixed(2)}
+                                      ${basePrice.toFixed(2)}
                                     </small>
-                                    {volumeDiscount > 0 && !multiplyAndSave && (
+                                    {isMaxDiscount && (
+                                      <small className="text-warning d-block" style={{ fontSize: '0.65rem' }}>Max 30% off!</small>
+                                    )}
+                                    {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
                                       <small className="text-info d-block" style={{ fontSize: '0.65rem' }}>Volume: {volumeDiscount}% off</small>
                                     )}
                                   </>

@@ -3934,21 +3934,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const unitPrice = 0.29;
       let effectiveUnitPrice = unitPrice;
+      let totalDiscountPercentage = 0;
       
-      // Apply multiply discount first (10%)
+      // Calculate total discount percentage
       if (hasDiscount) {
-        effectiveUnitPrice *= 0.9;
+        totalDiscountPercentage += 10; // x2 multiplier discount
       }
       
-      // Apply reputation discount (up to 20%)
       if (reputationDiscount > 0 && reputationDiscount <= 20) {
-        effectiveUnitPrice *= (1 - reputationDiscount / 100);
+        totalDiscountPercentage += reputationDiscount;
       }
       
-      // Apply volume discount (for users with <5 ratings when no x2 multiplier)
       if (volumeDiscount > 0 && !hasDiscount) {
-        effectiveUnitPrice *= (1 - volumeDiscount / 100);
+        totalDiscountPercentage += volumeDiscount;
       }
+      
+      // Cap total discount at 30%
+      const cappedDiscount = Math.min(totalDiscountPercentage, 30);
+      effectiveUnitPrice = unitPrice * (1 - cappedDiscount / 100);
       
       const totalAmount = quantity * effectiveUnitPrice;
       
@@ -3974,7 +3977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currency: 'usd',
             product_data: {
               name: 'Event Tickets',
-              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}${volumeDiscount > 0 && !hasDiscount ? ` (${volumeDiscount}% volume discount applied)` : ''}`,
+              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}${volumeDiscount > 0 && !hasDiscount ? ` (${volumeDiscount}% volume discount applied)` : ''}${totalDiscountPercentage > 30 ? ' (30% max discount cap applied)' : ''}`,
             },
             unit_amount: Math.round(effectiveUnitPrice * 100), // Convert to cents
           },
