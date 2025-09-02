@@ -38,6 +38,7 @@ import demandIcon from "@assets/image_1756849793480.png";
 import coreMetricsIcon from "@assets/image_1756850088693.png";
 import distributionIcon from "@assets/image_1756850111300.png";
 import statsIcon from "@assets/chart1-4_1756850194937.png";
+import ticketingTrendsIcon from "@assets/image_1756851232451.png";
 import tealBg from "@assets/win98-teal_1756850231196.png";
 
 export default function NerdStats() {
@@ -370,8 +371,8 @@ export default function NerdStats() {
         <div className="row mb-4">
           <div className="col-12">
             <h5 className="fw-semibold mb-3">
-              <img src={statsIcon} alt="Trend" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
-              Ticket Sales Trend (2-Day Periods)
+              <img src={ticketingTrendsIcon} alt="Ticketing Trends" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+              Ticketing Trends
             </h5>
             <div className="card shadow-sm">
               <div className="card-body">
