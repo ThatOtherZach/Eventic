@@ -3729,6 +3729,24 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
+  
+  // Get ticket demand for the last 48 hours
+  async getTicketDemand48Hours(): Promise<number> {
+    try {
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+      
+      // Count tickets created for events in the last 48 hours
+      const [result] = await db
+        .select({ count: count() })
+        .from(tickets)
+        .where(gte(tickets.createdAt, fortyEightHoursAgo));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('Error getting 48-hour ticket demand:', error);
+      return 0;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

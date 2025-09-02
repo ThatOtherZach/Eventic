@@ -22,9 +22,41 @@ export default function AccountPage() {
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [multiplyAndSave, setMultiplyAndSave] = useState(false);
+  const [demandLevel, setDemandLevel] = useState<'low' | 'medium' | 'high' | 'very-high'>('low');
+  const [bonusPercentage, setBonusPercentage] = useState(0);
 
   const { toast } = useToast();
   const { addNotification } = useNotifications();
+  
+  // Fetch demand data
+  const { data: demandData } = useQuery<{ demand: number }>({ 
+    queryKey: ["/api/currency/demand"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/currency/demand");
+      return response.json();
+    },
+    refetchInterval: 30 * 60 * 1000, // Refresh every 30 minutes
+  });
+  
+  // Calculate demand level and bonus percentage
+  useEffect(() => {
+    if (demandData) {
+      const demand = demandData.demand;
+      if (demand < 50) {
+        setDemandLevel('low');
+        setBonusPercentage(2);
+      } else if (demand < 200) {
+        setDemandLevel('medium');
+        setBonusPercentage(5);
+      } else if (demand < 500) {
+        setDemandLevel('high');
+        setBonusPercentage(8);
+      } else {
+        setDemandLevel('very-high');
+        setBonusPercentage(12);
+      }
+    }
+  }, [demandData]);
   
   const { data: tickets, isLoading: ticketsLoading } = useQuery<(TicketType & { event: Event })[]>({
     queryKey: ["/api/user/tickets"],
@@ -180,8 +212,15 @@ export default function AccountPage() {
     
     setIsPurchasing(true);
     try {
+      // Calculate actual quantity including bonus
+      let finalQuantity = ticketQuantity;
+      if (multiplyAndSave && bonusPercentage > 0) {
+        const bonusTickets = Math.floor(ticketQuantity * (bonusPercentage / 100));
+        finalQuantity = ticketQuantity + bonusTickets;
+      }
+      
       const response = await apiRequest("POST", "/api/currency/create-purchase", {
-        quantity: ticketQuantity,
+        quantity: finalQuantity,
         hasDiscount: multiplyAndSave
       });
       const data = await response.json();
@@ -427,7 +466,12 @@ export default function AccountPage() {
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold">Starter</div>
-                            <small className="text-muted">{multiplyAndSave ? '24' : '12'} tickets</small>
+                            <small className="text-muted">
+                              {multiplyAndSave ? '24' : '12'} tickets
+                              {multiplyAndSave && bonusPercentage > 0 && (
+                                <span className="text-success"> +{Math.floor(24 * (bonusPercentage / 100))} bonus</span>
+                              )}
+                            </small>
                           </div>
                           <div>
                             <div className="fw-bold">
@@ -446,7 +490,12 @@ export default function AccountPage() {
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold">Standard</div>
-                            <small className="text-muted">{multiplyAndSave ? '48' : '24'} tickets</small>
+                            <small className="text-muted">
+                              {multiplyAndSave ? '48' : '24'} tickets
+                              {multiplyAndSave && bonusPercentage > 0 && (
+                                <span className="text-success"> +{Math.floor(48 * (bonusPercentage / 100))} bonus</span>
+                              )}
+                            </small>
                           </div>
                           <div>
                             <div className="fw-bold">
@@ -468,7 +517,12 @@ export default function AccountPage() {
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold">Premium</div>
-                            <small className="text-muted">{multiplyAndSave ? '100' : '50'} tickets</small>
+                            <small className="text-muted">
+                              {multiplyAndSave ? '100' : '50'} tickets
+                              {multiplyAndSave && bonusPercentage > 0 && (
+                                <span className="text-success"> +{Math.floor(100 * (bonusPercentage / 100))} bonus</span>
+                              )}
+                            </small>
                           </div>
                           <div>
                             <div className="fw-bold">
@@ -487,7 +541,12 @@ export default function AccountPage() {
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold">Ultimate</div>
-                            <small className="text-muted">{multiplyAndSave ? '200' : '100'} tickets</small>
+                            <small className="text-muted">
+                              {multiplyAndSave ? '200' : '100'} tickets
+                              {multiplyAndSave && bonusPercentage > 0 && (
+                                <span className="text-success"> +{Math.floor(200 * (bonusPercentage / 100))} bonus</span>
+                              )}
+                            </small>
                           </div>
                           <div>
                             <div className="fw-bold">
@@ -501,12 +560,28 @@ export default function AccountPage() {
                     
                     {/* Selected Total */}
                     <div className="mt-2 bg-light rounded-2 p-2 text-center">
-                      <small className="text-muted d-block">{ticketQuantity} tickets</small>
+                      <small className="text-muted d-block">
+                        {ticketQuantity} tickets
+                        {multiplyAndSave && bonusPercentage > 0 && (
+                          <span className="text-success"> +{Math.floor(ticketQuantity * (bonusPercentage / 100))} bonus</span>
+                        )}
+                      </small>
                       <div className="fw-bold text-primary">
                         ${(ticketQuantity * 0.29 * (multiplyAndSave ? 0.9 : 1)).toFixed(2)}
                       </div>
                       {multiplyAndSave && (
-                        <small className="text-success">You save ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
+                        <>
+                          <small className="text-success d-block">You save ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
+                          {bonusPercentage > 0 && (
+                            <small className="text-info d-block">
+                              {demandLevel === 'low' && 'Low demand'}
+                              {demandLevel === 'medium' && 'Medium demand'}
+                              {demandLevel === 'high' && 'High demand!'}
+                              {demandLevel === 'very-high' && 'Very high demand!'}
+                              {' - '}{bonusPercentage}% bonus
+                            </small>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

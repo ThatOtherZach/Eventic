@@ -3874,6 +3874,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get ticket demand data (cached for 12 hours)
+  let demandCache: { value: number; timestamp: number } | null = null;
+  const DEMAND_CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+  
+  app.get("/api/currency/demand", async (req, res) => {
+    try {
+      // Check if cache is valid
+      if (demandCache && (Date.now() - demandCache.timestamp) < DEMAND_CACHE_DURATION) {
+        return res.json({ demand: demandCache.value });
+      }
+      
+      // Get fresh demand data
+      const demand = await storage.getTicketDemand48Hours();
+      
+      // Update cache
+      demandCache = { value: demand, timestamp: Date.now() };
+      
+      res.json({ demand });
+    } catch (error) {
+      await logError(error, "GET /api/currency/demand", { request: req });
+      res.status(500).json({ message: "Failed to get demand data" });
+    }
+  });
+  
   // Create ticket purchase session
   app.post("/api/currency/create-purchase", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
