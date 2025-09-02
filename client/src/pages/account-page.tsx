@@ -797,7 +797,7 @@ export default function AccountPage() {
                             <AlertTriangle size={20} className="text-warning" strokeWidth={2} />
                           </div>
                           <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
-                            Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
+                            Hmm, your reputation as an organizer needs work. You don't yet qualify for a ticket discount :(
                           </small>
                         </div>
                       </div>
