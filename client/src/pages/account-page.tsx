@@ -435,29 +435,34 @@ export default function AccountPage() {
                 <h5 className="mb-0 fw-semibold">My Wallet</h5>
               </div>
               
-              <div className="row g-4">
-                {/* Balance Section */}
-                <div className="col-md-6">
-                  <div className="border rounded-3 p-4 h-100 bg-gradient" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <label className="form-label fw-bold text-uppercase mb-0" style={{ fontSize: '0.8rem', letterSpacing: '1px', color: '#495057' }}>Balance</label>
-                      {!claimStatus?.canClaim && claimStatus?.nextClaimAt && (
-                        <span className="badge bg-success text-white">
-                          <CheckCircle size={12} className="me-1" />
-                          Claimed
-                        </span>
-                      )}
+              {/* Balance Display */}
+              <div className="bg-light rounded-3 p-3 mb-4">
+                <div className="row align-items-center">
+                  <div className="col-auto">
+                    <small className="text-muted text-uppercase fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>Balance</small>
+                    <div className="d-flex align-items-baseline">
+                      <span className="h2 mb-0 fw-bold text-danger">{balance ? Math.floor(parseFloat(balance.balance)) : 0}</span>
+                      <span className="ms-2 text-muted">Tickets</span>
                     </div>
-                    <div className="d-flex align-items-baseline mb-3">
-                      <span className="display-6 fw-bold text-danger me-2">{balance ? Math.floor(parseFloat(balance.balance)) : 0}</span>
-                      <span className="h6 text-muted mb-0">Tickets</span>
-                    </div>
-                    <p className="text-muted small mb-0" style={{ lineHeight: '1.5' }}>
-                      Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. You can collect free tickets every 24 hours.
-                    </p>
                   </div>
+                  {!claimStatus?.canClaim && claimStatus?.nextClaimAt && (
+                    <div className="col text-end">
+                      <span className="badge bg-success-subtle text-success">
+                        <CheckCircle size={12} className="me-1" />
+                        claimed
+                      </span>
+                    </div>
+                  )}
                 </div>
+                <div className="mt-3">
+                  <small className="text-muted d-block" style={{ lineHeight: '1.5' }}>
+                    Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. 
+                    You can collect free tickets every 24 hours.
+                  </small>
+                </div>
+              </div>
 
+              <div className="row g-4">
                 {/* Secret Code Section */}
                 <div className="col-md-6">
                   <div className="border rounded-3 p-3 h-100">
@@ -484,12 +489,11 @@ export default function AccountPage() {
                     <small className="text-muted">Redeem codes for free tickets</small>
                   </div>
                 </div>
-              </div>
 
-              {/* Ticket Packs Section */}
-              <div className="mt-4">
-                <div className="border rounded-3 p-3">
-                  <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Choose Pack</label>
+                {/* Ticket Packs Section */}
+                <div className="col-md-6">
+                  <div className="border rounded-3 p-3 h-100">
+                    <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Choose Pack</label>
                     
                     {/* Multiply and Save Checkbox */}
                     <div className="form-check mb-2">
@@ -912,13 +916,13 @@ export default function AccountPage() {
                 <div className="text-center mt-4">
                   <button
                     className="btn btn-secondary"
-                    onClick={() => setTicketsDisplayed(prev => Math.min(prev + 10, tickets!.length))}
+                    onClick={() => setTicketsDisplayed(prev => Math.min(prev + 10, tickets.length))}
                     data-testid="button-show-more-tickets"
                   >
-                    Show {Math.min(10, tickets!.length - ticketsDisplayed)} More
+                    Show {Math.min(10, tickets.length - ticketsDisplayed)} More
                   </button>
                   <div className="text-muted small mt-2">
-                    Showing {ticketsDisplayed} of {tickets!.length} tickets
+                    Showing {ticketsDisplayed} of {tickets.length} tickets
                   </div>
                 </div>
               )}
@@ -958,7 +962,7 @@ export default function AccountPage() {
               </div>
             ) : (
               <div className="row g-3">
-                {registryRecords!.map((record) => {
+                {registryRecords.map((record) => {
                   const mediaUrl = (record as any).imageUrl;
                   const metadata = record.metadata as any;
                   const mediaType = metadata?.mediaType || 'image/gif';
@@ -1036,6 +1040,7 @@ export default function AccountPage() {
                       </div>
                     </div>
                   </div>
+                  );
                 })}
               </div>
             )}
@@ -1074,7 +1079,7 @@ export default function AccountPage() {
                 {events?.map((event, index) => (
                   <div 
                     key={event.id}
-                    className={`p-3 ${index !== events!.length - 1 ? 'border-bottom' : ''}`}
+                    className={`p-3 ${index !== events.length - 1 ? 'border-bottom' : ''}`}
                   >
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
