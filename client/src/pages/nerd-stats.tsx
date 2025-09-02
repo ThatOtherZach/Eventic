@@ -181,7 +181,7 @@ export default function NerdStats() {
                         {advancedStats?.activeEvents || 0} active
                       </div>
                     </div>
-                    <img src={calendarIcon} alt="Calendar" className="opacity-50" style={{ width: 32, height: 32 }} />
+                    <img src={calendarIcon} alt="Calendar" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
@@ -198,7 +198,7 @@ export default function NerdStats() {
                         {advancedStats?.avgTicketsPerEvent || 0} avg/event
                       </div>
                     </div>
-                    <img src={ticketsIcon} alt="Tickets" className="opacity-50" style={{ width: 32, height: 32 }} />
+                    <img src={ticketsIcon} alt="Tickets" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
@@ -215,7 +215,7 @@ export default function NerdStats() {
                         {stats?.validatedTickets || 0} validated
                       </div>
                     </div>
-                    <img src={checkIcon} alt="Validation" className="opacity-50" style={{ width: 32, height: 32 }} />
+                    <img src={checkIcon} alt="Validation" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
@@ -232,7 +232,7 @@ export default function NerdStats() {
                         Tickets/hour
                       </div>
                     </div>
-                    <img src={demandIcon} alt="Demand" className="opacity-50" style={{ width: 32, height: 32 }} />
+                    <img src={demandIcon} alt="Demand" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
