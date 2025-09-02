@@ -1,0 +1,125 @@
+Loading failed for the <script> with source “https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js”. account:1:1
+Error: Failed to load QR code library
+    onerror qr-utils.ts:71
+
+The resource from “https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js” was blocked due to MIME type (“text/plain”) mismatch (X-Content-Type-Options: nosniff).
+account
+Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+a
+a
+Link<@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=51c80dd3:337:18
+div
+div
+TicketViewPage@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/pages/ticket-view.tsx:73:24
+Route@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=51c80dd3:323:13
+Switch@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=51c80dd3:379:14
+Router
+div
+div
+main
+div
+Provider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TUFP5RPM.js?v=51c80dd3:35:47
+TooltipProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=51c80dd3:58:7
+AuthProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/hooks/use-auth.tsx:37:29
+QueryClientProvider@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=51c80dd3:2804:27
+ErrorBoundary@https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/src/components/error-boundary.tsx:10:5
+App react-dom.development.js:86:30
+Source map error: Error: JSON.parse: unexpected character at line 1 column 1 of the JSON data
+Stack in the worker:parseSourceMapInput@resource://devtools/client/shared/vendor/source-map/lib/util.js:163:15
+_factory@resource://devtools/client/shared/vendor/source-map/lib/source-map-consumer.js:1066:22
+SourceMapConsumer@resource://devtools/client/shared/vendor/source-map/lib/source-map-consumer.js:26:12
+_fetch@resource://devtools/client/shared/source-map-loader/utils/fetchSourceMap.js:83:19
+
+Resource URL: https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/tickets/29e41e46-20c7-4022-9335-14137856f44e
+Source Map URL: index.css.map
+
+Starting mint process... mint-nft-button.tsx:236:15
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+XHRPOST
+https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/api/upload
+[HTTP/1.1 401 Unauthorized 23ms]
+
+HTML capture failed, falling back to static image: Error: Upload failed: 401
+    mutationFn mint-nft-button.tsx:276
+    fn mutation.ts:170
+    run retryer.ts:153
+    start retryer.ts:218
+    execute mutation.ts:208
+mint-nft-button.tsx:283:19
+#1 0ms Starting document clone with size 1424x585 scrolled to 0,-1037 logger.ts:25:30
+#1 226ms Document cloned, element located at 438.33331298828125,1338.2000122070312 with size 547.3333740234375x307.8833312988281 using computed rendering logger.ts:25:30
+#1 226ms Starting DOM parsing logger.ts:25:30
+#1 228ms Added image https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/public-objects/uploads/a7bcfca5-3aee-4711-893f-264e83ddc95d logger.ts:25:30
+#1 234ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212px%22%20height%3D%2212px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22rou logger.ts:25:30
+#1 237ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212px%22%20height%3D%2212px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22rou logger.ts:25:30
+#1 239ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212px%22%20height%3D%2212px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22rou logger.ts:25:30
+#1 243ms Starting renderer for element at 438.33331298828125,1338.2000122070312 with size 548x308 logger.ts:25:30
+#1 243ms Canvas renderer initialized (548x308) with scale 1 logger.ts:25:30
+#1 272ms Finished rendering logger.ts:25:30
+XHRPOST
+https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/api/upload
+[HTTP/1.1 401 Unauthorized 232ms]
+
+Starting mint process... mint-nft-button.tsx:236:15
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif. (Reason: CORS header ‘Access-Control-Allow-Origin’ missing). Status code: 200.
+
+Failed to convert image: https://ask.libreoffice.org/uploads/asklibo/original/3X/3/5/35664d063435f940bda4cb3bb31ea0a6c5fed2f4.gif mint-nft-button.tsx:70:17
+XHRPOST
+https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/api/upload
+[HTTP/1.1 401 Unauthorized 22ms]
+
+HTML capture failed, falling back to static image: Error: Upload failed: 401
+    mutationFn mint-nft-button.tsx:276
+    fn mutation.ts:170
+    run retryer.ts:153
+    run retryer.ts:199
+    promise callback*createRetryer/run/< retryer.ts:195
+mint-nft-button.tsx:283:19
+    mutationFn mint-nft-button.tsx:283
+    fn mutation.ts:170
+    run retryer.ts:153
+    run retryer.ts:199
+    (Async: promise callback)
+    run retryer.ts:195
+    (Async: promise callback)
+    run retryer.ts:160
+    start retryer.ts:218
+    execute mutation.ts:208
+    mutate mutationObserver.ts:125
+    mutate useMutation.ts:52
+    onClick mint-nft-button.tsx:470
+    React 32
+    onClick mint-nft-button.tsx:404
+    React 15
+#2 0ms Starting document clone with size 1424x585 scrolled to 0,-1037 logger.ts:25:30
+#2 141ms Document cloned, element located at 438.33331298828125,1338.2000122070312 with size 547.3333740234375x307.8833312988281 using computed rendering logger.ts:25:30
+#2 141ms Starting DOM parsing logger.ts:25:30
+#2 141ms Added image https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/public-objects/uploads/a7bcfca5-3aee-4711-893f-264e83ddc95d logger.ts:25:30
+#2 145ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212px%22%20height%3D%2212px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22rou logger.ts:25:30
+#2 147ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212px%22%20height%3D%2212px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22rou logger.ts:25:30
+#2 149ms Added image data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212px%22%20height%3D%2212px%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22rou logger.ts:25:30
+#2 152ms Starting renderer for element at 438.33331298828125,1338.2000122070312 with size 548x308 logger.ts:25:30
+#2 152ms Canvas renderer initialized (548x308) with scale 1 logger.ts:25:30
+#2 160ms Finished rendering logger.ts:25:30
+XHRPOST
+https://bbacfebf-d372-4815-890a-ff4ea02b6f16-00-1u1rxf0gxhvjq.spock.replit.dev/api/upload

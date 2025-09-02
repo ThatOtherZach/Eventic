@@ -265,11 +265,18 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           const formData = new FormData();
           formData.append('file', htmlBlob, 'ticket-nft.html');
           
-          // Use fetch directly for file upload, not apiRequest (which expects JSON)
+          // Get auth token for upload
+          const { supabase } = await import("@/lib/supabase");
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          // Use fetch directly for file upload with auth header
           const response = await fetch("/api/upload", {
             method: "POST",
             body: formData,
-            credentials: "include"
+            credentials: "include",
+            headers: {
+              ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {})
+            }
           });
           
           if (!response.ok) {
@@ -303,11 +310,18 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           const formData = new FormData();
           formData.append('file', pngBlob, 'ticket.png');
           
-          // Use fetch directly for file upload, not apiRequest (which expects JSON)
+          // Get auth token for upload
+          const { supabase } = await import("@/lib/supabase");
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          // Use fetch directly for file upload with auth header
           const response = await fetch("/api/upload", {
             method: "POST",
             body: formData,
-            credentials: "include"
+            credentials: "include",
+            headers: {
+              ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {})
+            }
           });
           
           if (!response.ok) {
