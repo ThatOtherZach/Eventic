@@ -371,10 +371,10 @@ export function QrScannerImplementation() {
                         ? "✔️ Authentic Ticket"
                         : validationResult.alreadyValidated
                           ? "⚠️ Already Validated"
-                          : "404"}
+                          : "❌ Validation Failed"}
                 </h6>
                 <p className="text-muted small mb-0">
-                  {validationResult.valid ? (validationResult.message || "Ticket status checked") : "Invalid ticket"}
+                  {validationResult.message || (validationResult.valid ? "Ticket status checked" : "This ticket is not valid")}
                 </p>
               </div>
             </div>
