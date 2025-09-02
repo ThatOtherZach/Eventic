@@ -1,0 +1,114 @@
+ASK: Ticket → MP4 Capture (Auth-Free, Deterministic)
+Definition of Done
+
+Implement GET /tickets/:id/render?snapshot_token=... that returns only the ticket UI (fixed size), no login required, seeded state, inline assets.
+
+Capture 90 PNG frames at 30 FPS of #ticket (≈3.0s), named frames/f0000.png … f0089.png.
+
+Encode MP4: H.264, yuv420p, -movflags +faststart, duration ≈ 3.0s.
+
+Produce WebM and GIF fallbacks (optional), plus ticket.png (first frame).
+
+Upload/store ticket.mp4 (primary) and ticket.png (preview) at tickets/{id}/v1/…; return URLs. Delete frames/.
+
+Idempotent: repeated runs for the same ticket return existing URLs (don’t duplicate work).
+
+ffprobe on ticket.mp4 shows: codec=h264, pix_fmt=yuv420p, avg_frame_rate=30/1, duration≈3.0.
+
+Hard Requirements
+
+Auth Bypass for Capture
+
+Use a one-time, short-lived snapshot_token bound to ticket id.
+
+Do not navigate to user ticket pages (they require login).
+
+Either:
+
+A) Call /tickets/:id/render?snapshot_token=... (preferred), or
+
+B) Use page.setContent(fullInlinedHTML) (no network at all).
+
+Render Route Contract
+
+Fixed pixel size (e.g., 512×768 or your chosen size).
+
+#ticket is the only visible element.
+
+All CSS/JS inlined; any images/fonts are same-origin or data: URIs.
+
+Deterministic: use the persisted seed/state from validation.
+
+Puppeteer Capture
+
+await page.goto(RENDER_URL, { waitUntil: "networkidle0" }); // or setContent(...)
+const clip = await page.$eval("#ticket", el => {
+  const r = el.getBoundingClientRect();
+  return { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) };
+});
+// Loop 90 frames @ 30 FPS
+for (let i = 0; i < 90; i++) {
+  await page.screenshot({ path: `frames/f${String(i).padStart(4,"0")}.png`, clip });
+  await new Promise(r => setTimeout(r, 1000/30));
+}
+
+
+Encoding Cascade
+
+MP4 (primary)
+
+ffmpeg -framerate 30 -i frames/f%04d.png \
+  -c:v libx264 -crf 20 -preset veryslow \
+  -pix_fmt yuv420p -movflags +faststart ticket.mp4
+
+
+WebM (secondary)
+
+ffmpeg -framerate 30 -i frames/f%04d.png \
+  -c:v libvpx-vp9 -b:v 0 -crf 30 -pix_fmt yuv420p ticket.webm
+
+
+GIF (tertiary)
+
+ffmpeg -i frames/f%04d.png -vf "fps=15,scale=480:-1:flags=lanczos,palettegen" palette.png
+ffmpeg -i frames/f%04d.png -i palette.png \
+  -lavfi "fps=15,scale=480:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer" ticket.gif
+
+
+First frame (preview)
+
+ffmpeg -i frames/f0000.png -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" ticket.png
+
+
+Upload & Cleanup
+
+Save ticket.mp4 and ticket.png to CDN path tickets/{id}/v1/.
+
+Return JSON: { mp4_url, png_url, (webm_url?), (gif_url?) }.
+
+Remove frames/ temp dir.
+
+Idempotency
+
+POST /tickets/:id/capture/claim accepts an idempotency_key.
+
+If already captured, return existing URLs; otherwise enqueue job once.
+
+Verification
+
+ffprobe -v error -select_streams v:0 \
+  -show_entries stream=codec_name,pix_fmt,avg_frame_rate -show_entries format=duration \
+  -of default=nw=1 ticket.mp4
+
+
+Must output: codec_name=h264, pix_fmt=yuv420p, avg_frame_rate=30/1, duration≈3.0.
+
+Anti-Requirements (do NOT do)
+
+Don’t hit pages that require user login/cookies.
+
+Don’t rely on external CDNs without proper CORS; prefer inline assets.
+
+Don’t skip -pix_fmt yuv420p or -movflags +faststart.
+
+Don’t produce non-padded frame names or non-30 FPS counts.

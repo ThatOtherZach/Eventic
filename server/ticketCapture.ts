@@ -72,20 +72,37 @@ export class TicketCaptureService {
       // Create a new page
       const page = await this.browser!.newPage();
       
-      // Set viewport to business card dimensions (scaled up for quality)
-      // 3.5" x 2" aspect ratio = 7:4
+      // Set viewport to fixed dimensions
       await page.setViewport({ 
-        width: 1050,  // 3.5 * 300 DPI
-        height: 600   // 2 * 300 DPI
+        width: 512,
+        height: 768
       });
 
-      // Navigate to the render route
-      const renderUrl = `http://localhost:5000/api/tickets/${ticket.id}/render`;
+      // Generate snapshot token
+      const crypto = require('crypto');
+      const snapshotToken = crypto.createHash('sha256')
+        .update(`${ticket.id}-snapshot-${new Date().toISOString().split('T')[0]}`)
+        .digest('hex')
+        .substring(0, 16);
+
+      // Navigate to the render route with snapshot token
+      const renderUrl = `http://localhost:5000/api/tickets/${ticket.id}/render?snapshot_token=${snapshotToken}`;
       console.log(`Navigating to render route: ${renderUrl}`);
-      await page.goto(renderUrl, { waitUntil: 'networkidle2' });
+      await page.goto(renderUrl, { waitUntil: 'networkidle0' });
       
       // Wait for the ticket element to be present
       await page.waitForSelector('#ticket', { visible: true });
+      
+      // Get the exact clip area of the ticket element
+      const clip = await page.$eval('#ticket', el => {
+        const r = el.getBoundingClientRect();
+        return { 
+          x: Math.round(r.x), 
+          y: Math.round(r.y), 
+          width: Math.round(r.width), 
+          height: Math.round(r.height) 
+        };
+      });
 
       // Small delay for animations to start
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -101,13 +118,11 @@ export class TicketCaptureService {
         const startTime = Date.now();
         const framePath = path.join(framesDir, `f${String(i).padStart(4, '0')}.png`);
         
-        // Take screenshot of the ticket element
-        const ticketElement = await page.$('#ticket');
-        if (!ticketElement) throw new Error('Ticket element not found');
-        
-        await ticketElement.screenshot({ 
+        // Take screenshot with the exact clip area
+        await page.screenshot({ 
           path: framePath as `${string}.png`,
-          type: 'png'
+          type: 'png',
+          clip
         });
         
         // Calculate timing for next frame
