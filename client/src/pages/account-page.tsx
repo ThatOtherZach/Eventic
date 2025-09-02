@@ -610,10 +610,22 @@ export default function AccountPage() {
                           </div>
                           <div className="text-end">
                             {(() => {
-                              const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 24 : 12);
+                              const quantity = multiplyAndSave ? 24 : 12;
+                              const basePrice = quantity * 0.23;
+                              
+                              // No discounts for packs under 15 tickets
+                              if (quantity < 15) {
+                                const finalPrice = roundToNice(basePrice);
+                                return (
+                                  <>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
+                                  </>
+                                );
+                              }
+                              
+                              const volumeDiscount = calculateVolumeDiscount(quantity);
                               const multiplyDiscount = multiplyAndSave ? 10 : 0;
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
-                              const basePrice = (multiplyAndSave ? 24 : 12) * 0.23;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
@@ -869,6 +881,13 @@ export default function AccountPage() {
                         <div className="h3 mb-2 text-primary fw-bold">
                         ${(() => {
                           const basePrice = ticketQuantity * 0.23;
+                          
+                          // No discounts for packs under 15 tickets
+                          if (ticketQuantity < 15) {
+                            const finalPrice = roundToNice(basePrice);
+                            return finalPrice.toFixed(2);
+                          }
+                          
                           const volumeDiscount = calculateVolumeDiscount(ticketQuantity);
                           const multiplyDiscount = multiplyAndSave ? 10 : 0;
                           const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max
@@ -884,6 +903,11 @@ export default function AccountPage() {
                         
                         {/* Total discount if any discounts apply */}
                         {(() => {
+                          // No discounts for packs under 15 tickets
+                          if (ticketQuantity < 15) {
+                            return null;
+                          }
+                          
                           const volumeDiscount = calculateVolumeDiscount(ticketQuantity);
                           const multiplyDiscount = multiplyAndSave ? 10 : 0;
                           const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30);
