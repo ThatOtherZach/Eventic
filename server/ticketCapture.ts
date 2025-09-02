@@ -155,18 +155,18 @@ export class TicketCaptureService {
       // Generate the HTML for the ticket
       const ticketHTML = this.generateTicketHTML(ticket, event);
       
-      // Set the content
-      await page.setContent(ticketHTML, { waitUntil: 'networkidle0' });
+      // Set the content with a simpler wait condition
+      await page.setContent(ticketHTML, { waitUntil: 'domcontentloaded' });
 
-      // Wait for content to render
-      await page.waitForSelector('.ticket-card', { visible: true });
-      await new Promise(resolve => setTimeout(resolve, 500)); // Let animations settle
+      // Wait a moment for rendering
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Take screenshot
+      // Take screenshot with timeout
       await page.screenshot({ 
         path: outputPath as `${string}.png`,
         type: 'png',
-        fullPage: false
+        fullPage: false,
+        timeout: 30000
       });
 
       // Close the page

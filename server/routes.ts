@@ -746,42 +746,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectStorageService = new ObjectStorageService();
       let mediaPath: string | null = null;
       let mediaUrl: string | null = null;
-      let mediaType: string = 'video/mp4';
+      let mediaType: string = 'image/png';
       
-      // Try MP4 first
+      // Generate static PNG image directly (skip video for now to avoid timeouts)
       try {
-        mediaPath = await captureService.captureTicketAsVideo({
+        mediaPath = await captureService.captureTicketAsImage({
           ticket,
-          event,
-          format: 'mp4'
+          event
         });
-        mediaType = 'video/mp4';
-      } catch (mp4Error) {
-        console.error("MP4 generation failed, trying WebM:", mp4Error);
-        
-        // Try WebM as second fallback
-        try {
-          mediaPath = await captureService.captureTicketAsVideo({
-            ticket,
-            event,
-            format: 'webm'
-          });
-          mediaType = 'video/webm';
-        } catch (webmError) {
-          console.error("WebM generation failed, falling back to static image:", webmError);
-          
-          // Final fallback: static PNG image
-          try {
-            mediaPath = await captureService.captureTicketAsImage({
-              ticket,
-              event
-            });
-            mediaType = 'image/png';
-          } catch (imageError) {
-            console.error("All media generation attempts failed:", imageError);
-            throw new Error("Failed to generate any media format");
-          }
-        }
+        mediaType = 'image/png';
+      } catch (imageError) {
+        console.error("Image generation failed:", imageError);
+        throw new Error("Failed to generate NFT media");
       }
       
       if (!mediaPath) {
