@@ -34,6 +34,7 @@ export class TicketCaptureService {
       this.browser = await puppeteer.launch({
         headless: true,
         executablePath,
+        protocolTimeout: 180000, // Increase timeout to 3 minutes
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -87,20 +88,21 @@ export class TicketCaptureService {
       // Wait for animations to be ready
       await page.waitForSelector('.ticket-card', { visible: true });
 
-      // Capture frames for animation (3 seconds at 30fps = 90 frames)
-      const frameCount = 90;
-      const fps = 30;
+      // Capture frames for animation (2 seconds at 15fps = 30 frames for faster generation)
+      const frameCount = 30;
+      const fps = 15;
       
       for (let i = 0; i < frameCount; i++) {
         // Take screenshot
         const framePath = path.join(framesDir, `frame-${String(i).padStart(4, '0')}.png`);
         await page.screenshot({ 
           path: framePath as `${string}.png`,
-          type: 'png'
+          type: 'png',
+          timeout: 30000 // 30 second timeout per screenshot
         });
 
-        // Wait for next frame (33ms for 30fps)
-        await new Promise(resolve => setTimeout(resolve, 33));
+        // Wait for next frame (66ms for 15fps)
+        await new Promise(resolve => setTimeout(resolve, 66));
       }
 
       // Close the page
