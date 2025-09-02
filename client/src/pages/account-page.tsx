@@ -785,7 +785,7 @@ export default function AccountPage() {
                             <Info size={20} className="text-info" strokeWidth={2} />
                           </div>
                           <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
-                            Host an event and get rated to unlock reputation discounts up to 20% off
+                            Heads up! Hosting events and getting good ratings improves your discount level. You can save up to 20% on tickets.
                           </small>
                         </div>
                       </div>
