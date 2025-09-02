@@ -368,6 +368,7 @@ export const registryRecords = pgTable("registry_records", {
   ticketIsGolden: boolean("ticket_is_golden").default(false),
   ticketNftMediaUrl: text("ticket_nft_media_url"),
   ticketQrCode: text("ticket_qr_code"),
+  ticketValidationCode: text("ticket_validation_code"), // The 4-digit code used for validation
   
   // Complete event data preservation  
   eventName: text("event_name").notNull(),

@@ -2785,6 +2785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketIsGolden: ticket.isGolden || false,
         ticketNftMediaUrl: ticket.nftMediaUrl || null,
         ticketQrCode: ticket.qrData,
+        ticketValidationCode: ticket.validationCode || null,
         
         // Complete event data preservation
         eventName: event.name,
