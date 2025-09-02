@@ -22,6 +22,7 @@ import starIcon from "@assets/world_star-0_1756849251180.png";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
 import p2pIcon from "@assets/users_green-4_1756849357200.png";
 import gpsIcon from "@assets/gps-1_1756849430189.png";
+import calendarIcon from "@assets/calendar-0_1756849638733.png";
 
 export default function NerdStats() {
 
@@ -177,7 +178,7 @@ export default function NerdStats() {
                         {advancedStats?.activeEvents || 0} active
                       </div>
                     </div>
-                    <Calendar className="text-primary opacity-50" size={32} />
+                    <img src={calendarIcon} alt="Calendar" className="opacity-50" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
