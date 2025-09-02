@@ -191,8 +191,8 @@ export default function AccountPage() {
   
   // Calculate volume discount for users with less than 5 ratings
   const calculateVolumeDiscount = (quantity: number): number => {
-    // Only apply if user has less than 5 total ratings and x2 multiplier is NOT active
-    if (!multiplyAndSave && reputation && reputation.totalRatings < 5) {
+    // Only apply if user has less than 5 total ratings and x2 multiplier is NOT active and quantity > 100
+    if (!multiplyAndSave && reputation && reputation.totalRatings < 5 && quantity > 100) {
       // 5% discount for every 50 tickets
       const discountTiers = Math.floor(quantity / 50);
       return discountTiers * 5; // 5% per 50 tickets
