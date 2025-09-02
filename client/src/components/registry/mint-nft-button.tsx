@@ -12,8 +12,9 @@ import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 // Helper function to capture ticket HTML with all assets
 async function captureTicketHTML(): Promise<string> {
-  // Find the actual ticket card element
-  const ticketElement = document.querySelector('[data-testid^="ticket-card-"]') as HTMLElement;
+  // Find the actual ticket card element - it's inside the div with id ticket-card-for-nft
+  const container = document.getElementById('ticket-card-for-nft');
+  const ticketElement = container?.querySelector('.ticket-card') as HTMLElement;
   if (!ticketElement) throw new Error('Ticket element not found');
   
   // Get the computed styles for the ticket element
