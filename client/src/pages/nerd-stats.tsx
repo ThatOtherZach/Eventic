@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
@@ -11,9 +10,6 @@ import {
   Zap, 
   ChevronLeft, 
   Activity, 
-  Database, 
-  Clock, 
-  Server,
   Award,
   DollarSign,
   Gift,
@@ -25,15 +21,6 @@ import {
 } from "lucide-react";
 
 export default function NerdStats() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Fetch various stats
   const { data: stats } = useQuery({
@@ -42,7 +29,7 @@ export default function NerdStats() {
       const response = await apiRequest("GET", "/api/stats");
       return response.json();
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    // No auto-refresh, only refresh on page load
   });
 
   const { data: demandData } = useQuery({
@@ -51,7 +38,7 @@ export default function NerdStats() {
       const response = await apiRequest("GET", "/api/currency/demand");
       return response.json();
     },
-    refetchInterval: 30000,
+    // No auto-refresh
   });
 
   const { data: events } = useQuery({
@@ -60,7 +47,7 @@ export default function NerdStats() {
       const response = await apiRequest("GET", "/api/events");
       return response.json();
     },
-    refetchInterval: 60000,
+    // No auto-refresh
   });
 
   const { data: tickets } = useQuery({
@@ -69,7 +56,7 @@ export default function NerdStats() {
       const response = await apiRequest("GET", "/api/user/tickets");
       return response.json();
     },
-    refetchInterval: 60000,
+    // No auto-refresh
   });
 
   // Calculate advanced stats
@@ -77,8 +64,8 @@ export default function NerdStats() {
     if (!events || !stats) return null;
 
     const now = new Date();
-    const activeEvents = events.filter((e: any) => new Date(e.eventDate) > now);
-    const pastEvents = events.filter((e: any) => new Date(e.eventDate) <= now);
+    const activeEvents = events.filter((e: any) => new Date(e.date) > now);
+    const pastEvents = events.filter((e: any) => new Date(e.date) <= now);
     
     // Calculate average tickets per event
     const avgTicketsPerEvent = events.length > 0 
@@ -92,31 +79,31 @@ export default function NerdStats() {
 
     // Events by day of week
     const dayStats = events.reduce((acc: any, event: any) => {
-      const day = new Date(event.eventDate).getDay();
+      const day = new Date(event.date).getDay();
       const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day];
       acc[dayName] = (acc[dayName] || 0) + 1;
       return acc;
     }, {});
 
     // Price statistics
-    const ticketPrices = events.map((e: any) => e.ticketPrice).filter((p: any) => p > 0);
+    const ticketPrices = events.map((e: any) => parseFloat(e.ticketPrice)).filter((p: any) => p > 0);
     const avgPrice = ticketPrices.length > 0 
       ? Math.round(ticketPrices.reduce((a: number, b: number) => a + b, 0) / ticketPrices.length * 100) / 100
       : 0;
-    const maxPrice = Math.max(...ticketPrices, 0);
+    const maxPrice = ticketPrices.length > 0 ? Math.max(...ticketPrices) : 0;
     const minPrice = ticketPrices.length > 0 ? Math.min(...ticketPrices) : 0;
 
     // Badge statistics
-    const featuredEvents = events.filter((e: any) => e.isFeatured).length;
-    const recurringEvents = events.filter((e: any) => e.isRecurring).length;
+    const featuredEvents = 0; // Featured events are tracked separately in featuredEvents table
+    const recurringEvents = events.filter((e: any) => e.recurringType).length;
     const privateEvents = events.filter((e: any) => e.isPrivate).length;
-    const p2pEvents = events.filter((e: any) => e.allowPeerValidation).length;
+    const p2pEvents = events.filter((e: any) => e.p2pValidation).length;
 
     // Ticket economy stats
-    const freeEvents = events.filter((e: any) => e.ticketPrice === 0).length;
-    const paidEvents = events.filter((e: any) => e.ticketPrice > 0).length;
-    const goldenTickets = tickets?.filter((t: any) => t.isGolden).length || 0;
-    const resaleTickets = tickets?.filter((t: any) => t.isResale).length || 0;
+    const freeEvents = events.filter((e: any) => parseFloat(e.ticketPrice) === 0).length;
+    const paidEvents = events.filter((e: any) => parseFloat(e.ticketPrice) > 0).length;
+    const goldenTickets = tickets?.filter((t: any) => t.isGoldenTicket).length || 0;
+    const resaleTickets = tickets?.filter((t: any) => t.resalePrice !== null).length || 0;
 
     return {
       activeEvents: activeEvents.length,
@@ -148,10 +135,6 @@ export default function NerdStats() {
     return num.toString();
   };
 
-  // Calculate system uptime (mock)
-  const uptime = Math.floor((Date.now() - new Date('2024-01-01').getTime()) / 1000);
-  const uptimeDays = Math.floor(uptime / 86400);
-  const uptimeHours = Math.floor((uptime % 86400) / 3600);
 
   return (
     <div className="container py-4">
@@ -167,46 +150,6 @@ export default function NerdStats() {
               <BarChart3 className="me-2 text-primary" size={28} style={{ verticalAlign: 'text-bottom' }} />
               Stats for Nerds
             </h1>
-          </div>
-        </div>
-      </div>
-
-      {/* System Status Card */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0 d-flex align-items-center gap-2">
-                <Server size={20} className="text-primary" />
-                System Status
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="row g-3">
-                <div className="col-md-3">
-                  <div className="text-muted small mb-1">Server Time</div>
-                  <div className="fw-semibold font-monospace small">
-                    {currentTime.toISOString()}
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-muted small mb-1">Unix Timestamp</div>
-                  <div className="fw-semibold font-monospace">
-                    {Math.floor(currentTime.getTime() / 1000)}
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-muted small mb-1">Uptime</div>
-                  <div className="fw-semibold">
-                    {uptimeDays}d {uptimeHours}h
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="text-muted small mb-1">API Version</div>
-                  <div className="fw-semibold">v2.0.0</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -429,8 +372,8 @@ export default function NerdStats() {
                   </div>
                 </div>
                 <div className="col-md-4">
-                  <div className="text-muted small mb-1">NFTs Minted</div>
-                  <div className="h3 fw-bold text-info">{stats?.nftMinted || 0}</div>
+                  <div className="text-muted small mb-1">Total Events</div>
+                  <div className="h3 fw-bold text-info">{stats?.totalEvents || 0}</div>
                 </div>
               </div>
             </div>
@@ -476,59 +419,6 @@ export default function NerdStats() {
         </div>
       )}
 
-      {/* Technical Details */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <h5 className="fw-semibold mb-3">
-            <Database size={20} className="me-2 text-primary" style={{ verticalAlign: 'text-bottom' }} />
-            Technical Details
-          </h5>
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <div className="font-monospace small">
-                <div className="row mb-2">
-                  <div className="col-5 col-md-4 text-muted">Database</div>
-                  <div className="col-7 col-md-8">PostgreSQL (Neon)</div>
-                </div>
-                <div className="row mb-2">
-                  <div className="col-5 col-md-4 text-muted">ORM</div>
-                  <div className="col-7 col-md-8">Drizzle ORM</div>
-                </div>
-                <div className="row mb-2">
-                  <div className="col-5 col-md-4 text-muted">Backend</div>
-                  <div className="col-7 col-md-8">Express.js + TypeScript</div>
-                </div>
-                <div className="row mb-2">
-                  <div className="col-5 col-md-4 text-muted">Frontend</div>
-                  <div className="col-7 col-md-8">React 18 + Vite</div>
-                </div>
-                <div className="row mb-2">
-                  <div className="col-5 col-md-4 text-muted">Data Retention</div>
-                  <div className="col-7 col-md-8">69 days post-event</div>
-                </div>
-                <div className="row mb-2">
-                  <div className="col-5 col-md-4 text-muted">Cache TTL</div>
-                  <div className="col-7 col-md-8">30s (stats), 60s (events)</div>
-                </div>
-                <div className="row mb-2">
-                  <div className="col-5 col-md-4 text-muted">Rate Limits</div>
-                  <div className="col-7 col-md-8">100 req/min (general), 10 req/min (auth)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="row">
-        <div className="col-12">
-          <p className="text-muted text-center small">
-            <Clock size={14} className="me-1" style={{ verticalAlign: 'text-bottom' }} />
-            Last refresh: {new Date().toLocaleTimeString()} | Auto-refresh: 30s
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
