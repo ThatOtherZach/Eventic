@@ -74,7 +74,14 @@ export function QrScannerImplementation() {
         ticketHolderLat,
         ticketHolderLng,
       });
-      return response.json();
+      const data = await response.json();
+      
+      // If response is not ok, throw the data as error to handle in onError
+      if (!response.ok) {
+        throw data;
+      }
+      
+      return data;
     },
     onSuccess: (result: any) => {
       // This will only be reached for successful validations now
@@ -116,18 +123,25 @@ export function QrScannerImplementation() {
           description: result.message,
           variant: "destructive",
         });
-      } else {
-        // Invalid ticket
+      } else if (result.outsideValidTime) {
+        // Outside valid time window
         toast({
-          title: "404",
-          description: "Invalid ticket",
+          title: "⏰ Invalid Time",
+          description: result.message,
+          variant: "destructive",
+        });
+      } else {
+        // Other validation failure - show the actual message from server
+        toast({
+          title: "❌ Validation Failed",
+          description: result.message || "This ticket is not valid",
           variant: "destructive",
         });
       }
     },
     onError: async (error: any) => {
-      // Check if this is a location-required error (400: Location required for this event)
-      if (error.message?.includes("Location required for this event")) {
+      // Check if this is a location-required error
+      if (error.requiresLocation || error.message?.includes("Location required for this event")) {
         // Automatically request validator's location
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -160,16 +174,31 @@ export function QrScannerImplementation() {
           });
         }
       } else {
-        // Handle other errors normally
+        // Handle other errors with proper context
+        const errorMessage = error.message || error.error || "Failed to validate ticket";
+        
+        let title = "❌ Validation Error";
+        let description = errorMessage;
+        
+        // Check for specific error types
+        if (error.outsideGeofence) {
+          title = "📍 Outside Event Zone";
+          description = errorMessage;
+        } else if (error.outsideValidTime) {
+          title = "⏰ Invalid Time";
+          description = errorMessage;
+        }
+        
         const result = {
           valid: false,
-          message: error.message || "Failed to validate ticket",
+          message: description,
+          ...error // Include all error fields
         };
         setValidationResult(result);
         addNotification({
           type: "error",
-          title: "❌ Validation Error",
-          description: result.message,
+          title: title,
+          description: description,
         });
       }
     },

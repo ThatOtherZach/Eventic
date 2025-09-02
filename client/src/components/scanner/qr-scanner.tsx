@@ -57,7 +57,14 @@ export function QrScanner() {
   const validateTicketMutation = useMutation({
     mutationFn: async (qrData: string) => {
       const response = await apiRequest("POST", "/api/validate", { qrData });
-      return response.json();
+      const data = await response.json();
+      
+      // If response is not ok, throw the data as error to handle in onError
+      if (!response.ok) {
+        throw data;
+      }
+      
+      return data;
     },
     onSuccess: (result: ValidationResult) => {
       setValidationResult(result);
@@ -95,15 +102,33 @@ export function QrScanner() {
       }
     },
     onError: (error: any) => {
+      // Handle both error objects and response data
+      const errorMessage = error.message || error.error || "Failed to validate ticket";
+      
+      // Check for specific error types
+      let title = "❌ Validation Error";
+      let description = errorMessage;
+      
+      if (error.outsideGeofence) {
+        title = "📍 Outside Event Zone";
+        description = errorMessage;
+      } else if (error.requiresLocation) {
+        title = "📍 Location Required";
+        description = "This event requires location access for validation";
+      } else if (error.outsideValidTime) {
+        title = "⏰ Invalid Time";
+        description = errorMessage;
+      }
+      
       const result = {
         valid: false,
-        message: error.message || "Failed to validate ticket",
+        message: description,
       };
       setValidationResult(result);
       addNotification({
         type: "error",
-        title: "❌ Validation Error",
-        description: result.message,
+        title: title,
+        description: description,
       });
     },
   });
