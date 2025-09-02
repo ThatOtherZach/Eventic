@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
-import { TicketsWallet } from "@/components/wallet/tickets-wallet";
 import type { Ticket as TicketType, Event, RegistryRecord, AccountBalance } from "@shared/schema";
 
 export default function AccountPage() {
@@ -180,16 +179,40 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Tickets Wallet with Windows 98 Styling */}
+      {/* Tickets Balance Card */}
       {balance && (
         <div className="row mb-4">
-          <div className="col-12 d-flex justify-content-center">
-            <TicketsWallet 
-              balance={balance}
-              claimStatus={claimStatus}
-              onClaimDaily={() => claimDailyMutation.mutate()}
-              isClaimPending={claimDailyMutation.isPending}
-            />
+          <div className="col-12">
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
+                    <Wallet className="text-primary me-3" size={32} />
+                    <div>
+                      <h5 className="card-title mb-1">Tickets Balance</h5>
+                      <div className="h3 mb-0 fw-bold">{Math.floor(parseFloat(balance.balance))}</div>
+                      {parseFloat(balance.holdBalance) > 0 && (
+                        <div className="text-warning">
+                          {Math.floor(parseFloat(balance.holdBalance))} tickets on hold
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Daily Claim Button */}
+                  {claimStatus && (
+                    <button
+                      onClick={() => claimDailyMutation.mutate()}
+                      disabled={!claimStatus.canClaim || claimDailyMutation.isPending}
+                      className={`btn ${claimStatus.canClaim ? 'btn-success' : 'btn-secondary'} d-flex align-items-center`}
+                      title={claimStatus.canClaim ? "Claim your daily tickets!" : `Next claim: ${claimStatus.nextClaimAt ? new Date(claimStatus.nextClaimAt).toLocaleString() : 'N/A'}`}
+                    >
+                      <Gift size={20} className="me-2" />
+                      {claimDailyMutation.isPending ? "Claiming..." : claimStatus.canClaim ? "Claim Daily" : "Claimed"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
