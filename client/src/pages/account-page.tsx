@@ -21,6 +21,7 @@ export default function AccountPage() {
   const [ticketQuantity, setTicketQuantity] = useState(12);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [multiplyAndSave, setMultiplyAndSave] = useState(false);
 
   const { toast } = useToast();
   const { addNotification } = useNotifications();
@@ -180,7 +181,8 @@ export default function AccountPage() {
     setIsPurchasing(true);
     try {
       const response = await apiRequest("POST", "/api/currency/create-purchase", {
-        quantity: ticketQuantity
+        quantity: ticketQuantity,
+        hasDiscount: multiplyAndSave
       });
       const data = await response.json();
       
@@ -401,32 +403,57 @@ export default function AccountPage() {
                 <div className="col-md-6">
                   <div className="border rounded-3 p-3 h-100">
                     <label className="form-label fw-semibold small text-uppercase" style={{ letterSpacing: '0.5px' }}>Choose Pack</label>
+                    
+                    {/* Multiply and Save Checkbox */}
+                    <div className="form-check mb-2">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="multiplyAndSave"
+                        checked={multiplyAndSave}
+                        onChange={(e) => setMultiplyAndSave(e.target.checked)}
+                      />
+                      <label className="form-check-label small" htmlFor="multiplyAndSave">
+                        Multiply and save, x2 for 10%
+                      </label>
+                    </div>
+                    
                     <div className="d-flex flex-column gap-2">
                       {/* Starter Pack Button */}
                       <button
-                        className={`btn btn-sm ${ticketQuantity === 12 ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
-                        onClick={() => setTicketQuantity(12)}
+                        className={`btn btn-sm ${ticketQuantity === (multiplyAndSave ? 24 : 12) ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
+                        onClick={() => setTicketQuantity(multiplyAndSave ? 24 : 12)}
                       >
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold">Starter</div>
-                            <small className="text-muted">12 tickets</small>
+                            <small className="text-muted">{multiplyAndSave ? '24' : '12'} tickets</small>
                           </div>
-                          <div className="fw-bold">$3.48</div>
+                          <div>
+                            <div className="fw-bold">
+                              ${multiplyAndSave ? (24 * 0.29 * 0.9).toFixed(2) : '3.48'}
+                            </div>
+                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          </div>
                         </div>
                       </button>
                       
                       {/* Standard Pack Button */}
                       <button
-                        className={`btn btn-sm ${ticketQuantity === 24 ? 'btn-primary' : 'btn-outline-primary'} text-start p-2 position-relative`}
-                        onClick={() => setTicketQuantity(24)}
+                        className={`btn btn-sm ${ticketQuantity === (multiplyAndSave ? 48 : 24) ? 'btn-primary' : 'btn-outline-primary'} text-start p-2 position-relative`}
+                        onClick={() => setTicketQuantity(multiplyAndSave ? 48 : 24)}
                       >
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold">Standard</div>
-                            <small className="text-muted">24 tickets</small>
+                            <small className="text-muted">{multiplyAndSave ? '48' : '24'} tickets</small>
                           </div>
-                          <div className="fw-bold">$6.96</div>
+                          <div>
+                            <div className="fw-bold">
+                              ${multiplyAndSave ? (48 * 0.29 * 0.9).toFixed(2) : '6.96'}
+                            </div>
+                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          </div>
                         </div>
                         <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style={{ fontSize: '0.65rem' }}>
                           Popular
@@ -435,15 +462,20 @@ export default function AccountPage() {
                       
                       {/* Premium Pack Button */}
                       <button
-                        className={`btn btn-sm ${ticketQuantity === 50 ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
-                        onClick={() => setTicketQuantity(50)}
+                        className={`btn btn-sm ${ticketQuantity === (multiplyAndSave ? 100 : 50) ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
+                        onClick={() => setTicketQuantity(multiplyAndSave ? 100 : 50)}
                       >
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
                             <div className="fw-semibold">Premium</div>
-                            <small className="text-muted">50 tickets</small>
+                            <small className="text-muted">{multiplyAndSave ? '100' : '50'} tickets</small>
                           </div>
-                          <div className="fw-bold">$14.50</div>
+                          <div>
+                            <div className="fw-bold">
+                              ${multiplyAndSave ? (100 * 0.29 * 0.9).toFixed(2) : '14.50'}
+                            </div>
+                            {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                          </div>
                         </div>
                       </button>
                     </div>
@@ -452,8 +484,11 @@ export default function AccountPage() {
                     <div className="mt-2 bg-light rounded-2 p-2 text-center">
                       <small className="text-muted d-block">{ticketQuantity} tickets</small>
                       <div className="fw-bold text-primary">
-                        ${(ticketQuantity * 0.29).toFixed(2)}
+                        ${(ticketQuantity * 0.29 * (multiplyAndSave ? 0.9 : 1)).toFixed(2)}
                       </div>
+                      {multiplyAndSave && (
+                        <small className="text-success">You save ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
+                      )}
                     </div>
                   </div>
                 </div>

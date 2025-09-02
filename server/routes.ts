@@ -3884,20 +3884,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const { quantity } = req.body;
+      const { quantity, hasDiscount } = req.body;
       
       if (!quantity || quantity < 12) {
         return res.status(400).json({ message: "Minimum purchase is 12 tickets" });
       }
       
       const unitPrice = 0.29;
-      const totalAmount = quantity * unitPrice;
+      const discountMultiplier = hasDiscount ? 0.9 : 1; // 10% discount if hasDiscount is true
+      const effectiveUnitPrice = unitPrice * discountMultiplier;
+      const totalAmount = quantity * effectiveUnitPrice;
       
       // Create purchase record
       const purchase = await storage.createTicketPurchase({
         userId,
         quantity,
-        unitPrice: unitPrice.toString(),
+        unitPrice: effectiveUnitPrice.toString(),
         totalAmount: totalAmount.toString(),
         status: "pending"
       });
@@ -3912,9 +3914,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currency: 'usd',
             product_data: {
               name: 'Event Tickets',
-              description: `${quantity} tickets for creating and boosting events`,
+              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}`,
             },
-            unit_amount: Math.round(unitPrice * 100), // Convert to cents
+            unit_amount: Math.round(effectiveUnitPrice * 100), // Convert to cents
           },
           quantity: quantity,
         }],
