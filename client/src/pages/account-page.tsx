@@ -581,7 +581,7 @@ export default function AccountPage() {
                       >
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
-                            <div className="fw-semibold">Starter</div>
+                            <div className="fw-semibold">Mini</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '24' : '12'} Tickets
                               {calculateBonus(24) > 0 && (
@@ -690,7 +690,7 @@ export default function AccountPage() {
                       >
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
-                            <div className="fw-semibold">Premium</div>
+                            <div className="fw-semibold">Standard</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '100' : '50'} Tickets
                               {calculateBonus(100) > 0 && (
@@ -743,7 +743,7 @@ export default function AccountPage() {
                       >
                         <div className="d-flex justify-content-between align-items-center">
                           <div>
-                            <div className="fw-semibold">Ultimate</div>
+                            <div className="fw-semibold">Large</div>
                             <small className="text-muted">
                               {multiplyAndSave ? '200' : '100'} Tickets
                               {calculateBonus(200) > 0 && (
@@ -757,6 +757,59 @@ export default function AccountPage() {
                               const multiplyDiscount = multiplyAndSave ? 10 : 0;
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 200 : 100) * 0.23;
+                              const cappedDiscount = totalDiscount; // Use the capped total directly
+                              const finalPrice = basePrice * (1 - cappedDiscount / 100);
+                              
+                              if (totalDiscount > 0 || cappedDiscount > 0) {
+                                const isMaxDiscount = cappedDiscount >= 30;
+                                return (
+                                  <>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
+                                    <small className="text-muted text-decoration-line-through" style={{ fontSize: '0.7rem' }}>
+                                      ${basePrice.toFixed(2)}
+                                    </small>
+                                    {isMaxDiscount && (
+                                      <span className="badge bg-warning text-dark d-block mt-1" style={{ fontSize: '0.65rem' }}>Best Rate</span>
+                                    )}
+                                    {volumeDiscount > 0 && !multiplyAndSave && !isMaxDiscount && (
+                                      <span className="badge bg-danger d-block mt-1" style={{ fontSize: '0.65rem' }}>{volumeDiscount}% Off</span>
+                                    )}
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <div className="fw-bold">${finalPrice.toFixed(2)}</div>
+                                    {multiplyAndSave && <small className="text-success" style={{ fontSize: '0.7rem' }}>10% off</small>}
+                                  </>
+                                );
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      </button>
+                      
+                      {/* Wumbo Pack Button */}
+                      <button
+                        className={`btn btn-sm ${ticketQuantity === (multiplyAndSave ? 400 : 200) ? 'btn-primary' : 'btn-outline-primary'} text-start p-2`}
+                        onClick={() => setTicketQuantity(multiplyAndSave ? 400 : 200)}
+                      >
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div className="fw-semibold">Wumbo</div>
+                            <small className="text-muted">
+                              {multiplyAndSave ? '400' : '200'} Tickets
+                              {calculateBonus(400) > 0 && (
+                                <span className="badge bg-success ms-1" style={{ fontSize: '0.65rem' }}>+{calculateBonus(400)} bonus</span>
+                              )}
+                            </small>
+                          </div>
+                          <div className="text-end">
+                            {(() => {
+                              const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 400 : 200);
+                              const multiplyDiscount = multiplyAndSave ? 10 : 0;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
+                              const basePrice = (multiplyAndSave ? 400 : 200) * 0.23;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
