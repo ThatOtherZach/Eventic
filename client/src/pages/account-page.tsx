@@ -725,17 +725,27 @@ export default function AccountPage() {
                     
                     {/* Reputation Discount Info Message */}
                     {reputation && reputation.totalRatings === 0 && (
-                      <div className="mt-2 p-2 bg-info bg-opacity-10 rounded-2">
-                        <small className="text-muted d-flex align-items-center gap-1">
-                          <Info size={14} className="text-info" style={{ padding: '5px' }} /> Host an event and get rated to unlock reputation discounts up to 20% off
-                        </small>
+                      <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(13, 110, 253, 0.08)', border: '1px solid rgba(13, 110, 253, 0.2)' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <div className="rounded-circle bg-info bg-opacity-25 d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px', minWidth: '24px' }}>
+                            <Info size={14} className="text-info" />
+                          </div>
+                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
+                            Host an event and get rated to unlock reputation discounts up to 20% off
+                          </small>
+                        </div>
                       </div>
                     )}
                     {reputation && reputation.totalRatings > 0 && reputation.reputation < 55 && (
-                      <div className="mt-2 p-2 bg-warning bg-opacity-10 rounded-2">
-                        <small className="text-muted d-flex align-items-center gap-1">
-                          <AlertTriangle size={14} className="text-warning" style={{ padding: '5px' }} /> Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
-                        </small>
+                      <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.08)', border: '1px solid rgba(255, 193, 7, 0.2)' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <div className="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px', minWidth: '24px' }}>
+                            <AlertTriangle size={14} className="text-warning" />
+                          </div>
+                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
+                            Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
+                          </small>
+                        </div>
                       </div>
                     )}
                   </div>
