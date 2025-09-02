@@ -178,8 +178,8 @@ export default function AccountPage() {
     if (reputation && reputation.totalRatings > 0) {
       const rep = reputation.reputation;
       if (rep >= 55) {
-        // Scale from 5% at 55 reputation to 30% at 100 reputation
-        const discount = 5 + ((rep - 55) / 45) * 25;
+        // Scale from 5% at 55 reputation to 20% at 100 reputation
+        const discount = 5 + ((rep - 55) / 45) * 15;
         setReputationDiscount(Math.round(discount * 100) / 100); // Round to 2 decimals
       } else {
         setReputationDiscount(0);

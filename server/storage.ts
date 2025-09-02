@@ -2834,7 +2834,7 @@ export class DatabaseStorage implements IStorage {
     return !!rating;
   }
   
-  async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
+  async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }> {
     // First check cache
     const [cached] = await db
       .select()
@@ -2851,17 +2851,24 @@ export class DatabaseStorage implements IStorage {
         return {
           thumbsUp: cached.thumbsUp,
           thumbsDown: cached.thumbsDown,
-          percentage: cached.percentage
+          percentage: cached.percentage,
+          reputation: cached.percentage || 0,
+          totalRatings: cached.thumbsUp + cached.thumbsDown
         };
       }
     }
     
     // Otherwise compute fresh and update cache
-    return this.updateUserReputationCache(userId);
+    const result = await this.updateUserReputationCache(userId);
+    return {
+      ...result,
+      reputation: result.percentage || 0,
+      totalRatings: result.thumbsUp + result.thumbsDown
+    };
   }
   
 
-  async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }> {
+  async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }> {
     const ratings = await db
       .select({
         rating: eventRatings.rating,
@@ -2905,7 +2912,13 @@ export class DatabaseStorage implements IStorage {
         }
       });
     
-    return { thumbsUp, thumbsDown, percentage };
+    return { 
+      thumbsUp, 
+      thumbsDown, 
+      percentage,
+      reputation: percentage || 0,
+      totalRatings: thumbsUp + thumbsDown
+    };
   }
   
   async updateAllUserReputations(): Promise<void> {

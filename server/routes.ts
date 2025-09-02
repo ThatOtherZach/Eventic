@@ -3922,8 +3922,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         effectiveUnitPrice *= 0.9;
       }
       
-      // Apply reputation discount (up to 30%)
-      if (reputationDiscount > 0 && reputationDiscount <= 30) {
+      // Apply reputation discount (up to 20%)
+      if (reputationDiscount > 0 && reputationDiscount <= 20) {
         effectiveUnitPrice *= (1 - reputationDiscount / 100);
       }
       
