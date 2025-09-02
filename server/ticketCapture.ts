@@ -83,7 +83,7 @@ export class TicketCaptureService {
       });
 
       // Generate snapshot token
-      const crypto = require('crypto');
+      const crypto = await import('crypto');
       const snapshotToken = crypto.createHash('sha256')
         .update(`${ticket.id}-snapshot-${new Date().toISOString().split('T')[0]}`)
         .digest('hex')
@@ -222,7 +222,7 @@ export class TicketCaptureService {
       });
 
       // Generate snapshot token
-      const crypto = require('crypto');
+      const crypto = await import('crypto');
       const snapshotToken = crypto.createHash('sha256')
         .update(`${ticket.id}-snapshot-${new Date().toISOString().split('T')[0]}`)
         .digest('hex')
