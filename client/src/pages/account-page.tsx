@@ -528,10 +528,10 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 24 : 12);
-                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount, 30); // Cap at 30% max discount
+                              const multiplyDiscount = multiplyAndSave ? 10 : 0;
+                              const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
                               const basePrice = (multiplyAndSave ? 24 : 12) * 0.29;
-                              const discountedPrice = multiplyAndSave ? basePrice * 0.9 : basePrice;
-                              const cappedDiscount = multiplyAndSave ? Math.min(totalDiscount + 10, 30) : totalDiscount; // Include x2 discount in cap
+                              const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = basePrice * (1 - cappedDiscount / 100);
                               
                               if (totalDiscount > 0 || cappedDiscount > 0) {
