@@ -369,6 +369,15 @@ export const registryRecords = pgTable("registry_records", {
   ticketNftMediaUrl: text("ticket_nft_media_url"),
   ticketQrCode: text("ticket_qr_code"),
   ticketValidationCode: text("ticket_validation_code"), // The 4-digit code used for validation
+  ticketVoteCount: integer("ticket_vote_count").default(0), // Number of votes received
+  ticketIsDoubleGolden: boolean("ticket_is_double_golden").default(false), // Both random golden AND most voted
+  ticketSpecialEffect: text("ticket_special_effect"), // Locked special effect type
+  ticketPurchaserEmail: text("ticket_purchaser_email"), // Email of the purchaser
+  ticketPurchaserIp: text("ticket_purchaser_ip"), // IP address of the purchaser
+  ticketPurchasePrice: decimal("ticket_purchase_price", { precision: 10, scale: 2 }), // Original purchase price
+  ticketResellStatus: text("ticket_resell_status"), // not_for_resale, for_resale, sold
+  ticketOriginalOwnerId: varchar("ticket_original_owner_id"), // Original owner for resell tracking
+  ticketIsCharged: boolean("ticket_is_charged").default(false), // Whether ticket was charged for better effects
   
   // Complete event data preservation  
   eventName: text("event_name").notNull(),

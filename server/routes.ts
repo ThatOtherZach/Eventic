@@ -2793,6 +2793,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketNftMediaUrl: permanentNftMediaUrl || null,
         ticketQrCode: ticket.qrData,
         ticketValidationCode: ticket.validationCode || null,
+        ticketVoteCount: ticket.voteCount || 0,
+        ticketIsDoubleGolden: ticket.isDoubleGolden || false,
+        ticketSpecialEffect: ticket.specialEffect || null,
+        ticketPurchaserEmail: ticket.purchaserEmail || null,
+        ticketPurchaserIp: ticket.purchaserIp || null,
+        ticketPurchasePrice: ticket.purchasePrice || null,
+        ticketResellStatus: ticket.resellStatus || "not_for_resale",
+        ticketOriginalOwnerId: ticket.originalOwnerId || null,
+        ticketIsCharged: ticket.isCharged || false,
         
         // Complete event data preservation
         eventName: event.name,
