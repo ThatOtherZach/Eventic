@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import starIcon from "@assets/world_star-0_1756849251180.png";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
+import p2pIcon from "@assets/users_green-4_1756849357200.png";
 
 export default function NerdStats() {
 
@@ -264,7 +265,7 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="card shadow-sm">
                 <div className="card-body text-center">
-                  <Users className="text-success mb-2" size={24} />
+                  <img src={p2pIcon} alt="P2P Validation" className="mb-2" style={{ width: 24, height: 24 }} />
                   <div className="h5 fw-bold mb-1">{advancedStats?.p2pEvents || 0}</div>
                   <div className="text-muted small">P2P Validation</div>
                 </div>
