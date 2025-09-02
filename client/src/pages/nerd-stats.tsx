@@ -204,10 +204,14 @@ export default function NerdStats() {
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small mb-1">Validation Rate</div>
-                      <div className="h4 fw-bold mb-1">{advancedStats?.validationRate || 0}%</div>
+                      <div className="text-muted small mb-1">Ticket Demand</div>
+                      <div className="h4 fw-bold mb-1">{demandData?.demand || 0}</div>
+                      <div className="text-success small">
+                        <Zap size={14} className="me-1" />
+                        Tickets/hour
+                      </div>
                     </div>
-                    <img src={checkIcon} alt="Validation" style={{ width: 32, height: 32 }} />
+                    <img src={demandIcon} alt="Demand" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
@@ -217,14 +221,10 @@ export default function NerdStats() {
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small mb-1">Ticket Demand</div>
-                      <div className="h4 fw-bold mb-1">{demandData?.demand || 0}</div>
-                      <div className="text-success small">
-                        <Zap size={14} className="me-1" />
-                        Tickets/hour
-                      </div>
+                      <div className="text-muted small mb-1">Validation Rate</div>
+                      <div className="h4 fw-bold mb-1">{advancedStats?.validationRate || 0}%</div>
                     </div>
-                    <img src={demandIcon} alt="Demand" style={{ width: 32, height: 32 }} />
+                    <img src={checkIcon} alt="Validation" style={{ width: 32, height: 32 }} />
                   </div>
                 </div>
               </div>
