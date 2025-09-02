@@ -12,16 +12,45 @@ import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 // Helper function to capture ticket HTML with all assets
 async function captureTicketHTML(): Promise<string> {
-  // Try to find the ticket element by different selectors
-  const ticketElement = document.querySelector('#ticket-card-for-nft') || 
-                        document.querySelector('.ticket-card') || 
-                        document.querySelector('.ticket-container');
+  // Find the actual ticket card element
+  const ticketElement = document.querySelector('[data-testid^="ticket-card-"]') as HTMLElement;
   if (!ticketElement) throw new Error('Ticket element not found');
+  
+  // Get the computed styles for the ticket element
+  const computedStyles = window.getComputedStyle(ticketElement);
+  const allStyles = Array.from(computedStyles).map(prop => 
+    `${prop}: ${computedStyles.getPropertyValue(prop)}`
+  ).join('; ');
   
   // Clone the ticket element
   const clone = ticketElement.cloneNode(true) as HTMLElement;
+  clone.setAttribute('style', allStyles);
   
-  // Convert all images to base64
+  // Convert background images and regular images to base64
+  const elementsWithBg = clone.querySelectorAll('*');
+  for (let i = 0; i < elementsWithBg.length; i++) {
+    const el = elementsWithBg[i] as HTMLElement;
+    const bgImage = window.getComputedStyle(el).backgroundImage;
+    if (bgImage && bgImage !== 'none') {
+      const urlMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
+      if (urlMatch && urlMatch[1]) {
+        try {
+          const response = await fetch(urlMatch[1]);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          const base64 = await new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          el.style.backgroundImage = `url(${base64})`;
+        } catch (err) {
+          console.warn('Failed to convert background image:', urlMatch[1]);
+        }
+      }
+    }
+  }
+  
+  // Convert all img elements to base64
   const images = clone.querySelectorAll('img');
   for (let i = 0; i < images.length; i++) {
     const img = images[i];
@@ -35,23 +64,88 @@ async function captureTicketHTML(): Promise<string> {
       });
       img.src = base64;
     } catch (err) {
-      console.warn('Failed to convert image:', img.src, err);
+      console.warn('Failed to convert image:', img.src);
     }
   }
   
-  // Get all stylesheets
-  const styles = Array.from(document.styleSheets)
-    .map(sheet => {
-      try {
-        return Array.from(sheet.cssRules)
-          .map(rule => rule.cssText)
-          .join('\n');
-      } catch {
-        return '';
-      }
-    })
-    .filter(Boolean)
-    .join('\n');
+  // Get all the CSS we need
+  const criticalCSS = `
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .ticket-card {
+      position: relative;
+      width: 100%;
+      max-width: 512px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Preserve all the Bootstrap classes used in the ticket */
+    .position-relative { position: relative !important; }
+    .position-absolute { position: absolute !important; }
+    .d-flex { display: flex !important; }
+    .flex-column { flex-direction: column !important; }
+    .align-items-center { align-items: center !important; }
+    .justify-content-center { justify-content: center !important; }
+    .text-center { text-align: center !important; }
+    .text-white { color: white !important; }
+    .fw-bold { font-weight: 700 !important; }
+    .badge { display: inline-block; padding: 0.25em 0.6em; font-size: .75em; font-weight: 700; line-height: 1; color: #fff; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.375rem; }
+    .bg-warning { background-color: #ffc107 !important; }
+    .bg-danger { background-color: #dc3545 !important; }
+    .bg-success { background-color: #198754 !important; }
+    .bg-info { background-color: #0dcaf0 !important; }
+    .bg-primary { background-color: #0d6efd !important; }
+    .opacity-75 { opacity: 0.75 !important; }
+    .opacity-90 { opacity: 0.9 !important; }
+    
+    /* Animations and effects */
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .shimmer {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      background-size: 1000px 100%;
+      animation: shimmer 2s infinite;
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    .float {
+      animation: float 3s ease-in-out infinite;
+    }
+  `;
   
   // Create standalone HTML document
   const html = `<!DOCTYPE html>
@@ -60,9 +154,9 @@ async function captureTicketHTML(): Promise<string> {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NFT Ticket</title>
-  <style>${styles}</style>
+  <style>${criticalCSS}</style>
 </head>
-<body style="margin: 0; padding: 20px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+<body>
   ${clone.outerHTML}
 </body>
 </html>`;
