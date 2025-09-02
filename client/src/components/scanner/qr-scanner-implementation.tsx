@@ -8,7 +8,7 @@ import spiderIcon from "@assets/image_1756530947341.png";
 import lockIcon from "@assets/image_1756530985990.png";
 import geofenceIcon from "@assets/image_1756580752162.png";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Ticket, Event } from "@shared/schema";
@@ -111,6 +111,11 @@ export function QrScannerImplementation() {
         valid: result.valid && result.canValidate,
       };
       setRecentValidations((prev) => [validation, ...prev.slice(0, 99)]);
+
+      // Invalidate ticket owner's validation count if ticket was successfully validated
+      if (result.valid && result.canValidate && result.ticket?.userId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${result.ticket.userId}/validated-count`] });
+      }
 
       if (result.valid && result.canValidate) {
         // Check if this is a golden ticket winner!

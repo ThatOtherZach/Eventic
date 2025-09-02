@@ -156,6 +156,10 @@ export default function TicketViewPage(): React.ReactElement {
       if (data.rewardCredited) {
         queryClient.invalidateQueries({ queryKey: ['/api/currency/balance'] });
       }
+      // Invalidate event owner's reputation query to reflect the new rating
+      if (event?.userId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${event.userId}/reputation`] });
+      }
     },
     onError: (error: any) => {
       toast({
