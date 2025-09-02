@@ -67,21 +67,33 @@ export function QrScannerImplementation() {
       // Add a 1 second delay to show the color animation
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const response = await apiRequest("POST", "/api/validate", {
-        qrData: code,
-        validatorLat,
-        validatorLng,
-        ticketHolderLat,
-        ticketHolderLng,
-      });
-      const data = await response.json();
-      
-      // If response is not ok, throw the data as error to handle in onError
-      if (!response.ok) {
-        throw data;
+      try {
+        const response = await apiRequest("POST", "/api/validate", {
+          qrData: code,
+          validatorLat,
+          validatorLng,
+          ticketHolderLat,
+          ticketHolderLng,
+        });
+        return await response.json();
+      } catch (error: any) {
+        // Parse the error message to extract JSON if present
+        const errorMessage = error.message || error.toString();
+        
+        // Check if error message contains JSON (format: "400: {json}")
+        const match = errorMessage.match(/^\d{3}:\s*({.*})/);
+        if (match) {
+          try {
+            const errorData = JSON.parse(match[1]);
+            throw errorData;
+          } catch (e) {
+            // If parsing fails, throw original error
+            throw error;
+          }
+        }
+        
+        throw error;
       }
-      
-      return data;
     },
     onSuccess: (result: any) => {
       // This will only be reached for successful validations now
@@ -175,7 +187,8 @@ export function QrScannerImplementation() {
         }
       } else {
         // Handle other errors with proper context
-        const errorMessage = error.message || error.error || "Failed to validate ticket";
+        // The error should already be parsed as JSON from mutationFn
+        let errorMessage = error.message || error.error || "Failed to validate ticket";
         
         let title = "❌ Validation Error";
         let description = errorMessage;
@@ -192,7 +205,10 @@ export function QrScannerImplementation() {
         const result = {
           valid: false,
           message: description,
-          ...error // Include all error fields
+          outsideGeofence: error.outsideGeofence,
+          outsideValidTime: error.outsideValidTime,
+          event: error.event,
+          ticket: error.ticket
         };
         setValidationResult(result);
         addNotification({
