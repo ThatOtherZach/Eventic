@@ -727,14 +727,14 @@ export default function AccountPage() {
                     {reputation && reputation.totalRatings === 0 && (
                       <div className="mt-2 p-2 bg-info bg-opacity-10 rounded-2">
                         <small className="text-muted d-flex align-items-center gap-1">
-                          <Info size={14} className="text-info" /> Host an event and get rated to unlock reputation discounts up to 20% off
+                          <Info size={14} className="text-info" style={{ padding: '5px' }} /> Host an event and get rated to unlock reputation discounts up to 20% off
                         </small>
                       </div>
                     )}
                     {reputation && reputation.totalRatings > 0 && reputation.reputation < 55 && (
                       <div className="mt-2 p-2 bg-warning bg-opacity-10 rounded-2">
                         <small className="text-muted d-flex align-items-center gap-1">
-                          <AlertTriangle size={14} className="text-warning" /> Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
+                          <AlertTriangle size={14} className="text-warning" style={{ padding: '5px' }} /> Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
                         </small>
                       </div>
                     )}
