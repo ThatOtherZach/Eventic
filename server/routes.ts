@@ -2179,24 +2179,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all tickets for analysis
       const allTickets = await storage.getTickets();
       
-      // Calculate ticket sales by month
-      const ticketsByMonth: Record<string, number> = {};
+      // Calculate ticket sales by day (last 68 days)
+      const ticketsByDay: Record<string, number> = {};
       allTickets.forEach(ticket => {
         if (ticket.createdAt) {
-          const month = new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-          ticketsByMonth[month] = (ticketsByMonth[month] || 0) + 1;
+          const day = new Date(ticket.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          ticketsByDay[day] = (ticketsByDay[day] || 0) + 1;
         }
       });
       
-      // Get last 6 months of data
-      const monthLabels: string[] = [];
-      const monthData: number[] = [];
-      for (let i = 5; i >= 0; i--) {
+      // Get last 68 days of data
+      const dayLabels: string[] = [];
+      const dayData: number[] = [];
+      for (let i = 67; i >= 0; i--) {
         const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-        monthLabels.push(monthKey);
-        monthData.push(ticketsByMonth[monthKey] || 0);
+        date.setDate(date.getDate() - i);
+        const dayKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        dayLabels.push(dayKey);
+        dayData.push(ticketsByDay[dayKey] || 0);
       }
       
       // Calculate events by country
@@ -2285,8 +2285,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         charts: {
           ticketsByMonth: {
-            labels: monthLabels,
-            data: monthData
+            labels: dayLabels,
+            data: dayData
           },
           topCountries,
           topEventTypes
