@@ -727,8 +727,8 @@ export default function AccountPage() {
                     {reputation && reputation.totalRatings === 0 && (
                       <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(13, 110, 253, 0.08)', border: '1px solid rgba(13, 110, 253, 0.2)' }}>
                         <div className="d-flex align-items-start gap-2">
-                          <div className="rounded-circle bg-info bg-opacity-25 d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px', minWidth: '24px' }}>
-                            <Info size={14} className="text-info" />
+                          <div style={{ minWidth: '20px' }}>
+                            <Info size={20} className="text-info" strokeWidth={2} />
                           </div>
                           <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
                             Host an event and get rated to unlock reputation discounts up to 20% off
@@ -739,8 +739,8 @@ export default function AccountPage() {
                     {reputation && reputation.totalRatings > 0 && reputation.reputation < 55 && (
                       <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.08)', border: '1px solid rgba(255, 193, 7, 0.2)' }}>
                         <div className="d-flex align-items-start gap-2">
-                          <div className="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px', minWidth: '24px' }}>
-                            <AlertTriangle size={14} className="text-warning" />
+                          <div style={{ minWidth: '20px' }}>
+                            <AlertTriangle size={20} className="text-warning" strokeWidth={2} />
                           </div>
                           <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
                             Reputation discount requires 55% or higher rating (currently {reputation.reputation}%)
