@@ -82,27 +82,36 @@ export class TicketCaptureService {
       // Generate the HTML for the ticket
       const ticketHTML = this.generateTicketHTML(ticket, event);
       
-      // Set the content with faster wait
-      await page.setContent(ticketHTML, { waitUntil: 'domcontentloaded' });
+      // Set the content - no wait to be faster
+      await page.setContent(ticketHTML);
 
-      // Wait briefly for initial render
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Very brief pause to let DOM settle
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Capture fewer frames for faster generation (1 second at 10fps = 10 frames)
-      const frameCount = 10;
-      const fps = 10;
+      // Capture 3 seconds at 30fps = 90 frames
+      const frameCount = 90;
+      const fps = 30;
+      const frameInterval = 1000 / fps; // 33.33ms per frame
       
+      // Capture frames sequentially with precise timing
       for (let i = 0; i < frameCount; i++) {
-        // Take screenshot
+        const startTime = Date.now();
         const framePath = path.join(framesDir, `frame-${String(i).padStart(4, '0')}.png`);
+        
+        // Take screenshot without any timeout
         await page.screenshot({ 
           path: framePath as `${string}.png`,
           type: 'png',
-          timeout: 10000 // 10 second timeout per screenshot
+          clip: { x: 0, y: 0, width: 1050, height: 600 } // Explicit clip area for speed
         });
-
-        // Wait for next frame (100ms for 10fps)
-        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Calculate how long to wait for next frame
+        const elapsed = Date.now() - startTime;
+        const waitTime = Math.max(0, frameInterval - elapsed);
+        
+        if (waitTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
 
       // Close the page
