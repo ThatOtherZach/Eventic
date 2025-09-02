@@ -572,18 +572,36 @@ export default function AccountPage() {
               </div>
             ) : (
               <div className="row g-3">
-                {registryRecords.map((record) => (
-                  <div key={record.id} className="col-md-6">
-                    <div className="card">
-                      {(record as any).imageUrl && (
-                        <img 
-                          src={(record as any).imageUrl} 
-                          className="card-img-top" 
-                          alt={record.title}
-                          style={{ height: '200px', objectFit: 'cover' }}
-                        />
-                      )}
-                      <div className="card-body">
+                {registryRecords.map((record) => {
+                  const mediaUrl = (record as any).imageUrl;
+                  const metadata = record.metadata as any;
+                  const mediaType = metadata?.mediaType || 'image/gif';
+                  const isVideo = mediaType === 'video/mp4' || mediaUrl?.endsWith('.mp4');
+                  
+                  return (
+                    <div key={record.id} className="col-md-6">
+                      <div className="card">
+                        {mediaUrl && (
+                          isVideo ? (
+                            <video 
+                              src={mediaUrl}
+                              className="card-img-top" 
+                              style={{ height: '200px', objectFit: 'cover' }}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                            />
+                          ) : (
+                            <img 
+                              src={mediaUrl} 
+                              className="card-img-top" 
+                              alt={record.title}
+                              style={{ height: '200px', objectFit: 'cover' }}
+                            />
+                          )
+                        )}
+                        <div className="card-body">
                         <div className="d-flex justify-content-between align-items-start mb-3">
                           <div>
                             <h6 className="card-title mb-1">{record.title}</h6>
@@ -623,7 +641,8 @@ export default function AccountPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
