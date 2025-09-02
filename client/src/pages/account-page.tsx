@@ -432,17 +432,17 @@ export default function AccountPage() {
         <div className="col-12">
           <div className="card shadow-sm">
             <div className="card-body py-3">
-              <h5 className="card-title mb-2 d-flex align-items-center gap-2" style={{ fontSize: '1.1rem' }}>
-                <Wallet size={18} />
+              <h5 className="card-title mb-3 d-flex align-items-center gap-2">
+                <Wallet size={20} />
                 My Wallet
               </h5>
               
               {/* Balance Display */}
               <div className="mb-3">
-                <div className="text-muted text-uppercase small" style={{ fontSize: '0.75rem' }}>Balance</div>
+                <div className="text-muted text-uppercase small mb-1">Balance</div>
                 <div className="d-flex align-items-baseline gap-2">
-                  <h3 className="mb-0 text-danger">{balance ? Math.floor(parseFloat(balance.balance)) : 0}</h3>
-                  <span className="text-muted" style={{ fontSize: '0.9rem' }}>Tickets</span>
+                  <h2 className="mb-0 text-danger">{balance ? Math.floor(parseFloat(balance.balance)) : 0}</h2>
+                  <span className="text-muted">Tickets</span>
                   {!claimStatus?.canClaim && claimStatus?.nextClaimAt && (
                     <span className="badge bg-success ms-2">
                       <CheckCircle size={12} className="me-1" />
@@ -451,20 +451,20 @@ export default function AccountPage() {
                   )}
                 </div>
                 <div className="mt-2">
-                  <small className="text-muted" style={{ fontSize: '0.8rem', lineHeight: '1.3' }}>
+                  <small className="text-muted" style={{ fontSize: '0.85rem' }}>
                     Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. You can collect free tickets every 24 hours.
                   </small>
                 </div>
               </div>
 
               {/* Secret Code Section - Collapsible */}
-              <div className="border-top pt-2">
+              <div className="border-top pt-3">
                 <div 
                   className="d-flex align-items-center justify-content-between mb-2" 
                   style={{ cursor: 'pointer' }}
                   onClick={() => setSecretCodeExpanded(!secretCodeExpanded)}
                 >
-                  <h6 className="mb-0" style={{ fontSize: '0.9rem' }}>SECRET CODE</h6>
+                  <h6 className="mb-0 text-uppercase fw-semibold" style={{ fontSize: '0.85rem', letterSpacing: '0.5px' }}>Secret Code</h6>
                   <ChevronDown 
                     size={16} 
                     style={{ 
@@ -475,11 +475,11 @@ export default function AccountPage() {
                 </div>
                 {secretCodeExpanded && (
                   <div className="mb-3">
-                    <div className="input-group input-group-sm">
+                    <div className="input-group">
                       <input
                         type="text"
                         className="form-control"
-                        placeholder="ENTER CODE"
+                        placeholder="Enter code"
                         value={secretCode}
                         onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
                         onKeyDown={(e) => e.key === 'Enter' && handleRedeemCode()}
@@ -487,15 +487,15 @@ export default function AccountPage() {
                         style={{ textTransform: 'uppercase' }}
                       />
                       <button 
-                        className="btn btn-outline-primary btn-sm"
+                        className="btn btn-outline-primary"
                         onClick={handleRedeemCode}
                         disabled={isRedeeming || !secretCode.trim()}
                       >
                         {isRedeeming ? "Redeeming..." : "Execute"}
                       </button>
                     </div>
-                    <small className="text-muted mt-1 d-block" style={{ fontSize: '0.75rem' }}>
-                      <Lock size={12} className="me-1" />
+                    <small className="text-muted mt-2 d-block">
+                      <Lock size={14} className="me-1" />
                       Redeem codes for free tickets
                     </small>
                   </div>
@@ -503,13 +503,13 @@ export default function AccountPage() {
               </div>
 
               {/* Ticket Purchase Section - Collapsible */}
-              <div className="border-top pt-2 mt-2">
+              <div className="border-top pt-3 mt-3">
                 <div 
                   className="d-flex align-items-center justify-content-between mb-2" 
                   style={{ cursor: 'pointer' }}
                   onClick={() => setPurchaseExpanded(!purchaseExpanded)}
                 >
-                  <h6 className="mb-0" style={{ fontSize: '0.9rem' }}>CHOOSE PACK</h6>
+                  <h6 className="mb-0 text-uppercase fw-semibold" style={{ fontSize: '0.85rem', letterSpacing: '0.5px' }}>Choose Pack</h6>
                   <ChevronDown 
                     size={16} 
                     style={{ 
@@ -522,7 +522,7 @@ export default function AccountPage() {
                   <div>
                     
                     {/* Multiply and Save Checkbox */}
-                    <div className="form-check mb-2">
+                    <div className="form-check mb-3">
                       <input
                         className="form-check-input"
                         type="checkbox"
@@ -753,7 +753,7 @@ export default function AccountPage() {
                     </div>
                     
                     {/* Selected Total */}
-                    <div className="mt-3 p-3 rounded-3" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', border: '1px solid #dee2e6' }}>
+                    <div className="mt-3 p-3 rounded bg-light">
                       <div className="text-center">
                         {/* Price */}
                         <div className="h3 mb-2 text-primary fw-bold">
@@ -842,11 +842,11 @@ export default function AccountPage() {
                     )}
                     
                     {/* Stats for nerds link */}
-                    <div className="text-end mt-3">
+                    <div className="text-end mt-2">
                       <Link 
                         to="/sys/nerd" 
                         className="text-muted small text-decoration-none"
-                        style={{ fontSize: '0.8rem' }}
+                        style={{ fontSize: '0.75rem' }}
                         data-testid="link-stats-nerds"
                       >
                         Stats for nerds
