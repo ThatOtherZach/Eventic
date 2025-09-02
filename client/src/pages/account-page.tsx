@@ -670,57 +670,57 @@ export default function AccountPage() {
                     </div>
                     
                     {/* Selected Total */}
-                    <div className="mt-2 bg-light rounded-2 p-2 text-center">
-                      <small className="text-muted d-block">
-                        {ticketQuantity} tickets
-                        {calculateBonus(ticketQuantity) > 0 && (
-                          <span className="text-success"> +{calculateBonus(ticketQuantity)} bonus</span>
-                        )}
-                      </small>
-                      <div className="fw-bold text-primary">
+                    <div className="mt-3 p-3 rounded-3" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', border: '1px solid #dee2e6' }}>
+                      <div className="text-center">
+                        {/* Price */}
+                        <div className="h3 mb-2 text-primary fw-bold">
                         ${(() => {
                           let price = ticketQuantity * 0.29;
                           if (multiplyAndSave) price *= 0.9; // 10% multiply discount
                           if (reputationDiscount > 0) price *= (1 - reputationDiscount / 100); // Reputation discount
                           return price.toFixed(2);
                         })()}
-                      </div>
-                      {(multiplyAndSave || reputationDiscount > 0) && (
-                        <>
-                          {multiplyAndSave && (
-                            <small className="text-success d-block">Multiply discount: ${(ticketQuantity * 0.29 * 0.1).toFixed(2)}</small>
-                          )}
-                          {reputationDiscount > 0 && (
-                            <small className="text-success d-block">
-                              Reputation discount ({reputationDiscount}%): ${(() => {
-                                let basePrice = ticketQuantity * 0.29;
-                                if (multiplyAndSave) basePrice *= 0.9;
-                                return (basePrice * (reputationDiscount / 100)).toFixed(2);
-                              })()}
-                            </small>
-                          )}
+                        </div>
+                        
+                        {/* Ticket count with bonus */}
+                        <div className="mb-2" style={{ fontSize: '1.1rem' }}>
+                          <span className="fw-semibold">{ticketQuantity} tickets</span>
                           {calculateBonus(ticketQuantity) > 0 && (
-                            <small className="text-info d-block">
-                              {demandLevel === 'low' && 'Low demand'}
-                              {demandLevel === 'medium' && 'Medium demand'}
-                              {demandLevel === 'high' && 'High demand!'}
-                              {demandLevel === 'very-high' && 'Very high demand!'}
-                              {' - '}{bonusPercentage}% bonus
-                            </small>
+                            <span className="text-success fw-bold"> +{calculateBonus(ticketQuantity)} bonus</span>
                           )}
-                          {(multiplyAndSave || reputationDiscount > 0) && (
-                            <small className="text-muted d-block mt-1">
-                              Total savings: ${(() => {
+                        </div>
+                        
+                        {/* Total discount if any discounts apply */}
+                        {(multiplyAndSave || reputationDiscount > 0) && (
+                          <div className="mb-2">
+                            <span className="fw-semibold text-dark">
+                              Total discount: ${(() => {
                                 const baseTotal = ticketQuantity * 0.29;
                                 let finalPrice = baseTotal;
                                 if (multiplyAndSave) finalPrice *= 0.9;
                                 if (reputationDiscount > 0) finalPrice *= (1 - reputationDiscount / 100);
                                 return (baseTotal - finalPrice).toFixed(2);
-                              })()}
-                            </small>
-                          )}
-                        </>
-                      )}
+                              })()} 
+                              <span className="text-muted"> ({Math.round((() => {
+                                const baseTotal = ticketQuantity * 0.29;
+                                let finalPrice = baseTotal;
+                                if (multiplyAndSave) finalPrice *= 0.9;
+                                if (reputationDiscount > 0) finalPrice *= (1 - reputationDiscount / 100);
+                                return ((baseTotal - finalPrice) / baseTotal) * 100;
+                              })())}%)</span>
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Demand bonus badge */}
+                        {calculateBonus(ticketQuantity) > 0 && (
+                          <div className="mt-2">
+                            <span className="badge bg-success px-3 py-2" style={{ fontSize: '0.85rem' }}>
+                              {bonusPercentage}% Demand Bonus Applied
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Reputation Discount Info Message */}
