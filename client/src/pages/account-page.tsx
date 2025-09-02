@@ -817,6 +817,18 @@ export default function AccountPage() {
                         </div>
                       </div>
                     )}
+                    
+                    {/* Stats for nerds link */}
+                    <div className="text-end mt-3">
+                      <Link 
+                        to="/sys/nerd" 
+                        className="text-muted small text-decoration-none"
+                        style={{ fontSize: '0.8rem' }}
+                        data-testid="link-stats-nerds"
+                      >
+                        Stats for nerds
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -851,18 +863,6 @@ export default function AccountPage() {
                     </button>
                   </div>
                 </div>
-              </div>
-              
-              {/* Stats for nerds link */}
-              <div className="text-end mt-3">
-                <Link 
-                  to="/sys/nerd" 
-                  className="text-muted small text-decoration-none"
-                  style={{ fontSize: '0.8rem' }}
-                  data-testid="link-stats-nerds"
-                >
-                  Stats for nerds
-                </Link>
               </div>
             </div>
           </div>
