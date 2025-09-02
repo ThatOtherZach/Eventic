@@ -16,9 +16,9 @@ import {
   RefreshCw,
   Coins,
   Trophy,
-  Star,
   Hash
 } from "lucide-react";
+import starIcon from "@assets/world_star-0_1756849251180.png";
 
 export default function NerdStats() {
 
@@ -245,9 +245,9 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="card shadow-sm">
                 <div className="card-body text-center">
-                  <Star className="text-warning mb-2" size={24} />
+                  <img src={starIcon} alt="Star" className="mb-2" style={{ width: 24, height: 24 }} />
                   <div className="h5 fw-bold mb-1">{advancedStats?.featuredEvents || 0}</div>
-                  <div className="text-muted small">Featured Events</div>
+                  <div className="text-muted small">Boosted Events</div>
                 </div>
               </div>
             </div>
