@@ -173,46 +173,49 @@ export default function AccountPage() {
 
                   </div>
                 </div>
-                {/* Balance Display */}
-                {balance && (
-                  <div className="mt-3 mt-sm-0">
-                    <div className="card bg-light">
-                      <div className="card-body py-2 px-3">
-                        <div className="d-flex align-items-center justify-content-between">
-                          <div className="d-flex align-items-center">
-                            <Wallet className="text-primary me-2" size={24} />
-                            <div>
-                              <div className="small text-muted">Tickets Balance</div>
-                              <div className="h5 mb-0 fw-bold">{Math.floor(parseFloat(balance.balance))}</div>
-                              {parseFloat(balance.holdBalance) > 0 && (
-                                <div className="small text-warning">
-                                  {Math.floor(parseFloat(balance.holdBalance))} on hold
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {/* Daily Claim Button */}
-                          {claimStatus && (
-                            <button
-                              onClick={() => claimDailyMutation.mutate()}
-                              disabled={!claimStatus.canClaim || claimDailyMutation.isPending}
-                              className={`btn btn-sm ${claimStatus.canClaim ? 'btn-success' : 'btn-secondary'} d-flex align-items-center`}
-                              title={claimStatus.canClaim ? "Claim your daily tickets!" : `Next claim: ${claimStatus.nextClaimAt ? new Date(claimStatus.nextClaimAt).toLocaleString() : 'N/A'}`}
-                            >
-                              <Gift size={16} className="me-1" />
-                              {claimDailyMutation.isPending ? "Claiming..." : claimStatus.canClaim ? "Claim Daily" : "Claimed"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Tickets Balance Card */}
+      {balance && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
+                    <Wallet className="text-primary me-3" size={32} />
+                    <div>
+                      <h5 className="card-title mb-1">Tickets Balance</h5>
+                      <div className="h3 mb-0 fw-bold">{Math.floor(parseFloat(balance.balance))}</div>
+                      {parseFloat(balance.holdBalance) > 0 && (
+                        <div className="text-warning">
+                          {Math.floor(parseFloat(balance.holdBalance))} tickets on hold
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Daily Claim Button */}
+                  {claimStatus && (
+                    <button
+                      onClick={() => claimDailyMutation.mutate()}
+                      disabled={!claimStatus.canClaim || claimDailyMutation.isPending}
+                      className={`btn ${claimStatus.canClaim ? 'btn-success' : 'btn-secondary'} d-flex align-items-center`}
+                      title={claimStatus.canClaim ? "Claim your daily tickets!" : `Next claim: ${claimStatus.nextClaimAt ? new Date(claimStatus.nextClaimAt).toLocaleString() : 'N/A'}`}
+                    >
+                      <Gift size={20} className="me-2" />
+                      {claimDailyMutation.isPending ? "Claiming..." : claimStatus.canClaim ? "Claim Daily" : "Claimed"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* My Tickets Section */}
       <div className="row mb-4">
