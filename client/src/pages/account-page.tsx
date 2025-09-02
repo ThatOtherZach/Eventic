@@ -920,8 +920,7 @@ export default function AccountPage() {
                             return (
                               <div className="mb-2">
                                 <span className="text-dark">
-                                  -${discountAmount.toFixed(2)} 
-                                  <span className="text-muted"> ({totalDiscount}% Off)</span> Discount Applied
+                                  -${discountAmount.toFixed(2)} Discount Applied 😊
                                 </span>
                               </div>
                             );
