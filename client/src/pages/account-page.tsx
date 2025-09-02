@@ -748,7 +748,7 @@ export default function AccountPage() {
                         {(multiplyAndSave || reputationDiscount > 0) && (
                           <div className="mb-2">
                             <span className="text-dark">
-                              Discount Applied: -${(() => {
+                              -${(() => {
                                 const baseTotal = ticketQuantity * 0.29;
                                 let finalPrice = baseTotal;
                                 if (multiplyAndSave) finalPrice *= 0.9;
@@ -761,7 +761,7 @@ export default function AccountPage() {
                                 if (multiplyAndSave) finalPrice *= 0.9;
                                 if (reputationDiscount > 0) finalPrice *= (1 - reputationDiscount / 100);
                                 return ((baseTotal - finalPrice) / baseTotal) * 100;
-                              })())}% Off)</span>
+                              })())}% Off)</span> Discount Applied
                             </span>
                           </div>
                         )}
