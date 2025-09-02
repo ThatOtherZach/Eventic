@@ -264,7 +264,17 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           const formData = new FormData();
           formData.append('file', htmlBlob, 'ticket-nft.html');
           
-          const response = await apiRequest("POST", "/api/upload", formData);
+          // Use fetch directly for file upload, not apiRequest (which expects JSON)
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+            credentials: "include"
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status}`);
+          }
+          
           const data = await response.json();
           imageUrl = data.url;
           mediaType = 'text/html';
@@ -293,7 +303,17 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           const formData = new FormData();
           formData.append('file', pngBlob, 'ticket.png');
           
-          const response = await apiRequest("POST", "/api/upload", formData);
+          // Use fetch directly for file upload, not apiRequest (which expects JSON)
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+            credentials: "include"
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status}`);
+          }
+          
           const data = await response.json();
           imageUrl = data.url;
           mediaType = 'image/png';
