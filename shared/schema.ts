@@ -408,6 +408,20 @@ export const registryRecords = pgTable("registry_records", {
   eventSpecialEffectsEnabled: boolean("event_special_effects_enabled").default(false),
   eventGeofence: text("event_geofence"), // JSON string with geofence data
   eventIsAdminCreated: boolean("event_is_admin_created").default(false),
+  eventContactDetails: text("event_contact_details"), // Contact details revealed to ticket holders
+  eventCountry: text("event_country"), // Country extracted from venue
+  eventTicketBackgroundUrl: text("event_ticket_background_url"), // Custom ticket background
+  eventEarlyValidation: text("event_early_validation"), // Early validation policy
+  eventMaxUses: integer("event_max_uses"), // Max uses per ticket
+  eventStickerOdds: integer("event_sticker_odds"), // Sticker appearance odds
+  eventIsEnabled: boolean("event_is_enabled").default(true), // Whether event is visible
+  eventTicketPurchasesEnabled: boolean("event_ticket_purchases_enabled").default(true), // Whether purchases are enabled
+  eventLatitude: decimal("event_latitude", { precision: 10, scale: 7 }), // GPS latitude
+  eventLongitude: decimal("event_longitude", { precision: 10, scale: 7 }), // GPS longitude
+  eventParentEventId: varchar("event_parent_event_id"), // Parent for recurring events
+  eventLastRecurrenceCreated: timestamp("event_last_recurrence_created"), // Last recurrence creation
+  eventTimezone: text("event_timezone"), // Event timezone
+  eventHashtags: text("event_hashtags").array(), // Hashtags from description
   
   // User data preservation
   creatorUsername: text("creator_username").notNull(),
