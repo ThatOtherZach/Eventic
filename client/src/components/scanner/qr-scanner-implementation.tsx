@@ -79,14 +79,17 @@ export function QrScannerImplementation() {
       } catch (error: any) {
         // Parse the error message to extract JSON if present
         const errorMessage = error.message || error.toString();
+        console.log('Raw error message:', errorMessage);
         
         // Check if error message contains JSON (format: "400: {json}")
-        const match = errorMessage.match(/^\d{3}:\s*({.*})/);
+        const match = errorMessage.match(/^\d{3}:\s*(.+)$/s);
         if (match) {
           try {
             const errorData = JSON.parse(match[1]);
+            console.log('Parsed error data:', errorData);
             throw errorData;
           } catch (e) {
+            console.log('Failed to parse JSON from error:', e);
             // If parsing fails, throw original error
             throw error;
           }
@@ -152,6 +155,7 @@ export function QrScannerImplementation() {
       }
     },
     onError: async (error: any) => {
+      console.log('Error in onError handler:', error);
       // Check if this is a location-required error
       if (error.requiresLocation || error.message?.includes("Location required for this event")) {
         // Automatically request validator's location
@@ -190,6 +194,20 @@ export function QrScannerImplementation() {
         // The error should already be parsed as JSON from mutationFn
         let errorMessage = error.message || error.error || "Failed to validate ticket";
         
+        // The error might still be coming through as "400: {json}" format
+        // Let's check and parse it if needed
+        if (typeof errorMessage === 'string' && errorMessage.startsWith('400: ')) {
+          try {
+            const jsonPart = errorMessage.substring(5); // Remove "400: " prefix
+            const parsed = JSON.parse(jsonPart);
+            errorMessage = parsed.message || errorMessage;
+            // Also update the error object with parsed data
+            Object.assign(error, parsed);
+          } catch (e) {
+            console.log('Could not parse error message:', e);
+          }
+        }
+        
         let title = "❌ Validation Error";
         let description = errorMessage;
         
@@ -210,6 +228,7 @@ export function QrScannerImplementation() {
           event: error.event,
           ticket: error.ticket
         };
+        console.log('Setting validation result:', result);
         setValidationResult(result);
         addNotification({
           type: "error",
