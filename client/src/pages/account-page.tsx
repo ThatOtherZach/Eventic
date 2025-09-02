@@ -534,6 +534,44 @@ export default function AccountPage() {
                         Multiply and save, x2 for 10%
                       </label>
                     </div>
+
+                    {/* Reputation Discount Info Message - Moved here */}
+                    {reputation && reputation.totalRatings === 0 && (
+                      <div className="mb-3 p-2 rounded-2" style={{ backgroundColor: 'rgba(13, 110, 253, 0.08)', border: '1px solid rgba(13, 110, 253, 0.2)' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <div style={{ minWidth: '20px' }}>
+                            <Info size={20} className="text-info" strokeWidth={2} />
+                          </div>
+                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
+                            Heads up! Hosting events and getting good ratings improves your discount level. You can save up to 20% on tickets.
+                          </small>
+                        </div>
+                      </div>
+                    )}
+                    {reputation && reputation.totalRatings > 0 && reputation.reputation < 55 && (
+                      <div className="mb-3 p-2 rounded-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.08)', border: '1px solid rgba(255, 193, 7, 0.2)' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <div style={{ minWidth: '20px' }}>
+                            <AlertTriangle size={20} className="text-warning" strokeWidth={2} />
+                          </div>
+                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
+                            Hmm, your reputation as an organizer needs work. You don't yet qualify for a ticket discount :(
+                          </small>
+                        </div>
+                      </div>
+                    )}
+                    {reputation && reputation.totalRatings > 0 && reputation.reputation >= 55 && reputationDiscount > 0 && (
+                      <div className="mb-3 p-2 rounded-2" style={{ backgroundColor: 'rgba(40, 167, 69, 0.08)', border: '1px solid rgba(40, 167, 69, 0.2)' }}>
+                        <div className="d-flex align-items-start gap-2">
+                          <div style={{ minWidth: '20px' }}>
+                            <Info size={20} className="text-success" strokeWidth={2} />
+                          </div>
+                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
+                            Your reputation is impressive! You're now getting {reputationDiscount.toFixed(1)}% off on tickets! Keep hosting awesome events :)
+                          </small>
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="d-flex flex-column gap-2">
                       {/* Starter Pack Button */}
@@ -802,44 +840,6 @@ export default function AccountPage() {
                         )}
                       </div>
                     </div>
-                    
-                    {/* Reputation Discount Info Message */}
-                    {reputation && reputation.totalRatings === 0 && (
-                      <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(13, 110, 253, 0.08)', border: '1px solid rgba(13, 110, 253, 0.2)' }}>
-                        <div className="d-flex align-items-start gap-2">
-                          <div style={{ minWidth: '20px' }}>
-                            <Info size={20} className="text-info" strokeWidth={2} />
-                          </div>
-                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
-                            Heads up! Hosting events and getting good ratings improves your discount level. You can save up to 20% on tickets.
-                          </small>
-                        </div>
-                      </div>
-                    )}
-                    {reputation && reputation.totalRatings > 0 && reputation.reputation < 55 && (
-                      <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.08)', border: '1px solid rgba(255, 193, 7, 0.2)' }}>
-                        <div className="d-flex align-items-start gap-2">
-                          <div style={{ minWidth: '20px' }}>
-                            <AlertTriangle size={20} className="text-warning" strokeWidth={2} />
-                          </div>
-                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
-                            Hmm, your reputation as an organizer needs work. You don't yet qualify for a ticket discount :(
-                          </small>
-                        </div>
-                      </div>
-                    )}
-                    {reputation && reputation.totalRatings > 0 && reputation.reputation >= 55 && reputationDiscount > 0 && (
-                      <div className="mt-2 p-2 rounded-2" style={{ backgroundColor: 'rgba(40, 167, 69, 0.08)', border: '1px solid rgba(40, 167, 69, 0.2)' }}>
-                        <div className="d-flex align-items-start gap-2">
-                          <div style={{ minWidth: '20px' }}>
-                            <Info size={20} className="text-success" strokeWidth={2} />
-                          </div>
-                          <small style={{ fontSize: '0.875rem', lineHeight: '1.4' }}>
-                            Your reputation is impressive! You're now getting {reputationDiscount.toFixed(1)}% off on tickets! Keep hosting awesome events :)
-                          </small>
-                        </div>
-                      </div>
-                    )}
                     
                     {/* Stats for nerds link */}
                     <div className="text-end mt-2">
