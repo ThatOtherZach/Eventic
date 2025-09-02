@@ -519,9 +519,9 @@ export default function AccountPage() {
                           <div>
                             <div className="fw-semibold">Starter</div>
                             <small className="text-muted">
-                              {multiplyAndSave ? '24' : '12'} tickets
+                              {multiplyAndSave ? '24' : '12'} Tickets
                               {calculateBonus(24) > 0 && (
-                                <span className="text-success"> +{calculateBonus(24)} bonus</span>
+                                <span className="badge bg-success ms-1" style={{ fontSize: '0.65rem' }}>+{calculateBonus(24)} bonus</span>
                               )}
                             </small>
                           </div>
@@ -572,9 +572,9 @@ export default function AccountPage() {
                           <div>
                             <div className="fw-semibold">Standard</div>
                             <small className="text-muted">
-                              {multiplyAndSave ? '48' : '24'} tickets
+                              {multiplyAndSave ? '48' : '24'} Tickets
                               {calculateBonus(48) > 0 && (
-                                <span className="text-success"> +{calculateBonus(48)} bonus</span>
+                                <span className="badge bg-success ms-1" style={{ fontSize: '0.65rem' }}>+{calculateBonus(48)} bonus</span>
                               )}
                             </small>
                           </div>
@@ -628,9 +628,9 @@ export default function AccountPage() {
                           <div>
                             <div className="fw-semibold">Premium</div>
                             <small className="text-muted">
-                              {multiplyAndSave ? '100' : '50'} tickets
+                              {multiplyAndSave ? '100' : '50'} Tickets
                               {calculateBonus(100) > 0 && (
-                                <span className="text-success"> +{calculateBonus(100)} bonus</span>
+                                <span className="badge bg-success ms-1" style={{ fontSize: '0.65rem' }}>+{calculateBonus(100)} bonus</span>
                               )}
                             </small>
                           </div>
@@ -681,9 +681,9 @@ export default function AccountPage() {
                           <div>
                             <div className="fw-semibold">Ultimate</div>
                             <small className="text-muted">
-                              {multiplyAndSave ? '200' : '100'} tickets
+                              {multiplyAndSave ? '200' : '100'} Tickets
                               {calculateBonus(200) > 0 && (
-                                <span className="text-success"> +{calculateBonus(200)} bonus</span>
+                                <span className="badge bg-success ms-1" style={{ fontSize: '0.65rem' }}>+{calculateBonus(200)} bonus</span>
                               )}
                             </small>
                           </div>
