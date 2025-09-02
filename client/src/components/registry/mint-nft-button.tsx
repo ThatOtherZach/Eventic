@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { captureTicketAsGif, uploadGifToStorage } from "@/utils/ticket-to-gif";
+import html2canvas from "html2canvas";
 import type { Ticket, Event, RegistryRecord } from "@shared/schema";
 
 interface MintNFTButtonProps {
@@ -101,28 +102,55 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
             imageUrl = mediaData.mediaUrl;
           }
         } catch (error) {
-          console.error("Failed to generate MP4, falling back to GIF:", error);
+          console.error("Failed to generate media server-side, falling back to client-side capture:", error);
           
-          // Fallback to GIF generation if MP4 fails
+          // Fallback to client-side capture
           const ticketElement = document.getElementById('ticket-card-for-nft');
           if (!ticketElement) {
             throw new Error('Unable to find ticket element');
           }
 
-          addNotification({
-            type: "info",
-            title: "Capturing Ticket",
-            description: "Creating image of your ticket...",
-          });
+          try {
+            // Try GIF generation first
+            addNotification({
+              type: "info",
+              title: "Capturing Ticket",
+              description: "Creating animated image of your ticket...",
+            });
 
-          const gifBlob = await captureTicketAsGif(ticketElement as HTMLElement);
-          imageUrl = await uploadGifToStorage(gifBlob);
+            const gifBlob = await captureTicketAsGif(ticketElement as HTMLElement);
+            imageUrl = await uploadGifToStorage(gifBlob);
+          } catch (gifError) {
+            console.error("GIF generation failed, capturing static image:", gifError);
+            
+            // Final fallback: capture as static image
+            addNotification({
+              type: "info",
+              title: "Capturing Ticket",
+              description: "Creating static image of your ticket...",
+            });
+            
+            const canvas = await html2canvas(ticketElement as HTMLElement);
+            const pngBlob = await new Promise<Blob>((resolve) => {
+              canvas.toBlob((blob) => resolve(blob!), 'image/png');
+            });
+            
+            // Upload the PNG
+            const formData = new FormData();
+            formData.append('file', pngBlob, 'ticket.png');
+            
+            const response = await apiRequest("POST", "/api/upload", formData);
+            const data = await response.json();
+            imageUrl = data.url;
+          }
         }
       }
 
       const metadata: any = {
         imageUrl,
-        mediaType: imageUrl.includes('.mp4') ? 'video/mp4' : 'image/gif'
+        mediaType: imageUrl.includes('.mp4') ? 'video/mp4' : 
+                  imageUrl.includes('.webm') ? 'video/webm' :
+                  imageUrl.includes('.png') ? 'image/png' : 'image/gif'
       };
       if (additionalMetadata) {
         try {

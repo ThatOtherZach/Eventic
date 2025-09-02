@@ -47,11 +47,11 @@ export class TicketCaptureService {
     }
   }
 
-  async captureTicketAsMP4(options: CaptureOptions): Promise<string> {
-    const { ticket, event } = options;
+  async captureTicketAsVideo(options: CaptureOptions & { format?: 'mp4' | 'webm' }): Promise<string> {
+    const { ticket, event, format = 'mp4' } = options;
     const sessionId = uuidv4();
     const framesDir = path.join(this.tempDir, sessionId);
-    const outputPath = options.outputPath || path.join(this.tempDir, `${sessionId}.mp4`);
+    const outputPath = options.outputPath || path.join(this.tempDir, `${sessionId}.${format}`);
 
     try {
       // Initialize browser if not already done
@@ -87,9 +87,9 @@ export class TicketCaptureService {
       
       for (let i = 0; i < frameCount; i++) {
         // Take screenshot
-        const framePath = path.join(framesDir, `frame-${String(i).padStart(4, '0')}.png`) as `${string}.png`;
+        const framePath = path.join(framesDir, `frame-${String(i).padStart(4, '0')}.png`);
         await page.screenshot({ 
-          path: framePath,
+          path: framePath as `${string}.png`,
           type: 'png'
         });
 
@@ -100,8 +100,12 @@ export class TicketCaptureService {
       // Close the page
       await page.close();
 
-      // Convert frames to MP4 using FFmpeg
-      await this.createMP4FromFrames(framesDir, outputPath, fps);
+      // Convert frames to video using FFmpeg
+      if (format === 'mp4') {
+        await this.createMP4FromFrames(framesDir, outputPath, fps);
+      } else if (format === 'webm') {
+        await this.createWebMFromFrames(framesDir, outputPath, fps);
+      }
 
       // Clean up frames directory
       this.cleanupDirectory(framesDir);
@@ -113,6 +117,56 @@ export class TicketCaptureService {
       if (fs.existsSync(framesDir)) {
         this.cleanupDirectory(framesDir);
       }
+      throw error;
+    }
+  }
+
+  // Legacy method for backward compatibility
+  async captureTicketAsMP4(options: CaptureOptions): Promise<string> {
+    return this.captureTicketAsVideo({ ...options, format: 'mp4' });
+  }
+
+  async captureTicketAsImage(options: CaptureOptions): Promise<string> {
+    const { ticket, event } = options;
+    const sessionId = uuidv4();
+    const outputPath = options.outputPath || path.join(this.tempDir, `${sessionId}.png`);
+
+    try {
+      // Initialize browser if not already done
+      await this.initialize();
+
+      // Create a new page
+      const page = await this.browser!.newPage();
+      
+      // Set viewport to business card dimensions (scaled up for quality)
+      await page.setViewport({ 
+        width: 1050,
+        height: 600
+      });
+
+      // Generate the HTML for the ticket
+      const ticketHTML = this.generateTicketHTML(ticket, event);
+      
+      // Set the content
+      await page.setContent(ticketHTML, { waitUntil: 'networkidle0' });
+
+      // Wait for content to render
+      await page.waitForSelector('.ticket-card', { visible: true });
+      await new Promise(resolve => setTimeout(resolve, 500)); // Let animations settle
+
+      // Take screenshot
+      await page.screenshot({ 
+        path: outputPath as `${string}.png`,
+        type: 'png',
+        fullPage: false
+      });
+
+      // Close the page
+      await page.close();
+
+      return outputPath;
+
+    } catch (error) {
       throw error;
     }
   }
@@ -387,6 +441,24 @@ export class TicketCaptureService {
           '-pix_fmt yuv420p',
           '-crf 23',
           '-preset medium'
+        ])
+        .on('end', () => resolve())
+        .on('error', (err: Error) => reject(err))
+        .run();
+    });
+  }
+
+  private createWebMFromFrames(framesDir: string, outputPath: string, fps: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      ffmpeg()
+        .input(path.join(framesDir, 'frame-%04d.png'))
+        .inputFPS(fps)
+        .output(outputPath)
+        .outputOptions([
+          '-c:v libvpx-vp9',
+          '-pix_fmt yuv420p',
+          '-crf 30',
+          '-b:v 0'
         ])
         .on('end', () => resolve())
         .on('error', (err: Error) => reject(err))

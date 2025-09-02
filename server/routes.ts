@@ -706,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate MP4 for NFT minting (called when user views ticket after validation)
+  // Generate NFT media for minting (called when user views ticket after validation)
   app.post("/api/tickets/:ticketId/generate-nft-media", async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id || null;
@@ -726,7 +726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ticket must be validated before generating NFT media" });
       }
       
-      // Check if MP4 already exists
+      // Check if media already exists
       if (ticket.nftMediaUrl) {
         return res.json({ mediaUrl: ticket.nftMediaUrl, cached: true });
       }
@@ -742,26 +742,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "NFT minting is not enabled for this event" });
       }
       
-      // Generate MP4 using Puppeteer
       const captureService = getTicketCaptureService();
-      const mp4Path = await captureService.captureTicketAsMP4({
-        ticket,
-        event
-      });
-      
-      // Upload MP4 to object storage
       const objectStorageService = new ObjectStorageService();
+      let mediaPath: string | null = null;
+      let mediaUrl: string | null = null;
+      let mediaType: string = 'video/mp4';
+      
+      // Try MP4 first
+      try {
+        mediaPath = await captureService.captureTicketAsVideo({
+          ticket,
+          event,
+          format: 'mp4'
+        });
+        mediaType = 'video/mp4';
+      } catch (mp4Error) {
+        console.error("MP4 generation failed, trying WebM:", mp4Error);
+        
+        // Try WebM as second fallback
+        try {
+          mediaPath = await captureService.captureTicketAsVideo({
+            ticket,
+            event,
+            format: 'webm'
+          });
+          mediaType = 'video/webm';
+        } catch (webmError) {
+          console.error("WebM generation failed, falling back to static image:", webmError);
+          
+          // Final fallback: static PNG image
+          try {
+            mediaPath = await captureService.captureTicketAsImage({
+              ticket,
+              event
+            });
+            mediaType = 'image/png';
+          } catch (imageError) {
+            console.error("All media generation attempts failed:", imageError);
+            throw new Error("Failed to generate any media format");
+          }
+        }
+      }
+      
+      if (!mediaPath) {
+        throw new Error("No media generated");
+      }
+      
+      // Upload media to object storage
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       
-      // Read the MP4 file
-      const mp4Buffer = fs.readFileSync(mp4Path);
+      // Read the media file
+      const mediaBuffer = fs.readFileSync(mediaPath);
       
       // Upload to storage
       const uploadResponse = await fetch(uploadURL, {
         method: 'PUT',
-        body: mp4Buffer,
+        body: mediaBuffer,
         headers: {
-          'Content-Type': 'video/mp4',
+          'Content-Type': mediaType,
         },
       });
       
@@ -776,7 +814,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const publicUrl = `/public-objects/uploads/${filename}`;
       
       // Clean up temporary file
-      fs.unlinkSync(mp4Path);
+      if (mediaPath) {
+        fs.unlinkSync(mediaPath);
+      }
       
       // Update ticket with MP4 URL
       await storage.updateTicketNftMediaUrl(req.params.ticketId, publicUrl);
