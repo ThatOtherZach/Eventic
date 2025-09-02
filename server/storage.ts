@@ -1,6 +1,6 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne, isNull, inArray } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -168,6 +168,7 @@ export interface IStorage {
   rateEvent(rating: InsertEventRating): Promise<EventRating | null>;
   hasUserRatedEvent(ticketId: string): Promise<boolean>;
   getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>;
+  getAllUserRatings(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }>;
   
   // Currency Ledger Operations
   getUserBalance(userId: string): Promise<AccountBalance | null>;
@@ -2869,13 +2870,36 @@ export class DatabaseStorage implements IStorage {
   
 
   async updateUserReputationCache(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }> {
+    // Get current time minus 24 hours (in ISO string format for comparison)
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    const twentyFourHoursAgoStr = twentyFourHoursAgo.toISOString();
+    
+    // Query ratings but only for events that have ended at least 24 hours ago
     const ratings = await db
       .select({
         rating: eventRatings.rating,
         count: count()
       })
       .from(eventRatings)
-      .where(eq(eventRatings.eventOwnerId, userId))
+      .innerJoin(events, eq(eventRatings.eventId, events.id))
+      .where(
+        and(
+          eq(eventRatings.eventOwnerId, userId),
+          or(
+            // If event has end date, use that + 24 hours
+            and(
+              not(isNull(events.endDate)),
+              lte(events.endDate, twentyFourHoursAgoStr)
+            ),
+            // If no end date, use start date + 24 hours
+            and(
+              isNull(events.endDate),
+              lte(events.date, twentyFourHoursAgoStr)
+            )
+          )
+        )
+      )
       .groupBy(eventRatings.rating);
     
     let thumbsUp = 0;
@@ -2921,6 +2945,40 @@ export class DatabaseStorage implements IStorage {
     };
   }
   
+  // Get all ratings without 24-hour filter (for debug/comparison)
+  async getAllUserRatings(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }> {
+    const ratings = await db
+      .select({
+        rating: eventRatings.rating,
+        count: count()
+      })
+      .from(eventRatings)
+      .where(eq(eventRatings.eventOwnerId, userId))
+      .groupBy(eventRatings.rating);
+    
+    let thumbsUp = 0;
+    let thumbsDown = 0;
+    
+    for (const row of ratings) {
+      if (row.rating === 'thumbs_up') {
+        thumbsUp = row.count;
+      } else if (row.rating === 'thumbs_down') {
+        thumbsDown = row.count;
+      }
+    }
+    
+    const total = thumbsUp + thumbsDown;
+    const percentage = total > 0 ? Math.round((thumbsUp / total) * 100) : null;
+    
+    return {
+      thumbsUp,
+      thumbsDown,
+      percentage,
+      reputation: percentage || 0,
+      totalRatings: total
+    };
+  }
+
   async updateAllUserReputations(): Promise<void> {
     // Get all users who have received ratings
     const usersWithRatings = await db

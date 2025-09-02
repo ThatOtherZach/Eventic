@@ -3740,9 +3740,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/:userId/reputation", async (req, res) => {
     try {
       const { userId } = req.params;
+      const { debug } = req.query;
       
       const reputation = await storage.getUserReputation(userId);
-      res.json(reputation);
+      
+      // If debug mode, also show what ratings are pending (not yet 24 hours old)
+      if (debug === 'true') {
+        // Get all ratings for comparison
+        const allRatings = await storage.getAllUserRatings(userId);
+        
+        res.json({
+          ...reputation,
+          debug: {
+            currentReputation: reputation,
+            totalRatingsAll: allRatings.totalRatings,
+            pendingRatings: allRatings.totalRatings - reputation.totalRatings,
+            note: "Ratings from events less than 24 hours old are pending and not included in reputation yet"
+          }
+        });
+      } else {
+        res.json(reputation);
+      }
     } catch (error) {
       await logError(error, "GET /api/users/:userId/reputation", {
         request: req
