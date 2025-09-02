@@ -3379,6 +3379,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to claim daily tickets" });
     }
   });
+  
+  // Secret code redemption
+  app.post("/api/currency/redeem-code", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const { code } = req.body;
+      if (!code) {
+        return res.status(400).json({ message: "Code is required" });
+      }
+      
+      const result = await storage.redeemSecretCode(code, userId);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          ticketAmount: result.ticketAmount,
+          message: `Successfully redeemed ${result.ticketAmount} tickets!`
+        });
+      } else {
+        res.status(400).json({ 
+          success: false,
+          message: result.error || "Failed to redeem code" 
+        });
+      }
+    } catch (error) {
+      await logError(error, "POST /api/currency/redeem-code", { request: req });
+      res.status(500).json({ message: "Failed to redeem code" });
+    }
+  });
+  
+  // Create ticket purchase session
+  app.post("/api/currency/create-purchase", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const userEmail = req.user?.email;
+      
+      if (!userId || !userEmail) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const { quantity } = req.body;
+      
+      if (!quantity || quantity < 12) {
+        return res.status(400).json({ message: "Minimum purchase is 12 tickets" });
+      }
+      
+      const unitPrice = 0.29;
+      const totalAmount = quantity * unitPrice;
+      
+      // Create purchase record
+      const purchase = await storage.createTicketPurchase({
+        userId,
+        quantity,
+        unitPrice: unitPrice.toString(),
+        totalAmount: totalAmount.toString(),
+        status: "pending"
+      });
+      
+      // Create Stripe checkout session
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Event Tickets',
+              description: `${quantity} tickets for creating and boosting events`,
+            },
+            unit_amount: Math.round(unitPrice * 100), // Convert to cents
+          },
+          quantity: quantity,
+        }],
+        mode: 'payment',
+        success_url: `${process.env.VITE_APP_URL || 'http://localhost:5000'}/account?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.VITE_APP_URL || 'http://localhost:5000'}/account?purchase=cancelled`,
+        customer_email: userEmail,
+        metadata: {
+          purchaseId: purchase.id,
+          userId: userId,
+          quantity: quantity.toString()
+        }
+      });
+      
+      // Update purchase with session ID
+      await storage.updateTicketPurchaseStatus(purchase.id, "pending", session.id);
+      
+      res.json({
+        sessionId: session.id,
+        sessionUrl: session.url
+      });
+    } catch (error) {
+      await logError(error, "POST /api/currency/create-purchase", { request: req });
+      res.status(500).json({ message: "Failed to create purchase session" });
+    }
+  });
+  
+  // Handle Stripe webhook for successful payments
+  app.post("/api/stripe/webhook", async (req, res) => {
+    try {
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      
+      let event;
+      
+      if (endpointSecret) {
+        // Verify webhook signature
+        const sig = req.headers['stripe-signature'];
+        try {
+          event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+        } catch (err: any) {
+          console.error('Webhook signature verification failed:', err.message);
+          return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+      } else {
+        // For testing without webhook signature
+        event = req.body;
+      }
+      
+      // Handle the event
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        
+        // Get purchase from metadata
+        const purchaseId = session.metadata?.purchaseId;
+        const userId = session.metadata?.userId;
+        const quantity = parseInt(session.metadata?.quantity || '0');
+        
+        if (purchaseId && userId && quantity > 0) {
+          // Update purchase status
+          await storage.updateTicketPurchaseStatus(purchaseId, "completed", session.id);
+          
+          // Credit user account
+          await storage.creditUserAccount(
+            userId,
+            quantity,
+            `Purchased ${quantity} tickets`,
+            { 
+              stripeSessionId: session.id,
+              purchaseId 
+            }
+          );
+          
+          console.log(`Successfully processed purchase ${purchaseId} for user ${userId}: ${quantity} tickets`);
+        }
+      }
+      
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Stripe webhook error:', error);
+      res.status(500).json({ message: "Webhook processing failed" });
+    }
+  });
 
   app.post("/api/currency/transfer", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

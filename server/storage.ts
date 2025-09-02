@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, gt, lt, gte, notInArray, sql, isNotNull, ne, isNull, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -192,6 +192,17 @@ export interface IStorage {
   // Daily Claims
   canClaimDailyTickets(userId: string): Promise<{ canClaim: boolean; nextClaimAt?: Date }>;
   claimDailyTickets(userId: string): Promise<{ amount: number; nextClaimAt: Date }>;
+  
+  // Secret Codes
+  validateSecretCode(code: string): Promise<SecretCode | undefined>;
+  redeemSecretCode(code: string, userId: string): Promise<{ success: boolean; ticketAmount?: number; error?: string }>;
+  hasUserRedeemedCode(userId: string, codeId: string): Promise<boolean>;
+  
+  // Ticket Purchases
+  createTicketPurchase(purchase: InsertTicketPurchase): Promise<TicketPurchase>;
+  updateTicketPurchaseStatus(id: string, status: string, stripeSessionId?: string): Promise<TicketPurchase | undefined>;
+  getTicketPurchase(id: string): Promise<TicketPurchase | undefined>;
+  getTicketPurchaseBySessionId(sessionId: string): Promise<TicketPurchase | undefined>;
 }
 
 interface ValidationSession {
@@ -3555,6 +3566,150 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error claiming daily tickets:', error);
       throw error;
+    }
+  }
+  
+  // Secret Codes
+  async validateSecretCode(code: string): Promise<SecretCode | undefined> {
+    try {
+      const [secretCode] = await db.select()
+        .from(secretCodes)
+        .where(and(
+          eq(secretCodes.code, code.toUpperCase()),
+          eq(secretCodes.isActive, true)
+        ));
+      
+      if (!secretCode) return undefined;
+      
+      // Check if expired
+      if (secretCode.expiresAt && new Date(secretCode.expiresAt) < new Date()) {
+        return undefined;
+      }
+      
+      // Check if max uses reached
+      if (secretCode.maxUses && secretCode.currentUses >= secretCode.maxUses) {
+        return undefined;
+      }
+      
+      return secretCode;
+    } catch (error) {
+      console.error('Error validating secret code:', error);
+      return undefined;
+    }
+  }
+  
+  async redeemSecretCode(code: string, userId: string): Promise<{ success: boolean; ticketAmount?: number; error?: string }> {
+    try {
+      // Validate the code
+      const secretCode = await this.validateSecretCode(code);
+      if (!secretCode) {
+        return { success: false, error: 'Invalid or expired code' };
+      }
+      
+      // Check if user already redeemed this code
+      const hasRedeemed = await this.hasUserRedeemedCode(userId, secretCode.id);
+      if (hasRedeemed) {
+        return { success: false, error: 'You have already redeemed this code' };
+      }
+      
+      // Start transaction
+      await db.transaction(async (tx) => {
+        // Record the redemption
+        await tx.insert(codeRedemptions).values({
+          codeId: secretCode.id,
+          userId
+        });
+        
+        // Update the usage count
+        await tx.update(secretCodes)
+          .set({ currentUses: secretCode.currentUses + 1 })
+          .where(eq(secretCodes.id, secretCode.id));
+        
+        // Credit user account with tickets
+        await this.creditUserAccount(
+          userId, 
+          secretCode.ticketAmount, 
+          `Redeemed secret code: ${code}`,
+          { codeId: secretCode.id }
+        );
+      });
+      
+      return { success: true, ticketAmount: secretCode.ticketAmount };
+    } catch (error) {
+      console.error('Error redeeming secret code:', error);
+      return { success: false, error: 'Failed to redeem code' };
+    }
+  }
+  
+  async hasUserRedeemedCode(userId: string, codeId: string): Promise<boolean> {
+    try {
+      const [redemption] = await db.select()
+        .from(codeRedemptions)
+        .where(and(
+          eq(codeRedemptions.userId, userId),
+          eq(codeRedemptions.codeId, codeId)
+        ));
+      
+      return !!redemption;
+    } catch (error) {
+      console.error('Error checking code redemption:', error);
+      return false;
+    }
+  }
+  
+  // Ticket Purchases
+  async createTicketPurchase(purchase: InsertTicketPurchase): Promise<TicketPurchase> {
+    try {
+      const [newPurchase] = await db.insert(ticketPurchases).values(purchase).returning();
+      return newPurchase;
+    } catch (error) {
+      console.error('Error creating ticket purchase:', error);
+      throw error;
+    }
+  }
+  
+  async updateTicketPurchaseStatus(id: string, status: string, stripeSessionId?: string): Promise<TicketPurchase | undefined> {
+    try {
+      const updateData: any = { status };
+      if (stripeSessionId) {
+        updateData.stripeSessionId = stripeSessionId;
+      }
+      
+      const [updated] = await db.update(ticketPurchases)
+        .set(updateData)
+        .where(eq(ticketPurchases.id, id))
+        .returning();
+      
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating ticket purchase status:', error);
+      return undefined;
+    }
+  }
+  
+  async getTicketPurchase(id: string): Promise<TicketPurchase | undefined> {
+    try {
+      const [purchase] = await db.select()
+        .from(ticketPurchases)
+        .where(eq(ticketPurchases.id, id));
+      
+      return purchase || undefined;
+    } catch (error) {
+      console.error('Error getting ticket purchase:', error);
+      return undefined;
+    }
+  }
+  
+  async getTicketPurchaseBySessionId(sessionId: string): Promise<TicketPurchase | undefined> {
+    try {
+      const [purchase] = await db.select()
+        .from(ticketPurchases)
+        .where(eq(ticketPurchases.stripeSessionId, sessionId));
+      
+      return purchase || undefined;
+    } catch (error) {
+      console.error('Error getting ticket purchase by session ID:', error);
+      return undefined;
     }
   }
 }

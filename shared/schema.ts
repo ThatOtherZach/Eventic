@@ -409,6 +409,42 @@ export const validationActions = pgTable("validation_actions", {
   validatedAt: timestamp("validated_at").defaultNow(),
 });
 
+// Secret codes for free ticket redemption
+export const secretCodes = pgTable("secret_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  ticketAmount: integer("ticket_amount").notNull(), // Number of tickets this code gives
+  maxUses: integer("max_uses"), // null for unlimited
+  currentUses: integer("current_uses").default(0),
+  expiresAt: timestamp("expires_at"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+});
+
+// Track who redeemed secret codes
+export const codeRedemptions = pgTable("code_redemptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  codeId: varchar("code_id").references(() => secretCodes.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  redeemedAt: timestamp("redeemed_at").defaultNow(),
+}, (table) => ({
+  uniqueUserCode: unique().on(table.userId, table.codeId), // Prevent same user from redeeming same code twice
+}));
+
+// Ticket purchases through Stripe
+export const ticketPurchases = pgTable("ticket_purchases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(), // Price per ticket
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripeSessionId: text("stripe_session_id"),
+  status: text("status").default("pending"), // pending, completed, failed, refunded
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -764,6 +800,22 @@ export const insertDailyClaimSchema = createInsertSchema(dailyClaims).omit({
   claimedAt: true,
 });
 
+export const insertSecretCodeSchema = createInsertSchema(secretCodes).omit({
+  id: true,
+  createdAt: true,
+  currentUses: true,
+});
+
+export const insertCodeRedemptionSchema = createInsertSchema(codeRedemptions).omit({
+  id: true,
+  redeemedAt: true,
+});
+
+export const insertTicketPurchaseSchema = createInsertSchema(ticketPurchases).omit({
+  id: true,
+  purchasedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -820,3 +872,9 @@ export type InsertCurrencyHold = z.infer<typeof insertCurrencyHoldSchema>;
 export type CurrencyHold = typeof currencyHolds.$inferSelect;
 export type InsertDailyClaim = z.infer<typeof insertDailyClaimSchema>;
 export type DailyClaim = typeof dailyClaims.$inferSelect;
+export type InsertSecretCode = z.infer<typeof insertSecretCodeSchema>;
+export type SecretCode = typeof secretCodes.$inferSelect;
+export type InsertCodeRedemption = z.infer<typeof insertCodeRedemptionSchema>;
+export type CodeRedemption = typeof codeRedemptions.$inferSelect;
+export type InsertTicketPurchase = z.infer<typeof insertTicketPurchaseSchema>;
+export type TicketPurchase = typeof ticketPurchases.$inferSelect;

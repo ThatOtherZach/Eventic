@@ -1,19 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Calendar, Ticket, User, Eye, Sparkles, Edit, Save, X, Globe, CheckCircle, Wallet, Gift, Minus, Plus } from "lucide-react";
+import { Link, useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
 import type { Ticket as TicketType, Event, RegistryRecord, AccountBalance } from "@shared/schema";
+import { loadStripe } from "@stripe/stripe-js";
 
 export default function AccountPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const searchParams = useSearch();
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
+  const [secretCode, setSecretCode] = useState("");
+  const [ticketQuantity, setTicketQuantity] = useState(12);
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const { toast } = useToast();
   const { addNotification } = useNotifications();
@@ -114,6 +120,114 @@ export default function AccountPage() {
       });
     },
   });
+  
+  // Handle secret code redemption
+  const handleRedeemCode = async () => {
+    if (!secretCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a code",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsRedeeming(true);
+    try {
+      const response = await apiRequest("POST", "/api/currency/redeem-code", {
+        code: secretCode.trim()
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Success!",
+          description: data.message,
+          variant: "success",
+        });
+        setSecretCode("");
+        queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
+      } else {
+        toast({
+          title: "Failed",
+          description: data.message || "Invalid code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to redeem code",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
+  
+  // Handle ticket purchase
+  const handlePurchaseTickets = async () => {
+    if (ticketQuantity < 12) {
+      toast({
+        title: "Error",
+        description: "Minimum purchase is 12 tickets",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsPurchasing(true);
+    try {
+      const response = await apiRequest("POST", "/api/currency/create-purchase", {
+        quantity: ticketQuantity
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.sessionUrl) {
+        // Redirect to Stripe checkout
+        window.location.href = data.sessionUrl;
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to create purchase session",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to start purchase",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPurchasing(false);
+    }
+  };
+  
+  // Check for purchase success/cancel in URL params
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const purchase = params.get("purchase");
+    
+    if (purchase === "success") {
+      toast({
+        title: "Purchase Complete!",
+        description: "Your tickets have been added to your balance",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
+      // Clean up URL
+      setLocation("/account");
+    } else if (purchase === "cancelled") {
+      toast({
+        title: "Purchase Cancelled",
+        description: "Your purchase was cancelled",
+        variant: "destructive",
+      });
+      // Clean up URL
+      setLocation("/account");
+    }
+  }, [searchParams]);
 
   if (!user) {
     return null;
@@ -216,6 +330,117 @@ export default function AccountPage() {
           </div>
         </div>
       )}
+
+      {/* My Wallet - Purchase and Redeem Tickets */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="card">
+            <div className="card-header bg-primary text-white">
+              <h5 className="mb-0">My Wallet</h5>
+            </div>
+            <div className="card-body">
+              {/* Balance Display */}
+              <div className="mb-3">
+                <label className="form-label text-muted">Balance</label>
+                <div className="d-flex align-items-center">
+                  <div className="text-danger fw-bold h5 mb-0">
+                    {balance ? Math.floor(parseFloat(balance.balance)) : 0} Tickets
+                  </div>
+                  {claimStatus?.canClaim && (
+                    <span className="badge bg-success ms-2">claimed</span>
+                  )}
+                </div>
+                <small className="text-muted">
+                  Tickets are used to create and boost events, and to charge your ticket for better special-effect odds. 
+                  Tickets are not required for RVSPing to events. You can collect a free 2 or 4 tickets every 24 hours (you get more in the evening).
+                </small>
+              </div>
+
+              {/* Secret Code Section */}
+              <div className="mb-4">
+                <label className="form-label">Secret code</label>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="enter code"
+                    value={secretCode}
+                    onChange={(e) => setSecretCode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRedeemCode()}
+                    disabled={isRedeeming}
+                  />
+                  <button 
+                    className="btn btn-outline-secondary"
+                    onClick={handleRedeemCode}
+                    disabled={isRedeeming || !secretCode.trim()}
+                  >
+                    {isRedeeming ? "Redeeming..." : "Execute"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Tickets Section */}
+              <div className="mb-3">
+                <label className="form-label">Add tickets</label>
+                <div className="d-flex align-items-center gap-2">
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => setTicketQuantity(Math.max(12, ticketQuantity - 1))}
+                    disabled={ticketQuantity <= 12}
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <input
+                    type="number"
+                    className="form-control text-center"
+                    style={{ width: '80px' }}
+                    value={ticketQuantity}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 12;
+                      setTicketQuantity(Math.max(12, val));
+                    }}
+                    min="12"
+                  />
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => setTicketQuantity(ticketQuantity + 3)}
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+                <div className="mt-2">
+                  <div className="h5 mb-0">
+                    Total: ${(ticketQuantity * 0.29).toFixed(2)}
+                  </div>
+                  <small className="text-muted">
+                    ${(0.29).toFixed(2)} per ticket • Minimum 12 tickets
+                  </small>
+                </div>
+              </div>
+
+              {/* Payment Buttons */}
+              <div className="d-flex gap-2">
+                <button 
+                  className="btn btn-primary flex-fill d-flex align-items-center justify-content-center"
+                  onClick={handlePurchaseTickets}
+                  disabled={isPurchasing || ticketQuantity < 12}
+                >
+                  <img src="/stripe-icon.png" alt="Stripe" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+                  {isPurchasing ? "Processing..." : "Stripe"}
+                </button>
+                <button 
+                  className="btn btn-secondary flex-fill d-flex align-items-center justify-content-center"
+                  disabled
+                  title="Coinbase payment coming soon"
+                >
+                  <img src="/coinbase-icon.png" alt="Coinbase" style={{ width: '20px', height: '20px', marginRight: '8px' }} />
+                  Coinbase
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* My Tickets Section */}
       <div className="row mb-4">
