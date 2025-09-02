@@ -707,7 +707,7 @@ export default function AccountPage() {
                                 if (multiplyAndSave) finalPrice *= 0.9;
                                 if (reputationDiscount > 0) finalPrice *= (1 - reputationDiscount / 100);
                                 return ((baseTotal - finalPrice) / baseTotal) * 100;
-                              })()}% Off)</span>
+                              })())}% Off)</span>
                             </span>
                           </div>
                         )}

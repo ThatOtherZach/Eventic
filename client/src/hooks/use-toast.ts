@@ -8,7 +8,12 @@ import type {
 const TOAST_LIMIT = 3
 const TOAST_REMOVE_DELAY = 5500 // 5 seconds + animation time
 
-type ToasterToast = ToastProps & {
+// Custom toast type that supports Bootstrap-style variants
+type CustomToastProps = Omit<ToastProps, 'variant'> & {
+  variant?: "default" | "destructive" | "success" | "error" | "info" | "warning" | "system"
+}
+
+type ToasterToast = CustomToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
