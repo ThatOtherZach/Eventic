@@ -36,6 +36,7 @@ import timeAndDateIcon from "@assets/time_and_date-4_1756934474067.png";
 import surgeClockIcon from "@assets/clock-1_1756934533905.png";
 import goldenSmileyIcon from "@assets/utopia_smiley_1756934700538.png";
 import voteIcon from "@assets/image_1756934773951.png";
+import rsvpIcon from "@assets/printer-0_1756935612816.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -1342,7 +1343,7 @@ export default function EventDetailPage() {
                   "Good 2 Go"
                 ) : (
                   <>
-                    <img src="/ticket-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
+                    <img src={event.currentPrice === 0 ? rsvpIcon : "/ticket-icon.png"} alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
                     {event.currentPrice === 0 ? "RSVP" : "RSVP - Pay on Arrival"}
                   </>
                 )}
