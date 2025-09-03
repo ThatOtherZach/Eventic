@@ -419,7 +419,7 @@ export default function NerdStats() {
                         <div key={item.hashtag} className="d-flex justify-content-between align-items-center py-2 border-bottom">
                           <div className="d-flex align-items-center">
                             <span className="me-2" style={{ minWidth: '25px', fontSize: '16px' }}>{rankEmoji}</span>
-                            <Link href={`/hashtag/${encodeURIComponent(item.hashtag)}`} className="text-decoration-none text-primary">
+                            <Link href={`/events/hashtag/${encodeURIComponent(item.hashtag)}`} className="text-decoration-none text-primary">
                               #{formattedHashtag}
                             </Link>
                           </div>
