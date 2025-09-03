@@ -243,25 +243,39 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="h-100" style={{ 
                 background: '#c0c0c0',
-                border: '2px solid',
-                borderColor: '#ffffff #808080 #808080 #ffffff',
-                padding: '2px'
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
               }}>
                 <div style={{ 
-                  background: '#008080',
-                  borderTop: '2px solid #ffffff',
-                  borderLeft: '2px solid #ffffff',
-                  borderRight: '2px solid #000000',
-                  borderBottom: '2px solid #000000',
-                  padding: '3px',
-                  marginBottom: '2px'
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'MS Sans Serif, sans-serif' }}>Total Events</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'inline-block'
+                  }}></div>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Total Events</div>
                 </div>
-                <div className="p-2" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex justify-content-between align-items-center">
-                    <div className="h4 fw-bold mb-0" style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>{formatNumber(stats?.totalEvents || 0)}</div>
-                    <img src={calendarIcon} alt="Calendar" style={{ width: 24, height: 24 }} />
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{formatNumber(stats?.totalEvents || 0)}</div>
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={calendarIcon} alt="Calendar" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -269,31 +283,44 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="h-100" style={{ 
                 background: '#c0c0c0',
-                border: '2px solid',
-                borderColor: '#ffffff #808080 #808080 #ffffff',
-                padding: '2px'
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
               }}>
                 <div style={{ 
-                  background: '#008080',
-                  borderTop: '2px solid #ffffff',
-                  borderLeft: '2px solid #ffffff',
-                  borderRight: '2px solid #000000',
-                  borderBottom: '2px solid #000000',
-                  padding: '3px',
-                  marginBottom: '2px'
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'MS Sans Serif, sans-serif' }}>Total Tickets</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'inline-block'
+                  }}></div>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Total Tickets</div>
                 </div>
-                <div className="p-2" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="h4 fw-bold mb-0" style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>{formatNumber(stats?.totalTickets || 0)}</div>
-                      <div className="small" style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
-                        <Activity size={12} className="me-1" />
+                      <div className="h3 fw-bold mb-1" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{formatNumber(stats?.totalTickets || 0)}</div>
+                      <div style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', color: '#000000' }}>
                         {advancedStats?.avgTicketsPerEvent || 0} avg/event
                       </div>
                     </div>
-                    <img src={ticketsIcon} alt="Tickets" style={{ width: 24, height: 24 }} />
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={ticketsIcon} alt="Tickets" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -301,31 +328,44 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="h-100" style={{ 
                 background: '#c0c0c0',
-                border: '2px solid',
-                borderColor: '#ffffff #808080 #808080 #ffffff',
-                padding: '2px'
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
               }}>
                 <div style={{ 
-                  background: '#008080',
-                  borderTop: '2px solid #ffffff',
-                  borderLeft: '2px solid #ffffff',
-                  borderRight: '2px solid #000000',
-                  borderBottom: '2px solid #000000',
-                  padding: '3px',
-                  marginBottom: '2px'
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'MS Sans Serif, sans-serif' }}>Ticket Demand</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'inline-block'
+                  }}></div>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Ticket Demand</div>
                 </div>
-                <div className="p-2" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="h4 fw-bold mb-0" style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>{demandData?.demand || 0}</div>
-                      <div className="small" style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>
-                        <Zap size={12} className="me-1" />
+                      <div className="h3 fw-bold mb-1" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{demandData?.demand || 0}</div>
+                      <div style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', color: '#000000' }}>
                         Tickets/hour
                       </div>
                     </div>
-                    <img src={demandIcon} alt="Demand" style={{ width: 24, height: 24 }} />
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={demandIcon} alt="Demand" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -333,25 +373,39 @@ export default function NerdStats() {
             <div className="col-md-3">
               <div className="h-100" style={{ 
                 background: '#c0c0c0',
-                border: '2px solid',
-                borderColor: '#ffffff #808080 #808080 #ffffff',
-                padding: '2px'
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
               }}>
                 <div style={{ 
-                  background: '#008080',
-                  borderTop: '2px solid #ffffff',
-                  borderLeft: '2px solid #ffffff',
-                  borderRight: '2px solid #000000',
-                  borderBottom: '2px solid #000000',
-                  padding: '3px',
-                  marginBottom: '2px'
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
                 }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'MS Sans Serif, sans-serif' }}>Validation Rate</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'inline-block'
+                  }}></div>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Validation Rate</div>
                 </div>
-                <div className="p-2" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex justify-content-between align-items-center">
-                    <div className="h4 fw-bold mb-0" style={{ fontFamily: 'MS Sans Serif, sans-serif' }}>{advancedStats?.validationRate || 0}%</div>
-                    <img src={checkIcon} alt="Validation" style={{ width: 24, height: 24 }} />
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.validationRate || 0}%</div>
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={checkIcon} alt="Validation" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
                   </div>
                 </div>
               </div>
