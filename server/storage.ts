@@ -947,17 +947,21 @@ export class DatabaseStorage implements IStorage {
       
       const ticketsSold = ticketCount?.count || 0;
       
-      // Calculate demand factor with gentler scaling
+      // Calculate demand factor with very gentle scaling - just enough to nudge behavior
       let demandFactor = 0;
       if (event.maxTickets && event.maxTickets > 0) {
         const soldRatio = ticketsSold / event.maxTickets;
-        // Use square root for gentler curve: 50% sold = 22% increase, 90% sold = 42% increase
-        demandFactor = Math.sqrt(soldRatio) * 0.45;
-        // Cap at 0.45 to prevent extreme pricing
-        demandFactor = Math.min(demandFactor, 0.45);
+        // Use logarithmic scaling for ultra-gentle curve
+        // 25% sold = +5%, 50% sold = +10%, 75% sold = +15%, 90% sold = +20%
+        if (soldRatio > 0) {
+          demandFactor = Math.log10(soldRatio * 10 + 1) * 0.2;
+        }
+        // Cap at 0.25 for predictable pricing
+        demandFactor = Math.min(demandFactor, 0.25);
       } else {
-        // If no max tickets, use even softer scaling
-        demandFactor = Math.min(Math.sqrt(ticketsSold / 100) * 0.3, 0.3); // Cap at 30% increase
+        // If no max tickets, use even gentler scaling based on absolute numbers
+        // Every 50 tickets adds ~5% to price
+        demandFactor = Math.min(Math.log10(ticketsSold / 10 + 1) * 0.1, 0.15);
       }
       
       // Calculate urgency factor based on time to event (very gentle)
