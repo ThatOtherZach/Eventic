@@ -81,6 +81,25 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
         </div>
       )}
       
+      {/* Validated Badge - Second from left */}
+      {isValidated && (
+        <div
+          style={{
+            backgroundColor: '#059669',
+            color: '#fff',
+            padding: '0 8px',
+            display: 'flex',
+            alignItems: 'center',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }}
+        >
+          Validated
+        </div>
+      )}
+      
       {/* Color Segments - Middle (flexible width) */}
       {colorSegments.length > 0 && (
         <div className="flex-grow-1 d-flex">
@@ -97,12 +116,12 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
         </div>
       )}
       
-      {/* If no color segments but need space between Mission/Pass/Validated */}
+      {/* If no color segments but need space before Pass number */}
       {colorSegments.length === 0 && (hasMission || passUses || isValidated) && (
         <div className="flex-grow-1" />
       )}
       
-      {/* Pass Uses Number */}
+      {/* Pass Uses Number - Right */}
       {passUses && (
         <div
           style={{
@@ -117,25 +136,6 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
           }}
         >
           {passUses}
-        </div>
-      )}
-      
-      {/* Validated Badge - Right */}
-      {isValidated && (
-        <div
-          style={{
-            backgroundColor: '#059669',
-            color: '#fff',
-            padding: '0 8px',
-            display: 'flex',
-            alignItems: 'center',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            whiteSpace: 'nowrap',
-            flexShrink: 0
-          }}
-        >
-          Validated
         </div>
       )}
     </div>
