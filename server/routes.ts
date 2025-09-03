@@ -3703,7 +3703,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingRating = await storage.getUserEventRating(userId, ticket.eventId);
       
       if (existingRating) {
-        // User has already rated, update their rating
+        // User has already rated, handle ticket adjustments for rating change
+        const oldRating = existingRating.rating;
+        
+        // Calculate ticket adjustment
+        // Switching from thumbs_up to thumbs_down: -2 tickets (lose reward + pay cost)
+        // Switching from thumbs_down to thumbs_up: +2 tickets (refund cost + get reward)
+        if (oldRating !== rating) {
+          if (oldRating === 'thumbs_up' && rating === 'thumbs_down') {
+            // User is changing from thumbs up to thumbs down
+            // They need to pay 2 tickets: 1 to remove the reward, 1 for the downvote cost
+            const userBalance = await storage.getUserBalance(userId);
+            if (!userBalance || userBalance.tickets < 2) {
+              return res.status(400).json({ 
+                message: "Insufficient tickets. Changing from thumbs up to thumbs down costs 2 tickets." 
+              });
+            }
+            
+            // Debit 2 tickets
+            await storage.debitUserAccount(
+              userId,
+              2,
+              `Changed rating from thumbs up to thumbs down for ${event.name}`,
+              { 
+                type: 'rating_change_cost',
+                eventId: ticket.eventId,
+                ticketId: ticketId
+              }
+            );
+          } else if (oldRating === 'thumbs_down' && rating === 'thumbs_up') {
+            // User is changing from thumbs down to thumbs up
+            // They get 2 tickets: 1 refund for the downvote, 1 reward for the upvote
+            await storage.creditUserAccount(
+              userId,
+              2,
+              `Changed rating from thumbs down to thumbs up for ${event.name}`,
+              { 
+                type: 'rating_change_reward',
+                eventId: ticket.eventId,
+                ticketId: ticketId
+              }
+            );
+          }
+        }
+        
+        // Update the rating
         const updatedRating = await storage.updateEventRating(userId, ticket.eventId, rating);
         
         if (!updatedRating) {
@@ -3712,6 +3756,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.json({ success: true, rating: updatedRating, updated: true });
       } else {
+        // For thumbs down, check if user has enough tickets first
+        if (rating === 'thumbs_down') {
+          const userBalance = await storage.getUserBalance(userId);
+          if (!userBalance || userBalance.tickets < 1) {
+            return res.status(400).json({ message: "Insufficient tickets. Downvoting costs 1 ticket." });
+          }
+        }
+        
         // Create new rating
         const eventRating = await storage.rateEvent({
           ticketId,
@@ -3724,19 +3776,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Failed to submit rating" });
         }
 
-        // Credit user with 1 ticket for rating the event
-        await storage.creditUserAccount(
-          userId,
-          1,
-          `Event rating reward for ${event.name}`,
-          { 
-            type: 'rating_reward',
-            eventId: ticket.eventId,
-            ticketId: ticketId
-          }
-        );
-
-        res.json({ success: true, rating: eventRating, updated: false, rewardCredited: true });
+        // Handle ticket rewards/costs based on rating type
+        if (rating === 'thumbs_up') {
+          // Credit user with 1 ticket for positive rating
+          await storage.creditUserAccount(
+            userId,
+            1,
+            `Event rating reward for ${event.name}`,
+            { 
+              type: 'rating_reward',
+              eventId: ticket.eventId,
+              ticketId: ticketId
+            }
+          );
+          res.json({ success: true, rating: eventRating, updated: false, rewardCredited: true });
+        } else {
+          // Debit user 1 ticket for negative rating
+          const debitSuccess = await storage.debitUserAccount(
+            userId,
+            1,
+            `Event downvote cost for ${event.name}`,
+            { 
+              type: 'rating_cost',
+              eventId: ticket.eventId,
+              ticketId: ticketId
+            }
+          );
+          
+          res.json({ success: true, rating: eventRating, updated: false, ticketDebited: true });
+        }
       }
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/rate", {

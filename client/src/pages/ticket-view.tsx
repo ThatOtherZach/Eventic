@@ -141,19 +141,36 @@ export default function TicketViewPage(): React.ReactElement {
       const response = await apiRequest("POST", `/api/tickets/${ticketId}/rate`, {
         rating
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit rating');
+      }
+      return data;
     },
     onSuccess: (data) => {
       setSelectedRating(data.rating.rating);
       setHasRated(true);
+      
+      let description = "";
+      if (data.updated) {
+        description = "Your rating has been updated!";
+      } else if (data.rewardCredited) {
+        description = "Thank you! You've earned 1 ticket for rating this event!";
+      } else if (data.ticketDebited) {
+        description = "Thank you for your feedback! 1 ticket was deducted.";
+      } else {
+        description = "Thank you for rating this event!";
+      }
+      
       toast({
         title: data.updated ? "Rating Updated" : "Rating Submitted",
-        description: data.updated ? "Your rating has been updated!" : data.rewardCredited ? "Thank you! You've earned 1 ticket for rating this event!" : "Thank you for rating this event!",
+        description: description,
       });
+      
       // Invalidate rating queries to sync across tickets
       queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}/rating`] });
-      // Invalidate balance query if reward was credited
-      if (data.rewardCredited) {
+      // Invalidate balance query if reward was credited or debited
+      if (data.rewardCredited || data.ticketDebited) {
         queryClient.invalidateQueries({ queryKey: ['/api/currency/balance'] });
       }
       // Invalidate event owner's reputation query to reflect the new rating
@@ -1119,34 +1136,52 @@ export default function TicketViewPage(): React.ReactElement {
                   <div>
                     <h5 className="card-title mb-1">Rate Event</h5>
                     <p className="text-muted mb-0 small">
-                      {hasRated ? 'You can change your rating' : 'Share your experience and earn 1 ticket!'}
+                      {hasRated ? (
+                        selectedRating === 'thumbs_up' ? 
+                          'Change to thumbs down costs 2 tickets' : 
+                          'Change to thumbs up refunds 2 tickets'
+                      ) : (
+                        'Thumbs up earns 1 ticket, thumbs down costs 1 ticket'
+                      )}
                     </p>
                   </div>
                   
-                  <div className="d-flex gap-2">
-                    <button
-                      className={`btn ${selectedRating === 'thumbs_up' ? 'btn-success' : 'btn-outline-success'}`}
-                      onClick={() => {
-                        submitRatingMutation.mutate('thumbs_up');
-                      }}
-                      disabled={submitRatingMutation.isPending}
-                      data-testid="button-thumbs-up"
-                      style={{ padding: '8px 16px' }}
-                    >
-                      <ThumbsUp size={20} />
-                    </button>
+                  <div className="d-flex gap-3 align-items-center">
+                    <div className="d-flex flex-column align-items-center">
+                      <button
+                        className={`btn ${selectedRating === 'thumbs_up' ? 'btn-success' : 'btn-outline-success'}`}
+                        onClick={() => {
+                          submitRatingMutation.mutate('thumbs_up');
+                        }}
+                        disabled={submitRatingMutation.isPending}
+                        data-testid="button-thumbs-up"
+                        style={{ padding: '8px 16px', minWidth: '60px' }}
+                        title={hasRated && selectedRating === 'thumbs_down' ? 'Refunds 2 tickets' : 'Earns 1 ticket'}
+                      >
+                        <ThumbsUp size={20} />
+                      </button>
+                      <small className="text-success mt-1">
+                        {hasRated && selectedRating === 'thumbs_down' ? '+2' : '+1'}
+                      </small>
+                    </div>
                     
-                    <button
-                      className={`btn ${selectedRating === 'thumbs_down' ? 'btn-danger' : 'btn-outline-danger'}`}
-                      onClick={() => {
-                        submitRatingMutation.mutate('thumbs_down');
-                      }}
-                      disabled={submitRatingMutation.isPending}
-                      data-testid="button-thumbs-down"
-                      style={{ padding: '8px 16px' }}
-                    >
-                      <ThumbsDown size={20} />
-                    </button>
+                    <div className="d-flex flex-column align-items-center">
+                      <button
+                        className={`btn ${selectedRating === 'thumbs_down' ? 'btn-danger' : 'btn-outline-danger'}`}
+                        onClick={() => {
+                          submitRatingMutation.mutate('thumbs_down');
+                        }}
+                        disabled={submitRatingMutation.isPending}
+                        data-testid="button-thumbs-down"
+                        style={{ padding: '8px 16px', minWidth: '60px' }}
+                        title={hasRated && selectedRating === 'thumbs_up' ? 'Costs 2 tickets' : 'Costs 1 ticket'}
+                      >
+                        <ThumbsDown size={20} />
+                      </button>
+                      <small className="text-danger mt-1">
+                        {hasRated && selectedRating === 'thumbs_up' ? '-2' : '-1'}
+                      </small>
+                    </div>
                   </div>
                 </div>
                 
