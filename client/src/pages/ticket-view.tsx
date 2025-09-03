@@ -559,8 +559,8 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           </div>
 
-          {/* Charge Ticket Section - Only show if event has special effects enabled, ticket not validated */}
-          {event.specialEffectsEnabled && !ticket.isCharged && !ticket.isValidated && (
+          {/* Charge Ticket Section - Only show if event has special effects OR stickers enabled, ticket not validated */}
+          {(event.specialEffectsEnabled || event.stickerUrl) && !ticket.isCharged && !ticket.isValidated && (
             <div className="card mb-4">
               <div className="card-body">
                 <h6 className="card-title mb-3">

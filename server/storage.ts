@@ -1225,14 +1225,14 @@ export class DatabaseStorage implements IStorage {
           return false;
         }
 
-        // Get event to verify special effects are enabled
+        // Get event to verify special effects OR stickers are enabled
         const event = await tx
           .select()
           .from(events)
           .where(eq(events.id, ticketToCharge.eventId))
           .then(rows => rows[0]);
           
-        if (!event || !event.specialEffectsEnabled) {
+        if (!event || (!event.specialEffectsEnabled && !event.stickerUrl)) {
           return false;
         }
 
