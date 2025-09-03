@@ -90,6 +90,15 @@ export default function EventDetailPage() {
     },
   });
 
+  const { data: organizerValidations } = useQuery<{ validatedCount: number }>({
+    queryKey: [`/api/users/${event?.userId}/validated-count`],
+    enabled: !!event?.userId,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${event?.userId}/validated-count`);
+      return response.json();
+    },
+  });
+
   // Update SEO meta tags when event data loads
   useEffect(() => {
     if (event) {
@@ -875,7 +884,7 @@ export default function EventDetailPage() {
           )}
 
           {/* Reputation */}
-          {organizerReputation && (
+          {(organizerReputation || organizerValidations) && (
             <div className="card mb-4" style={{
               border: '2px solid #e0e0e0',
               borderRadius: '0',
@@ -886,112 +895,136 @@ export default function EventDetailPage() {
                   Reputation
                 </h6>
                 
-                <div className="d-flex align-items-center justify-content-center gap-4 mb-3">
-                  {/* Percentage Display */}
-                  <div style={{
-                    fontSize: '28px',
-                    fontWeight: 'bold',
-                    color: organizerReputation.percentage !== null && organizerReputation.percentage >= 80 
-                      ? '#28a745'
-                      : organizerReputation.percentage !== null && organizerReputation.percentage >= 50
-                      ? '#ffc107'
-                      : organizerReputation.percentage !== null
-                      ? '#dc3545'
-                      : '#6c757d'
-                  }}>
-                    {organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : '—'}
-                  </div>
+                {/* Check if all stats are zero (new user on signup day) */}
+                {(() => {
+                  const totalVotes = organizerReputation ? organizerReputation.thumbsUp + organizerReputation.thumbsDown : 0;
+                  const validationCount = organizerValidations?.validatedCount || 0;
+                  const isNewUser = totalVotes === 0 && validationCount === 0;
                   
-                  {/* Separator */}
-                  <div style={{
-                    width: '1px',
-                    height: '35px',
-                    backgroundColor: '#dee2e6'
-                  }} />
+                  if (isNewUser) {
+                    return (
+                      <div style={{ fontSize: '16px', color: '#6c757d', padding: '20px 0' }}>
+                        Not yet :)
+                      </div>
+                    );
+                  }
                   
-                  {/* Vote Count */}
-                  <div>
-                    <div style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
-                      {(() => {
-                        const total = organizerReputation.thumbsUp + organizerReputation.thumbsDown;
-                        if (total >= 1000000) return '+1M';
-                        if (total >= 1000) return `${Math.floor(total / 1000)}k`;
-                        return total.toString();
-                      })()}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
-                      votes
-                    </div>
-                  </div>
-                  
-                  {/* Badge */}
-                  {(organizerReputation.percentage === null || 
-                    (organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25) ||
-                    (organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000)) && (
+                  return (
                     <>
-                      <div style={{
-                        width: '1px',
-                        height: '35px',
-                        backgroundColor: '#dee2e6'
-                      }} />
-                      {organizerReputation.percentage === null ? (
-                        <span className="badge" style={{
-                          backgroundColor: '#6c757d',
-                          color: '#fff',
-                          fontSize: '11px',
-                          padding: '5px 10px',
-                          borderRadius: '0',
-                          fontWeight: '500'
+                      <div className="d-flex align-items-center justify-content-center gap-4 mb-3">
+                        {/* Left side: Validations and Votes */}
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ marginBottom: '8px' }}>
+                            <div style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
+                              {validationCount >= 1000000 ? '+1M' : validationCount >= 1000 ? `${Math.floor(validationCount / 1000)}k` : validationCount.toString()}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                              validations
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
+                              {totalVotes >= 1000000 ? '+1M' : totalVotes >= 1000 ? `${Math.floor(totalVotes / 1000)}k` : totalVotes.toString()}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                              votes
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Separator */}
+                        <div style={{
+                          width: '1px',
+                          height: '60px',
+                          backgroundColor: '#dee2e6'
+                        }} />
+                        
+                        {/* Percentage Display */}
+                        <div style={{
+                          fontSize: '28px',
+                          fontWeight: 'bold',
+                          color: organizerReputation?.percentage !== null && organizerReputation.percentage >= 80 
+                            ? '#28a745'
+                            : organizerReputation?.percentage !== null && organizerReputation.percentage >= 50
+                            ? '#ffc107'
+                            : organizerReputation?.percentage !== null
+                            ? '#dc3545'
+                            : '#6c757d'
                         }}>
-                          NEW
-                        </span>
-                      ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
-                        <span className="badge" style={{
-                          backgroundColor: '#ffc107',
-                          color: '#000',
-                          fontSize: '11px',
-                          padding: '5px 10px',
-                          borderRadius: '0',
-                          fontWeight: '500'
-                        }}>
-                          NOVICE
-                        </span>
-                      ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
-                        <span className="badge" style={{
-                          backgroundColor: '#6f42c1',
-                          color: '#fff',
-                          fontSize: '11px',
-                          padding: '5px 10px',
-                          borderRadius: '0',
-                          fontWeight: '500'
-                        }}>
-                          BESTIE
-                        </span>
-                      ) : null}
+                          {organizerReputation?.percentage !== null ? `${organizerReputation.percentage}%` : '—'}
+                        </div>
+                        
+                        {/* Badge */}
+                        {organizerReputation && (organizerReputation.percentage === null || 
+                          (organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25) ||
+                          (organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000)) && (
+                          <>
+                            <div style={{
+                              width: '1px',
+                              height: '60px',
+                              backgroundColor: '#dee2e6'
+                            }} />
+                            {organizerReputation.percentage === null ? (
+                              <span className="badge" style={{
+                                backgroundColor: '#6c757d',
+                                color: '#fff',
+                                fontSize: '11px',
+                                padding: '5px 10px',
+                                borderRadius: '0',
+                                fontWeight: '500'
+                              }}>
+                                NEW
+                              </span>
+                            ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
+                              <span className="badge" style={{
+                                backgroundColor: '#ffc107',
+                                color: '#000',
+                                fontSize: '11px',
+                                padding: '5px 10px',
+                                borderRadius: '0',
+                                fontWeight: '500'
+                              }}>
+                                NOVICE
+                              </span>
+                            ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
+                              <span className="badge" style={{
+                                backgroundColor: '#6f42c1',
+                                color: '#fff',
+                                fontSize: '11px',
+                                padding: '5px 10px',
+                                borderRadius: '0',
+                                fontWeight: '500'
+                              }}>
+                                BESTIE
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Username Badge */}
+                      {organizerDetails && (
+                        <div className="d-flex justify-content-center">
+                          <span className="badge" style={{
+                            backgroundColor: '#f8f9fa',
+                            color: '#495057',
+                            border: '1px solid #dee2e6',
+                            fontSize: '12px',
+                            padding: '6px 10px',
+                            borderRadius: '0',
+                            fontWeight: '500',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}>
+                            <img src={ownerIcon} alt="" style={{ width: '16px', height: '16px' }} />
+                            {organizerDetails.type ? `${organizerDetails.type}${organizerDetails.displayName}` : organizerDetails.displayName}
+                          </span>
+                        </div>
+                      )}
                     </>
-                  )}
-                </div>
-                
-                {/* Username Badge */}
-                {organizerDetails && (
-                  <div className="d-flex justify-content-center">
-                    <span className="badge" style={{
-                      backgroundColor: '#f8f9fa',
-                      color: '#495057',
-                      border: '1px solid #dee2e6',
-                      fontSize: '12px',
-                      padding: '6px 10px',
-                      borderRadius: '0',
-                      fontWeight: '500',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}>
-                      <img src={ownerIcon} alt="" style={{ width: '16px', height: '16px' }} />
-                      {organizerDetails.type ? `${organizerDetails.type}${organizerDetails.displayName}` : organizerDetails.displayName}
-                    </span>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           )}

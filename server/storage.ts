@@ -169,6 +169,7 @@ export interface IStorage {
   hasUserRatedEvent(ticketId: string): Promise<boolean>;
   getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null }>;
   getAllUserRatings(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }>;
+  getUserValidationStats(userId: string): Promise<{ validationsPerformed: number }>;
   
   // Currency Ledger Operations
   getUserBalance(userId: string): Promise<AccountBalance | null>;
@@ -2835,6 +2836,23 @@ export class DatabaseStorage implements IStorage {
     return !!rating;
   }
   
+  async getUserValidationStats(userId: string): Promise<{ validationsPerformed: number }> {
+    // Count tickets validated by this user (they are the ticket owner and ticket is validated)
+    const validatedTickets = await db
+      .select({ count: count() })
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.userId, userId),
+          eq(tickets.isValidated, true)
+        )
+      );
+    
+    return {
+      validationsPerformed: Number(validatedTickets[0]?.count || 0)
+    };
+  }
+
   async getUserReputation(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }> {
     // First check cache
     const [cached] = await db
