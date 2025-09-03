@@ -381,7 +381,7 @@ export default function EventDetailPage() {
     const totalVotes = thumbsUp + thumbsDown;
     
     if (percentage === null || percentage === 0) {
-      return { badge: "New", showPercentage: false, totalVotes };
+      return { badge: "Newbie", showPercentage: false, totalVotes };
     } else if (percentage >= 1 && percentage <= 25) {
       return { badge: "Novice", showPercentage: false, totalVotes };
     } else {
