@@ -4002,7 +4002,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if cache is valid
       if (demandCache && (Date.now() - demandCache.timestamp) < DEMAND_CACHE_DURATION) {
         const cachedDemand = demandCache.value;
-        const demandMultiplier = Math.min(1.28, Math.max(0.92, 0.92 + (cachedDemand / 1389)));
+        let demandMultiplier: number;
+        if (cachedDemand <= 200) {
+          demandMultiplier = 0.92;
+        } else if (cachedDemand <= 500) {
+          demandMultiplier = 0.92 + ((cachedDemand - 200) / 300) * 0.08;
+        } else if (cachedDemand <= 1000) {
+          demandMultiplier = 1.0 + ((cachedDemand - 500) / 500) * 0.12;
+        } else {
+          demandMultiplier = Math.min(1.28, 1.12 + ((cachedDemand - 1000) / 1000) * 0.16);
+        }
         const currentUnitPrice = 0.25 * demandMultiplier;
         
         return res.json({ 
@@ -4020,7 +4029,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       demandCache = { value: demand, timestamp: Date.now() };
       
       // Calculate current pricing based on bidirectional demand
-      const demandMultiplier = Math.min(1.28, Math.max(0.92, 0.92 + (demand / 1389)));
+      let demandMultiplier: number;
+      if (demand <= 200) {
+        demandMultiplier = 0.92;
+      } else if (demand <= 500) {
+        demandMultiplier = 0.92 + ((demand - 200) / 300) * 0.08;
+      } else if (demand <= 1000) {
+        demandMultiplier = 1.0 + ((demand - 500) / 500) * 0.12;
+      } else {
+        demandMultiplier = Math.min(1.28, 1.12 + ((demand - 1000) / 1000) * 0.16);
+      }
       const currentUnitPrice = 0.25 * demandMultiplier;
       
       res.json({ 
@@ -4057,11 +4075,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Base price with dynamic adjustment based on bidirectional demand
       const baseUnitPrice = 0.25;
       
-      // Calculate demand multiplier (0.92x to 1.28x based on demand)
-      // When demand is 0, price drops to floor (0.92x = $0.23)
-      // When demand is high (e.g., 500+), price rises to ceiling (1.28x = $0.32)
-      // This keeps us within $0.23 - $0.32 range with $0.25 as the midpoint
-      const demandMultiplier = Math.min(1.28, Math.max(0.92, 0.92 + (currentDemand / 1389)));
+      // Calculate demand multiplier with gentler curve (0.92x to 1.28x)
+      // 0-200: Floor price ($0.23)
+      // 200-500: Gradual rise to base ($0.25)
+      // 500-1000: Rise to moderate surge ($0.28)
+      // 1000+: Approach ceiling ($0.32)
+      let demandMultiplier: number;
+      if (currentDemand <= 200) {
+        demandMultiplier = 0.92; // Floor: $0.23
+      } else if (currentDemand <= 500) {
+        // Linear interpolation from 0.92 to 1.0 (floor to base)
+        demandMultiplier = 0.92 + ((currentDemand - 200) / 300) * 0.08;
+      } else if (currentDemand <= 1000) {
+        // Linear interpolation from 1.0 to 1.12 (base to moderate)
+        demandMultiplier = 1.0 + ((currentDemand - 500) / 500) * 0.12;
+      } else {
+        // Linear interpolation from 1.12 to 1.28 (moderate to ceiling)
+        // Caps at 1.28 when demand reaches 2000
+        demandMultiplier = Math.min(1.28, 1.12 + ((currentDemand - 1000) / 1000) * 0.16);
+      }
       
       const unitPrice = baseUnitPrice * demandMultiplier;
       let effectiveUnitPrice = unitPrice;
