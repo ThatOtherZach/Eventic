@@ -874,34 +874,139 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Event Creator Reputation */}
+          {/* Event Creator Reputation - Windows 98 Style */}
           {organizerReputation && (
-            <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
-              <div className="flex items-center gap-2">
-                <Award className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-sm">Event Creator Reputation</span>
-                {organizerReputation.percentage === null ? (
-                  <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
-                    New
-                  </span>
-                ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
-                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs rounded-full">
-                    Novice
-                  </span>
-                ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
-                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded-full">
-                    Bestie
-                  </span>
-                ) : (
-                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
-                    {organizerReputation.percentage}% • {(() => {
-                      const total = organizerReputation.thumbsUp + organizerReputation.thumbsDown;
-                      if (total >= 1000000) return `+1M`;
-                      if (total >= 1000) return `${Math.floor(total / 1000)}k`;
-                      return total.toString();
-                    })()} votes
-                  </span>
-                )}
+            <div className="mb-4" style={{
+              border: '2px solid #000',
+              borderTopColor: '#fff',
+              borderLeftColor: '#fff',
+              borderBottomColor: '#868686',
+              borderRightColor: '#868686',
+              backgroundColor: '#c0c0c0',
+              padding: '2px'
+            }}>
+              <div style={{
+                background: 'linear-gradient(to right, #000080, #1084d0)',
+                color: '#fff',
+                padding: '2px 4px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                fontFamily: 'MS Sans Serif, sans-serif',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <img src={ownerIcon} alt="" style={{ width: '16px', height: '16px' }} />
+                Event Creator Reputation
+              </div>
+              <div style={{
+                padding: '8px',
+                backgroundColor: '#c0c0c0',
+                fontFamily: 'MS Sans Serif, sans-serif',
+                fontSize: '11px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  {/* Progress Bar Container */}
+                  <div style={{
+                    flex: 1,
+                    height: '20px',
+                    backgroundColor: '#fff',
+                    border: '1px solid #000',
+                    borderTopColor: '#868686',
+                    borderLeftColor: '#868686',
+                    borderBottomColor: '#fff',
+                    borderRightColor: '#fff',
+                    position: 'relative'
+                  }}>
+                    {/* Progress Fill */}
+                    <div style={{
+                      height: '100%',
+                      width: organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : '0%',
+                      background: organizerReputation.percentage !== null && organizerReputation.percentage >= 80 
+                        ? 'repeating-linear-gradient(90deg, #00ff00, #00ff00 8px, #00cc00 8px, #00cc00 16px)'
+                        : organizerReputation.percentage !== null && organizerReputation.percentage >= 50
+                        ? 'repeating-linear-gradient(90deg, #ffff00, #ffff00 8px, #cccc00 8px, #cccc00 16px)'
+                        : 'repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #cc0000 8px, #cc0000 16px)',
+                      position: 'relative'
+                    }} />
+                    {/* Percentage Text Overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      color: '#000',
+                      fontWeight: 'bold',
+                      textShadow: '1px 1px 0px #fff',
+                      fontSize: '10px'
+                    }}>
+                      {organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : 'NEW'}
+                    </div>
+                  </div>
+                  
+                  {/* Stats Section */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    minWidth: '80px'
+                  }}>
+                    <div style={{
+                      padding: '2px 4px',
+                      backgroundColor: '#fff',
+                      border: '1px solid #000',
+                      borderTopColor: '#868686',
+                      borderLeftColor: '#868686',
+                      fontSize: '10px'
+                    }}>
+                      {(() => {
+                        const total = organizerReputation.thumbsUp + organizerReputation.thumbsDown;
+                        if (total >= 1000000) return `+1M votes`;
+                        if (total >= 1000) return `${Math.floor(total / 1000)}k votes`;
+                        return `${total} votes`;
+                      })()}
+                    </div>
+                    {/* Badge */}
+                    {organizerReputation.percentage === null ? (
+                      <div style={{
+                        backgroundColor: '#808080',
+                        color: '#fff',
+                        padding: '1px 4px',
+                        fontSize: '9px',
+                        textAlign: 'center',
+                        border: '1px solid #000'
+                      }}>
+                        NEW
+                      </div>
+                    ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
+                      <div style={{
+                        backgroundColor: '#ffff00',
+                        color: '#000',
+                        padding: '1px 4px',
+                        fontSize: '9px',
+                        textAlign: 'center',
+                        border: '1px solid #000'
+                      }}>
+                        NOVICE
+                      </div>
+                    ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
+                      <div style={{
+                        backgroundColor: '#ff00ff',
+                        color: '#fff',
+                        padding: '1px 4px',
+                        fontSize: '9px',
+                        textAlign: 'center',
+                        border: '1px solid #000'
+                      }}>
+                        BESTIE
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
           )}
