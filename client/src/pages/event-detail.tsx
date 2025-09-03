@@ -1839,7 +1839,7 @@ export default function EventDetailPage() {
                   !(event?.ticketPurchasesEnabled ?? true) ||
                   ((event?.oneTicketPerUser ?? false) &&
                     userTickets &&
-                    userTickets.length > 0)
+                    userTickets.filter(t => (t as any).resellStatus !== "for_resale").length > 0)
                 }
                 data-testid="button-purchase"
               >
@@ -1856,7 +1856,7 @@ export default function EventDetailPage() {
                   "Suspended"
                 ) : event?.oneTicketPerUser &&
                   userTickets &&
-                  userTickets.length > 0 ? (
+                  userTickets.filter(t => (t as any).resellStatus !== "for_resale").length > 0 ? (
                   "Good 2 Go"
                 ) : (
                   <>

@@ -601,11 +601,11 @@ export default function TicketViewPage(): React.ReactElement {
               <span>
                 {daysUntilDeletion} days until deletion
                 {event.allowMinting && (
-                  <span> - digital collectable available below</span>
+                  <span> - digital collectable available</span>
                 )}
                 {daysUntilDeletion <= 7 && !event.allowMinting && (
                   <span className="ms-1">
-                    - data will be permanently removed soon
+                    - data will be permanently deleted soon
                   </span>
                 )}
               </span>
@@ -647,7 +647,7 @@ export default function TicketViewPage(): React.ReactElement {
           {/* Ticket Details */}
           <div className="card mb-4">
             <div className="card-body">
-              <h6 className="card-title mb-3">Ticket Details</h6>
+              <h6 className="card-title mb-3">Details</h6>
 
               <div className="d-flex justify-content-between">
                 <div>
@@ -663,7 +663,7 @@ export default function TicketViewPage(): React.ReactElement {
                   </p>
                 </div>
                 <div className="text-end">
-                  <span className="text-muted">Purchase Price:</span>
+                  <span className="text-muted">Price:</span>
                   <p className="mb-0 fw-bold">
                     ${ticket.purchasePrice || event.ticketPrice || "0.00"}
                   </p>
@@ -698,14 +698,14 @@ export default function TicketViewPage(): React.ReactElement {
                     <ul className="mb-0 mt-2">
                       <li>You have {userCredits} credits available</li>
                       <li>
-                        Charging costs 3 credits to improve this ticket's odds
+                        Charging costs 3 credits to improve this ticket's odds.
                       </li>
                       <li>
-                        Special effects odds will be improved (better chances)
+                        Special effects odds will be improved (better chances).
                       </li>
                       <li>
                         Includes seasonal effects, stickers, and visual
-                        enhancements
+                        enhancements.
                       </li>
                     </ul>
                   </div>
