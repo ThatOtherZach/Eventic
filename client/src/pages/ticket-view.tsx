@@ -1056,10 +1056,22 @@ export default function TicketViewPage(): React.ReactElement {
                       </div>
                     </div>
                   ) : event.enableVoting && event.p2pValidation && ticket.isValidated ? (
-                    <p className="text-muted mb-3">
-                      Click the button below to vote for other attendees.
-                      You can enter their 4-digit codes during the validation session.
-                    </p>
+                    !isWithinVotingPeriod() ? (
+                      <div className="alert alert-warning mb-3">
+                        <div className="d-flex align-items-center">
+                          <img src="/clock-warning-icon.png" alt="" width="20" height="20" className="me-2" style={{ flexShrink: 0 }} />
+                          <div>
+                            <h6 className="mb-1">Voting Period Ended</h6>
+                            <p className="mb-0 small">Voting is no longer available for this event</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-muted mb-3">
+                        Click the button below to vote for other attendees.
+                        You can enter their 4-digit codes during the validation session.
+                      </p>
+                    )
                   ) : (
                     <p className="text-muted mb-3">
                       Click the button below to generate a time-limited validation session. 
@@ -1110,7 +1122,11 @@ export default function TicketViewPage(): React.ReactElement {
                         startValidationMutation.mutate(undefined);
                       }
                     }}
-                    disabled={startValidationMutation.isPending || !timeValidation.valid}
+                    disabled={
+                      startValidationMutation.isPending || 
+                      (!timeValidation.valid && !(event.enableVoting && event.p2pValidation && ticket.isValidated)) ||
+                      (event.enableVoting && event.p2pValidation && ticket.isValidated && !isWithinVotingPeriod())
+                    }
                     data-testid="button-validate-ticket"
                   >
                     {startValidationMutation.isPending ? (
@@ -1118,10 +1134,15 @@ export default function TicketViewPage(): React.ReactElement {
                         <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                         Starting...
                       </>
-                    ) : !timeValidation.valid ? (
+                    ) : !timeValidation.valid && !(event.enableVoting && event.p2pValidation && ticket.isValidated) ? (
                       <>
                         <Clock size={18} className="me-2" />
                         {timeValidation.message?.includes('begins') ? 'Please Wait' : 'Expired'}
+                      </>
+                    ) : event.enableVoting && event.p2pValidation && ticket.isValidated && !isWithinVotingPeriod() ? (
+                      <>
+                        <Clock size={18} className="me-2" />
+                        Voting Period Ended
                       </>
                     ) : event.enableVoting && event.p2pValidation && ticket.isValidated ? (
                       <>
