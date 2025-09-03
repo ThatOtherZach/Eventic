@@ -580,8 +580,7 @@ export default function EventDetailPage() {
               {event.goldenTicketEnabled && (
                 <Link href="/type/golden">
                   <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <img src={goldenTicketIcon} alt="" style={{ width: '14px', height: '14px', filter: 'invert(1)' }} />
-                    Golden Tickets
+                    🎫 Golden Tickets
                   </span>
                 </Link>
               )}
