@@ -78,29 +78,65 @@ export default function Manifesto() {
             I'm being serious. No I'm not drunk, stop asking.
           </p>
 
-          <h5 className="mt-4 mb-3">💸 The Economics of Fun</h5>
+          <h5 className="mt-4 mb-3">💸 The Credits Game (Yes, It's a Game)</h5>
           <p className="mb-3" style={paragraphStyle}>
-            Every event needs tickets for attendees. New users start with 10
-            free tickets. Log in daily for 2 (morning) or 4 (evening) tickets
-            every 24 hours.
+            OK, so here's where it gets weird (in a good way). We built an 
+            entire economy around... wait for it... being nice. I know, revolutionary.
           </p>
           <p className="mb-3" style={paragraphStyle}>
-            Need more? Buy a pack. Simple. Transparent. Not evil. Use them to
-            create or boost events. That's it. It's a one time purchase on
-            demand should you need more tickets.
+            <strong>Credits are NOT tickets.</strong> Credits are like arcade tokens 
+            for creating events. Tickets are what people use to actually show up. 
+            Got it? Good. Everyone starts with 10 credits. You spend them to create 
+            events (100-person event = 100 credits). But attending? Always free.
           </p>
           <p className="mb-3" style={paragraphStyle}>
-            While event organizers can set ticket prices, Eventic does not yet
-            perform as a payment procesor for the event. The ticket price is to
-            be paid at the event, using whatever payment system the organizer
-            chooses be it cash, card, crypto, or magic beans. Eventic is just
-            gets you on the list.
+            Here's the fun part: Rate an event with a thumbs up? Boom, you earn 1 
+            credit. First time only though—we're not running a credit farm here. 
+            Want to thumbs down that terrible DJ set? That'll cost you 1 credit. 
+            Why? Because negativity should cost something, even if it's tiny.
           </p>
           <p className="mb-3" style={paragraphStyle}>
-            There are no refunds on this platform and only organizers need
-            tickets to list events. Anyone can boost an event, which is
-            dynamically priced by demand. This is a beta release and I'm working
-            on payment processing to make this easier, and of course, optional.
+            Changed your mind? Switching your rating is free. We're not monsters.
+          </p>
+          
+          <h5 className="mt-4 mb-3">🎢 The Reputation Rollercoaster</h5>
+          <p className="mb-3" style={paragraphStyle}>
+            Every 69 days (nice), your reputation gets composted. Not deleted—composted. 
+            Like nature intended. This isn't LinkedIn where you hoard endorsements 
+            until the heat death of the universe. Your rep is fresh, current, real.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            Run good events? Your reputation badge evolves: Newbie → Rising Star → 
+            Trusted → Elite → Legend → 😎 (yes, that's an actual badge). Run bad 
+            events? Well, you'll find out in 69 days when you can try again.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            The beauty? Bad actors can't game the system. Creating 100 fake accounts 
+            to upvote yourself costs 10,000 credits. Good luck with that, chief.
+          </p>
+          
+          <h5 className="mt-4 mb-3">📈 Surge Pricing (But Make It Gentle)</h5>
+          <p className="mb-3" style={paragraphStyle}>
+            Remember Uber's 10x surge pricing during that snowstorm? Yeah, we don't 
+            do that. Our surge is more like a polite nudge. Popular event filling up? 
+            Prices might go up 25%. Last minute panic buy? Another 25%. That's it.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            It's logarithmic (fancy word for "gets less aggressive as it goes up"). 
+            Because we want to reward early birds without punishing procrastinators 
+            too hard. We've all been there.
+          </p>
+          
+          <h5 className="mt-4 mb-3">💰 Real Money? Not Our Problem (Yet)</h5>
+          <p className="mb-3" style={paragraphStyle}>
+            Cash happens at the door. Venmo in the DMs. Crypto in the metaverse. 
+            Whatever. We don't touch it. We're just the matchmaker between people 
+            who throw parties and people who show up to them.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            Soon™ we'll add Stripe (2% fee) and crypto payments for the brave. But 
+            credits? They stay in the platform. No cash out. They're utility tokens, 
+            not securities. The SEC can't hurt us here.
           </p>
 
           <h5 className="mt-4 mb-3">🔐 Control With Some Chaos</h5>
