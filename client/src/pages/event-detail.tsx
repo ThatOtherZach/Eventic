@@ -383,7 +383,7 @@ export default function EventDetailPage() {
     if (totalVotes === 0 || percentage === null) {
       return { badge: "Newbie", showPercentage: false, totalVotes };
     } else if (percentage >= 1 && percentage <= 49) {
-      return { badge: "Amateur", showPercentage: false, totalVotes };
+      return { badge: "Interesting", showPercentage: false, totalVotes };
     } else if (percentage >= 50 && percentage <= 79) {
       return { badge: "Nice", showPercentage: false, totalVotes };
     } else if (percentage >= 80) {
@@ -987,7 +987,7 @@ export default function EventDetailPage() {
                             
                             // Different colors for each badge level
                             let badgeColor = '#28a745'; // Green for Newbie
-                            if (reputationInfo.badge === 'Amateur') {
+                            if (reputationInfo.badge === 'Interesting') {
                               badgeColor = '#ffc107'; // Yellow
                             } else if (reputationInfo.badge === 'Nice') {
                               badgeColor = '#17a2b8'; // Teal
