@@ -381,7 +381,7 @@ export default function NerdStats() {
               <div className="card-body">
                 <div className="row g-2">
                   {analyticsData.charts.eventDistribution.map((item: { date: string; count: number; badges?: any }) => {
-                    const maxCount = Math.max(...analyticsData.charts.eventDistribution.map((d: any) => d.count), 1);
+                    const maxCount = 24;
                     const percentage = (item.count / maxCount) * 100;
                     
                     return (
