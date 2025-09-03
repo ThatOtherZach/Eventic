@@ -3836,20 +3836,41 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  // Get ticket demand for the last 48 hours
+  // Get ticket demand for the last 48 hours (bidirectional: purchases up, validations down)
   async getTicketDemand48Hours(): Promise<number> {
     try {
       const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
       
-      // Count tickets created for events in the last 48 hours
-      const [result] = await db
+      // Count credit purchases in the last 48 hours (increases demand)
+      const [purchaseResult] = await db
+        .select({ 
+          totalQuantity: sql<number>`COALESCE(SUM(quantity), 0)` 
+        })
+        .from(ticketPurchases)
+        .where(and(
+          eq(ticketPurchases.status, "completed"),
+          gte(ticketPurchases.purchasedAt, fortyEightHoursAgo)
+        ));
+      
+      // Count ticket validations in the last 48 hours (decreases demand)
+      const [validationResult] = await db
         .select({ count: count() })
         .from(tickets)
-        .where(gte(tickets.createdAt, fortyEightHoursAgo));
+        .where(and(
+          eq(tickets.isValidated, true),
+          gte(tickets.validatedAt, fortyEightHoursAgo)
+        ));
       
-      return result?.count || 0;
+      const purchaseDemand = purchaseResult?.totalQuantity || 0;
+      const validationReduction = validationResult?.count || 0;
+      
+      // Bidirectional demand: purchases increase it, validations decrease it
+      // Apply a multiplier to validations to make them impactful (each validation reduces demand by 0.5)
+      const netDemand = Math.max(0, purchaseDemand - (validationReduction * 0.5));
+      
+      return netDemand;
     } catch (error) {
-      console.error('Error getting 48-hour ticket demand:', error);
+      console.error('Error getting 48-hour bidirectional demand:', error);
       return 0;
     }
   }

@@ -4001,7 +4001,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if cache is valid
       if (demandCache && (Date.now() - demandCache.timestamp) < DEMAND_CACHE_DURATION) {
-        return res.json({ demand: demandCache.value });
+        const cachedDemand = demandCache.value;
+        const demandMultiplier = Math.min(1.5, Math.max(0.8, 0.8 + (cachedDemand / 1000)));
+        const currentUnitPrice = 0.23 * demandMultiplier;
+        
+        return res.json({ 
+          demand: cachedDemand,
+          demandMultiplier: demandMultiplier,
+          currentUnitPrice: currentUnitPrice,
+          baseUnitPrice: 0.23
+        });
       }
       
       // Get fresh demand data
@@ -4010,7 +4019,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update cache
       demandCache = { value: demand, timestamp: Date.now() };
       
-      res.json({ demand });
+      // Calculate current pricing based on bidirectional demand
+      const demandMultiplier = Math.min(1.5, Math.max(0.8, 0.8 + (demand / 1000)));
+      const currentUnitPrice = 0.23 * demandMultiplier;
+      
+      res.json({ 
+        demand,
+        demandMultiplier,
+        currentUnitPrice,
+        baseUnitPrice: 0.23
+      });
     } catch (error) {
       await logError(error, "GET /api/currency/demand", { request: req });
       res.status(500).json({ message: "Failed to get demand data" });
@@ -4030,10 +4048,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { quantity, hasDiscount, reputationDiscount = 0, volumeDiscount = 0 } = req.body;
       
       if (!quantity || quantity < 12) {
-        return res.status(400).json({ message: "Minimum purchase is 12 tickets" });
+        return res.status(400).json({ message: "Minimum purchase is 12 credits" });
       }
       
-      const unitPrice = 0.23;
+      // Get current demand to calculate dynamic pricing
+      const currentDemand = await storage.getTicketDemand48Hours();
+      
+      // Base price with dynamic adjustment based on bidirectional demand
+      const baseUnitPrice = 0.23;
+      
+      // Calculate demand multiplier (0.8x to 1.5x based on demand)
+      // When demand is 0, price is 0.8x (20% discount)
+      // When demand is high (e.g., 500+), price approaches 1.5x (50% increase)
+      const demandMultiplier = Math.min(1.5, Math.max(0.8, 0.8 + (currentDemand / 1000)));
+      
+      const unitPrice = baseUnitPrice * demandMultiplier;
       let effectiveUnitPrice = unitPrice;
       let totalDiscountPercentage = 0;
       

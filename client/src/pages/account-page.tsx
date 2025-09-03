@@ -33,7 +33,12 @@ export default function AccountPage() {
   const { addNotification } = useNotifications();
   
   // Fetch demand data
-  const { data: demandData } = useQuery<{ demand: number }>({ 
+  const { data: demandData } = useQuery<{ 
+    demand: number; 
+    demandMultiplier: number;
+    currentUnitPrice: number;
+    baseUnitPrice: number;
+  }>({ 
     queryKey: ["/api/currency/demand"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/currency/demand");
@@ -612,7 +617,8 @@ export default function AccountPage() {
                           <div className="text-end">
                             {(() => {
                               const quantity = multiplyAndSave ? 24 : 12;
-                              const basePrice = quantity * 0.23;
+                              const unitPrice = demandData?.currentUnitPrice || 0.23;
+                              const basePrice = quantity * unitPrice;
                               
                               // No discounts for packs under 15 tickets
                               if (quantity < 15) {
@@ -679,7 +685,8 @@ export default function AccountPage() {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 48 : 24);
                               const multiplyDiscount = multiplyAndSave ? 10 : 0;
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
-                              const basePrice = (multiplyAndSave ? 48 : 24) * 0.29;
+                              const unitPrice = demandData?.currentUnitPrice || 0.23;
+                              const basePrice = (multiplyAndSave ? 48 : 24) * unitPrice * 1.26; // Keep relative premium
                               const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
@@ -735,7 +742,8 @@ export default function AccountPage() {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 100 : 50);
                               const multiplyDiscount = multiplyAndSave ? 10 : 0;
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
-                              const basePrice = (multiplyAndSave ? 100 : 50) * 0.23;
+                              const unitPrice = demandData?.currentUnitPrice || 0.23;
+                              const basePrice = (multiplyAndSave ? 100 : 50) * unitPrice;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
@@ -788,7 +796,8 @@ export default function AccountPage() {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 200 : 100);
                               const multiplyDiscount = multiplyAndSave ? 10 : 0;
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
-                              const basePrice = (multiplyAndSave ? 200 : 100) * 0.23;
+                              const unitPrice = demandData?.currentUnitPrice || 0.23;
+                              const basePrice = (multiplyAndSave ? 200 : 100) * unitPrice;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
@@ -841,7 +850,8 @@ export default function AccountPage() {
                               const volumeDiscount = calculateVolumeDiscount(multiplyAndSave ? 400 : 200);
                               const multiplyDiscount = multiplyAndSave ? 10 : 0;
                               const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30); // Cap at 30% max discount
-                              const basePrice = (multiplyAndSave ? 400 : 200) * 0.23;
+                              const unitPrice = demandData?.currentUnitPrice || 0.23;
+                              const basePrice = (multiplyAndSave ? 400 : 200) * unitPrice;
                               const cappedDiscount = totalDiscount; // Use the capped total directly
                               const finalPrice = roundToNice(basePrice * (1 - cappedDiscount / 100));
                               
@@ -881,7 +891,8 @@ export default function AccountPage() {
                         {/* Price */}
                         <div className="h3 mb-2 text-primary fw-bold">
                         ${(() => {
-                          const basePrice = ticketQuantity * 0.23;
+                          const unitPrice = demandData?.currentUnitPrice || 0.23;
+                          const basePrice = ticketQuantity * unitPrice;
                           
                           // No discounts for packs under 15 tickets
                           if (ticketQuantity < 15) {
@@ -914,7 +925,8 @@ export default function AccountPage() {
                           const totalDiscount = Math.min(reputationDiscount + volumeDiscount + multiplyDiscount, 30);
                           
                           if (totalDiscount > 0) {
-                            const baseTotal = ticketQuantity * 0.23;
+                            const unitPrice = demandData?.currentUnitPrice || 0.23;
+                            const baseTotal = ticketQuantity * unitPrice;
                             const finalPrice = roundToNice(baseTotal * (1 - totalDiscount / 100));
                             const discountAmount = baseTotal - finalPrice;
                             
@@ -941,8 +953,33 @@ export default function AccountPage() {
                       </div>
                     </div>
                     
-                    {/* Stats for nerds link */}
-                    <div className="text-end mt-2">
+                    {/* Demand indicator and stats link */}
+                    <div className="d-flex justify-content-between align-items-center mt-2">
+                      <div className="small text-muted">
+                        {demandData && (
+                          <>
+                            <span className={`badge ${
+                              demandData.demandMultiplier < 0.9 ? 'bg-success' :
+                              demandData.demandMultiplier < 1.1 ? 'bg-warning' :
+                              'bg-danger'
+                            } me-1`}>
+                              {demandData.demandMultiplier < 0.9 ? 'Low Demand' :
+                               demandData.demandMultiplier < 1.1 ? 'Normal' :
+                               'High Demand'}
+                            </span>
+                            <span style={{ fontSize: '0.75rem' }}>
+                              ${demandData.currentUnitPrice.toFixed(3)}/credit
+                              {demandData.demandMultiplier !== 1 && (
+                                <span className="ms-1">
+                                  ({demandData.demandMultiplier < 1 ? 
+                                    `-${Math.round((1 - demandData.demandMultiplier) * 100)}%` :
+                                    `+${Math.round((demandData.demandMultiplier - 1) * 100)}%`})
+                                </span>
+                              )}
+                            </span>
+                          </>
+                        )}
+                      </div>
                       <Link 
                         to="/sys/nerd" 
                         className="text-muted small text-decoration-none"
