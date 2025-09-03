@@ -1330,20 +1330,20 @@ export default function EventDetailPage() {
                 {isPurchasing ? (
                   <>
                     <span className="spinner-border spinner-border-sm me-2" />
-                    Processing...
+                    Issuing...
                   </>
                 ) : isEventPast ? (
                   "Event Has Passed"
                 ) : isSoldOut ? (
-                  "Sold Out"
+                  "All Gone :("
                 ) : !event?.ticketPurchasesEnabled ? (
-                  "Event Suspended"
+                  "Suspended"
                 ) : (event?.oneTicketPerUser && userTickets && userTickets.length > 0) ? (
-                  "Already Have Ticket"
+                  "Good 2 Go"
                 ) : (
                   <>
                     <img src="/ticket-icon.png" alt="" style={{ width: '18px', height: '18px', marginRight: '8px' }} />
-                    {event.currentPrice === 0 ? "Get Ticket" : "Buy Ticket"}
+                    {event.currentPrice === 0 ? "RSVP" : "RSVP - Pay on Arrival"}
                   </>
                 )}
               </button>
