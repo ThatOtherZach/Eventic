@@ -211,8 +211,8 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         // Check what badges we need to show
         const hasMission = (event as any).isAdminCreated;
         const isValidated = showBadges && ticket.isValidated;
-        const isPass = showBadges && event.reentryType === "Pass (Multiple Use)";
-        const passUses = isPass ? (event.reentryType === 'No Limit' ? '∞' : (ticket.useCount || '0')) : null;
+        const isPass = showBadges && event.reentryType && event.reentryType !== 'No Reentry (Single Use)';
+        const passUses = isPass ? (event.reentryType === 'No Limit' ? '∞' : String(ticket.useCount || 0)) : null;
         
         // Collect color segments for features (no text, just colors)
         const colorSegments = [];
