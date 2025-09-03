@@ -712,13 +712,6 @@ export default function TicketViewPage(): React.ReactElement {
                   <button
                     className="btn btn-warning w-100"
                     onClick={async () => {
-                      if (
-                        !confirm(
-                          "Are you sure you want to charge this ticket? This will cost 3 credits to improve special effects odds.",
-                        )
-                      ) {
-                        return;
-                      }
                       setIsCharging(true);
                       try {
                         const response = await apiRequest(
