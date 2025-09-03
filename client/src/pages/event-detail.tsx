@@ -1874,7 +1874,8 @@ export default function EventDetailPage() {
 
               {/* Boost Button for event owners and ticket holders - not shown for private events */}
               {!event.isPrivate &&
-                (isOwner || (userTickets && userTickets.length > 0)) && (
+                (isOwner || (userTickets && userTickets.length > 0)) &&
+                new Date(event.startTime) > new Date() && (
                   <button
                     onClick={() => setIsBoostModalOpen(true)}
                     className="btn btn-warning w-100 mb-3"
