@@ -1209,22 +1209,21 @@ export default function EventDetailPage() {
                           const formattedVotes = formatVoteCount(totalVotes);
                           
                           return (
-                            <>
-                              {badge ? (
-                                <span className="badge bg-secondary">{badge}</span>
-                              ) : showPercentage ? (
-                                <>
-                                  <strong>{percentage}%</strong>
-                                  <span className="text-muted small ms-2" style={{ fontSize: '0.85em' }}>({formattedVotes} votes)</span>
-                                </>
-                              ) : null}
-                              {totalVotes >= 1000 && (
-                                <span className="badge bg-warning text-dark ms-2">
-                                  <Award size={14} className="me-1" />
-                                  Bestie
-                                </span>
+                            <div className="d-flex flex-column align-items-start">
+                              <div className="d-flex align-items-center">
+                                <strong>{organizerReputation.percentage || 0}%</strong>
+                                <span className="text-muted small ms-2" style={{ fontSize: '0.85em' }}>({formattedVotes} votes)</span>
+                                {totalVotes >= 1000 && (
+                                  <span className="badge bg-warning text-dark ms-2">
+                                    <Award size={14} className="me-1" />
+                                    Bestie
+                                  </span>
+                                )}
+                              </div>
+                              {badge && (
+                                <span className="badge bg-secondary mt-1" style={{ fontSize: '0.75em' }}>{badge}</span>
                               )}
-                            </>
+                            </div>
                           );
                         })()}
                       </div>
