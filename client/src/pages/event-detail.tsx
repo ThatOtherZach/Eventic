@@ -1201,7 +1201,7 @@ export default function EventDetailPage() {
                         const reputationInfo = getReputationDisplay();
                         if (!reputationInfo) return null;
                         
-                        const { badge, showPercentage, percentage, totalVotes } = reputationInfo;
+                        const { badge, showPercentage, totalVotes } = reputationInfo;
                         const formattedVotes = formatVoteCount(totalVotes);
                         
                         return (
