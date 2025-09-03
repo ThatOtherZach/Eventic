@@ -882,14 +882,11 @@ export default function EventDetailPage() {
               boxShadow: '1px 1px 0 rgba(0,0,0,0.05)'
             }}>
               <div className="card-body text-center" style={{ padding: '20px' }}>
-                <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
-                  <img src={ownerIcon} alt="" style={{ width: '20px', height: '20px' }} />
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#495057' }}>
-                    Reputation
-                  </span>
-                </div>
+                <h6 style={{ fontSize: '14px', fontWeight: '600', color: '#495057', marginBottom: '16px' }}>
+                  Reputation
+                </h6>
                 
-                <div className="d-flex align-items-center justify-content-center gap-4">
+                <div className="d-flex align-items-center justify-content-center gap-4 mb-3">
                   {/* Percentage Display */}
                   <div style={{
                     fontSize: '28px',
@@ -974,6 +971,27 @@ export default function EventDetailPage() {
                     </>
                   )}
                 </div>
+                
+                {/* Username Badge */}
+                {organizerDetails && (
+                  <div className="d-flex justify-content-center">
+                    <span className="badge" style={{
+                      backgroundColor: '#f8f9fa',
+                      color: '#495057',
+                      border: '1px solid #dee2e6',
+                      fontSize: '12px',
+                      padding: '6px 10px',
+                      borderRadius: '0',
+                      fontWeight: '500',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <img src={ownerIcon} alt="" style={{ width: '16px', height: '16px' }} />
+                      {organizerDetails.type ? `${organizerDetails.type}${organizerDetails.displayName}` : organizerDetails.displayName}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
