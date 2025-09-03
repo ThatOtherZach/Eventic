@@ -2169,9 +2169,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all events and filter by country if specified
       let allEvents = await storage.getEvents();
+      
+      // Filter to only include events from today onwards up to 1 year in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      
+      allEvents = allEvents.filter(e => {
+        const eventDate = new Date(e.date);
+        return eventDate >= today && eventDate <= oneYearFromNow;
+      });
+      
       if (country && country !== 'Global') {
         allEvents = allEvents.filter(e => e.country === country);
       }
+      
       const upcomingEvents = allEvents.filter(e => new Date(e.date) > now);
       const pastEvents = allEvents.filter(e => new Date(e.date) <= now);
       const activeEvents = upcomingEvents.filter(e => {
