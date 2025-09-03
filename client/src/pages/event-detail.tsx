@@ -874,95 +874,61 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Event Creator Reputation - Windows 98 Style */}
+          {/* Event Creator Reputation - Subtle Retro Style */}
           {organizerReputation && (
-            <div className="mb-4" style={{
-              border: '2px solid #000',
-              borderTopColor: '#fff',
-              borderLeftColor: '#fff',
-              borderBottomColor: '#868686',
-              borderRightColor: '#868686',
-              backgroundColor: '#c0c0c0',
-              padding: '2px'
+            <div className="card mb-4" style={{
+              border: '1px solid #d4d4d4',
+              borderRadius: '0',
+              boxShadow: '2px 2px 0 rgba(0,0,0,0.1)'
             }}>
-              <div style={{
-                background: 'linear-gradient(to right, #000080, #1084d0)',
-                color: '#fff',
-                padding: '2px 4px',
-                fontSize: '11px',
-                fontWeight: 'bold',
-                fontFamily: 'MS Sans Serif, sans-serif',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                <img src={ownerIcon} alt="" style={{ width: '16px', height: '16px' }} />
-                Event Creator Reputation
-              </div>
-              <div style={{
-                padding: '8px',
-                backgroundColor: '#c0c0c0',
-                fontFamily: 'MS Sans Serif, sans-serif',
-                fontSize: '11px'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                  {/* Progress Bar Container */}
-                  <div style={{
-                    flex: 1,
-                    height: '20px',
-                    backgroundColor: '#fff',
-                    border: '1px solid #000',
-                    borderTopColor: '#868686',
-                    borderLeftColor: '#868686',
-                    borderBottomColor: '#fff',
-                    borderRightColor: '#fff',
-                    position: 'relative'
-                  }}>
-                    {/* Progress Fill */}
+              <div className="card-body" style={{ padding: '12px' }}>
+                <div className="d-flex align-items-center gap-2 mb-3">
+                  <img src={ownerIcon} alt="" style={{ width: '18px', height: '18px' }} />
+                  <h6 className="mb-0" style={{ fontSize: '14px', fontWeight: '600' }}>
+                    Event Creator Reputation
+                  </h6>
+                </div>
+                
+                <div className="d-flex align-items-center gap-3">
+                  {/* Progress Bar */}
+                  <div className="flex-grow-1">
                     <div style={{
-                      height: '100%',
-                      width: organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : '0%',
-                      background: organizerReputation.percentage !== null && organizerReputation.percentage >= 80 
-                        ? 'repeating-linear-gradient(90deg, #00ff00, #00ff00 8px, #00cc00 8px, #00cc00 16px)'
-                        : organizerReputation.percentage !== null && organizerReputation.percentage >= 50
-                        ? 'repeating-linear-gradient(90deg, #ffff00, #ffff00 8px, #cccc00 8px, #cccc00 16px)'
-                        : 'repeating-linear-gradient(90deg, #ff0000, #ff0000 8px, #cc0000 8px, #cc0000 16px)',
-                      position: 'relative'
-                    }} />
-                    {/* Percentage Text Overlay */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      color: '#000',
-                      fontWeight: 'bold',
-                      textShadow: '1px 1px 0px #fff',
-                      fontSize: '10px'
+                      height: '24px',
+                      backgroundColor: '#f0f0f0',
+                      border: '1px solid #ccc',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}>
-                      {organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : 'NEW'}
+                      {/* Progress Fill */}
+                      <div style={{
+                        height: '100%',
+                        width: organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : '0%',
+                        background: organizerReputation.percentage !== null && organizerReputation.percentage >= 80 
+                          ? 'linear-gradient(90deg, #28a745 0%, #20c997 100%)'
+                          : organizerReputation.percentage !== null && organizerReputation.percentage >= 50
+                          ? 'linear-gradient(90deg, #ffc107 0%, #fd7e14 100%)'
+                          : 'linear-gradient(90deg, #dc3545 0%, #e83e8c 100%)',
+                        transition: 'width 0.3s ease'
+                      }} />
+                      {/* Percentage Text */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        color: '#000',
+                        fontWeight: 'bold',
+                        fontSize: '12px',
+                        textShadow: '0 0 2px rgba(255,255,255,0.8)'
+                      }}>
+                        {organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : 'NEW'}
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Stats Section */}
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px',
-                    minWidth: '80px'
-                  }}>
-                    <div style={{
-                      padding: '2px 4px',
-                      backgroundColor: '#fff',
-                      border: '1px solid #000',
-                      borderTopColor: '#868686',
-                      borderLeftColor: '#868686',
-                      fontSize: '10px'
-                    }}>
+                  {/* Stats and Badge */}
+                  <div className="text-end" style={{ minWidth: '100px' }}>
+                    <div className="mb-1" style={{ fontSize: '13px', fontWeight: '500' }}>
                       {(() => {
                         const total = organizerReputation.thumbsUp + organizerReputation.thumbsDown;
                         if (total >= 1000000) return `+1M votes`;
@@ -972,38 +938,35 @@ export default function EventDetailPage() {
                     </div>
                     {/* Badge */}
                     {organizerReputation.percentage === null ? (
-                      <div style={{
-                        backgroundColor: '#808080',
+                      <span className="badge" style={{
+                        backgroundColor: '#6c757d',
                         color: '#fff',
-                        padding: '1px 4px',
-                        fontSize: '9px',
-                        textAlign: 'center',
-                        border: '1px solid #000'
+                        fontSize: '10px',
+                        padding: '3px 6px',
+                        borderRadius: '2px'
                       }}>
                         NEW
-                      </div>
+                      </span>
                     ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
-                      <div style={{
-                        backgroundColor: '#ffff00',
+                      <span className="badge" style={{
+                        backgroundColor: '#ffc107',
                         color: '#000',
-                        padding: '1px 4px',
-                        fontSize: '9px',
-                        textAlign: 'center',
-                        border: '1px solid #000'
+                        fontSize: '10px',
+                        padding: '3px 6px',
+                        borderRadius: '2px'
                       }}>
                         NOVICE
-                      </div>
+                      </span>
                     ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
-                      <div style={{
-                        backgroundColor: '#ff00ff',
+                      <span className="badge" style={{
+                        backgroundColor: '#6f42c1',
                         color: '#fff',
-                        padding: '1px 4px',
-                        fontSize: '9px',
-                        textAlign: 'center',
-                        border: '1px solid #000'
+                        fontSize: '10px',
+                        padding: '3px 6px',
+                        borderRadius: '2px'
                       }}>
                         BESTIE
-                      </div>
+                      </span>
                     ) : null}
                   </div>
                 </div>
