@@ -222,11 +222,9 @@ export default function NerdStats() {
               onChange={(e) => setSelectedCountry(e.target.value)}
             >
               <option value="Global">🌍 Global</option>
-              <optgroup label="Countries with Events">
-                {allCountries.filter(country => countriesWithEvents.has(country)).map(country => (
-                  <option key={country} value={country}>{country}</option>
-                ))}
-              </optgroup>
+              {allCountries.filter(country => countriesWithEvents.has(country)).map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
               <optgroup label="All Countries">
                 {allCountries.filter(country => !countriesWithEvents.has(country)).map(country => (
                   <option key={country} value={country} style={{ color: '#999' }}>{country}</option>
