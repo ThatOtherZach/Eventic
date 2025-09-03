@@ -889,7 +889,7 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   )}
                 </div>
-              ) : (event.enableVoting && event.p2pValidation && ticket.isValidated) || isValidating ? (
+              ) : (event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid) || isValidating ? (
                 <div>
                   {/* Only show timer for regular validation, not for voting */}
                   {!(event.enableVoting && event.p2pValidation && ticket.isValidated) && (
@@ -902,7 +902,7 @@ export default function TicketViewPage(): React.ReactElement {
                   )}
 
                   {/* Validation Code Display OR Voting Interface */}
-                  {event.enableVoting && event.p2pValidation && ticket.isValidated ? (
+                  {event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid ? (
                     // Voting interface for already-validated voting tickets
                     <div className="mb-3">
                       <div className="alert alert-info mb-3">
@@ -1004,7 +1004,7 @@ export default function TicketViewPage(): React.ReactElement {
                   <button
                     className="btn btn-secondary w-100"
                     onClick={() => {
-                      if (event.enableVoting && event.p2pValidation && ticket.isValidated) {
+                      if (event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid) {
                         // For voting, refresh the ticket data to update vote count
                         queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
                       } else {
@@ -1014,7 +1014,7 @@ export default function TicketViewPage(): React.ReactElement {
                     }}
                     data-testid="button-stop-validation"
                   >
-                    {event.enableVoting && event.p2pValidation && ticket.isValidated 
+                    {event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid
                       ? 'Refresh Vote Count' 
                       : 'Stop Validation'}
                   </button>
