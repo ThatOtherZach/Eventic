@@ -4253,6 +4253,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get leaderboard - top 100 users by reputation
+  app.get("/api/leaderboard", async (req, res) => {
+    try {
+      const leaderboard = await storage.getLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      await logError(error, "GET /api/leaderboard", { request: req });
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
   // Simple file upload endpoint for NFT HTML files
   app.post("/api/upload", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

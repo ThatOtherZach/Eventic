@@ -171,6 +171,17 @@ export interface IStorage {
   getAllUserRatings(userId: string): Promise<{ thumbsUp: number; thumbsDown: number; percentage: number | null; reputation: number; totalRatings: number }>;
   getUserValidationStats(userId: string): Promise<{ validationsPerformed: number }>;
   
+  // Leaderboard
+  getLeaderboard(): Promise<{
+    userId: string;
+    displayName: string;
+    memberStatus: string;
+    thumbsUp: number;
+    thumbsDown: number;
+    percentage: number | null;
+    validatedCount: number;
+  }[]>;
+  
   // Currency Ledger Operations
   getUserBalance(userId: string): Promise<AccountBalance | null>;
   createLedgerTransaction(params: {
@@ -3840,6 +3851,68 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting 48-hour ticket demand:', error);
       return 0;
+    }
+  }
+  
+  // Get leaderboard - top 100 users by reputation
+  async getLeaderboard(): Promise<{
+    userId: string;
+    displayName: string;
+    memberStatus: string;
+    thumbsUp: number;
+    thumbsDown: number;
+    percentage: number | null;
+    validatedCount: number;
+  }[]> {
+    try {
+      // Get top 100 users by total ratings (thumbs up + down) in last 69 days
+      const sixtyNineDaysAgo = new Date();
+      sixtyNineDaysAgo.setDate(sixtyNineDaysAgo.getDate() - 69);
+      
+      // Get all users with their reputation stats
+      const userStats = await db
+        .select({
+          userId: users.id,
+          displayName: users.displayName,
+          memberStatus: users.memberStatus,
+        })
+        .from(users);
+      
+      // Get ratings for each user
+      const leaderboardData = await Promise.all(
+        userStats.map(async (user) => {
+          const reputation = await this.getUserReputation(user.userId);
+          const validationStats = await this.getUserValidatedTicketsCount(user.userId);
+          
+          return {
+            userId: user.userId,
+            displayName: user.displayName || 'Anonymous',
+            memberStatus: user.memberStatus || 'Legacy',
+            thumbsUp: reputation.thumbsUp,
+            thumbsDown: reputation.thumbsDown,
+            percentage: reputation.percentage,
+            validatedCount: validationStats,
+            totalVotes: reputation.thumbsUp + reputation.thumbsDown
+          };
+        })
+      );
+      
+      // Sort by total votes (thumbs up + down) and take top 100
+      const sortedLeaderboard = leaderboardData
+        .filter(user => user.totalVotes > 0 || user.validatedCount > 0) // Only include users with activity
+        .sort((a, b) => {
+          // Sort by total votes first, then by validation count
+          const voteDiff = b.totalVotes - a.totalVotes;
+          if (voteDiff !== 0) return voteDiff;
+          return b.validatedCount - a.validatedCount;
+        })
+        .slice(0, 100)
+        .map(({ totalVotes, ...user }) => user); // Remove totalVotes from final output
+      
+      return sortedLeaderboard;
+    } catch (error) {
+      console.error('Error getting leaderboard:', error);
+      return [];
     }
   }
 }
