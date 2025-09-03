@@ -369,6 +369,30 @@ export default function TicketViewPage(): React.ReactElement {
     return hoursSinceStart <= 24;
   };
 
+  // Check if within voting period (only during event and up to 24 hours after, or until end date)
+  const isWithinVotingPeriod = () => {
+    if (!ticketData?.event) return false;
+    const now = new Date();
+    const startDateTime = `${ticketData.event.date}T${ticketData.event.time}:00`;
+    const startDate = new Date(startDateTime);
+    
+    // Check if event hasn't started yet
+    if (now < startDate) {
+      return false; // Voting not allowed before event starts
+    }
+    
+    // If event has an end date, check if we're past it
+    if (ticketData.event.endDate && ticketData.event.endTime) {
+      const endDateTime = `${ticketData.event.endDate}T${ticketData.event.endTime}:00`;
+      const endDate = new Date(endDateTime);
+      return now <= endDate; // Allow voting until end date
+    } else {
+      // No end date - allow voting for 24 hours after start
+      const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+      return now <= twentyFourHoursAfterStart;
+    }
+  };
+
   // Update rating state when rating status changes
   useEffect(() => {
     if (ratingStatus) {
@@ -889,7 +913,7 @@ export default function TicketViewPage(): React.ReactElement {
                     </div>
                   )}
                 </div>
-              ) : (event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid) || isValidating ? (
+              ) : (event.enableVoting && event.p2pValidation && ticket.isValidated && isWithinVotingPeriod()) || isValidating ? (
                 <div>
                   {/* Only show timer for regular validation, not for voting */}
                   {!(event.enableVoting && event.p2pValidation && ticket.isValidated) && (
@@ -902,7 +926,7 @@ export default function TicketViewPage(): React.ReactElement {
                   )}
 
                   {/* Validation Code Display OR Voting Interface */}
-                  {event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid ? (
+                  {event.enableVoting && event.p2pValidation && ticket.isValidated && isWithinVotingPeriod() ? (
                     // Voting interface for already-validated voting tickets
                     <div className="mb-3">
                       <div className="alert alert-info mb-3">
@@ -1004,7 +1028,7 @@ export default function TicketViewPage(): React.ReactElement {
                   <button
                     className="btn btn-secondary w-100"
                     onClick={() => {
-                      if (event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid) {
+                      if (event.enableVoting && event.p2pValidation && ticket.isValidated && isWithinVotingPeriod()) {
                         // For voting, refresh the ticket data to update vote count
                         queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticketId}`] });
                       } else {
@@ -1014,7 +1038,7 @@ export default function TicketViewPage(): React.ReactElement {
                     }}
                     data-testid="button-stop-validation"
                   >
-                    {event.enableVoting && event.p2pValidation && ticket.isValidated && timeValidation.valid
+                    {event.enableVoting && event.p2pValidation && ticket.isValidated && isWithinVotingPeriod()
                       ? 'Refresh Vote Count' 
                       : 'Stop Validation'}
                   </button>
