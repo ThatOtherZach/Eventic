@@ -874,107 +874,105 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Event Creator Reputation */}
+          {/* Reputation */}
           {organizerReputation && (
             <div className="card mb-4" style={{
               border: '2px solid #e0e0e0',
               borderRadius: '0',
               boxShadow: '1px 1px 0 rgba(0,0,0,0.05)'
             }}>
-              <div className="card-body" style={{ padding: '16px' }}>
-                <div className="d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-2">
-                    <img src={ownerIcon} alt="" style={{ width: '20px', height: '20px' }} />
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#495057' }}>
-                      Event Creator Reputation
-                    </span>
+              <div className="card-body text-center" style={{ padding: '20px' }}>
+                <div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+                  <img src={ownerIcon} alt="" style={{ width: '20px', height: '20px' }} />
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#495057' }}>
+                    Reputation
+                  </span>
+                </div>
+                
+                <div className="d-flex align-items-center justify-content-center gap-4">
+                  {/* Percentage Display */}
+                  <div style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: organizerReputation.percentage !== null && organizerReputation.percentage >= 80 
+                      ? '#28a745'
+                      : organizerReputation.percentage !== null && organizerReputation.percentage >= 50
+                      ? '#ffc107'
+                      : organizerReputation.percentage !== null
+                      ? '#dc3545'
+                      : '#6c757d'
+                  }}>
+                    {organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : '—'}
                   </div>
                   
-                  <div className="d-flex align-items-center gap-3">
-                    {/* Percentage Display */}
-                    <div style={{
-                      fontSize: '24px',
-                      fontWeight: 'bold',
-                      color: organizerReputation.percentage !== null && organizerReputation.percentage >= 80 
-                        ? '#28a745'
-                        : organizerReputation.percentage !== null && organizerReputation.percentage >= 50
-                        ? '#ffc107'
-                        : organizerReputation.percentage !== null
-                        ? '#dc3545'
-                        : '#6c757d'
-                    }}>
-                      {organizerReputation.percentage !== null ? `${organizerReputation.percentage}%` : '—'}
+                  {/* Separator */}
+                  <div style={{
+                    width: '1px',
+                    height: '35px',
+                    backgroundColor: '#dee2e6'
+                  }} />
+                  
+                  {/* Vote Count */}
+                  <div>
+                    <div style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
+                      {(() => {
+                        const total = organizerReputation.thumbsUp + organizerReputation.thumbsDown;
+                        if (total >= 1000000) return '+1M';
+                        if (total >= 1000) return `${Math.floor(total / 1000)}k`;
+                        return total.toString();
+                      })()}
                     </div>
-                    
-                    {/* Separator */}
-                    <div style={{
-                      width: '1px',
-                      height: '30px',
-                      backgroundColor: '#dee2e6'
-                    }} />
-                    
-                    {/* Vote Count */}
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '18px', fontWeight: '600', lineHeight: '1' }}>
-                        {(() => {
-                          const total = organizerReputation.thumbsUp + organizerReputation.thumbsDown;
-                          if (total >= 1000000) return '+1M';
-                          if (total >= 1000) return `${Math.floor(total / 1000)}k`;
-                          return total.toString();
-                        })()}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
-                        votes
-                      </div>
+                    <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                      votes
                     </div>
-                    
-                    {/* Badge */}
-                    {(organizerReputation.percentage === null || 
-                      (organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25) ||
-                      (organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000)) && (
-                      <>
-                        <div style={{
-                          width: '1px',
-                          height: '30px',
-                          backgroundColor: '#dee2e6'
-                        }} />
-                        {organizerReputation.percentage === null ? (
-                          <span className="badge" style={{
-                            backgroundColor: '#6c757d',
-                            color: '#fff',
-                            fontSize: '11px',
-                            padding: '4px 8px',
-                            borderRadius: '0',
-                            fontWeight: '500'
-                          }}>
-                            NEW
-                          </span>
-                        ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
-                          <span className="badge" style={{
-                            backgroundColor: '#ffc107',
-                            color: '#000',
-                            fontSize: '11px',
-                            padding: '4px 8px',
-                            borderRadius: '0',
-                            fontWeight: '500'
-                          }}>
-                            NOVICE
-                          </span>
-                        ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
-                          <span className="badge" style={{
-                            backgroundColor: '#6f42c1',
-                            color: '#fff',
-                            fontSize: '11px',
-                            padding: '4px 8px',
-                            borderRadius: '0',
-                            fontWeight: '500'
-                          }}>
-                            BESTIE
-                          </span>
-                        ) : null}
-                      </>
-                    )}
                   </div>
+                  
+                  {/* Badge */}
+                  {(organizerReputation.percentage === null || 
+                    (organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25) ||
+                    (organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000)) && (
+                    <>
+                      <div style={{
+                        width: '1px',
+                        height: '35px',
+                        backgroundColor: '#dee2e6'
+                      }} />
+                      {organizerReputation.percentage === null ? (
+                        <span className="badge" style={{
+                          backgroundColor: '#6c757d',
+                          color: '#fff',
+                          fontSize: '11px',
+                          padding: '5px 10px',
+                          borderRadius: '0',
+                          fontWeight: '500'
+                        }}>
+                          NEW
+                        </span>
+                      ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
+                        <span className="badge" style={{
+                          backgroundColor: '#ffc107',
+                          color: '#000',
+                          fontSize: '11px',
+                          padding: '5px 10px',
+                          borderRadius: '0',
+                          fontWeight: '500'
+                        }}>
+                          NOVICE
+                        </span>
+                      ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
+                        <span className="badge" style={{
+                          backgroundColor: '#6f42c1',
+                          color: '#fff',
+                          fontSize: '11px',
+                          padding: '5px 10px',
+                          borderRadius: '0',
+                          fontWeight: '500'
+                        }}>
+                          BESTIE
+                        </span>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
