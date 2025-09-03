@@ -912,23 +912,32 @@ export default function EventDetailPage() {
                   return (
                     <>
                       <div className="d-flex align-items-center justify-content-center gap-4 mb-3">
-                        {/* Left side: Validations and Votes */}
+                        {/* Left side: Validations and Votes on same line */}
                         <div style={{ textAlign: 'left' }}>
-                          <div style={{ marginBottom: '8px' }}>
-                            <div style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'baseline', 
+                            gap: '6px',
+                            marginBottom: '8px'
+                          }}>
+                            <span style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
                               {validationCount >= 1000000 ? '+1M' : validationCount >= 1000 ? `${Math.floor(validationCount / 1000)}k` : validationCount.toString()}
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                            </span>
+                            <span style={{ fontSize: '20px', color: '#6c757d' }}>
                               validations
-                            </div>
+                            </span>
                           </div>
-                          <div>
-                            <div style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'baseline', 
+                            gap: '6px'
+                          }}>
+                            <span style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
                               {totalVotes >= 1000000 ? '+1M' : totalVotes >= 1000 ? `${Math.floor(totalVotes / 1000)}k` : totalVotes.toString()}
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                            </span>
+                            <span style={{ fontSize: '20px', color: '#6c757d' }}>
                               votes
-                            </div>
+                            </span>
                           </div>
                         </div>
                         
