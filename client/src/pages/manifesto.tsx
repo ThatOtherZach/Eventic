@@ -99,20 +99,29 @@ export default function Manifesto() {
             Changed your mind? Switching your rating is free. We're not monsters.
           </p>
           
-          <h5 className="mt-4 mb-3">🎢 The Reputation Rollercoaster</h5>
+          <h5 className="mt-4 mb-3">🎢 The 69-Day Reputation Window</h5>
           <p className="mb-3" style={paragraphStyle}>
-            Every 69 days (nice), your reputation gets composted. Not deleted—composted. 
-            Like nature intended. This isn't LinkedIn where you hoard endorsements 
-            until the heat death of the universe. Your rep is fresh, current, real.
+            Here's how reputation actually works: Only events from the last 69 days 
+            count toward your score. Run an amazing event today? Those thumbs up boost 
+            your rep immediately. But in 69 days? Poof, they fall out of the window. 
+            Your reputation is always based on what you've done lately, not what you 
+            did last year.
           </p>
           <p className="mb-3" style={paragraphStyle}>
-            Run good events? Your reputation badge evolves: Newbie → Rising Star → 
-            Trusted → Elite → Legend → 😎 (yes, that's an actual badge). Run bad 
-            events? Well, you'll find out in 69 days when you can try again.
+            Think of it like a rolling average of your recent vibe. Got 100 thumbs up 
+            from an event 68 days ago? Tomorrow you'll need fresh ones to maintain your 
+            status. Your badge evolves in real-time: Newbie → Rising Star → Trusted → 
+            Elite → Legend → 😎. But slack off, and you'll slide right back down.
           </p>
           <p className="mb-3" style={paragraphStyle}>
-            The beauty? Bad actors can't game the system. Creating 100 fake accounts 
-            to upvote yourself costs 10,000 credits. Good luck with that, chief.
+            This rolling window is genius for three reasons: (1) Bad events can't haunt 
+            you forever—redemption is always 69 days away. (2) You can't coast on past 
+            glory—stay active or fade away. (3) Gaming the system is pointless since 
+            fake upvotes expire too, and creating 100 fake accounts costs 10,000 credits.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            It's reputation with an expiration date. Fresh, organic, and impossible to 
+            hoard. Like farmers market reputation, not Walmart reputation.
           </p>
           
           <h5 className="mt-4 mb-3">📈 Surge Pricing (But Make It Gentle)</h5>
