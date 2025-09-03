@@ -330,26 +330,25 @@ export default function NerdStats() {
       </div>
 
       {/* Event Distribution */}
-      {advancedStats?.dayStats && (
+      {analyticsData?.charts?.eventDistribution && analyticsData.charts.eventDistribution.length > 0 && (
         <div className="row mb-4">
           <div className="col-12">
             <h5 className="fw-semibold mb-3">
               <img src={distributionIcon} alt="Event Distribution" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
-              Event Distribution
+              Event Distribution - Upcoming Events
             </h5>
             <div className="card shadow-sm">
               <div className="card-body">
                 <div className="row g-2">
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
-                    const count = advancedStats.dayStats[day] || 0;
-                    const maxCount = Math.max(...Object.values(advancedStats.dayStats).map(v => Number(v)), 1);
-                    const percentage = (count / maxCount) * 100;
+                  {analyticsData.charts.eventDistribution.map((item: { date: string; count: number }) => {
+                    const maxCount = Math.max(...analyticsData.charts.eventDistribution.map((d: any) => d.count), 1);
+                    const percentage = (item.count / maxCount) * 100;
                     
                     return (
-                      <div key={day} className="col">
+                      <div key={item.date} className="col">
                         <div className="text-center">
-                          <div className="text-muted small mb-1">{day}</div>
-                          <div className="h5 fw-bold mb-2">{count}</div>
+                          <div className="text-muted small mb-1">{item.date}</div>
+                          <div className="h5 fw-bold mb-2">{item.count}</div>
                           <div className="progress" style={{ height: '6px' }}>
                             <div 
                               className="progress-bar bg-primary" 

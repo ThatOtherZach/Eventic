@@ -2274,6 +2274,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return eventDate.toDateString() === now.toDateString();
       });
       
+      // Calculate event distribution by date (next 7 upcoming events)
+      const eventDateDistribution = upcomingEvents
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 7)
+        .map(event => ({
+          date: new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          title: event.title,
+          count: 1
+        }));
+      
+      // Group events by date if multiple events on same day
+      const dateGroups: Record<string, number> = {};
+      eventDateDistribution.forEach(event => {
+        dateGroups[event.date] = (dateGroups[event.date] || 0) + 1;
+      });
+      
+      const eventDistribution = Object.entries(dateGroups).map(([date, count]) => ({
+        date,
+        count
+      }));
+      
       res.json({
         overview: {
           totalEvents: basicStats.totalEvents,
@@ -2308,7 +2329,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           topCountries,
           topEventTypes,
-          topHashtags
+          topHashtags,
+          eventDistribution
         }
       });
     } catch (error) {
