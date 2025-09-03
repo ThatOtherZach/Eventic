@@ -918,9 +918,10 @@ export default function EventDetailPage() {
                             display: 'flex', 
                             alignItems: 'baseline', 
                             gap: '4px',
-                            marginBottom: '6px'
+                            marginBottom: '2px',
+                            lineHeight: '1.2'
                           }}>
-                            <span style={{ fontSize: '14px', fontWeight: '600', lineHeight: '1' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '600' }}>
                               {validationCount >= 1000000 ? '+1M' : validationCount >= 1000 ? `${Math.floor(validationCount / 1000)}k` : validationCount.toString()}
                             </span>
                             <span style={{ fontSize: '14px', color: '#6c757d' }}>
@@ -930,9 +931,10 @@ export default function EventDetailPage() {
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'baseline', 
-                            gap: '4px'
+                            gap: '4px',
+                            lineHeight: '1.2'
                           }}>
-                            <span style={{ fontSize: '14px', fontWeight: '600', lineHeight: '1' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '600' }}>
                               {totalVotes >= 1000000 ? '+1M' : totalVotes >= 1000 ? `${Math.floor(totalVotes / 1000)}k` : totalVotes.toString()}
                             </span>
                             <span style={{ fontSize: '14px', color: '#6c757d' }}>
