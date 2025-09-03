@@ -241,61 +241,69 @@ export default function NerdStats() {
           </div>
           <div className="row g-3">
             <div className="col-md-3">
-              <div className="card shadow-sm h-100">
+              <div className="card shadow-sm h-100 border-0" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small mb-1">Total Events</div>
-                      <div className="h4 fw-bold mb-1">{formatNumber(stats?.totalEvents || 0)}</div>
+                      <div className="text-white-50 small mb-1">Total Events</div>
+                      <div className="h4 fw-bold mb-1 text-white">{formatNumber(stats?.totalEvents || 0)}</div>
                     </div>
-                    <img src={calendarIcon} alt="Calendar" style={{ width: 32, height: 32 }} />
+                    <div className="bg-white bg-opacity-25 rounded p-2">
+                      <img src={calendarIcon} alt="Calendar" style={{ width: 24, height: 24 }} />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="card shadow-sm h-100">
+              <div className="card shadow-sm h-100 border-0" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small mb-1">Total Tickets</div>
-                      <div className="h4 fw-bold mb-1">{formatNumber(stats?.totalTickets || 0)}</div>
-                      <div className="text-info small">
+                      <div className="text-white-50 small mb-1">Total Tickets</div>
+                      <div className="h4 fw-bold mb-1 text-white">{formatNumber(stats?.totalTickets || 0)}</div>
+                      <div className="text-white-50 small">
                         <Activity size={14} className="me-1" />
                         {advancedStats?.avgTicketsPerEvent || 0} avg/event
                       </div>
                     </div>
-                    <img src={ticketsIcon} alt="Tickets" style={{ width: 32, height: 32 }} />
+                    <div className="bg-white bg-opacity-25 rounded p-2">
+                      <img src={ticketsIcon} alt="Tickets" style={{ width: 24, height: 24 }} />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="card shadow-sm h-100">
+              <div className="card shadow-sm h-100 border-0" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small mb-1">Ticket Demand</div>
-                      <div className="h4 fw-bold mb-1">{demandData?.demand || 0}</div>
-                      <div className="text-success small">
+                      <div className="text-white-50 small mb-1">Ticket Demand</div>
+                      <div className="h4 fw-bold mb-1 text-white">{demandData?.demand || 0}</div>
+                      <div className="text-white-50 small">
                         <Zap size={14} className="me-1" />
                         Tickets/hour
                       </div>
                     </div>
-                    <img src={demandIcon} alt="Demand" style={{ width: 32, height: 32 }} />
+                    <div className="bg-white bg-opacity-25 rounded p-2">
+                      <img src={demandIcon} alt="Demand" style={{ width: 24, height: 24 }} />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="card shadow-sm h-100">
+              <div className="card shadow-sm h-100 border-0" style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}>
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start">
                     <div>
-                      <div className="text-muted small mb-1">Validation Rate</div>
-                      <div className="h4 fw-bold mb-1">{advancedStats?.validationRate || 0}%</div>
+                      <div className="text-white-50 small mb-1">Validation Rate</div>
+                      <div className="h4 fw-bold mb-1 text-white">{advancedStats?.validationRate || 0}%</div>
                     </div>
-                    <img src={checkIcon} alt="Validation" style={{ width: 32, height: 32 }} />
+                    <div className="bg-white bg-opacity-25 rounded p-2">
+                      <img src={checkIcon} alt="Validation" style={{ width: 24, height: 24 }} />
+                    </div>
                   </div>
                 </div>
               </div>
