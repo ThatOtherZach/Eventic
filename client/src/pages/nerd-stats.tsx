@@ -42,6 +42,7 @@ import statsIcon from "@assets/chart1-4_1756850194937.png";
 import ticketingTrendsIcon from "@assets/image_1756851232451.png";
 import tealBg from "@assets/win98-teal_1756850231196.png";
 import hashtagIcon from "@assets/modem-4_1756868854727.png";
+import { countries as allCountries } from "@/lib/countries";
 
 export default function NerdStats() {
   const [selectedCountry, setSelectedCountry] = useState<string>('Global');
@@ -94,14 +95,14 @@ export default function NerdStats() {
     // No auto-refresh
   });
 
-  // Get unique countries from events
-  const countries = useMemo(() => {
-    if (!events) return [];
+  // Get countries that have events
+  const countriesWithEvents = useMemo(() => {
+    if (!events) return new Set<string>();
     const countrySet = new Set<string>();
     events.forEach((event: any) => {
       if (event.country) countrySet.add(event.country);
     });
-    return Array.from(countrySet).sort();
+    return countrySet;
   }, [events]);
 
   // Filter events by selected country
@@ -215,15 +216,22 @@ export default function NerdStats() {
               Numbers & Stuff
             </h5>
             <select 
-              className="form-select form-select-sm" 
-              style={{ width: 'auto' }}
+              className="form-select" 
+              style={{ width: '200px', fontSize: '14px', padding: '4px 8px', height: 'auto' }}
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
             >
-              <option value="Global">Global</option>
-              {countries.map(country => (
-                <option key={country} value={country}>{country}</option>
-              ))}
+              <option value="Global">🌍 Global</option>
+              <optgroup label="Countries with Events">
+                {allCountries.filter(country => countriesWithEvents.has(country)).map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </optgroup>
+              <optgroup label="All Countries">
+                {allCountries.filter(country => !countriesWithEvents.has(country)).map(country => (
+                  <option key={country} value={country} style={{ color: '#999' }}>{country}</option>
+                ))}
+              </optgroup>
             </select>
           </div>
           <div className="row g-3">
