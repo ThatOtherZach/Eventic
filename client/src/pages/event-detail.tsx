@@ -979,7 +979,7 @@ export default function EventDetailPage() {
                             // Don't show badge for emoji
                             if (reputationInfo.badge === '😎') {
                               return (
-                                <div style={{ marginTop: '2px', fontSize: '20px' }}>
+                                <div style={{ marginTop: '-4px', fontSize: '20px' }}>
                                   {reputationInfo.badge}
                                 </div>
                               );
@@ -994,7 +994,7 @@ export default function EventDetailPage() {
                             }
                             
                             return (
-                              <div style={{ marginTop: '2px' }}>
+                              <div style={{ marginTop: '-4px' }}>
                                 <span className="badge" style={{
                                   backgroundColor: badgeColor,
                                   color: '#fff',
