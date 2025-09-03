@@ -127,6 +127,30 @@ export default function Manifesto() {
             too hard. We've all been there.
           </p>
           
+          <h5 className="mt-4 mb-3">🎭 The Absurdist Social Experiment</h5>
+          <p className="mb-3" style={paragraphStyle}>
+            Here's the beautiful, chaotic part: With P2P validation, you can create 
+            events for literally anything. "Standing in this parking lot for 10 minutes." 
+            "Synchronized yelling at the moon." "Being alive on a Tuesday." Turn it on 
+            and everyone who shows up can validate each other. No gatekeepers. Pure chaos.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            The kicker? These ridiculous moments can become permanent. That ticket from 
+            "Emergency dance party in Steve's backyard because his ex got engaged"? That 
+            proof you were at "The great pillow fight of 2025"? Mint it as an NFT for 
+            under 5 bucks (price TBD, we're not greedy). 
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            Everything else vanishes after 69 days. But minted tickets? They're forever. 
+            A permanent record that yes, you were there when 47 strangers decided to have 
+            a staring contest in a Denny's parking lot at 3am. Was it stupid? Absolutely. 
+            Was it real? The blockchain says yes.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            This isn't about creating value. It's about proving existence. "I was there" 
+            becomes immutable truth. Even if "there" was completely absurd.
+          </p>
+          
           <h5 className="mt-4 mb-3">💰 Real Money? Not Our Problem (Yet)</h5>
           <p className="mb-3" style={paragraphStyle}>
             Cash happens at the door. Venmo in the DMs. Crypto in the metaverse. 
