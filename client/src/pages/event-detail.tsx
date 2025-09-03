@@ -970,16 +970,17 @@ export default function EventDetailPage() {
                         </div>
                         
                         {/* Badge */}
-                        {organizerReputation && (organizerReputation.percentage === null || 
-                          (organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25) ||
-                          (organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000)) && (
-                          <>
-                            <div style={{
-                              width: '1px',
-                              height: '60px',
-                              backgroundColor: '#dee2e6'
-                            }} />
-                            {organizerReputation.percentage === null ? (
+                        {organizerReputation && (() => {
+                          const reputationInfo = getReputationDisplay();
+                          if (!reputationInfo || !reputationInfo.badge) return null;
+                          
+                          return (
+                            <>
+                              <div style={{
+                                width: '1px',
+                                height: '60px',
+                                backgroundColor: '#dee2e6'
+                              }} />
                               <span className="badge" style={{
                                 backgroundColor: '#6c757d',
                                 color: '#fff',
@@ -988,33 +989,11 @@ export default function EventDetailPage() {
                                 borderRadius: '0',
                                 fontWeight: '500'
                               }}>
-                                NEW
+                                {reputationInfo.badge}
                               </span>
-                            ) : organizerReputation.percentage >= 1 && organizerReputation.percentage <= 25 ? (
-                              <span className="badge" style={{
-                                backgroundColor: '#ffc107',
-                                color: '#000',
-                                fontSize: '11px',
-                                padding: '5px 10px',
-                                borderRadius: '0',
-                                fontWeight: '500'
-                              }}>
-                                NOVICE
-                              </span>
-                            ) : organizerReputation.thumbsUp + organizerReputation.thumbsDown >= 1000 ? (
-                              <span className="badge" style={{
-                                backgroundColor: '#6f42c1',
-                                color: '#fff',
-                                fontSize: '11px',
-                                padding: '5px 10px',
-                                borderRadius: '0',
-                                fontWeight: '500'
-                              }}>
-                                BESTIE
-                              </span>
-                            ) : null}
-                          </>
-                        )}
+                            </>
+                          );
+                        })()}
                       </div>
                       
                       {/* Username Badge */}
