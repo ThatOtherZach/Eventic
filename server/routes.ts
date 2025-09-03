@@ -2274,26 +2274,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return eventDate.toDateString() === now.toDateString();
       });
       
-      // Calculate event distribution by date (next 7 upcoming events)
-      const eventDateDistribution = upcomingEvents
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .slice(0, 7)
-        .map(event => ({
-          date: new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          title: event.title,
-          count: 1
-        }));
+      // Calculate event distribution for next 10 days
+      const tenDaysFromNow = new Date();
+      tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
       
-      // Group events by date if multiple events on same day
-      const dateGroups: Record<string, number> = {};
-      eventDateDistribution.forEach(event => {
-        dateGroups[event.date] = (dateGroups[event.date] || 0) + 1;
+      // Filter events within next 10 days
+      const next10DaysEvents = upcomingEvents.filter(e => {
+        const eventDate = new Date(e.date);
+        return eventDate >= now && eventDate <= tenDaysFromNow;
       });
       
-      const eventDistribution = Object.entries(dateGroups).map(([date, count]) => ({
-        date,
-        count
-      }));
+      // Create an array for each of the next 10 days
+      const eventDistribution = [];
+      for (let i = 0; i < 10; i++) {
+        const checkDate = new Date();
+        checkDate.setDate(checkDate.getDate() + i);
+        const dateStr = checkDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        // Count events on this date
+        const eventsOnDate = next10DaysEvents.filter(e => {
+          const eventDate = new Date(e.date);
+          return eventDate.toDateString() === checkDate.toDateString();
+        });
+        
+        eventDistribution.push({
+          date: dateStr,
+          count: eventsOnDate.length
+        });
+      }
       
       res.json({
         overview: {
