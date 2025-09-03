@@ -1139,7 +1139,7 @@ export default function TicketViewPage(): React.ReactElement {
                       {hasRated ? (
                         selectedRating === 'thumbs_up' ? 
                           'Change to thumbs down costs 2 tickets' : 
-                          'Change to thumbs up refunds 2 tickets'
+                          'Change to thumbs up returns 2 tickets'
                       ) : (
                         'Thumbs up earns 1 ticket, thumbs down costs 1 ticket'
                       )}
@@ -1156,7 +1156,7 @@ export default function TicketViewPage(): React.ReactElement {
                         disabled={submitRatingMutation.isPending}
                         data-testid="button-thumbs-up"
                         style={{ padding: '8px 16px', minWidth: '60px' }}
-                        title={hasRated && selectedRating === 'thumbs_down' ? 'Refunds 2 tickets' : 'Earns 1 ticket'}
+                        title={hasRated && selectedRating === 'thumbs_down' ? 'Returns 2 tickets' : 'Earns 1 ticket'}
                       >
                         <ThumbsUp size={20} />
                       </button>

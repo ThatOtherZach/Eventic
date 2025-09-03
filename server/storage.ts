@@ -947,31 +947,33 @@ export class DatabaseStorage implements IStorage {
       
       const ticketsSold = ticketCount?.count || 0;
       
-      // Calculate demand factor (0 to 1) based on tickets sold vs available
+      // Calculate demand factor with gentler scaling
       let demandFactor = 0;
       if (event.maxTickets && event.maxTickets > 0) {
-        demandFactor = ticketsSold / event.maxTickets;
-        // Cap at 0.9 to prevent infinite pricing when sold out
-        demandFactor = Math.min(demandFactor, 0.9);
+        const soldRatio = ticketsSold / event.maxTickets;
+        // Use square root for gentler curve: 50% sold = 22% increase, 90% sold = 42% increase
+        demandFactor = Math.sqrt(soldRatio) * 0.45;
+        // Cap at 0.45 to prevent extreme pricing
+        demandFactor = Math.min(demandFactor, 0.45);
       } else {
-        // If no max tickets, use a softer scaling based on absolute sold count
-        demandFactor = Math.min(ticketsSold / 100, 0.5); // Cap at 50% increase from demand alone
+        // If no max tickets, use even softer scaling
+        demandFactor = Math.min(Math.sqrt(ticketsSold / 100) * 0.3, 0.3); // Cap at 30% increase
       }
       
-      // Calculate urgency factor based on time to event
+      // Calculate urgency factor based on time to event (gentler)
       const eventDateTime = new Date(`${event.date}T${event.time}:00`);
       const now = new Date();
       const daysUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
       
       let urgencyFactor = 0;
       if (daysUntilEvent <= 1) {
-        urgencyFactor = 0.5; // 50% increase in last 24 hours
+        urgencyFactor = 0.25; // 25% increase in last 24 hours
       } else if (daysUntilEvent <= 3) {
-        urgencyFactor = 0.3; // 30% increase in last 3 days
+        urgencyFactor = 0.15; // 15% increase in last 3 days
       } else if (daysUntilEvent <= 7) {
-        urgencyFactor = 0.15; // 15% increase in last week
+        urgencyFactor = 0.08; // 8% increase in last week
       } else if (daysUntilEvent <= 14) {
-        urgencyFactor = 0.1; // 10% increase in last 2 weeks
+        urgencyFactor = 0.05; // 5% increase in last 2 weeks
       }
       
       // Combine factors: base price + (demand factor * base price) + (urgency factor * base price)

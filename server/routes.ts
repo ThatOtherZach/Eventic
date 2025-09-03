@@ -3708,7 +3708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Calculate ticket adjustment
         // Switching from thumbs_up to thumbs_down: -2 tickets (lose reward + pay cost)
-        // Switching from thumbs_down to thumbs_up: +2 tickets (refund cost + get reward)
+        // Switching from thumbs_down to thumbs_up: +2 tickets (return cost + get reward)
         if (oldRating !== rating) {
           if (oldRating === 'thumbs_up' && rating === 'thumbs_down') {
             // User is changing from thumbs up to thumbs down
@@ -3733,7 +3733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
           } else if (oldRating === 'thumbs_down' && rating === 'thumbs_up') {
             // User is changing from thumbs down to thumbs up
-            // They get 2 tickets: 1 refund for the downvote, 1 reward for the upvote
+            // They get 2 tickets: 1 return for the downvote, 1 reward for the upvote
             await storage.creditUserAccount(
               userId,
               2,
