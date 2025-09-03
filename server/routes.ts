@@ -4002,14 +4002,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if cache is valid
       if (demandCache && (Date.now() - demandCache.timestamp) < DEMAND_CACHE_DURATION) {
         const cachedDemand = demandCache.value;
-        const demandMultiplier = Math.min(1.391, Math.max(1.0, 1.0 + (cachedDemand / 1280)));
-        const currentUnitPrice = 0.23 * demandMultiplier;
+        const demandMultiplier = Math.min(1.28, Math.max(0.92, 0.92 + (cachedDemand / 1389)));
+        const currentUnitPrice = 0.25 * demandMultiplier;
         
         return res.json({ 
           demand: cachedDemand,
           demandMultiplier: demandMultiplier,
           currentUnitPrice: currentUnitPrice,
-          baseUnitPrice: 0.23
+          baseUnitPrice: 0.25
         });
       }
       
@@ -4020,14 +4020,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       demandCache = { value: demand, timestamp: Date.now() };
       
       // Calculate current pricing based on bidirectional demand
-      const demandMultiplier = Math.min(1.391, Math.max(1.0, 1.0 + (demand / 1280)));
-      const currentUnitPrice = 0.23 * demandMultiplier;
+      const demandMultiplier = Math.min(1.28, Math.max(0.92, 0.92 + (demand / 1389)));
+      const currentUnitPrice = 0.25 * demandMultiplier;
       
       res.json({ 
         demand,
         demandMultiplier,
         currentUnitPrice,
-        baseUnitPrice: 0.23
+        baseUnitPrice: 0.25
       });
     } catch (error) {
       await logError(error, "GET /api/currency/demand", { request: req });
@@ -4055,13 +4055,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentDemand = await storage.getTicketDemand48Hours();
       
       // Base price with dynamic adjustment based on bidirectional demand
-      const baseUnitPrice = 0.23;
+      const baseUnitPrice = 0.25;
       
-      // Calculate demand multiplier (1.0x to 1.39x based on demand)
-      // When demand is 0, price stays at base (1.0x)
-      // When demand is high (e.g., 500+), price approaches 1.39x (~39% increase)
-      // This ensures we stay within $0.23 - $0.32 range to cover Stripe fees
-      const demandMultiplier = Math.min(1.391, Math.max(1.0, 1.0 + (currentDemand / 1280)));
+      // Calculate demand multiplier (0.92x to 1.28x based on demand)
+      // When demand is 0, price drops to floor (0.92x = $0.23)
+      // When demand is high (e.g., 500+), price rises to ceiling (1.28x = $0.32)
+      // This keeps us within $0.23 - $0.32 range with $0.25 as the midpoint
+      const demandMultiplier = Math.min(1.28, Math.max(0.92, 0.92 + (currentDemand / 1389)));
       
       const unitPrice = baseUnitPrice * demandMultiplier;
       let effectiveUnitPrice = unitPrice;
