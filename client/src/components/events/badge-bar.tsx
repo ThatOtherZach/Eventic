@@ -28,7 +28,8 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
   const hasMission = event.isAdminCreated;
   const isValidated = ticket?.isValidated;
   const isPass = event.reentryType && event.reentryType !== 'No Reentry (Single Use)';
-  const passUses = isPass ? (event.reentryType === 'No Limit' ? '∞' : (ticket?.useCount || '0')) : null;
+  const passUses = isPass ? (event.reentryType === 'No Limit' ? '∞' : (ticket?.useCount || 0)) : null;
+  const shouldShowPassUses = passUses && (passUses === '∞' || passUses > 0);
   
   // Collect all other feature badges (as color segments)
   const colorSegments = [];
@@ -45,7 +46,7 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
   if (event.endDate) colorSegments.push('#6B7280'); // Gray for multi-day
 
   // If nothing to show, return null
-  if (!hasMission && !isValidated && !passUses && colorSegments.length === 0) {
+  if (!hasMission && !isValidated && !shouldShowPassUses && colorSegments.length === 0) {
     return null;
   }
 
@@ -117,12 +118,12 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
       )}
       
       {/* If no color segments but need space before Pass number */}
-      {colorSegments.length === 0 && (hasMission || passUses || isValidated) && (
+      {colorSegments.length === 0 && (hasMission || shouldShowPassUses || isValidated) && (
         <div className="flex-grow-1" />
       )}
       
       {/* Pass Uses Number - Right */}
-      {passUses && (
+      {shouldShowPassUses && (
         <div
           style={{
             backgroundColor: '#10B981',
