@@ -1147,7 +1147,7 @@ export default function EventDetailPage() {
                 <div className="mb-3 p-3 bg-light rounded">
                   {organizerDetails && (
                     <div className="mb-2">
-                      <div className="text-muted small">Event Organizer</div>
+                      <div className="text-muted small">Creator</div>
                       <div className="mt-1">
                         <strong>{organizerDetails.displayName}</strong>
                       </div>
