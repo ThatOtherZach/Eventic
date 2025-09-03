@@ -29,7 +29,7 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
   const isValidated = ticket?.isValidated;
   const isPass = event.reentryType && event.reentryType !== 'No Reentry (Single Use)';
   const passUses = isPass ? (event.reentryType === 'No Limit' ? '∞' : (ticket?.useCount || 0)) : null;
-  const shouldShowPassUses = passUses && (passUses === '∞' || passUses > 0);
+  const shouldShowPassUses = passUses !== null && (passUses === '∞' || passUses > 0);
   
   // Collect all other feature badges (as color segments)
   const colorSegments = [];
