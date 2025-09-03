@@ -2162,12 +2162,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/analytics/dashboard", async (req, res) => {
     try {
       const now = new Date();
+      const { country } = req.query;
       
       // Get basic stats
       const basicStats = await storage.getEventStats();
       
-      // Get events by status
-      const allEvents = await storage.getEvents();
+      // Get all events and filter by country if specified
+      let allEvents = await storage.getEvents();
+      if (country && country !== 'Global') {
+        allEvents = allEvents.filter(e => e.country === country);
+      }
       const upcomingEvents = allEvents.filter(e => new Date(e.date) > now);
       const pastEvents = allEvents.filter(e => new Date(e.date) <= now);
       const activeEvents = upcomingEvents.filter(e => {
@@ -2177,7 +2181,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Get all tickets for analysis
-      const allTickets = await storage.getTickets();
+      let allTickets = await storage.getTickets();
+      
+      // If filtering by country, only include tickets for events in that country
+      if (country && country !== 'Global') {
+        const eventIds = new Set(allEvents.map(e => e.id));
+        allTickets = allTickets.filter(t => eventIds.has(t.eventId));
+      }
       
       // Calculate ticket sales by day (last 68 days)
       const ticketsByDay: Record<string, number> = {};

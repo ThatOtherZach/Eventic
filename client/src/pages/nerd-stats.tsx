@@ -67,7 +67,14 @@ export default function NerdStats() {
   });
 
   const { data: analyticsData } = useQuery({
-    queryKey: ["/api/analytics/dashboard"],
+    queryKey: ["/api/analytics/dashboard", selectedCountry],
+    queryFn: async () => {
+      const params = selectedCountry && selectedCountry !== 'Global' 
+        ? `?country=${encodeURIComponent(selectedCountry)}` 
+        : '';
+      const response = await apiRequest("GET", `/api/analytics/dashboard${params}`);
+      return response.json();
+    },
   });
 
   // Prepare chart data for ticket sales trend (2-day periods)
