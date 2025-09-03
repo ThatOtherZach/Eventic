@@ -630,7 +630,8 @@ export default function EventDetailPage() {
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
   const isAdmin = user?.email?.endsWith("@saymservices.com");
-  const canEdit = isOwner || isAdmin;
+  const eventHasStarted = new Date(event.startTime) <= new Date();
+  const canEdit = isAdmin || (isOwner && !eventHasStarted);
 
   return (
     <div className="container py-5">
