@@ -253,17 +253,23 @@ export default function NerdStats() {
                   marginBottom: '1px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  justifyContent: 'space-between'
                 }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Total Events</div>
                   <div style={{ 
                     width: '13px', 
                     height: '11px', 
                     background: '#c0c0c0',
                     border: '1px solid',
                     borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'inline-block'
-                  }}></div>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Total Events</div>
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex align-items-center gap-3">
@@ -293,17 +299,23 @@ export default function NerdStats() {
                   marginBottom: '1px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  justifyContent: 'space-between'
                 }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Total Tickets</div>
                   <div style={{ 
                     width: '13px', 
                     height: '11px', 
                     background: '#c0c0c0',
                     border: '1px solid',
                     borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'inline-block'
-                  }}></div>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Total Tickets</div>
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex align-items-start gap-3">
@@ -339,17 +351,23 @@ export default function NerdStats() {
                   marginBottom: '1px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  justifyContent: 'space-between'
                 }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Ticket Demand</div>
                   <div style={{ 
                     width: '13px', 
                     height: '11px', 
                     background: '#c0c0c0',
                     border: '1px solid',
                     borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'inline-block'
-                  }}></div>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Ticket Demand</div>
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex align-items-start gap-3">
@@ -385,17 +403,23 @@ export default function NerdStats() {
                   marginBottom: '1px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px'
+                  justifyContent: 'space-between'
                 }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Validation Rate</div>
                   <div style={{ 
                     width: '13px', 
                     height: '11px', 
                     background: '#c0c0c0',
                     border: '1px solid',
                     borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'inline-block'
-                  }}></div>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Validation Rate</div>
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
                   <div className="d-flex align-items-center gap-3">
