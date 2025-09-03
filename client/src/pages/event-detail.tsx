@@ -32,6 +32,7 @@ import mediaPlayerIcon from "@assets/wm-4_1756934119811.png";
 import charmapIcon from "@assets/charmap_w2k-0_1756934317788.png";
 import netmeetingIcon from "@assets/netmeeting-2_1756934362133.png";
 import worldIcon from "@assets/world-2_1756934408907.png";
+import timeAndDateIcon from "@assets/time_and_date-4_1756934474067.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -665,7 +666,7 @@ export default function EventDetailPage() {
               {event.endDate && (
                 <Link href="/type/multiday">
                   <span className="badge" style={{ backgroundColor: '#6B7280', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <img src={dateIcon} alt="" style={{ width: '14px', height: '14px' }} />
+                    <img src={timeAndDateIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Multi-day
                   </span>
                 </Link>
