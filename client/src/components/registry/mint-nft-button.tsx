@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Clock, Sparkles, CheckCircle } from "lucide-react";
+import mintTicketIcon from "@assets/image_1756937391196.png";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -142,7 +143,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
         data-testid="button-mint-countdown"
       >
         <Clock className="me-2" size={16} />
-        Mint NFT in {timeLeft}
+        Mint Ticket in {timeLeft}
       </Button>
     );
   }
@@ -157,8 +158,12 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           className="w-100"
           data-testid="button-mint-nft"
         >
-          <Sparkles className="me-2" size={16} />
-          Mint NFT
+          <img
+            src={mintTicketIcon}
+            alt=""
+            style={{ width: "16px", height: "16px", marginRight: "8px" }}
+          />
+          Mint Ticket
         </Button>
 
         <Modal open={showMintModal} onOpenChange={setShowMintModal}>
@@ -231,7 +236,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
               ) : (
                 <>
                   <Sparkles className="me-2" size={16} />
-                  Mint NFT
+                  Mint Ticket
                 </>
               )}
             </Button>
