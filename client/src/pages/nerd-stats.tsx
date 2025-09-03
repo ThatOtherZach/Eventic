@@ -266,8 +266,7 @@ export default function NerdStats() {
                   <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Total Events</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{formatNumber(stats?.totalEvents || 0)}</div>
+                  <div className="d-flex align-items-center gap-3">
                     <div style={{ 
                       padding: '4px',
                       background: '#ffffff',
@@ -276,6 +275,7 @@ export default function NerdStats() {
                     }}>
                       <img src={calendarIcon} alt="Calendar" style={{ width: 20, height: 20, display: 'block' }} />
                     </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{formatNumber(stats?.totalEvents || 0)}</div>
                   </div>
                 </div>
               </div>
@@ -306,20 +306,21 @@ export default function NerdStats() {
                   <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Total Tickets</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
-                  <div className="d-flex justify-content-between align-items-start">
+                  <div className="d-flex align-items-start gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080',
+                      marginTop: '2px'
+                    }}>
+                      <img src={ticketsIcon} alt="Tickets" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
                     <div>
                       <div className="h3 fw-bold mb-1" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{formatNumber(stats?.totalTickets || 0)}</div>
                       <div style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', color: '#000000' }}>
                         {advancedStats?.avgTicketsPerEvent || 0} avg/event
                       </div>
-                    </div>
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={ticketsIcon} alt="Tickets" style={{ width: 20, height: 20, display: 'block' }} />
                     </div>
                   </div>
                 </div>
@@ -351,20 +352,21 @@ export default function NerdStats() {
                   <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Ticket Demand</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
-                  <div className="d-flex justify-content-between align-items-start">
+                  <div className="d-flex align-items-start gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080',
+                      marginTop: '2px'
+                    }}>
+                      <img src={demandIcon} alt="Demand" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
                     <div>
                       <div className="h3 fw-bold mb-1" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{demandData?.demand || 0}</div>
                       <div style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', color: '#000000' }}>
                         Tickets/hour
                       </div>
-                    </div>
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={demandIcon} alt="Demand" style={{ width: 20, height: 20, display: 'block' }} />
                     </div>
                   </div>
                 </div>
@@ -396,8 +398,7 @@ export default function NerdStats() {
                   <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', flexGrow: 1 }}>Validation Rate</div>
                 </div>
                 <div className="p-3" style={{ background: '#c0c0c0' }}>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.validationRate || 0}%</div>
+                  <div className="d-flex align-items-center gap-3">
                     <div style={{ 
                       padding: '4px',
                       background: '#ffffff',
@@ -406,6 +407,7 @@ export default function NerdStats() {
                     }}>
                       <img src={checkIcon} alt="Validation" style={{ width: 20, height: 20, display: 'block' }} />
                     </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.validationRate || 0}%</div>
                   </div>
                 </div>
               </div>
