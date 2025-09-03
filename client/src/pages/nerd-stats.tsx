@@ -388,25 +388,7 @@ export default function NerdStats() {
                       <div key={item.date} className="col">
                         <div className="text-center">
                           <div className="text-muted small mb-1">{item.date}</div>
-                          <div className="h5 fw-bold mb-1">{item.count}</div>
-                          <div className="d-flex justify-content-center gap-1 mb-2" style={{ minHeight: '20px' }}>
-                            {item.badges && item.count > 0 && (
-                              <>
-                                {item.badges.featured > 0 && (
-                                  <img src={starIcon} alt="Featured" style={{ width: 16, height: 16 }} title={`${item.badges.featured} featured`} />
-                                )}
-                                {item.badges.specialEffects > 0 && (
-                                  <img src={specialEffectsIcon} alt="Special Effects" style={{ width: 16, height: 16 }} title={`${item.badges.specialEffects} with effects`} />
-                                )}
-                                {item.badges.p2p > 0 && (
-                                  <img src={p2pIcon} alt="P2P" style={{ width: 16, height: 16 }} title={`${item.badges.p2p} P2P validation`} />
-                                )}
-                                {item.badges.locationSpecific > 0 && (
-                                  <img src={gpsIcon} alt="Location" style={{ width: 16, height: 16 }} title={`${item.badges.locationSpecific} location-specific`} />
-                                )}
-                              </>
-                            )}
-                          </div>
+                          <div className="h5 fw-bold mb-2">{item.count}</div>
                           <div className="progress" style={{ height: '6px' }}>
                             <div 
                               className="progress-bar bg-primary" 
