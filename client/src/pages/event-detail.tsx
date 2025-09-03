@@ -943,15 +943,15 @@ export default function EventDetailPage() {
                         <div style={{
                           fontSize: '28px',
                           fontWeight: 'bold',
-                          color: organizerReputation?.percentage !== null && organizerReputation.percentage >= 80 
+                          color: organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined && organizerReputation.percentage >= 80 
                             ? '#28a745'
-                            : organizerReputation?.percentage !== null && organizerReputation.percentage >= 50
+                            : organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined && organizerReputation.percentage >= 50
                             ? '#ffc107'
-                            : organizerReputation?.percentage !== null
+                            : organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined
                             ? '#dc3545'
                             : '#6c757d'
                         }}>
-                          {organizerReputation?.percentage !== null ? `${organizerReputation.percentage}%` : '—'}
+                          {organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined ? `${organizerReputation.percentage}%` : '—'}
                         </div>
                         
                         {/* Badge */}

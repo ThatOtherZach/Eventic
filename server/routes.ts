@@ -631,7 +631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate deterministic HTML for the ticket (fixed 512x768 size)
       // Use ticket ID as seed for deterministic positioning
-      const seed = ticketData.ticket.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const seed = ticketData.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const random = (index: number) => {
         const x = Math.sin(seed + index) * 10000;
         return x - Math.floor(x);
@@ -745,16 +745,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 </head>
 <body>
   <div id="ticket">
-    ${event.specialEffects && ticketData.ticket.stickerUrl ? `
-      <img class="sticker-overlay sticker-1" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
-      <img class="sticker-overlay sticker-2" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
-      <img class="sticker-overlay sticker-3" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
-      <img class="sticker-overlay sticker-4" src="${ticketData.ticket.stickerUrl}" alt="" crossorigin="anonymous">
+    ${event.specialEffectsEnabled && event.stickerUrl ? `
+      <img class="sticker-overlay sticker-1" src="${event.stickerUrl}" alt="" crossorigin="anonymous">
+      <img class="sticker-overlay sticker-2" src="${event.stickerUrl}" alt="" crossorigin="anonymous">
+      <img class="sticker-overlay sticker-3" src="${event.stickerUrl}" alt="" crossorigin="anonymous">
+      <img class="sticker-overlay sticker-4" src="${event.stickerUrl}" alt="" crossorigin="anonymous">
     ` : ''}
     <div class="ticket-content">
       <div class="event-title">${event.name}</div>
-      <div class="ticket-id">Ticket #${ticketData.ticket.ticketNumber || '001'}</div>
-      ${ticketData.ticket.isValidated ? '<div class="validated-badge">✓ VALIDATED</div>' : ''}
+      <div class="ticket-id">Ticket #${ticketData.ticketNumber || '001'}</div>
+      ${ticketData.isValidated ? '<div class="validated-badge">✓ VALIDATED</div>' : ''}
     </div>
   </div>
 </body>
@@ -888,7 +888,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if already captured (idempotency)
       if (ticket.nftMediaUrl) {
-        const mediaType = ticket.nftMediaType || 'video/mp4';
+        const mediaType = 'video/mp4';
         const pngUrl = ticket.nftMediaUrl.replace(/\.(mp4|webm|gif)$/, '.png');
         
         return res.json({
@@ -1001,7 +1001,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Media already exists for ticket ${ticket.id}, returning cached URL`);
         return res.json({ 
           mediaUrl: ticket.nftMediaUrl, 
-          mediaType: ticket.nftMediaType || 'video/mp4',
+          mediaType: 'video/mp4',
           cached: true 
         });
       }
@@ -1763,13 +1763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         type: "success",
         title: "Ticket Returned",
-        description: `Your ticket has been returned and is now available for others.`,
-        metadata: JSON.stringify({
-          ticketId,
-          eventId: ticket.eventId,
-          eventName: event.name,
-          ticketNumber: ticket.ticketNumber
-        })
+        description: `Your ticket for "${event.name}" has been returned and is now available for others.`
       });
 
       // Log the resell listing
@@ -2322,12 +2316,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Count badges for events on this date
         const badges = {
-          featured: eventsOnDate.filter(e => e.isFeatured).length,
+          featured: 0, // Featured events are tracked separately
           specialEffects: eventsOnDate.filter(e => e.specialEffectsEnabled).length,
           p2p: eventsOnDate.filter(e => e.p2pValidation).length,
           locationSpecific: eventsOnDate.filter(e => e.geofence).length,
-          free: eventsOnDate.filter(e => e.price === 0).length,
-          goldenTicket: eventsOnDate.filter(e => e.specialEffectsEnabled && e.specialEffectsType === 'golden-ticket').length
+          free: eventsOnDate.filter(e => parseFloat(e.ticketPrice) === 0).length,
+          goldenTicket: eventsOnDate.filter(e => e.goldenTicketEnabled).length
         };
         
         eventDistribution.push({
@@ -2863,16 +2857,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketNumber: ticket.ticketNumber,
         ticketStatus: ticket.status || "validated",
         ticketValidatedAt: ticket.validatedAt || null,
-        ticketValidatedBy: ticket.validatedBy || null,
+        ticketValidatedBy: null, // validatedBy not tracked in current schema
         ticketCreatedAt: ticket.createdAt || new Date(),
-        ticketRecipientName: ticket.recipientName || owner?.username || "Unknown",
+        ticketRecipientName: ticket.recipientName || owner?.displayName || "Unknown",
         ticketRecipientEmail: ticket.recipientEmail || owner?.email || "unknown@example.com",
         ticketSeatNumber: ticket.seatNumber || null,
         ticketType: ticket.ticketType || null,
         ticketTransferable: ticket.transferable || false,
         ticketUsageCount: ticket.useCount || 0,
-        ticketMaxUses: ticket.maxUses || 1,
-        ticketIsGolden: ticket.isGolden || false,
+        ticketMaxUses: 1, // maxUses not tracked on tickets, only events
+        ticketIsGolden: ticket.isGoldenTicket || false,
         ticketNftMediaUrl: permanentNftMediaUrl || null,
         ticketQrCode: ticket.qrData,
         ticketValidationCode: ticket.validationCode || null,
@@ -2896,9 +2890,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventEndTime: event.endTime || null,
         eventImageUrl: permanentEventImageUrl || null,
         eventMaxTickets: event.maxTickets || null,
-        eventTicketsSold: event.ticketsSold || 0,
+        eventTicketsSold: 0, // ticketsSold calculated separately
         eventTicketPrice: event.ticketPrice || null,
-        eventEventTypes: event.eventTypes || [],
+        eventEventTypes: [], // eventTypes not stored in current schema
         eventReentryType: event.reentryType || "No Reentry (Single Use)",
         eventGoldenTicketEnabled: event.goldenTicketEnabled || false,
         eventGoldenTicketCount: event.goldenTicketCount || null,
@@ -2931,9 +2925,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventHashtags: event.hashtags || [],
         
         // User data preservation
-        creatorUsername: creator?.username || "unknown",
+        creatorUsername: creator?.displayName || "unknown",
         creatorDisplayName: creator?.displayName || null,
-        ownerUsername: owner?.username || "unknown",
+        ownerUsername: owner?.displayName || "unknown",
         ownerDisplayName: owner?.displayName || null,
         
         validatedAt: ticket.validatedAt!,
@@ -4050,7 +4044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Stripe checkout session
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2024-12-18.acacia'
+        apiVersion: '2025-07-30.basil'
       });
       
       const session = await stripe.checkout.sessions.create({
@@ -4095,7 +4089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2024-12-18.acacia'
+        apiVersion: '2025-07-30.basil'
       });
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
@@ -4105,7 +4099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Verify webhook signature
         const sig = req.headers['stripe-signature'];
         try {
-          event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+          event = stripe.webhooks.constructEvent(req.body, sig as string, endpointSecret);
         } catch (err: any) {
           console.error('Webhook signature verification failed:', err.message);
           return res.status(400).send(`Webhook Error: ${err.message}`);

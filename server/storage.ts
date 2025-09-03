@@ -3693,7 +3693,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Check if max uses reached
-      if (secretCode.maxUses && secretCode.currentUses >= secretCode.maxUses) {
+      if (secretCode.maxUses && secretCode.currentUses !== null && secretCode.currentUses >= secretCode.maxUses) {
         return undefined;
       }
       
@@ -3728,7 +3728,7 @@ export class DatabaseStorage implements IStorage {
         
         // Update the usage count
         await tx.update(secretCodes)
-          .set({ currentUses: secretCode.currentUses + 1 })
+          .set({ currentUses: (secretCode.currentUses || 0) + 1 })
           .where(eq(secretCodes.id, secretCode.id));
         
         // Credit user account with tickets
