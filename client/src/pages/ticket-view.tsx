@@ -540,7 +540,10 @@ export default function TicketViewPage(): React.ReactElement {
               />
               <span>
                 {daysUntilDeletion} days until deletion
-                {daysUntilDeletion <= 7 && (
+                {event.allowMinting && (
+                  <span> - digital collectable available below</span>
+                )}
+                {daysUntilDeletion <= 7 && !event.allowMinting && (
                   <span className="ms-1">- data will be permanently removed soon</span>
                 )}
               </span>
