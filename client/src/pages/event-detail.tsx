@@ -381,7 +381,7 @@ export default function EventDetailPage() {
     const totalVotes = thumbsUp + thumbsDown;
     
     if (totalVotes === 0 || percentage === null) {
-      return { badge: "Newbie", showPercentage: false, totalVotes };
+      return { badge: "NPC", showPercentage: false, totalVotes };
     } else if (percentage >= 1 && percentage <= 49) {
       return { badge: "Interesting", showPercentage: false, totalVotes };
     } else if (percentage >= 50 && percentage <= 79) {
@@ -389,7 +389,7 @@ export default function EventDetailPage() {
     } else if (percentage >= 80) {
       return { badge: "😎", showPercentage: false, totalVotes };
     } else {
-      return { badge: "Newbie", showPercentage: false, totalVotes };
+      return { badge: "NPC", showPercentage: false, totalVotes };
     }
   };
 
@@ -986,7 +986,7 @@ export default function EventDetailPage() {
                             }
                             
                             // Different colors for each badge level
-                            let badgeColor = '#28a745'; // Green for Newbie
+                            let badgeColor = '#28a745'; // Green for NPC
                             if (reputationInfo.badge === 'Interesting') {
                               badgeColor = '#ffc107'; // Yellow
                             } else if (reputationInfo.badge === 'Nice') {

@@ -658,7 +658,7 @@ export default function NerdStats() {
                           const total = thumbsUp + thumbsDown;
                           
                           if (total === 0 || percentage === null) {
-                            return { badge: "Newbie", color: "#28a745" };
+                            return { badge: "NPC", color: "#28a745" };
                           } else if (percentage >= 1 && percentage <= 49) {
                             return { badge: "Interesting", color: "#ffc107" };
                           } else if (percentage >= 50 && percentage <= 79) {
@@ -666,7 +666,7 @@ export default function NerdStats() {
                           } else if (percentage >= 80) {
                             return { badge: "😎", color: null };
                           } else {
-                            return { badge: "Newbie", color: "#28a745" };
+                            return { badge: "NPC", color: "#28a745" };
                           }
                         };
                         const reputationInfo = getReputationBadge(user.percentage, user.thumbsUp, user.thumbsDown);

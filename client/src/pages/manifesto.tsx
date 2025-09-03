@@ -110,8 +110,8 @@ export default function Manifesto() {
           <p className="mb-3" style={paragraphStyle}>
             Think of it like a rolling average of your recent vibe. Got 100 thumbs up 
             from an event 68 days ago? Tomorrow you'll need fresh ones to maintain your 
-            status. Your badge evolves in real-time: Newbie → Rising Star → Trusted → 
-            Elite → Legend → 😎. But slack off, and you'll slide right back down.
+            status. Your badge evolves in real-time: NPC → Interesting → Nice → 😎. 
+            But slack off, and you'll slide right back down.
           </p>
           <p className="mb-3" style={paragraphStyle}>
             This rolling window is genius for three reasons: (1) Bad events can't haunt 
