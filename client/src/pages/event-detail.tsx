@@ -30,6 +30,7 @@ import calendarBadgeIcon from "@assets/calendar-0_1756849638733.png";
 import missionIcon from "@assets/internet_connection_wiz-2_1756934046026.png";
 import mediaPlayerIcon from "@assets/wm-4_1756934119811.png";
 import charmapIcon from "@assets/charmap_w2k-0_1756934317788.png";
+import netmeetingIcon from "@assets/netmeeting-2_1756934362133.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -645,7 +646,7 @@ export default function EventDetailPage() {
               {event.recurringType && (
                 <Link href="/type/recurring">
                   <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <img src={calendarBadgeIcon} alt="" style={{ width: '14px', height: '14px' }} />
+                    <img src={netmeetingIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     {event.recurringType === 'weekly' && 'Weekly Recurring'}
                     {event.recurringType === 'monthly' && 'Monthly Recurring'}
                     {event.recurringType === 'annually' && 'Annual Recurring'}
