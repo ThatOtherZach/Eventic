@@ -191,8 +191,8 @@ export default function NerdStats() {
       <div className="row mb-4">
         <div className="col-12">
           <h5 className="fw-semibold mb-3">
-            <img src={coreMetricsIcon} alt="Core Metrics" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
-            Core Metrics
+            <img src={coreMetricsIcon} alt="Numbers 'n' Stuff" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+            Numbers 'n' Stuff
           </h5>
           <div className="row g-3">
             <div className="col-md-3">
