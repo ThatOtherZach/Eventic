@@ -370,27 +370,31 @@ export default function TicketViewPage(): React.ReactElement {
   };
 
   // Check if within voting period (only during event and up to 24 hours after, or until end date)
-  const isWithinVotingPeriod = () => {
-    if (!ticketData?.event) return false;
+  const getVotingPeriodStatus = () => {
+    if (!ticketData?.event) return { isValid: false, reason: 'notStarted' };
     const now = new Date();
     const startDateTime = `${ticketData.event.date}T${ticketData.event.time}:00`;
     const startDate = new Date(startDateTime);
     
     // Check if event hasn't started yet
     if (now < startDate) {
-      return false; // Voting not allowed before event starts
+      return { isValid: false, reason: 'notStarted' }; // Voting not allowed before event starts
     }
     
     // If event has an end date, check if we're past it
     if (ticketData.event.endDate && ticketData.event.endTime) {
       const endDateTime = `${ticketData.event.endDate}T${ticketData.event.endTime}:00`;
       const endDate = new Date(endDateTime);
-      return now <= endDate; // Allow voting until end date
+      return now <= endDate ? { isValid: true, reason: 'active' } : { isValid: false, reason: 'ended' };
     } else {
       // No end date - allow voting for 24 hours after start
       const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-      return now <= twentyFourHoursAfterStart;
+      return now <= twentyFourHoursAfterStart ? { isValid: true, reason: 'active' } : { isValid: false, reason: 'ended' };
     }
+  };
+  
+  const isWithinVotingPeriod = () => {
+    return getVotingPeriodStatus().isValid;
   };
 
   // Update rating state when rating status changes
@@ -1061,8 +1065,14 @@ export default function TicketViewPage(): React.ReactElement {
                         <div className="d-flex align-items-center">
                           <img src="/clock-warning-icon.png" alt="" width="20" height="20" className="me-2" style={{ flexShrink: 0 }} />
                           <div>
-                            <h6 className="mb-1">Voting Period Ended</h6>
-                            <p className="mb-0 small">Voting is no longer available for this event</p>
+                            <h6 className="mb-1">
+                              {getVotingPeriodStatus().reason === 'notStarted' ? 'Voting Not Yet Available' : 'Voting Period Ended'}
+                            </h6>
+                            <p className="mb-0 small">
+                              {getVotingPeriodStatus().reason === 'notStarted' 
+                                ? 'Voting will be available when the event starts' 
+                                : 'Voting is no longer available for this event'}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1142,7 +1152,7 @@ export default function TicketViewPage(): React.ReactElement {
                     ) : event.enableVoting && event.p2pValidation && ticket.isValidated && !isWithinVotingPeriod() ? (
                       <>
                         <Clock size={18} className="me-2" />
-                        Voting Period Ended
+                        {getVotingPeriodStatus().reason === 'notStarted' ? 'Voting Starts at Event Time' : 'Voting Period Ended'}
                       </>
                     ) : event.enableVoting && event.p2pValidation && ticket.isValidated ? (
                       <>
