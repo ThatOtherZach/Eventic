@@ -63,15 +63,18 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <div className="min-vh-100 bg-light">
+            <div className="min-vh-100 bg-light d-flex flex-column">
               <Navigation />
-              <main id="main-content" className="container-fluid px-3 px-md-4 py-4" role="main">
+              <main id="main-content" className="container-fluid px-3 px-md-4 py-4 flex-grow-1" role="main">
                 <div className="row justify-content-center">
                   <div className="col-12 col-xl-10">
                     <Router />
                   </div>
                 </div>
               </main>
+              <footer className="text-center py-3 mt-auto">
+                <small className="text-muted">Saym Services Inc.</small>
+              </footer>
             </div>
             <Toaster />
           </TooltipProvider>
