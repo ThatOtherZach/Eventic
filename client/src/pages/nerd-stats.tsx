@@ -366,10 +366,10 @@ export default function NerdStats() {
         </div>
       )}
 
-      {/* Ticket Sales Trend */}
+      {/* Ticket Sales Trend and Top Hashtags */}
       {periodData.length > 0 && (
         <div className="row mb-4">
-          <div className="col-12">
+          <div className="col-md-8">
             <h5 className="fw-semibold mb-3">
               <img src={ticketingTrendsIcon} alt="Ticketing Trends" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
               Ticketing Trends
@@ -399,6 +399,31 @@ export default function NerdStats() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <h5 className="fw-semibold mb-3">
+              <Hash size={20} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+              Top 10 Hashtags
+            </h5>
+            <div className="card shadow-sm">
+              <div className="card-body">
+                {analyticsData?.charts?.topHashtags && analyticsData.charts.topHashtags.length > 0 ? (
+                  <div className="list-group list-group-flush">
+                    {analyticsData.charts.topHashtags.map((item: { hashtag: string; count: number }, index: number) => (
+                      <div key={item.hashtag} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div className="d-flex align-items-center">
+                          <span className="badge bg-primary me-2" style={{ minWidth: '25px' }}>{index + 1}</span>
+                          <span className="text-muted">#{item.hashtag}</span>
+                        </div>
+                        <span className="badge bg-light text-dark">{item.count} events</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted text-center mb-0">No hashtags found</p>
+                )}
               </div>
             </div>
           </div>

@@ -2256,6 +2256,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .slice(0, 5)
         .map(([type, count]) => ({ type, count }));
       
+      // Get top 10 hashtags
+      const topHashtags = Object.entries(eventTypes)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([hashtag, count]) => ({ hashtag, count }));
+      
       // Get user growth (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -2301,7 +2307,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             data: periodData
           },
           topCountries,
-          topEventTypes
+          topEventTypes,
+          topHashtags
         }
       });
     } catch (error) {
