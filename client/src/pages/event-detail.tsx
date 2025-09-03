@@ -19,7 +19,14 @@ import dateIcon from "@assets/image_1756751150943.png";
 import locationIcon from "@assets/globe_map-5_1756751517694.png";
 import clockIcon from "@assets/clock-1_1756752706835.png";
 import { LocationPicker } from "@/components/location-picker";
-import FeatureGrid from "@/components/events/feature-grid";
+import goldenTicketIcon from "@assets/world_star-0_1756849251180.png";
+import specialEffectsIcon from "@assets/image_1756849316138.png";
+import certificateIcon from "@assets/certificate_multiple-1_1756849669534.png";
+import gpsIcon from "@assets/gps-1_1756849430189.png";
+import checkIcon from "@assets/check-0_1756849706987.png";
+import usersIcon from "@assets/users_green-4_1756849357200.png";
+import chartIcon from "@assets/chart1-4_1756850194937.png";
+import calendarBadgeIcon from "@assets/calendar-0_1756849638733.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -543,80 +550,87 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Feature Grid - Visual dictionary of event features */}
-          <FeatureGrid event={event} />
-
-          {/* Old badges section removed - replaced with feature grid above */}
-          {false && (event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
+          {/* Event Settings Display - Retro badges with icons */}
+          {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
             event.recurringType || event.stickerUrl || event.p2pValidation || event.allowMinting || 
             event.geofence || event.enableVoting) && (
             <div className="d-flex flex-wrap gap-2 mb-2">
               {event.isAdminCreated && (
                 <Link href="/type/mission">
-                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={ownerIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Mission
                   </span>
                 </Link>
               )}
               {event.goldenTicketEnabled && (
                 <Link href="/type/golden">
-                  <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#FFD700', color: '#000', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={goldenTicketIcon} alt="" style={{ width: '14px', height: '14px', filter: 'invert(1)' }} />
                     Golden Tickets
                   </span>
                 </Link>
               )}
               {event.specialEffectsEnabled && (
                 <Link href="/type/effects">
-                  <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={specialEffectsIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Special Effects
                   </span>
                 </Link>
               )}
               {event.surgePricing && (
                 <Link href="/type/surge">
-                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#DC2626', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={chartIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Surge
                   </span>
                 </Link>
               )}
               {event.stickerUrl && (
                 <Link href="/type/stickers">
-                  <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={specialEffectsIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Custom Stickers ({event.stickerOdds || 50}%)
                   </span>
                 </Link>
               )}
               {event.p2pValidation && (
                 <Link href="/type/p2p">
-                  <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#3B82F6', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={usersIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     P2P Validation
                   </span>
                 </Link>
               )}
               {event.allowMinting && (
                 <Link href="/type/collectable">
-                  <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#000000', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={certificateIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Collectable
                   </span>
                 </Link>
               )}
               {event.geofence && (
                 <Link href="/type/geofenced">
-                  <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#F59E0B', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={gpsIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Location Lock
                   </span>
                 </Link>
               )}
               {event.enableVoting && (
                 <Link href="/type/voting">
-                  <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#EAB308', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={checkIcon} alt="" style={{ width: '14px', height: '14px', filter: 'invert(1)' }} />
                     Vote
                   </span>
                 </Link>
               )}
               {event.recurringType && (
                 <Link href="/type/recurring">
-                  <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#059669', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={calendarBadgeIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     {event.recurringType === 'weekly' && 'Weekly Recurring'}
                     {event.recurringType === 'monthly' && 'Monthly Recurring'}
                     {event.recurringType === 'annually' && 'Annual Recurring'}
@@ -625,14 +639,16 @@ export default function EventDetailPage() {
               )}
               {event.maxTickets && (
                 <Link href="/type/limited">
-                  <span className="badge" style={{ backgroundColor: '#14B8A6', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#14B8A6', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={clockIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Limited
                   </span>
                 </Link>
               )}
               {event.endDate && (
                 <Link href="/type/multiday">
-                  <span className="badge" style={{ backgroundColor: '#6B7280', color: '#fff', cursor: 'pointer' }}>
+                  <span className="badge" style={{ backgroundColor: '#6B7280', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <img src={dateIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Multi-day
                   </span>
                 </Link>
