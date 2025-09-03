@@ -3712,11 +3712,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         res.json({ success: true, rating: updatedRating, updated: true });
       } else {
-        // For thumbs down, check if user has enough tickets first
+        // For thumbs down, check if user has enough credits first
         if (rating === 'thumbs_down') {
           const userBalance = await storage.getUserBalance(userId);
-          if (!userBalance || userBalance.tickets < 1) {
-            return res.status(400).json({ message: "Insufficient tickets. Downvoting costs 1 ticket." });
+          if (!userBalance || parseFloat(userBalance.availableBalance) < 1) {
+            return res.status(400).json({ message: "Insufficient credits. Downvoting costs 1 credit." });
           }
         }
         
@@ -3734,7 +3734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Handle ticket rewards/costs based on rating type
         if (rating === 'thumbs_up') {
-          // Credit user with 1 ticket for positive rating
+          // Credit user with 1 credit for positive rating
           await storage.creditUserAccount(
             userId,
             1,
@@ -3747,7 +3747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
           res.json({ success: true, rating: eventRating, updated: false, rewardCredited: true });
         } else {
-          // Debit user 1 ticket for negative rating
+          // Debit user 1 credit for negative rating
           const debitSuccess = await storage.debitUserAccount(
             userId,
             1,

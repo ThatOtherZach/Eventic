@@ -155,9 +155,9 @@ export default function TicketViewPage(): React.ReactElement {
       if (data.updated) {
         description = "Your rating has been updated!";
       } else if (data.rewardCredited) {
-        description = "Thank you! You've earned 1 ticket for rating this event!";
+        description = "Thank you! You've earned 1 credit for rating this event!";
       } else if (data.ticketDebited) {
-        description = "Thank you for your feedback! 1 ticket was deducted.";
+        description = "Thank you for your feedback! 1 credit was deducted.";
       } else {
         description = "Thank you for rating this event!";
       }
@@ -1139,7 +1139,7 @@ export default function TicketViewPage(): React.ReactElement {
                       {hasRated ? (
                         'You can change your rating for free'
                       ) : (
-                        'Thumbs up earns 1 ticket, thumbs down costs 1 ticket'
+                        'Thumbs up earns 1 credit, thumbs down costs 1 credit'
                       )}
                     </p>
                   </div>
@@ -1154,7 +1154,7 @@ export default function TicketViewPage(): React.ReactElement {
                         disabled={submitRatingMutation.isPending}
                         data-testid="button-thumbs-up"
                         style={{ padding: '8px 16px', minWidth: '60px' }}
-                        title={hasRated ? 'Change rating (free)' : 'Earns 1 ticket'}
+                        title={hasRated ? 'Change rating (free)' : 'Earns 1 credit'}
                       >
                         <ThumbsUp size={20} />
                       </button>
@@ -1172,7 +1172,7 @@ export default function TicketViewPage(): React.ReactElement {
                         disabled={submitRatingMutation.isPending}
                         data-testid="button-thumbs-down"
                         style={{ padding: '8px 16px', minWidth: '60px' }}
-                        title={hasRated ? 'Change rating (free)' : 'Costs 1 ticket'}
+                        title={hasRated ? 'Change rating (free)' : 'Costs 1 credit'}
                       >
                         <ThumbsDown size={20} />
                       </button>
