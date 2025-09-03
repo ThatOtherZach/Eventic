@@ -954,46 +954,61 @@ export default function EventDetailPage() {
                           backgroundColor: '#dee2e6'
                         }} />
                         
-                        {/* Percentage Display */}
-                        <div style={{
-                          fontSize: '28px',
-                          fontWeight: 'bold',
-                          color: organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined && organizerReputation.percentage >= 80 
-                            ? '#28a745'
-                            : organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined && organizerReputation.percentage >= 50
-                            ? '#ffc107'
-                            : organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined
-                            ? '#dc3545'
-                            : '#6c757d'
-                        }}>
-                          {organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined ? `${organizerReputation.percentage}%` : '—'}
-                        </div>
-                        
-                        {/* Badge */}
-                        {organizerReputation && (() => {
-                          const reputationInfo = getReputationDisplay();
-                          if (!reputationInfo || !reputationInfo.badge) return null;
+                        {/* Percentage and Badge Container */}
+                        <div style={{ textAlign: 'center' }}>
+                          {/* Percentage Display */}
+                          <div style={{
+                            fontSize: '28px',
+                            fontWeight: 'bold',
+                            color: organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined && organizerReputation.percentage >= 80 
+                              ? '#28a745'
+                              : organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined && organizerReputation.percentage >= 50
+                              ? '#ffc107'
+                              : organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined
+                              ? '#dc3545'
+                              : '#6c757d'
+                          }}>
+                            {organizerReputation?.percentage !== null && organizerReputation?.percentage !== undefined ? `${organizerReputation.percentage}%` : '—'}
+                          </div>
                           
-                          return (
-                            <>
-                              <div style={{
-                                width: '1px',
-                                height: '60px',
-                                backgroundColor: '#dee2e6'
-                              }} />
-                              <span className="badge" style={{
-                                backgroundColor: '#6c757d',
-                                color: '#fff',
-                                fontSize: '11px',
-                                padding: '5px 10px',
-                                borderRadius: '0',
-                                fontWeight: '500'
-                              }}>
-                                {reputationInfo.badge}
-                              </span>
-                            </>
-                          );
-                        })()}
+                          {/* Badge below percentage */}
+                          {organizerReputation && (() => {
+                            const reputationInfo = getReputationDisplay();
+                            if (!reputationInfo || !reputationInfo.badge) return null;
+                            
+                            // Don't show badge for emoji
+                            if (reputationInfo.badge === '😎') {
+                              return (
+                                <div style={{ marginTop: '8px', fontSize: '20px' }}>
+                                  {reputationInfo.badge}
+                                </div>
+                              );
+                            }
+                            
+                            // Different colors for each badge level
+                            let badgeColor = '#28a745'; // Green for Newbie
+                            if (reputationInfo.badge === 'Amateur') {
+                              badgeColor = '#ffc107'; // Yellow
+                            } else if (reputationInfo.badge === 'Nice') {
+                              badgeColor = '#17a2b8'; // Teal
+                            }
+                            
+                            return (
+                              <div style={{ marginTop: '8px' }}>
+                                <span className="badge" style={{
+                                  backgroundColor: badgeColor,
+                                  color: '#fff',
+                                  fontSize: '11px',
+                                  padding: '5px 10px',
+                                  borderRadius: '0',
+                                  fontWeight: '500'
+                                }}>
+                                  {reputationInfo.badge}
+                                </span>
+                              </div>
+                            );
+                          })()}
+                        </div>
                       </div>
                       
                       {/* Username Badge */}
