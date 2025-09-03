@@ -4,6 +4,7 @@ import { MapPin, Calendar, Clock, DollarSign, Shield, Sparkles, Star, Filter } f
 import { SpecialEffects, SpecialEffectBadge, SpecialEffectOverlay, detectSpecialEffect, getMonthlyColor } from "@/components/tickets/special-effects";
 import BadgeBar from "@/components/events/badge-bar";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
+import goldenTicketIcon from "@assets/utopia_smiley_1756934814087.png";
 
 interface Event {
   id: string;
@@ -50,7 +51,7 @@ const eventTypeConfig: Record<string, {
   golden: { 
     label: 'Golden Ticket Events', 
     color: '#FFD700',
-    emoji: '🎫',
+    imageIcon: goldenTicketIcon,
     checkField: (e) => !!e.goldenTicketEnabled 
   },
   effects: { 
