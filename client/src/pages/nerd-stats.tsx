@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import { useState, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -43,6 +44,7 @@ import tealBg from "@assets/win98-teal_1756850231196.png";
 import hashtagIcon from "@assets/modem-4_1756868854727.png";
 
 export default function NerdStats() {
+  const [selectedCountry, setSelectedCountry] = useState<string>('Global');
 
   // Fetch various stats
   const { data: stats } = useQuery({
@@ -92,17 +94,34 @@ export default function NerdStats() {
     // No auto-refresh
   });
 
+  // Get unique countries from events
+  const countries = useMemo(() => {
+    if (!events) return [];
+    const countrySet = new Set<string>();
+    events.forEach((event: any) => {
+      if (event.country) countrySet.add(event.country);
+    });
+    return Array.from(countrySet).sort();
+  }, [events]);
+
+  // Filter events by selected country
+  const filteredEvents = useMemo(() => {
+    if (!events) return [];
+    if (selectedCountry === 'Global') return events;
+    return events.filter((event: any) => event.country === selectedCountry);
+  }, [events, selectedCountry]);
+
   // Calculate advanced stats
   const calculateStats = () => {
-    if (!events || !stats) return null;
+    if (!filteredEvents || !stats) return null;
 
     const now = new Date();
-    const activeEvents = events.filter((e: any) => new Date(e.date) > now);
-    const pastEvents = events.filter((e: any) => new Date(e.date) <= now);
+    const activeEvents = filteredEvents.filter((e: any) => new Date(e.date) > now);
+    const pastEvents = filteredEvents.filter((e: any) => new Date(e.date) <= now);
     
     // Calculate average tickets per event
-    const avgTicketsPerEvent = events.length > 0 
-      ? Math.round(stats.totalTickets / events.length * 100) / 100 
+    const avgTicketsPerEvent = filteredEvents.length > 0 
+      ? Math.round(stats.totalTickets / filteredEvents.length * 100) / 100 
       : 0;
 
     // Calculate validation rate
@@ -111,7 +130,7 @@ export default function NerdStats() {
       : 0;
 
     // Events by day of week
-    const dayStats = events.reduce((acc: any, event: any) => {
+    const dayStats = filteredEvents.reduce((acc: any, event: any) => {
       const day = new Date(event.date).getDay();
       const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day];
       acc[dayName] = (acc[dayName] || 0) + 1;
@@ -119,7 +138,7 @@ export default function NerdStats() {
     }, {});
 
     // Price statistics
-    const ticketPrices = events.map((e: any) => parseFloat(e.ticketPrice)).filter((p: any) => p > 0);
+    const ticketPrices = filteredEvents.map((e: any) => parseFloat(e.ticketPrice)).filter((p: any) => p > 0);
     const avgPrice = ticketPrices.length > 0 
       ? Math.round(ticketPrices.reduce((a: number, b: number) => a + b, 0) / ticketPrices.length * 100) / 100
       : 0;
@@ -128,13 +147,13 @@ export default function NerdStats() {
 
     // Badge statistics
     const featuredEvents = 0; // Featured events are tracked separately in featuredEvents table
-    const specialEffectsEvents = events.filter((e: any) => e.specialEffectsEnabled).length;
-    const locationSpecificEvents = events.filter((e: any) => e.geofence).length;
-    const p2pEvents = events.filter((e: any) => e.p2pValidation).length;
+    const specialEffectsEvents = filteredEvents.filter((e: any) => e.specialEffectsEnabled).length;
+    const locationSpecificEvents = filteredEvents.filter((e: any) => e.geofence).length;
+    const p2pEvents = filteredEvents.filter((e: any) => e.p2pValidation).length;
 
     // Ticket economy stats
-    const freeEvents = events.filter((e: any) => parseFloat(e.ticketPrice) === 0).length;
-    const paidEvents = events.filter((e: any) => parseFloat(e.ticketPrice) > 0).length;
+    const freeEvents = filteredEvents.filter((e: any) => parseFloat(e.ticketPrice) === 0).length;
+    const paidEvents = filteredEvents.filter((e: any) => parseFloat(e.ticketPrice) > 0).length;
     const goldenTickets = tickets?.filter((t: any) => t.isGoldenTicket).length || 0;
     const resaleTickets = tickets?.filter((t: any) => t.resalePrice !== null).length || 0;
 
@@ -190,10 +209,23 @@ export default function NerdStats() {
       {/* Core Metrics */}
       <div className="row mb-4">
         <div className="col-12">
-          <h5 className="fw-semibold mb-3">
-            <img src={coreMetricsIcon} alt="Numbers & Stuff" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
-            Numbers & Stuff
-          </h5>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="fw-semibold mb-0">
+              <img src={coreMetricsIcon} alt="Numbers & Stuff" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+              Numbers & Stuff
+            </h5>
+            <select 
+              className="form-select form-select-sm" 
+              style={{ width: 'auto' }}
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+            >
+              <option value="Global">Global</option>
+              {countries.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
+          </div>
           <div className="row g-3">
             <div className="col-md-3">
               <div className="card shadow-sm h-100">
