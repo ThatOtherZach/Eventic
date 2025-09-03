@@ -92,7 +92,7 @@ const eventTypeConfig: Record<string, {
     checkField: (e) => !!e.geofence 
   },
   voting: { 
-    label: 'Voting Enabled Events', 
+    label: 'Voting Events', 
     color: '#EAB308',
     imageIcon: votingIcon,
     checkField: (e) => !!e.enableVoting 
