@@ -959,12 +959,12 @@ export default function AccountPage() {
                         {demandData && (
                           <>
                             <span className={`badge ${
-                              demandData.demandMultiplier < 0.9 ? 'bg-success' :
-                              demandData.demandMultiplier < 1.1 ? 'bg-warning' :
+                              demandData.demandMultiplier <= 1.0 ? 'bg-success' :
+                              demandData.demandMultiplier < 1.15 ? 'bg-warning' :
                               'bg-danger'
                             } me-1`}>
-                              {demandData.demandMultiplier < 0.9 ? 'Low Demand' :
-                               demandData.demandMultiplier < 1.1 ? 'Normal' :
+                              {demandData.demandMultiplier <= 1.0 ? 'Base Price' :
+                               demandData.demandMultiplier < 1.15 ? 'Moderate Demand' :
                                'High Demand'}
                             </span>
                             <span style={{ fontSize: '0.75rem' }}>

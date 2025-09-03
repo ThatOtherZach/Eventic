@@ -4002,7 +4002,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if cache is valid
       if (demandCache && (Date.now() - demandCache.timestamp) < DEMAND_CACHE_DURATION) {
         const cachedDemand = demandCache.value;
-        const demandMultiplier = Math.min(1.5, Math.max(0.8, 0.8 + (cachedDemand / 1000)));
+        const demandMultiplier = Math.min(1.3, Math.max(1.0, 1.0 + (cachedDemand / 1666)));
         const currentUnitPrice = 0.23 * demandMultiplier;
         
         return res.json({ 
@@ -4020,7 +4020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       demandCache = { value: demand, timestamp: Date.now() };
       
       // Calculate current pricing based on bidirectional demand
-      const demandMultiplier = Math.min(1.5, Math.max(0.8, 0.8 + (demand / 1000)));
+      const demandMultiplier = Math.min(1.3, Math.max(1.0, 1.0 + (demand / 1666)));
       const currentUnitPrice = 0.23 * demandMultiplier;
       
       res.json({ 
@@ -4057,10 +4057,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Base price with dynamic adjustment based on bidirectional demand
       const baseUnitPrice = 0.23;
       
-      // Calculate demand multiplier (0.8x to 1.5x based on demand)
-      // When demand is 0, price is 0.8x (20% discount)
-      // When demand is high (e.g., 500+), price approaches 1.5x (50% increase)
-      const demandMultiplier = Math.min(1.5, Math.max(0.8, 0.8 + (currentDemand / 1000)));
+      // Calculate demand multiplier (1.0x to 1.3x based on demand)
+      // When demand is 0, price stays at base (1.0x)
+      // When demand is high (e.g., 500+), price approaches 1.3x (30% increase)
+      // This ensures we stay within $0.23 - $0.299 range to cover Stripe fees
+      const demandMultiplier = Math.min(1.3, Math.max(1.0, 1.0 + (currentDemand / 1666)));
       
       const unitPrice = baseUnitPrice * demandMultiplier;
       let effectiveUnitPrice = unitPrice;
