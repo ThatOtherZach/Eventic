@@ -206,77 +206,86 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         )}
       </div>
 
-      {/* Event Feature Badge Bar at Bottom - Matching BadgeBar component style */}
+      {/* Event Feature Badge Bar at Bottom - Format: [Mission][Validated]---colors---[#] */}
       {(() => {
-        // Text badges - these show with text
-        const textBadges = [];
-        if ((event as any).isAdminCreated) textBadges.push({ name: 'MISSION', bg: '#DC2626', color: '#fff' });
+        // Check what badges we need to show
+        const hasMission = (event as any).isAdminCreated;
+        const isValidated = showBadges && ticket.isValidated;
+        const isPass = showBadges && event.reentryType === "Pass (Multiple Use)";
+        const passUses = isPass ? (event.reentryType === 'No Limit' ? '∞' : (ticket.useCount || '0')) : null;
         
-        // Add status badges
-        if (showBadges) {
-          if (ticket.isValidated) textBadges.push({ name: 'VALIDATED', bg: '#059669', color: '#fff' });
-          if (event.reentryType === "Pass (Multiple Use)") {
-            const passUses = event.reentryType === 'No Limit' ? '∞' : (ticket.useCount || '0');
-            textBadges.push({ name: passUses, bg: '#0DCAF0', color: '#000' });
-          }
-        }
-        
-        // Color segments - these show as colors only without text
+        // Collect color segments for features (no text, just colors)
         const colorSegments = [];
         if (event.goldenTicketEnabled) colorSegments.push('#FFD700'); // Golden
-        if (event.specialEffectsEnabled) colorSegments.push('#9333EA'); // Purple
-        if (event.surgePricing) colorSegments.push('#DC2626'); // Red
-        if (event.stickerUrl) colorSegments.push('#EC4899'); // Pink
+        if (event.specialEffectsEnabled) colorSegments.push('#9333EA'); // Purple  
         if (event.p2pValidation) colorSegments.push('#3B82F6'); // Blue
         if (event.allowMinting) colorSegments.push('#000000'); // Black
         if (event.geofence) colorSegments.push('#F59E0B'); // Orange
         if (event.enableVoting) colorSegments.push('#EAB308'); // Yellow
+        if (event.surgePricing) colorSegments.push('#DC2626'); // Red
+        if (event.stickerUrl) colorSegments.push('#EC4899'); // Pink
         if (event.recurringType) colorSegments.push('#059669'); // Green
         if (event.maxTickets) colorSegments.push('#14B8A6'); // Teal
         if (event.endDate) colorSegments.push('#6B7280'); // Gray for multi-day
         
-        // Add special status badges to colors
+        // Add special ticket status to colors
         if (showBadges) {
           if ((ticket as any).resellStatus === "for_resale") colorSegments.push('#FFC107'); // Yellow for returned
           if (ticket.nftMediaUrl) colorSegments.push('#17a2b8'); // Teal for NFT
         }
 
         // If nothing to show, don't show the bar
-        if (textBadges.length === 0 && colorSegments.length === 0) return null;
+        if (!hasMission && !isValidated && colorSegments.length === 0 && !passUses) return null;
 
         return (
           <div 
             className="position-absolute bottom-0 start-0 w-100 d-flex align-items-stretch"
             style={{ 
-              height: '20px',
+              height: '24px',
               zIndex: 10,
-              borderRadius: '0 0 8px 8px',
-              overflow: 'hidden'
+              fontSize: '11px',
+              fontWeight: 'bold'
             }}
           >
-            {/* Text badges on the left */}
-            {textBadges.map((badge) => (
+            {/* Mission Badge - First */}
+            {hasMission && (
               <div
-                key={badge.name}
                 style={{
-                  backgroundColor: badge.bg,
-                  color: badge.color,
+                  backgroundColor: '#DC2626',
+                  color: '#fff',
                   padding: '0 8px',
                   display: 'flex',
                   alignItems: 'center',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                   whiteSpace: 'nowrap',
                   flexShrink: 0
                 }}
               >
-                {badge.name}
+                MISSION
               </div>
-            ))}
+            )}
             
-            {/* Color segments take up remaining space */}
+            {/* Validated Badge - Second */}
+            {isValidated && (
+              <div
+                style={{
+                  backgroundColor: '#059669',
+                  color: '#fff',
+                  padding: '0 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
+                VALIDATED
+              </div>
+            )}
+            
+            {/* Color segments fill the middle */}
             {colorSegments.length > 0 && (
               <div className="flex-grow-1 d-flex" style={{ minWidth: 0 }}>
                 {colorSegments.map((color, index) => (
@@ -288,6 +297,28 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
                     }}
                   />
                 ))}
+              </div>
+            )}
+            
+            {/* If no color segments but we need space filler, add empty space */}
+            {colorSegments.length === 0 && (hasMission || isValidated) && passUses && (
+              <div className="flex-grow-1" />
+            )}
+            
+            {/* Pass count - Last */}
+            {passUses && (
+              <div
+                style={{
+                  backgroundColor: '#0DCAF0',
+                  color: '#000',
+                  padding: '0 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontWeight: 'bold',
+                  flexShrink: 0
+                }}
+              >
+                {passUses}
               </div>
             )}
           </div>
