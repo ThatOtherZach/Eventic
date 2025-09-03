@@ -137,32 +137,6 @@ export default function Manifesto() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection id="credits" title="💸 The Credits Game (Yes, It's a Game)">
-            <p className="mb-3" style={paragraphStyle}>
-              OK, so here's where it gets weird (in a good way). We built an
-              entire economy around... wait for it... being nice. I know,
-              revolutionary.
-            </p>
-            <p className="mb-3" style={paragraphStyle}>
-              <strong>Credits are NOT tickets.</strong> Credits are like arcade
-              tokens for creating events. Tickets are what people use to
-              actually show up. Got it? Good. Everyone starts with 10 credits.
-              You spend them to create events (100-person event = 100 credits).
-              But attending? Always free.
-            </p>
-            <p className="mb-3" style={paragraphStyle}>
-              Here's the fun part: Rate an event with a thumbs up? Boom, you
-              earn 1 credit. First time only though—we're not running a credit
-              farm here. Want to thumbs down that terrible DJ set? That'll cost
-              you 1 credit. Why? Because negativity should cost something, even
-              if it's tiny.
-            </p>
-            <p className="mb-3" style={paragraphStyle}>
-              Changed your mind? Switching your rating is free. We're not
-              monsters.
-            </p>
-          </CollapsibleSection>
-
           <CollapsibleSection
             id="reputation"
             title="🎢 The 69-Day Reputation Window"
@@ -195,6 +169,32 @@ export default function Manifesto() {
             </p>
           </CollapsibleSection>
 
+          <CollapsibleSection id="credits" title="💸 The Credits Game (Yes, It's a Game)">
+            <p className="mb-3" style={paragraphStyle}>
+              OK, so here's where it gets weird (in a good way). We built an
+              entire economy around... wait for it... being nice. I know,
+              revolutionary.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              <strong>Credits are NOT tickets.</strong> Credits are like arcade
+              tokens for creating events. Tickets are what people use to
+              actually show up. Got it? Good. Everyone starts with 10 credits.
+              You spend them to create events (100-person event = 100 credits).
+              But attending? Always free.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Here's the fun part: Rate an event with a thumbs up? Boom, you
+              earn 1 credit. First time only though—we're not running a credit
+              farm here. Want to thumbs down that terrible DJ set? That'll cost
+              you 1 credit. Why? Because negativity should cost something, even
+              if it's tiny.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Changed your mind? Switching your rating is free. We're not
+              monsters.
+            </p>
+          </CollapsibleSection>
+
           <CollapsibleSection id="surge" title="📈 Surge Pricing (But Make It Gentle)">
             <p className="mb-3" style={paragraphStyle}>
               Remember Uber's 10x surge pricing during that snowstorm? Yeah, we
@@ -206,6 +206,20 @@ export default function Manifesto() {
               It's logarithmic (fancy word for "gets less aggressive as it goes
               up"). Because we want to reward early birds without punishing
               procrastinators too hard. We've all been there.
+            </p>
+          </CollapsibleSection>
+
+          <CollapsibleSection id="money" title="💰 Real Money? Not Our Problem (Yet)">
+            <p className="mb-3" style={paragraphStyle}>
+              Cash happens at the door. Venmo in the DMs. Crypto in the
+              metaverse. Whatever. We don't touch it. We're just the matchmaker
+              between people who throw parties and people who show up to them.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Soon™ we'll add Stripe (2% fee) and crypto payments for the
+              brave. But credits? They stay in the platform. No cash out.
+              They're utility tokens, not securities. The SEC can't hurt us
+              here.
             </p>
           </CollapsibleSection>
 
@@ -235,20 +249,6 @@ export default function Manifesto() {
               This isn't about creating value. It's about proving existence. "I
               was there" becomes immutable truth. Even if "there" was completely
               absurd.
-            </p>
-          </CollapsibleSection>
-
-          <CollapsibleSection id="money" title="💰 Real Money? Not Our Problem (Yet)">
-            <p className="mb-3" style={paragraphStyle}>
-              Cash happens at the door. Venmo in the DMs. Crypto in the
-              metaverse. Whatever. We don't touch it. We're just the matchmaker
-              between people who throw parties and people who show up to them.
-            </p>
-            <p className="mb-3" style={paragraphStyle}>
-              Soon™ we'll add Stripe (2% fee) and crypto payments for the
-              brave. But credits? They stay in the platform. No cash out.
-              They're utility tokens, not securities. The SEC can't hurt us
-              here.
             </p>
           </CollapsibleSection>
 
