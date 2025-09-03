@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import {
   Sparkles,
@@ -9,10 +10,26 @@ import {
   Calendar,
   Ticket as TicketIcon,
   Zap,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import manifestoIcon from "@assets/image_1756696153574.png";
 
 export default function Manifesto() {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  };
+
   const paragraphStyle = {
     fontSize: "1.125rem",
     lineHeight: "1.8",
@@ -23,6 +40,23 @@ export default function Manifesto() {
   const sectionStyle = {
     fontSize: "1.05rem",
     lineHeight: "1.7",
+  };
+
+  const CollapsibleSection = ({ id, title, children }: { id: string; title: string; children: React.ReactNode }) => {
+    const isExpanded = expandedSections.has(id);
+    return (
+      <div className="mb-3">
+        <h5 
+          className="mt-4 mb-3 d-flex align-items-center justify-content-between" 
+          style={{ cursor: "pointer" }}
+          onClick={() => toggleSection(id)}
+        >
+          <span>{title}</span>
+          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </h5>
+        {isExpanded && <div>{children}</div>}
+      </div>
+    );
   };
 
   return (
@@ -62,194 +96,205 @@ export default function Manifesto() {
             solution, Eventic!
           </p>
 
-          <h5 className="mt-4 mb-3">🎟 Tickets That Don't Suck</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Your ticket can glow golden. It can transform based on the day, the
-            month, your birthday, or other random chaos.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Drop custom stickers on tickets. Enable peer-to-peer validation for
-            your underground warehouse rave. Lock tickets to GPS coordinates for
-            that secret rooftop show. Enable voting for your anarcho-syndicated
-            commune's bi-weekly internal affairs meeting.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            This isn't just ticketing, it's digital metaphysical alchemy! Yes,
-            I'm being serious. No I'm not drunk, stop asking.
-          </p>
+          <CollapsibleSection id="tickets" title="🎟 Tickets That Don't Suck">
+            <p className="mb-3" style={paragraphStyle}>
+              Your ticket can glow golden. It can transform based on the day, the
+              month, your birthday, or other random chaos.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Drop custom stickers on tickets. Enable peer-to-peer validation for
+              your underground warehouse rave. Lock tickets to GPS coordinates for
+              that secret rooftop show. Enable voting for your anarcho-syndicated
+              commune's bi-weekly internal affairs meeting.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              This isn't just ticketing, it's digital metaphysical alchemy! Yes,
+              I'm being serious. No I'm not drunk, stop asking.
+            </p>
+          </CollapsibleSection>
 
-          <h5 className="mt-4 mb-3">💸 The Credits Game (Yes, It's a Game)</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            OK, so here's where it gets weird (in a good way). We built an 
-            entire economy around... wait for it... being nice. I know, revolutionary.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            <strong>Credits are NOT tickets.</strong> Credits are like arcade tokens 
-            for creating events. Tickets are what people use to actually show up. 
-            Got it? Good. Everyone starts with 10 credits. You spend them to create 
-            events (100-person event = 100 credits). But attending? Always free.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Here's the fun part: Rate an event with a thumbs up? Boom, you earn 1 
-            credit. First time only though—we're not running a credit farm here. 
-            Want to thumbs down that terrible DJ set? That'll cost you 1 credit. 
-            Why? Because negativity should cost something, even if it's tiny.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Changed your mind? Switching your rating is free. We're not monsters.
-          </p>
+          <CollapsibleSection id="credits" title="💸 The Credits Game (Yes, It's a Game)">
+            <p className="mb-3" style={paragraphStyle}>
+              OK, so here's where it gets weird (in a good way). We built an 
+              entire economy around... wait for it... being nice. I know, revolutionary.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              <strong>Credits are NOT tickets.</strong> Credits are like arcade tokens 
+              for creating events. Tickets are what people use to actually show up. 
+              Got it? Good. Everyone starts with 10 credits. You spend them to create 
+              events (100-person event = 100 credits). But attending? Always free.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Here's the fun part: Rate an event with a thumbs up? Boom, you earn 1 
+              credit. First time only though—we're not running a credit farm here. 
+              Want to thumbs down that terrible DJ set? That'll cost you 1 credit. 
+              Why? Because negativity should cost something, even if it's tiny.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Changed your mind? Switching your rating is free. We're not monsters.
+            </p>
+          </CollapsibleSection>
           
-          <h5 className="mt-4 mb-3">🎢 The 69-Day Reputation Window</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Here's how reputation actually works: Only events from the last 69 days 
-            count toward your score. Run an amazing event today? Those thumbs up boost 
-            your rep immediately. But in 69 days? Poof, they fall out of the window. 
-            Your reputation is always based on what you've done lately, not what you 
-            did last year.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Think of it like a rolling average of your recent vibe. Got 100 thumbs up 
-            from an event 68 days ago? Tomorrow you'll need fresh ones to maintain your 
-            status. Your badge evolves in real-time: NPC → Interesting → Nice → 😎. 
-            But slack off, and you'll slide right back down.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            This rolling window is genius for three reasons: (1) Bad events can't haunt 
-            you forever—redemption is always 69 days away. (2) You can't coast on past 
-            glory—stay active or fade away. (3) Gaming the system is pointless since 
-            fake upvotes expire too, and creating 100 fake accounts costs 10,000 credits.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            It's reputation with an expiration date. Fresh, organic, and impossible to 
-            hoard. Like farmers market reputation, not Walmart reputation.
-          </p>
+          <CollapsibleSection id="reputation" title="🎢 The 69-Day Reputation Window">
+            <p className="mb-3" style={paragraphStyle}>
+              Here's how reputation actually works: Only events from the last 69 days 
+              count toward your score. Run an amazing event today? Those thumbs up boost 
+              your rep immediately. But in 69 days? Poof, they fall out of the window. 
+              Your reputation is always based on what you've done lately, not what you 
+              did last year.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Think of it like a rolling average of your recent vibe. Got 100 thumbs up 
+              from an event 68 days ago? Tomorrow you'll need fresh ones to maintain your 
+              status. Your badge evolves in real-time: NPC → Interesting → Nice → 😎. 
+              But slack off, and you'll slide right back down.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              This rolling window is genius for three reasons: (1) Bad events can't haunt 
+              you forever—redemption is always 69 days away. (2) You can't coast on past 
+              glory—stay active or fade away. (3) Gaming the system is pointless since 
+              fake upvotes expire too, and creating 100 fake accounts costs 10,000 credits.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              It's reputation with an expiration date. Fresh, organic, and impossible to 
+              hoard. Like farmers market reputation, not Walmart reputation.
+            </p>
+          </CollapsibleSection>
           
-          <h5 className="mt-4 mb-3">📈 Surge Pricing (But Make It Gentle)</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Remember Uber's 10x surge pricing during that snowstorm? Yeah, we don't 
-            do that. Our surge is more like a polite nudge. Popular event filling up? 
-            Prices might go up 25%. Last minute panic buy? Another 25%. That's it.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            It's logarithmic (fancy word for "gets less aggressive as it goes up"). 
-            Because we want to reward early birds without punishing procrastinators 
-            too hard. We've all been there.
-          </p>
+          <CollapsibleSection id="surge" title="📈 Surge Pricing (But Make It Gentle)">
+            <p className="mb-3" style={paragraphStyle}>
+              Remember Uber's 10x surge pricing during that snowstorm? Yeah, we don't 
+              do that. Our surge is more like a polite nudge. Popular event filling up? 
+              Prices might go up 25%. Last minute panic buy? Another 25%. That's it.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              It's logarithmic (fancy word for "gets less aggressive as it goes up"). 
+              Because we want to reward early birds without punishing procrastinators 
+              too hard. We've all been there.
+            </p>
+          </CollapsibleSection>
           
-          <h5 className="mt-4 mb-3">🎭 The Absurdist Social Experiment</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Here's the beautiful, chaotic part: With P2P validation, you can create 
-            events for literally anything. "Standing in this parking lot for 10 minutes." 
-            "Synchronized yelling at the moon." "Being alive on a Tuesday." Turn it on 
-            and everyone who shows up can validate each other. No gatekeepers. Pure chaos.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            The kicker? These ridiculous moments can become permanent. That ticket from 
-            "Emergency dance party in Steve's backyard because his ex got engaged"? That 
-            proof you were at "The great pillow fight of 2025"? Mint it as an NFT for 
-            under 5 bucks (price TBD, we're not greedy). 
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Everything else vanishes after 69 days. But minted tickets? They're forever. 
-            A permanent record that yes, you were there when 47 strangers decided to have 
-            a staring contest in a Denny's parking lot at 3am. Was it stupid? Absolutely. 
-            Was it real? The blockchain says yes.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            This isn't about creating value. It's about proving existence. "I was there" 
-            becomes immutable truth. Even if "there" was completely absurd.
-          </p>
+          <CollapsibleSection id="absurdist" title="🎭 The Absurdist Social Experiment">
+            <p className="mb-3" style={paragraphStyle}>
+              Here's the beautiful, chaotic part: With P2P validation, you can create 
+              events for literally anything. "Standing in this parking lot for 10 minutes." 
+              "Synchronized yelling at the moon." "Being alive on a Tuesday." Turn it on 
+              and everyone who shows up can validate each other. No gatekeepers. Pure chaos.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              The kicker? These ridiculous moments can become permanent. That ticket from 
+              "Emergency dance party in Steve's backyard because his ex got engaged"? That 
+              proof you were at "The great pillow fight of 2025"? Mint it as an NFT for 
+              under 5 bucks (price TBD, we're not greedy). 
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Everything else vanishes after 69 days. But minted tickets? They're forever. 
+              A permanent record that yes, you were there when 47 strangers decided to have 
+              a staring contest in a Denny's parking lot at 3am. Was it stupid? Absolutely. 
+              Was it real? The blockchain says yes.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              This isn't about creating value. It's about proving existence. "I was there" 
+              becomes immutable truth. Even if "there" was completely absurd.
+            </p>
+          </CollapsibleSection>
           
-          <h5 className="mt-4 mb-3">💰 Real Money? Not Our Problem (Yet)</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Cash happens at the door. Venmo in the DMs. Crypto in the metaverse. 
-            Whatever. We don't touch it. We're just the matchmaker between people 
-            who throw parties and people who show up to them.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Soon™ we'll add Stripe (2% fee) and crypto payments for the brave. But 
-            credits? They stay in the platform. No cash out. They're utility tokens, 
-            not securities. The SEC can't hurt us here.
-          </p>
+          <CollapsibleSection id="money" title="💰 Real Money? Not Our Problem (Yet)">
+            <p className="mb-3" style={paragraphStyle}>
+              Cash happens at the door. Venmo in the DMs. Crypto in the metaverse. 
+              Whatever. We don't touch it. We're just the matchmaker between people 
+              who throw parties and people who show up to them.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Soon™ we'll add Stripe (2% fee) and crypto payments for the brave. But 
+              credits? They stay in the platform. No cash out. They're utility tokens, 
+              not securities. The SEC can't hurt us here.
+            </p>
+          </CollapsibleSection>
 
-          <h5 className="mt-4 mb-3">🔐 Control With Some Chaos</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            <strong>Validation:</strong> Works in any browser. No app downloads.
-            Simply Login and get validated at the event. Some questions may be
-            asked for security.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            <strong>Geofencing:</strong> If enabled, your ticket becomes
-            location aware. It's only valid within a 690-meter radius. If
-            disabled, users can enter from wherever they want. Defaults: off.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            <strong>Multi-pass:</strong> Enable if one ticket allows multiple
-            entries. Perfect for conferences or multi-day festivals. All event
-            creation settings are permanent.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            <strong>Surge pricing:</strong> Let capitalism work when demand
-            spikes, like ride-sharing apps, you set the multiplier, 1.5x to 5x.
-          </p>
+          <CollapsibleSection id="control" title="🔐 Control With Some Chaos">
+            <p className="mb-3" style={paragraphStyle}>
+              <strong>Validation:</strong> Works in any browser. No app downloads.
+              Simply Login and get validated at the event. Some questions may be
+              asked for security.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              <strong>Geofencing:</strong> If enabled, your ticket becomes
+              location aware. It's only valid within a 690-meter radius. If
+              disabled, users can enter from wherever they want. Defaults: off.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              <strong>Multi-pass:</strong> Enable if one ticket allows multiple
+              entries. Perfect for conferences or multi-day festivals. All event
+              creation settings are permanent.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              <strong>Surge pricing:</strong> Let capitalism work when demand
+              spikes, like ride-sharing apps, you set the multiplier, 1.5x to 5x.
+            </p>
+          </CollapsibleSection>
 
-          <h5 className="mt-4 mb-3">📍 Your Location = Your Business</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Let's be crystal clear: <strong>We don't track you.</strong> Period. No creepy 
-            location history. No selling your movements to advertisers. No "anonymous" 
-            analytics that aren't really anonymous.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            When you validate a geofenced ticket, your browser checks if you're within 
-            690 meters of the venue. This happens <strong>on your device</strong>, takes 
-            2 seconds, then we forget it forever. The GPS check never leaves your phone. 
-            We literally don't know where you are and don't want to know.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Your "location preference" for the leaderboard? That's just the country of 
-            the last event you attended. Not GPS. Not IP tracking. Just "Oh, you went 
-            to that show in Berlin? Here's Berlin's leaderboard." It updates when you 
-            participate, expires after 69 days if you don't.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            We treat location like a vampire treats your house—we can't come in unless 
-            you explicitly invite us, and even then, we leave immediately.
-          </p>
+          <CollapsibleSection id="location" title="📍 Your Location = Your Business">
+            <p className="mb-3" style={paragraphStyle}>
+              Let's be crystal clear: <strong>We don't track you.</strong> Period. No creepy 
+              location history. No selling your movements to advertisers. No "anonymous" 
+              analytics that aren't really anonymous.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              When you validate a geofenced ticket, your browser checks if you're within 
+              690 meters of the venue. This happens <strong>on your device</strong>, takes 
+              2 seconds, then we forget it forever. The GPS check never leaves your phone. 
+              We literally don't know where you are and don't want to know.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Your "location preference" for the leaderboard? That's just the country of 
+              the last event you attended. Not GPS. Not IP tracking. Just "Oh, you went 
+              to that show in Berlin? Here's Berlin's leaderboard." It updates when you 
+              participate, expires after 69 days if you don't.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              We treat location like a vampire treats your house—we can't come in unless 
+              you explicitly invite us, and even then, we leave immediately.
+            </p>
+          </CollapsibleSection>
 
-          <h5 className="mt-4 mb-3">⏳ The 69-Day Rule</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Most moments are meant to fade. Event and ticket data self-destructs
-            69 days after your event ends. A minimal archive survives up to a
-            year, then vanishes too.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            Until I ship the NFT feature. $2.69 turns your ticket into an
-            eternal proof-of-experience. Optional. Zero pressure. Proof. You.
-            Were. There. Stuck in the blockchain forever. Or until the world
-            ends. Whichever comes first.
-          </p>
+          <CollapsibleSection id="sixtynine" title="⏳ The 69-Day Rule">
+            <p className="mb-3" style={paragraphStyle}>
+              Most moments are meant to fade. Event and ticket data self-destructs
+              69 days after your event ends. A minimal archive survives up to a
+              year, then vanishes too.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              Until I ship the NFT feature. $2.69 turns your ticket into an
+              eternal proof-of-experience. Optional. Zero pressure. Proof. You.
+              Were. There. Stuck in the blockchain forever. Or until the world
+              ends. Whichever comes first.
+            </p>
+          </CollapsibleSection>
 
-          <h5 className="mt-4 mb-3">✨ The Philosophy</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            No engagement metrics. No influencer tiers. No algorithmic
-            manipulation. Just tickets to things that actually happen. In places
-            that actually exist. For people who actually show up.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            We built this for the underground comedy show. The warehouse rave.
-            The popup restaurant. The anarchist book club. The rooftop ritual.
-            Things that matter because they don't last forever.
-          </p>
+          <CollapsibleSection id="philosophy" title="✨ The Philosophy">
+            <p className="mb-3" style={paragraphStyle}>
+              No engagement metrics. No influencer tiers. No algorithmic
+              manipulation. Just tickets to things that actually happen. In places
+              that actually exist. For people who actually show up.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              We built this for the underground comedy show. The warehouse rave.
+              The popup restaurant. The anarchist book club. The rooftop ritual.
+              Things that matter because they don't last forever.
+            </p>
+          </CollapsibleSection>
 
-          <h5 className="mt-4 mb-3">🏁 The Promise</h5>
-          <p className="mb-3" style={paragraphStyle}>
-            Create weird events. Validate real moments. Let most things
-            disappear. And when something truly matters? Mint it.
-          </p>
-          <p className="mb-3" style={paragraphStyle}>
-            This is Eventic. We're not disrupting anything. We're not the future
-            of anything. We're just making tickets that don't suck.
-          </p>
+          <CollapsibleSection id="promise" title="🏁 The Promise">
+            <p className="mb-3" style={paragraphStyle}>
+              Create weird events. Validate real moments. Let most things
+              disappear. And when something truly matters? Mint it.
+            </p>
+            <p className="mb-3" style={paragraphStyle}>
+              This is Eventic. We're not disrupting anything. We're not the future
+              of anything. We're just making tickets that don't suck.
+            </p>
+          </CollapsibleSection>
         </div>
       </div>
 
