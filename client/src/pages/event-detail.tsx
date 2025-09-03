@@ -1453,7 +1453,7 @@ export default function EventDetailPage() {
                               style={{ width: "16px", height: "16px" }}
                             />
                             {organizerDetails.type
-                              ? `${organizerDetails.type}${organizerDetails.displayName}`
+                              ? `${organizerDetails.type.charAt(0).toUpperCase() + organizerDetails.type.slice(1)}${organizerDetails.displayName}`
                               : organizerDetails.displayName}
                           </span>
                         </div>
