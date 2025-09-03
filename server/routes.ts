@@ -3703,51 +3703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingRating = await storage.getUserEventRating(userId, ticket.eventId);
       
       if (existingRating) {
-        // User has already rated, handle ticket adjustments for rating change
-        const oldRating = existingRating.rating;
-        
-        // Calculate ticket adjustment
-        // Switching from thumbs_up to thumbs_down: -2 tickets (lose reward + pay cost)
-        // Switching from thumbs_down to thumbs_up: +2 tickets (return cost + get reward)
-        if (oldRating !== rating) {
-          if (oldRating === 'thumbs_up' && rating === 'thumbs_down') {
-            // User is changing from thumbs up to thumbs down
-            // They need to pay 2 tickets: 1 to remove the reward, 1 for the downvote cost
-            const userBalance = await storage.getUserBalance(userId);
-            if (!userBalance || userBalance.tickets < 2) {
-              return res.status(400).json({ 
-                message: "Insufficient tickets. Changing from thumbs up to thumbs down costs 2 tickets." 
-              });
-            }
-            
-            // Debit 2 tickets
-            await storage.debitUserAccount(
-              userId,
-              2,
-              `Changed rating from thumbs up to thumbs down for ${event.name}`,
-              { 
-                type: 'rating_change_cost',
-                eventId: ticket.eventId,
-                ticketId: ticketId
-              }
-            );
-          } else if (oldRating === 'thumbs_down' && rating === 'thumbs_up') {
-            // User is changing from thumbs down to thumbs up
-            // They get 2 tickets: 1 return for the downvote, 1 reward for the upvote
-            await storage.creditUserAccount(
-              userId,
-              2,
-              `Changed rating from thumbs down to thumbs up for ${event.name}`,
-              { 
-                type: 'rating_change_reward',
-                eventId: ticket.eventId,
-                ticketId: ticketId
-              }
-            );
-          }
-        }
-        
-        // Update the rating
+        // User has already rated, allow free switching (no ticket adjustments)
         const updatedRating = await storage.updateEventRating(userId, ticket.eventId, rating);
         
         if (!updatedRating) {

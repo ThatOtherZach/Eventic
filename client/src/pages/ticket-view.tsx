@@ -1137,9 +1137,7 @@ export default function TicketViewPage(): React.ReactElement {
                     <h5 className="card-title mb-1">Rate Event</h5>
                     <p className="text-muted mb-0 small">
                       {hasRated ? (
-                        selectedRating === 'thumbs_up' ? 
-                          'Change to thumbs down costs 2 tickets' : 
-                          'Change to thumbs up returns 2 tickets'
+                        'You can change your rating for free'
                       ) : (
                         'Thumbs up earns 1 ticket, thumbs down costs 1 ticket'
                       )}
@@ -1156,12 +1154,12 @@ export default function TicketViewPage(): React.ReactElement {
                         disabled={submitRatingMutation.isPending}
                         data-testid="button-thumbs-up"
                         style={{ padding: '8px 16px', minWidth: '60px' }}
-                        title={hasRated && selectedRating === 'thumbs_down' ? 'Returns 2 tickets' : 'Earns 1 ticket'}
+                        title={hasRated ? 'Change rating (free)' : 'Earns 1 ticket'}
                       >
                         <ThumbsUp size={20} />
                       </button>
                       <small className="text-success mt-1">
-                        {hasRated && selectedRating === 'thumbs_down' ? '+2' : '+1'}
+                        {hasRated ? '' : '+1'}
                       </small>
                     </div>
                     
@@ -1174,12 +1172,12 @@ export default function TicketViewPage(): React.ReactElement {
                         disabled={submitRatingMutation.isPending}
                         data-testid="button-thumbs-down"
                         style={{ padding: '8px 16px', minWidth: '60px' }}
-                        title={hasRated && selectedRating === 'thumbs_up' ? 'Costs 2 tickets' : 'Costs 1 ticket'}
+                        title={hasRated ? 'Change rating (free)' : 'Costs 1 ticket'}
                       >
                         <ThumbsDown size={20} />
                       </button>
                       <small className="text-danger mt-1">
-                        {hasRated && selectedRating === 'thumbs_up' ? '-2' : '-1'}
+                        {hasRated ? '' : '-1'}
                       </small>
                     </div>
                   </div>

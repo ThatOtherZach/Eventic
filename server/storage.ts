@@ -960,7 +960,7 @@ export class DatabaseStorage implements IStorage {
         demandFactor = Math.min(Math.sqrt(ticketsSold / 100) * 0.3, 0.3); // Cap at 30% increase
       }
       
-      // Calculate urgency factor based on time to event (gentler)
+      // Calculate urgency factor based on time to event (very gentle)
       const eventDateTime = new Date(`${event.date}T${event.time}:00`);
       const now = new Date();
       const daysUntilEvent = (eventDateTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
@@ -969,11 +969,11 @@ export class DatabaseStorage implements IStorage {
       if (daysUntilEvent <= 1) {
         urgencyFactor = 0.25; // 25% increase in last 24 hours
       } else if (daysUntilEvent <= 3) {
-        urgencyFactor = 0.15; // 15% increase in last 3 days
+        urgencyFactor = 0.13; // 13% increase in last 3 days
       } else if (daysUntilEvent <= 7) {
-        urgencyFactor = 0.08; // 8% increase in last week
+        urgencyFactor = 0.05; // 5% increase in last week
       } else if (daysUntilEvent <= 14) {
-        urgencyFactor = 0.05; // 5% increase in last 2 weeks
+        urgencyFactor = 0.02; // 2% increase in last 2 weeks
       }
       
       // Combine factors: base price + (demand factor * base price) + (urgency factor * base price)
