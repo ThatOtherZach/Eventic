@@ -1199,34 +1199,36 @@ export default function EventDetailPage() {
                       <div className="mt-1">
                         <strong>{organizerDetails.displayName}</strong>
                       </div>
-                      <div className="d-flex align-items-center mt-1">
-                        <span className="badge bg-secondary small me-2" style={{ textTransform: 'capitalize' }}>{organizerDetails.type}</span>
-                        {organizerReputation && (() => {
-                          const reputationInfo = getReputationDisplay();
-                          if (!reputationInfo) return null;
-                          
-                          const { badge, showPercentage, percentage, totalVotes } = reputationInfo;
-                          const formattedVotes = formatVoteCount(totalVotes);
-                          
-                          return (
-                            <div className="d-flex flex-column align-items-start">
-                              <div className="d-flex align-items-center">
-                                <strong>{organizerReputation.percentage || 0}%</strong>
-                                <span className="text-muted small ms-2" style={{ fontSize: '0.85em' }}>({formattedVotes} votes)</span>
-                                {totalVotes >= 1000 && (
-                                  <span className="badge bg-warning text-dark ms-2">
-                                    <Award size={14} className="me-1" />
-                                    Bestie
-                                  </span>
-                                )}
-                              </div>
-                              {badge && (
-                                <span className="badge bg-secondary mt-1" style={{ fontSize: '0.75em' }}>{badge}</span>
+                      <div className="mt-1">
+                        <span className="badge bg-secondary small" style={{ textTransform: 'capitalize' }}>{organizerDetails.type}</span>
+                      </div>
+                      {organizerReputation && (() => {
+                        const reputationInfo = getReputationDisplay();
+                        if (!reputationInfo) return null;
+                        
+                        const { badge, showPercentage, percentage, totalVotes } = reputationInfo;
+                        const formattedVotes = formatVoteCount(totalVotes);
+                        
+                        return (
+                          <div className="mt-2">
+                            <div className="d-flex align-items-center">
+                              <strong>{organizerReputation.percentage || 0}%</strong>
+                              <span className="text-muted small ms-2" style={{ fontSize: '0.85em' }}>({formattedVotes} votes)</span>
+                              {totalVotes >= 1000 && (
+                                <span className="badge bg-warning text-dark ms-2">
+                                  <Award size={14} className="me-1" />
+                                  Bestie
+                                </span>
                               )}
                             </div>
-                          );
-                        })()}
-                      </div>
+                            {badge && (
+                              <div className="mt-1">
+                                <span className="badge bg-secondary" style={{ fontSize: '0.75em' }}>{badge}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
