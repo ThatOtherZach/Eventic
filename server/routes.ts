@@ -1687,7 +1687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!success) {
         return res.status(400).json({ 
-          message: "Cannot charge this ticket. You need at least 3 tickets for this event, and the event must have special effects and stickers enabled." 
+          message: "Cannot charge this ticket. You need at least 3 credits, and the event must have special effects enabled." 
         });
       }
 

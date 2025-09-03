@@ -559,13 +559,13 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           </div>
 
-          {/* Charge Ticket Section - Only show if event has special effects and stickers enabled, ticket not validated */}
-          {event.specialEffectsEnabled && event.stickerUrl && !ticket.isCharged && !ticket.isValidated && (
+          {/* Charge Ticket Section - Only show if event has special effects enabled, ticket not validated */}
+          {event.specialEffectsEnabled && !ticket.isCharged && !ticket.isValidated && (
             <div className="card mb-4">
               <div className="card-body">
                 <h6 className="card-title mb-3">
                   <Zap size={18} className="me-2 text-warning" />
-                  3 Tickets to Charge
+                  Charge Ticket
                 </h6>
                 <p className="text-muted small mb-3">
                   Charge your ticket for better odds of special effects.
@@ -574,7 +574,7 @@ export default function TicketViewPage(): React.ReactElement {
                     className="ms-1" 
                     data-bs-toggle="tooltip" 
                     data-bs-placement="top" 
-                    data-bs-title="Charging cuts the odds of all special effects in half, including golden tickets, monthly effects, day-driven effects, and criteria-driven special effects."
+                    data-bs-title="Charging improves the odds of receiving special effects (not golden tickets). Effects include seasonal animations, monthly themes, and other visual enhancements."
                     style={{ cursor: 'help' }}
                   />
                 </p>
@@ -583,8 +583,8 @@ export default function TicketViewPage(): React.ReactElement {
                   <ul className="mb-0 mt-2">
                     <li>You have {userCredits} credits available</li>
                     <li>Charging costs 3 credits to improve this ticket's odds</li>
-                    <li>Special effects odds will be cut in half (better chances)</li>
-                    <li>Includes golden tickets, stickers, and all special effects</li>
+                    <li>Special effects odds will be improved (better chances)</li>
+                    <li>Includes seasonal effects, stickers, and visual enhancements</li>
                   </ul>
                 </div>
                 <button
