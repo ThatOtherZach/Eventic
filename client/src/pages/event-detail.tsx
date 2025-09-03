@@ -1244,7 +1244,7 @@ export default function EventDetailPage() {
                 border: "2px solid #e0e0e0",
                 borderRadius: "0",
                 boxShadow: "1px 1px 0 rgba(0,0,0,0.05)",
-                backgroundColor: "#f8f9fa",
+                backgroundColor: "#e9ecef",
               }}
             >
               <div
