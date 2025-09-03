@@ -40,6 +40,7 @@ import distributionIcon from "@assets/image_1756850111300.png";
 import statsIcon from "@assets/chart1-4_1756850194937.png";
 import ticketingTrendsIcon from "@assets/image_1756851232451.png";
 import tealBg from "@assets/win98-teal_1756850231196.png";
+import hashtagIcon from "@assets/modem-4_1756868854727.png";
 
 export default function NerdStats() {
 
@@ -404,22 +405,25 @@ export default function NerdStats() {
           </div>
           <div className="col-md-4">
             <h5 className="fw-semibold mb-3">
-              <Hash size={20} className="me-2" style={{ verticalAlign: 'text-bottom' }} />
+              <img src={hashtagIcon} alt="Hashtags" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
               Top 10 Hashtags
             </h5>
             <div className="card shadow-sm">
               <div className="card-body">
                 {analyticsData?.charts?.topHashtags && analyticsData.charts.topHashtags.length > 0 ? (
                   <div className="list-group list-group-flush">
-                    {analyticsData.charts.topHashtags.map((item: { hashtag: string; count: number }, index: number) => (
-                      <div key={item.hashtag} className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <div className="d-flex align-items-center">
-                          <span className="badge bg-primary me-2" style={{ minWidth: '25px' }}>{index + 1}</span>
-                          <span className="text-muted">#{item.hashtag}</span>
+                    {analyticsData.charts.topHashtags.map((item: { hashtag: string; count: number }, index: number) => {
+                      const rankEmoji = index === 0 ? '🔥' : (index + 1).toString();
+                      return (
+                        <div key={item.hashtag} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                          <div className="d-flex align-items-center">
+                            <span className="me-2" style={{ minWidth: '25px', fontSize: '16px' }}>{rankEmoji}</span>
+                            <span className="text-muted">#{item.hashtag}</span>
+                          </div>
+                          <span className="badge bg-light text-dark">{item.count} Events</span>
                         </div>
-                        <span className="badge bg-light text-dark">{item.count} events</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-muted text-center mb-0">No hashtags found</p>
