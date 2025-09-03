@@ -917,25 +917,25 @@ export default function EventDetailPage() {
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'baseline', 
-                            gap: '6px',
-                            marginBottom: '8px'
+                            gap: '4px',
+                            marginBottom: '6px'
                           }}>
-                            <span style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '600', lineHeight: '1' }}>
                               {validationCount >= 1000000 ? '+1M' : validationCount >= 1000 ? `${Math.floor(validationCount / 1000)}k` : validationCount.toString()}
                             </span>
-                            <span style={{ fontSize: '20px', color: '#6c757d' }}>
+                            <span style={{ fontSize: '14px', color: '#6c757d' }}>
                               validations
                             </span>
                           </div>
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'baseline', 
-                            gap: '6px'
+                            gap: '4px'
                           }}>
-                            <span style={{ fontSize: '20px', fontWeight: '600', lineHeight: '1' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '600', lineHeight: '1' }}>
                               {totalVotes >= 1000000 ? '+1M' : totalVotes >= 1000 ? `${Math.floor(totalVotes / 1000)}k` : totalVotes.toString()}
                             </span>
-                            <span style={{ fontSize: '20px', color: '#6c757d' }}>
+                            <span style={{ fontSize: '14px', color: '#6c757d' }}>
                               votes
                             </span>
                           </div>
