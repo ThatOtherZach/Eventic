@@ -380,12 +380,16 @@ export default function EventDetailPage() {
     const { percentage, thumbsUp, thumbsDown } = organizerReputation;
     const totalVotes = thumbsUp + thumbsDown;
     
-    if (percentage === null || percentage === 0) {
+    if (totalVotes === 0 || percentage === null) {
       return { badge: "Newbie", showPercentage: false, totalVotes };
-    } else if (percentage >= 1 && percentage <= 25) {
-      return { badge: "Novice", showPercentage: false, totalVotes };
+    } else if (percentage >= 1 && percentage <= 49) {
+      return { badge: "Amateur", showPercentage: false, totalVotes };
+    } else if (percentage >= 50 && percentage <= 79) {
+      return { badge: "Nice", showPercentage: false, totalVotes };
+    } else if (percentage >= 80) {
+      return { badge: "😎", showPercentage: false, totalVotes };
     } else {
-      return { badge: null, showPercentage: true, percentage, totalVotes };
+      return { badge: "Newbie", showPercentage: false, totalVotes };
     }
   };
 
