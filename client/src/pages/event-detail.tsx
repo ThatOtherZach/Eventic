@@ -28,6 +28,7 @@ import usersIcon from "@assets/users_green-4_1756849357200.png";
 import chartIcon from "@assets/chart1-4_1756850194937.png";
 import calendarBadgeIcon from "@assets/calendar-0_1756849638733.png";
 import missionIcon from "@assets/internet_connection_wiz-2_1756934046026.png";
+import mediaPlayerIcon from "@assets/wm-4_1756934119811.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -587,7 +588,7 @@ export default function EventDetailPage() {
               {event.specialEffectsEnabled && (
                 <Link href="/type/effects">
                   <span className="badge" style={{ backgroundColor: '#9333EA', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <img src={specialEffectsIcon} alt="" style={{ width: '14px', height: '14px' }} />
+                    <img src={mediaPlayerIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Special Effects
                   </span>
                 </Link>
@@ -603,7 +604,7 @@ export default function EventDetailPage() {
               {event.stickerUrl && (
                 <Link href="/type/stickers">
                   <span className="badge" style={{ backgroundColor: '#EC4899', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <img src={specialEffectsIcon} alt="" style={{ width: '14px', height: '14px' }} />
+                    <img src={mediaPlayerIcon} alt="" style={{ width: '14px', height: '14px' }} />
                     Custom Stickers ({event.stickerOdds || 50}%)
                   </span>
                 </Link>
