@@ -1655,25 +1655,25 @@ export default function EventDetailPage() {
                   {organizerDetails && (
                     <div className="mb-2">
                       <div className="text-muted small">Creator</div>
-                      <div className="mt-1">
-                        <strong>{organizerDetails.displayName}</strong>
-                      </div>
                       <div className="mt-1 d-flex align-items-center">
+                        {organizerReputation &&
+                          (() => {
+                            const reputationInfo = getReputationDisplay();
+                            if (!reputationInfo) return null;
+                            if (reputationInfo.badge === "😎") {
+                              return <span className="me-2">{reputationInfo.badge}</span>;
+                            }
+                            return null;
+                          })()}
                         <span
                           className="badge bg-secondary small"
                           style={{ textTransform: "capitalize" }}
                         >
                           {organizerDetails.type}
                         </span>
-                        {organizerReputation &&
-                          (() => {
-                            const reputationInfo = getReputationDisplay();
-                            if (!reputationInfo) return null;
-                            if (reputationInfo.badge === "😎") {
-                              return <span className="ms-2">{reputationInfo.badge}</span>;
-                            }
-                            return null;
-                          })()}
+                      </div>
+                      <div className="mt-1">
+                        <strong>{organizerDetails.displayName}</strong>
                       </div>
                       {organizerReputation &&
                         (() => {
