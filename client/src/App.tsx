@@ -26,7 +26,6 @@ import Manifesto from "@/pages/manifesto";
 import NerdStats from "@/pages/nerd-stats";
 import { RegistryPage } from "@/pages/registry-page";
 import { RegistryTicketPage } from "@/pages/registry-ticket-page";
-import Leaderboard from "@/pages/leaderboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -47,7 +46,6 @@ function Router() {
       <Route path="/featured" component={FeaturedEventsPage} />
       <Route path="/manifesto" component={Manifesto} />
       <Route path="/sys/nerd" component={NerdStats} />
-      <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/registry" component={RegistryPage} />
       <Route path="/registry/:id" component={RegistryTicketPage} />
       <Route path="/auth" component={AuthPage} />

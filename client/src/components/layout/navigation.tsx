@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Check, User, LogOut, LogIn, Bell, Settings, Scroll, Trophy } from "lucide-react";
+import { Calendar, Check, User, LogOut, LogIn, Bell, Settings, Scroll } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -29,7 +29,6 @@ export function Navigation() {
   const navItems = [
     { path: "/events", label: "Events", icon: Calendar, ariaLabel: "View all events" },
     { path: "/scanner", label: "Validate", icon: Check, ariaLabel: "Validate tickets" },
-    { path: "/leaderboard", label: "Leaderboard", icon: Trophy, ariaLabel: "Reputation leaderboard" },
     { path: "/manifesto", label: "Manifesto", icon: Scroll, ariaLabel: "Event manifesto and guide" },
   ];
 
