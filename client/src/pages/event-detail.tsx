@@ -57,6 +57,7 @@ import goldenSmileyIcon from "@assets/utopia_smiley_1756934700538.png";
 import voteIcon from "@assets/image_1756934773951.png";
 import rsvpIcon from "@assets/printer-0_1756935612816.png";
 import userWorldIcon from "@assets/user_world-1_1756936174601.png";
+import deletionWarningIcon from "@assets/image_1756936869495.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -1102,7 +1103,11 @@ export default function EventDetailPage() {
           {/* Deletion countdown - Only shown for past events */}
           {daysUntilDeletion !== null && (
             <div className="d-flex align-items-center mb-4 text-danger">
-              <AlertTriangle size={18} className="me-2" />
+              <img
+                src={deletionWarningIcon}
+                alt=""
+                style={{ width: "18px", height: "18px", marginRight: "8px" }}
+              />
               <span>
                 {daysUntilDeletion} days until deletion
                 {daysUntilDeletion <= 7 && (

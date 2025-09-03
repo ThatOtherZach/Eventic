@@ -7,6 +7,7 @@ import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Clock, CheckCircle, RefreshCw, ThumbsUp, ThumbsDown, MapPin, AlertTriangle, Shield, Users, Zap, HelpCircle } from "lucide-react";
 import QRCode from "qrcode";
+import deletionWarningIcon from "@assets/image_1756936869495.png";
 import type { Ticket, Event } from "@shared/schema";
 
 interface ValidationSession {
@@ -532,7 +533,11 @@ export default function TicketViewPage(): React.ReactElement {
         <div className="row justify-content-center mb-4">
           <div className="col-12 col-md-8 col-lg-6">
             <div className="d-flex align-items-center text-danger">
-              <AlertTriangle size={18} className="me-2" />
+              <img
+                src={deletionWarningIcon}
+                alt=""
+                style={{ width: "18px", height: "18px", marginRight: "8px" }}
+              />
               <span>
                 {daysUntilDeletion} days until deletion
                 {daysUntilDeletion <= 7 && (
