@@ -2297,9 +2297,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return eventDate.toDateString() === checkDate.toDateString();
         });
         
+        // Count badges for events on this date
+        const badges = {
+          featured: eventsOnDate.filter(e => e.isFeatured).length,
+          specialEffects: eventsOnDate.filter(e => e.specialEffectsEnabled).length,
+          p2p: eventsOnDate.filter(e => e.p2pValidation).length,
+          locationSpecific: eventsOnDate.filter(e => e.geofence).length,
+          free: eventsOnDate.filter(e => e.price === 0).length,
+          goldenTicket: eventsOnDate.filter(e => e.specialEffectsEnabled && e.specialEffectsType === 'golden-ticket').length
+        };
+        
         eventDistribution.push({
           date: dateStr,
-          count: eventsOnDate.length
+          count: eventsOnDate.length,
+          badges
         });
       }
       
