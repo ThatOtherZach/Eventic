@@ -193,6 +193,29 @@ export default function Manifesto() {
             spikes, like ride-sharing apps, you set the multiplier, 1.5x to 5x.
           </p>
 
+          <h5 className="mt-4 mb-3">📍 Your Location = Your Business</h5>
+          <p className="mb-3" style={paragraphStyle}>
+            Let's be crystal clear: <strong>We don't track you.</strong> Period. No creepy 
+            location history. No selling your movements to advertisers. No "anonymous" 
+            analytics that aren't really anonymous.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            When you validate a geofenced ticket, your browser checks if you're within 
+            690 meters of the venue. This happens <strong>on your device</strong>, takes 
+            2 seconds, then we forget it forever. The GPS check never leaves your phone. 
+            We literally don't know where you are and don't want to know.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            Your "location preference" for the leaderboard? That's just the country of 
+            the last event you attended. Not GPS. Not IP tracking. Just "Oh, you went 
+            to that show in Berlin? Here's Berlin's leaderboard." It updates when you 
+            participate, expires after 69 days if you don't.
+          </p>
+          <p className="mb-3" style={paragraphStyle}>
+            We treat location like a vampire treats your house—we can't come in unless 
+            you explicitly invite us, and even then, we leave immediately.
+          </p>
+
           <h5 className="mt-4 mb-3">⏳ The 69-Day Rule</h5>
           <p className="mb-3" style={paragraphStyle}>
             Most moments are meant to fade. Event and ticket data self-destructs
