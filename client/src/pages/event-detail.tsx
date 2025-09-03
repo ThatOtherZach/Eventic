@@ -19,6 +19,7 @@ import dateIcon from "@assets/image_1756751150943.png";
 import locationIcon from "@assets/globe_map-5_1756751517694.png";
 import clockIcon from "@assets/clock-1_1756752706835.png";
 import { LocationPicker } from "@/components/location-picker";
+import FeatureGrid from "@/components/events/feature-grid";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -542,8 +543,11 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Event Settings Display - Badges above title */}
-          {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
+          {/* Feature Grid - Visual dictionary of event features */}
+          <FeatureGrid event={event} />
+
+          {/* Old badges section removed - replaced with feature grid above */}
+          {false && (event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || event.surgePricing || 
             event.recurringType || event.stickerUrl || event.p2pValidation || event.allowMinting || 
             event.geofence || event.enableVoting) && (
             <div className="d-flex flex-wrap gap-2 mb-2">
