@@ -206,38 +206,47 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         )}
       </div>
 
-      {/* Event Feature Badge Bar at Bottom - Always show if there are features */}
+      {/* Event Feature Badge Bar at Bottom - Matching BadgeBar component style */}
       {(() => {
-        const features = [];
-        if ((event as any).isAdminCreated) features.push({ name: 'MISSION', bg: '#DC2626', color: '#fff' });
-        if (event.enableVoting) features.push({ name: 'VOTE', bg: '#EAB308', color: '#fff' });
-        if (event.allowMinting) features.push({ name: 'COLLECT', bg: '#000000', color: '#fff' });
-        if (event.p2pValidation) features.push({ name: 'P2P', bg: '#3B82F6', color: '#fff' });
-        if (event.goldenTicketEnabled) features.push({ name: 'GOLDEN', bg: '#FFD700', color: '#000' });
-        if (event.specialEffectsEnabled) features.push({ name: 'FX', bg: '#9333EA', color: '#fff' });
-        if (event.surgePricing) features.push({ name: 'SURGE', bg: '#DC2626', color: '#fff' });
-        if (event.stickerUrl) features.push({ name: 'STICKER', bg: '#EC4899', color: '#fff' });
-        if (event.geofence) features.push({ name: 'LOCK', bg: '#F59E0B', color: '#fff' });
-        if (event.recurringType) {
-          const name = event.recurringType === 'weekly' ? 'WEEKLY' : 
-                      event.recurringType === 'monthly' ? 'MONTHLY' : 'ANNUAL';
-          features.push({ name, bg: '#059669', color: '#fff' });
-        }
-
-        // Add status badges as well
+        // Text badges - these show with text
+        const textBadges = [];
+        if ((event as any).isAdminCreated) textBadges.push({ name: 'MISSION', bg: '#DC2626', color: '#fff' });
+        
+        // Add status badges
         if (showBadges) {
-          if (ticket.isValidated) features.push({ name: 'VALIDATED', bg: '#198754', color: '#fff' });
-          if ((ticket as any).resellStatus === "for_resale") features.push({ name: 'RETURNED', bg: '#FFC107', color: '#000' });
-          if (event.reentryType === "Pass (Multiple Use)") features.push({ name: 'PASS', bg: '#0DCAF0', color: '#000' });
-          if (ticket.nftMediaUrl) features.push({ name: 'NFT', bg: '#17a2b8', color: '#fff' });
+          if (ticket.isValidated) textBadges.push({ name: 'VALIDATED', bg: '#059669', color: '#fff' });
+          if (event.reentryType === "Pass (Multiple Use)") {
+            const passUses = event.reentryType === 'No Limit' ? '∞' : (ticket.useCount || '0');
+            textBadges.push({ name: passUses, bg: '#0DCAF0', color: '#000' });
+          }
+        }
+        
+        // Color segments - these show as colors only without text
+        const colorSegments = [];
+        if (event.goldenTicketEnabled) colorSegments.push('#FFD700'); // Golden
+        if (event.specialEffectsEnabled) colorSegments.push('#9333EA'); // Purple
+        if (event.surgePricing) colorSegments.push('#DC2626'); // Red
+        if (event.stickerUrl) colorSegments.push('#EC4899'); // Pink
+        if (event.p2pValidation) colorSegments.push('#3B82F6'); // Blue
+        if (event.allowMinting) colorSegments.push('#000000'); // Black
+        if (event.geofence) colorSegments.push('#F59E0B'); // Orange
+        if (event.enableVoting) colorSegments.push('#EAB308'); // Yellow
+        if (event.recurringType) colorSegments.push('#059669'); // Green
+        if (event.maxTickets) colorSegments.push('#14B8A6'); // Teal
+        if (event.endDate) colorSegments.push('#6B7280'); // Gray for multi-day
+        
+        // Add special status badges to colors
+        if (showBadges) {
+          if ((ticket as any).resellStatus === "for_resale") colorSegments.push('#FFC107'); // Yellow for returned
+          if (ticket.nftMediaUrl) colorSegments.push('#17a2b8'); // Teal for NFT
         }
 
-        // If no features, don't show the bar
-        if (features.length === 0) return null;
+        // If nothing to show, don't show the bar
+        if (textBadges.length === 0 && colorSegments.length === 0) return null;
 
         return (
           <div 
-            className="position-absolute bottom-0 start-0 w-100 d-flex"
+            className="position-absolute bottom-0 start-0 w-100 d-flex align-items-stretch"
             style={{ 
               height: '20px',
               zIndex: 10,
@@ -245,25 +254,42 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
               overflow: 'hidden'
             }}
           >
-            {features.map((feature, index) => (
+            {/* Text badges on the left */}
+            {textBadges.map((badge) => (
               <div
-                key={feature.name}
+                key={badge.name}
                 style={{
-                  flex: `0 0 ${100 / features.length}%`,
-                  backgroundColor: feature.bg,
+                  backgroundColor: badge.bg,
+                  color: badge.color,
+                  padding: '0 8px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  color: feature.color,
-                  fontSize: '8px',
+                  fontSize: '11px',
                   fontWeight: 'bold',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.3px'
+                  letterSpacing: '0.5px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
                 }}
               >
-                {feature.name}
+                {badge.name}
               </div>
             ))}
+            
+            {/* Color segments take up remaining space */}
+            {colorSegments.length > 0 && (
+              <div className="flex-grow-1 d-flex" style={{ minWidth: 0 }}>
+                {colorSegments.map((color, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      flex: 1,
+                      backgroundColor: color
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         );
       })()}
