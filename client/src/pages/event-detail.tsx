@@ -1084,6 +1084,28 @@ export default function EventDetailPage() {
                 )}
               </span>
             </div>
+            {event.recurringType && event.recurringEndDate && (
+              <div className="d-flex align-items-center text-muted mb-2">
+                <img
+                  src={dateIcon}
+                  alt=""
+                  style={{ width: "18px", height: "18px", marginRight: "8px", opacity: 0.7 }}
+                />
+                <span style={{ fontSize: "0.9rem" }}>
+                  Recurs until {(() => {
+                    try {
+                      const [year, month, day] = event.recurringEndDate.split("-").map(Number);
+                      const endDate = new Date(year, month - 1, day);
+                      return isNaN(endDate.getTime())
+                        ? event.recurringEndDate
+                        : format(endDate, "MMMM d, yyyy");
+                    } catch {
+                      return event.recurringEndDate;
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
             <div className="d-flex align-items-center text-muted mb-2">
               <img
                 src={clockIcon}
