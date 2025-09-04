@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 export function StatsCards() {
   const { data: stats, isLoading } = useQuery<{
@@ -7,6 +9,19 @@ export function StatsCards() {
     validatedTickets: number;
   }>({
     queryKey: ["/api/stats"],
+  });
+
+  const { data: demandData } = useQuery<{
+    demand: number;
+    demandMultiplier: number;
+    currentUnitPrice: number;
+    baseUnitPrice: number;
+  }>({
+    queryKey: ["/api/currency/demand"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/currency/demand");
+      return response.json();
+    },
   });
 
   if (isLoading) {
@@ -91,6 +106,25 @@ export function StatsCards() {
                   >
                     {card.value.toLocaleString()}
                   </p>
+                  {card.title === "Tickets (48h)" && demandData && (
+                    <div className="mt-2">
+                      <Link
+                        to="/sys/nerd"
+                        className="text-muted small text-decoration-none"
+                        style={{ fontSize: "0.65rem" }}
+                        data-testid="link-stats-nerds-tickets"
+                      >
+                        Stats for nerds: ${demandData.currentUnitPrice.toFixed(3)}/credit
+                        {demandData.demandMultiplier !== 1 && (
+                          <>
+                            {demandData.demandMultiplier < 1
+                              ? ` (-${Math.round((1 - demandData.demandMultiplier) * 100)}%)`
+                              : ` (+${Math.round((demandData.demandMultiplier - 1) * 100)}%)`}
+                          </>
+                        )}
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
