@@ -1652,9 +1652,11 @@ export default function EventForm() {
                                   className="form-check-label"
                                   htmlFor="oneTicketPerUser"
                                 >
-                                  <span className="badge bg-info text-white me-2">
-                                    👤
-                                  </span>
+                                  <img 
+                                    src="/limit-sales-icon.png" 
+                                    alt="Limit Sales" 
+                                    style={{ width: "16px", height: "16px", marginRight: "8px" }}
+                                  />
                                   Limit Ticket Sales
                                 </label>
                               </div>
