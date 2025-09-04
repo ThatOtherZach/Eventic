@@ -1087,6 +1087,7 @@ export default function EventForm() {
                     </div>
 
                     {/* Tickets & Pricing Section - Windows 98 Style */}
+                    {!isEditMode && (
                     <div className="col-12">
                       <div
                         style={{
@@ -1324,7 +1325,7 @@ export default function EventForm() {
                         </div>
                       </div>
                     </div>
-
+                    )}
 
                     {/* Repeat Section - Admin Only */}
                     {user?.email?.endsWith("@saymservices.com") && (
@@ -1770,6 +1771,7 @@ export default function EventForm() {
                     </div>
 
                     {/* Ticket Preview Section */}
+                    {!isEditMode && (
                     <div className="col-12">
                       <div className="mb-4">
                         <label className="form-label">
@@ -1850,8 +1852,10 @@ export default function EventForm() {
                         </div>
                       </div>
                     </div>
+                    )}
 
                     {/* Special Features Section */}
+                    {!isEditMode && (
                     <div className="col-12">
                       <div
                         style={{
