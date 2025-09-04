@@ -1430,35 +1430,35 @@ export default function AccountPage() {
                         Stats for nerds
                       </Link>
                     </div>
+
+                    {/* Payment Method Selection */}
+                    <div className="border-top mt-4 pt-4">
+                      <div className="row g-2">
+                        <div className="col-8">
+                          <select
+                            className="form-select"
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            data-testid="select-payment-method"
+                          >
+                            <option value="Stripe">Stripe</option>
+                            <option value="Coinbase">Coinbase</option>
+                          </select>
+                        </div>
+                        <div className="col-4">
+                          <button
+                            className="btn btn-primary w-100 py-2"
+                            onClick={handlePurchaseTickets}
+                            disabled={isPurchasing || ticketQuantity < 12}
+                            data-testid="button-checkout"
+                          >
+                            {isPurchasing ? "Processing..." : "Checkout"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-
-              {/* Payment Method Selection */}
-              <div className="border-top mt-4 pt-4">
-                <div className="row g-2">
-                  <div className="col-8">
-                    <select
-                      className="form-select"
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      data-testid="select-payment-method"
-                    >
-                      <option value="Stripe">Stripe</option>
-                      <option value="Coinbase">Coinbase</option>
-                    </select>
-                  </div>
-                  <div className="col-4">
-                    <button
-                      className="btn btn-primary w-100 py-2"
-                      onClick={handlePurchaseTickets}
-                      disabled={isPurchasing || ticketQuantity < 12}
-                      data-testid="button-checkout"
-                    >
-                      {isPurchasing ? "Processing..." : "Checkout"}
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
