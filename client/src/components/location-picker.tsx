@@ -63,7 +63,12 @@ export function LocationPicker({
       <MapContainer 
         center={center} 
         zoom={13} 
-        style={{ height, width: "100%", borderRadius: "8px" }}
+        style={{ 
+          height, 
+          width: "100%", 
+          borderRadius: "8px",
+          opacity: readOnly ? 0.8 : 1
+        }}
         scrollWheelZoom={!readOnly}
         dragging={!readOnly}
         zoomControl={!readOnly}
@@ -83,6 +88,18 @@ export function LocationPicker({
       {!readOnly && (
         <div className="position-absolute top-0 start-0 m-2 bg-white rounded px-2 py-1" style={{ zIndex: 1000 }}>
           <small className="text-muted">Click on the map to set venue location</small>
+        </div>
+      )}
+      {readOnly && (
+        <div className="position-absolute top-50 start-50 translate-middle bg-light rounded px-3 py-2 shadow" 
+             style={{ 
+               zIndex: 1000,
+               pointerEvents: "none"
+             }}>
+          <small className="text-muted fw-bold">
+            <span className="me-1">🔒</span>
+            GPS coordinates are locked
+          </small>
         </div>
       )}
     </div>

@@ -761,7 +761,12 @@ export default function EventForm() {
                     {/* Interactive Map for Location Selection */}
                     <div className="col-12 mt-3">
                       <div className="mb-2">
-                        <label className="form-label">Map</label>
+                        <label className="form-label">
+                          Map
+                          {isEditMode && (
+                            <span className="text-muted small ms-2">(GPS coordinates locked)</span>
+                          )}
+                        </label>
                       </div>
                       <LocationPicker
                         latitude={latitude}
@@ -770,6 +775,7 @@ export default function EventForm() {
                           setLatitude(lat);
                           setLongitude(lng);
                         }}
+                        readOnly={isEditMode}
                         height="300px"
                       />
                       {latitude && longitude && (
@@ -777,6 +783,7 @@ export default function EventForm() {
                           <small className="text-muted">
                             Location set: {latitude.toFixed(6)},{" "}
                             {longitude.toFixed(6)}
+                            {isEditMode && " (cannot be changed)"}
                           </small>
                         </div>
                       )}
