@@ -828,8 +828,15 @@ export default function TicketViewPage(): React.ReactElement {
           {event.enableVoting && (
             <div className="card mb-4">
               <div className="card-body">
-                <h6 className="card-title mb-3">
-                  <span style={{ fontSize: "18px", fontWeight: "bold" }} className="me-2">+1</span>
+                <h6 className="card-title mb-3 d-flex align-items-center">
+                  <img
+                    src="/vote-count-icon.png"
+                    alt=""
+                    width="20"
+                    height="20"
+                    className="me-2"
+                    style={{ verticalAlign: "middle" }}
+                  />
                   Vote Count
                 </h6>
                 <div className="text-center">
