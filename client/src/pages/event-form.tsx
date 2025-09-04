@@ -286,6 +286,7 @@ export default function EventForm() {
         recurringEndDate: event.recurringEndDate || null,
         ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
         timezone: event.timezone || "America/New_York",
+        rollingTimezone: event.rollingTimezone || false,
       });
 
       setImageUrl(event.imageUrl || "");
@@ -1119,13 +1120,33 @@ export default function EventForm() {
                         name="timezone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Timezone</FormLabel>
+                            <FormLabel>
+                              Timezone
+                              {isEditMode && event?.rollingTimezone && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Lock size={14} className="ms-2 text-muted" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Timezone is locked for rolling timezone events</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </FormLabel>
                             <FormControl>
                               <select
-                                className="form-select"
+                                className={`form-select ${isEditMode && event?.rollingTimezone ? "bg-light text-muted" : ""}`}
                                 data-testid="select-timezone"
                                 value={field.value || "America/New_York"}
                                 onChange={(e) => field.onChange(e.target.value)}
+                                disabled={isEditMode && event?.rollingTimezone}
+                                style={
+                                  isEditMode && event?.rollingTimezone
+                                    ? { cursor: "not-allowed", opacity: 0.7 }
+                                    : {}
+                                }
                               >
                                 <optgroup label="US & Canada">
                                   <option value="America/New_York">
@@ -1218,20 +1239,41 @@ export default function EventForm() {
                               <FormControl>
                                 <Input
                                   type="checkbox"
-                                  className="form-check-input"
+                                  className={`form-check-input ${isEditMode ? "bg-light" : ""}`}
                                   data-testid="checkbox-rolling-timezone"
                                   checked={field.value || false}
                                   onChange={(e) => field.onChange(e.target.checked)}
+                                  disabled={isEditMode}
+                                  style={
+                                    isEditMode
+                                      ? { cursor: "not-allowed", opacity: 0.7 }
+                                      : {}
+                                  }
                                 />
                               </FormControl>
                               <FormLabel className="form-check-label ms-2">
                                 <Globe size={16} className="me-1" />
                                 Rolling Timezone Event
+                                {isEditMode && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Lock size={14} className="ms-2 text-muted" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Rolling timezone cannot be changed after event creation</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
                               </FormLabel>
                             </div>
                             <div className="form-text ms-4">
                               Event stays valid as the start time occurs in each timezone around the world.
                               Perfect for global celebrations like New Year's Eve.
+                              {isEditMode && (
+                                <span className="text-muted"> (Locked after creation)</span>
+                              )}
                             </div>
                             <FormMessage />
                           </FormItem>

@@ -1422,6 +1422,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       delete updateData.goldenTicketEnabled;
       delete updateData.goldenTicketNumber;
       
+      // If event has rolling timezone enabled, prevent timezone and rolling timezone changes
+      if (event.rollingTimezone) {
+        delete updateData.timezone;
+        delete updateData.rollingTimezone;
+      }
+      
       // Validate maxTickets if provided
       if (updateData.maxTickets !== undefined && updateData.maxTickets !== null) {
         const newMaxTickets = parseInt(updateData.maxTickets);
