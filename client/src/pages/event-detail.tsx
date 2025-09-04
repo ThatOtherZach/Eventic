@@ -1253,6 +1253,27 @@ export default function EventDetailPage() {
             <div className="mb-4">
               <div className="d-flex gap-2 flex-wrap">
                 <button
+                  className="btn btn-sm btn-outline-primary"
+                  onClick={() => {
+                    const eventUrl = `${window.location.origin}/event/${event.id}`;
+                    navigator.clipboard.writeText(eventUrl).then(() => {
+                      // Optional: Add a toast or some feedback that link was copied
+                    });
+                  }}
+                  data-testid="button-copy-link"
+                >
+                  <img
+                    src="/copy-link-icon.png"
+                    alt=""
+                    style={{
+                      width: "14px",
+                      height: "14px",
+                      marginRight: "4px",
+                    }}
+                  />
+                  Copy Link
+                </button>
+                <button
                   className="btn btn-sm btn-outline-danger"
                   onClick={() => downloadICalendar(event)}
                   data-testid="button-icalendar"
