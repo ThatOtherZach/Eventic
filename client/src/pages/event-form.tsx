@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-notifications";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { ArrowLeft, ArrowRight, CreditCard, Image } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, Image, Lock } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { countries } from "@/lib/countries";
@@ -1607,7 +1607,7 @@ export default function EventForm() {
                                   htmlFor="isPrivate"
                                 >
                                   <span className="badge bg-secondary me-2">
-                                    🔐
+                                    <Lock className="h-4 w-4" />
                                   </span>
                                   Private Event
                                 </label>
