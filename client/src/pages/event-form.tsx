@@ -145,6 +145,17 @@ export default function EventForm() {
     },
   });
 
+  // Update maxTickets default when user balance loads (for create mode)
+  useEffect(() => {
+    if (!isEditMode && userBalance && creditBalance > 0) {
+      const currentValue = form.getValues("maxTickets");
+      // Only update if it's still the default 100 or if balance is less than current value
+      if (currentValue === 100 || currentValue > creditBalance) {
+        form.setValue("maxTickets", Math.min(creditBalance, 5000));
+      }
+    }
+  }, [userBalance, creditBalance, isEditMode, form]);
+
   // Load event data into form when in edit mode
   useEffect(() => {
     if (event && isEditMode) {
