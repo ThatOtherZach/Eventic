@@ -1313,8 +1313,8 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Venue Location Map - Only for signed-in users and non-Hunt events */}
-          {user && event.latitude && event.longitude && !event.treasureHunt && (
+          {/* Venue Location Map - Only for signed-in users */}
+          {user && event.latitude && event.longitude && (
             <div className="mb-4">
               <h5>Map</h5>
               <LocationPicker
@@ -1322,6 +1322,7 @@ export default function EventDetailPage() {
                 longitude={Number(event.longitude)}
                 readOnly={true}
                 height="300px"
+                hideLockedOverlay={event.treasureHunt}
               />
             </div>
           )}
