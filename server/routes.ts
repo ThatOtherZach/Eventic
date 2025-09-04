@@ -1310,11 +1310,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to check for offensive content in event title
-  function containsOffensiveContent(title: string): boolean {
+  // Helper function to check for offensive content in text
+  function containsOffensiveContent(text: string): boolean {
     const offensiveWords = ['nigger', 'faggot', 'fuck', 'nazi'];
-    const lowerTitle = title.toLowerCase();
-    return offensiveWords.some(word => lowerTitle.includes(word));
+    const lowerText = text.toLowerCase();
+    return offensiveWords.some(word => lowerText.includes(word));
   }
 
   app.post("/api/events", eventCreationRateLimiter, validateBody(insertEventSchema), async (req: AuthenticatedRequest, res) => {
@@ -1342,9 +1342,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createData.isPrivate = true;
       }
       
-      // Content moderation: Check for offensive words in the title
+      // Content moderation: Check for offensive words in title and venue fields
+      let moderationTriggered = false;
+      let moderationField = '';
+      
+      // Check event name
       if (createData.name && containsOffensiveContent(createData.name)) {
-        createData.isPrivate = true; // Automatically make the event private
+        createData.isPrivate = true;
+        moderationTriggered = true;
+        moderationField = 'name';
+      }
+      
+      // Check venue address
+      if (createData.venueAddress && containsOffensiveContent(createData.venueAddress)) {
+        createData.isPrivate = true;
+        moderationTriggered = true;
+        moderationField = moderationField ? `${moderationField}, address` : 'address';
+      }
+      
+      // Check venue city
+      if (createData.venueCity && containsOffensiveContent(createData.venueCity)) {
+        createData.isPrivate = true;
+        moderationTriggered = true;
+        moderationField = moderationField ? `${moderationField}, city` : 'city';
+      }
+      
+      if (moderationTriggered) {
         // Log this moderation action for monitoring
         await logInfo(
           "Event auto-moderated due to offensive content",
@@ -1352,6 +1375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             userId,
             eventName: createData.name,
+            triggeredFields: moderationField,
             action: "auto-set-private"
           }
         );
@@ -1436,10 +1460,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle image URL normalization if provided
       let updateData = { ...req.body };
       
-      // Content moderation: If updating the name (which shouldn't happen in edit mode),
-      // check for offensive content
+      // Content moderation: Check for offensive content in editable fields
+      let moderationTriggered = false;
+      let moderationField = '';
+      
+      // Check if updating name (shouldn't happen in edit mode, but just in case)
       if (updateData.name && containsOffensiveContent(updateData.name)) {
-        updateData.isPrivate = true; // Automatically make the event private
+        updateData.isPrivate = true;
+        moderationTriggered = true;
+        moderationField = 'name';
+      }
+      
+      // Check venue address (this is locked in edit mode, but check anyway)
+      if (updateData.venueAddress && containsOffensiveContent(updateData.venueAddress)) {
+        updateData.isPrivate = true;
+        moderationTriggered = true;
+        moderationField = moderationField ? `${moderationField}, address` : 'address';
+      }
+      
+      // Check venue city (this is locked in edit mode, but check anyway)
+      if (updateData.venueCity && containsOffensiveContent(updateData.venueCity)) {
+        updateData.isPrivate = true;
+        moderationTriggered = true;
+        moderationField = moderationField ? `${moderationField}, city` : 'city';
+      }
+      
+      if (moderationTriggered) {
         // Log this moderation action for monitoring
         await logInfo(
           "Event auto-moderated due to offensive content",
@@ -1447,7 +1493,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             userId,
             eventId: req.params.id,
-            eventName: updateData.name,
+            eventName: event.name,
+            triggeredFields: moderationField,
             action: "auto-set-private"
           }
         );
