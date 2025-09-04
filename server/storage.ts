@@ -26,6 +26,7 @@ export interface IStorage {
   getEventsByUserId(userId: string): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event | undefined>;
+  updateEventMaxTickets(id: string, maxTickets: number): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
   
   // Tickets
@@ -491,6 +492,15 @@ export class DatabaseStorage implements IStorage {
     const [event] = await db
       .update(events)
       .set(updateData)
+      .where(eq(events.id, id))
+      .returning();
+    return event || undefined;
+  }
+
+  async updateEventMaxTickets(id: string, maxTickets: number): Promise<Event | undefined> {
+    const [event] = await db
+      .update(events)
+      .set({ maxTickets })
       .where(eq(events.id, id))
       .returning();
     return event || undefined;

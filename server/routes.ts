@@ -1704,6 +1704,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Expand event tickets endpoint (add 5 tickets for 5 credits)
+  app.post("/api/events/:eventId/expand", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { eventId } = req.params;
+      
+      // Get the event to verify it exists and user is the owner
+      const event = await storage.getEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "Only the event owner can expand tickets" });
+      }
+
+      // Check if event has already started (no expansion after start)
+      const now = new Date();
+      const [year, month, day] = event.date.split('-').map(Number);
+      const [hours, minutes] = event.time.split(':').map(Number);
+      const eventStartTime = new Date(year, month - 1, day, hours, minutes);
+      
+      if (now >= eventStartTime) {
+        return res.status(400).json({ message: "Cannot expand tickets after the event has started" });
+      }
+
+      // Check user's credit balance
+      const balance = await storage.getUserBalance(userId);
+      if (!balance || parseFloat(balance.balance) < 5) {
+        return res.status(400).json({ message: "Insufficient credits. You need 5 credits to expand tickets." });
+      }
+
+      // Deduct 5 credits from user's balance
+      const deducted = await storage.debitUserAccount(userId, 5, `Expanded tickets for event: ${event.name}`);
+      if (!deducted) {
+        return res.status(400).json({ message: "Failed to deduct credits" });
+      }
+
+      // Update the event's maxTickets (add 5)
+      const currentMaxTickets = event.maxTickets || 0;
+      const newMaxTickets = currentMaxTickets + 5;
+      
+      await storage.updateEventMaxTickets(eventId, newMaxTickets);
+
+      // Create a notification for the user
+      await storage.createNotification({
+        userId,
+        type: "success",
+        title: "Tickets Expanded",
+        description: `5 additional tickets have been added to "${event.name}". Total capacity is now ${newMaxTickets}.`
+      });
+
+      // Log the expansion
+      await logInfo(
+        "Event tickets expanded",
+        "POST /api/events/:eventId/expand",
+        {
+          userId,
+          eventId,
+          metadata: {
+            previousCapacity: currentMaxTickets,
+            newCapacity: newMaxTickets,
+            creditsSpent: 5
+          }
+        }
+      );
+
+      res.json({ 
+        success: true,
+        message: "Tickets expanded successfully",
+        newMaxTickets,
+        creditsSpent: 5
+      });
+    } catch (error) {
+      await logError(error, "POST /api/events/:eventId/expand", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
+      res.status(500).json({ message: "Failed to expand tickets" });
+    }
+  });
+
   // Resell ticket endpoint
   app.post("/api/tickets/:ticketId/resell", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

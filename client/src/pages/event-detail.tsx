@@ -24,6 +24,12 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
@@ -58,6 +64,7 @@ import voteIcon from "@assets/image_1756934773951.png";
 import rsvpIcon from "@assets/printer-0_1756935612816.png";
 import userWorldIcon from "@assets/user_world-1_1756936174601.png";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
+import expandIcon from "@assets/image_1756959756931.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -79,6 +86,7 @@ export default function EventDetailPage() {
   const [isAddingValidator, setIsAddingValidator] = useState(false);
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [isBoostModalOpen, setIsBoostModalOpen] = useState(false);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   const {
     data: event,
@@ -147,6 +155,16 @@ export default function EventDetailPage() {
         "GET",
         `/api/users/${event?.userId}/validated-count`,
       );
+      return response.json();
+    },
+  });
+
+  // Query for user's credit balance
+  const { data: userBalance } = useQuery<{ balance: string }>({
+    queryKey: [`/api/currency/balance`],
+    enabled: !!user && event?.userId === user?.id,
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/currency/balance`);
       return response.json();
     },
   });
@@ -314,6 +332,34 @@ export default function EventDetailPage() {
     },
   });
 
+  const expandTicketsMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) {
+        throw new Error("Please sign in to expand tickets");
+      }
+      return apiRequest("POST", `/api/events/${id}/expand`, {});
+    },
+    onSuccess: () => {
+      addNotification({
+        type: "success",
+        title: "Tickets Expanded",
+        description: "5 additional tickets have been added to your event",
+      });
+      // Refresh event data and user balance
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/currency/balance`] });
+      setIsExpanding(false);
+    },
+    onError: (error: any) => {
+      addNotification({
+        type: "error",
+        title: "Expansion Failed",
+        description: error.message || "Failed to expand tickets",
+      });
+      setIsExpanding(false);
+    },
+  });
+
   const resellTicketMutation = useMutation({
     mutationFn: async (ticketId: string) => {
       const response = await apiRequest(
@@ -437,6 +483,11 @@ export default function EventDetailPage() {
     }
     setIsPurchasing(true);
     purchaseTicketMutation.mutate();
+  };
+
+  const handleExpandTickets = () => {
+    setIsExpanding(true);
+    expandTicketsMutation.mutate();
   };
 
   // Format vote count (1000 -> 1k, 999000 -> 999k, 1000000+ -> +1M)
@@ -631,7 +682,16 @@ export default function EventDetailPage() {
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
   const isAdmin = user?.email?.endsWith("@saymservices.com");
-  const eventHasStarted = new Date(event.startTime) <= new Date();
+  
+  // Calculate if event has started using date and time
+  const eventHasStarted = (() => {
+    if (!event.date || !event.time) return false;
+    const [year, month, day] = event.date.split('-').map(Number);
+    const [hours, minutes] = event.time.split(':').map(Number);
+    const eventStartTime = new Date(year, month - 1, day, hours, minutes);
+    return eventStartTime <= new Date();
+  })();
+  
   const canEdit = isAdmin || (isOwner && !eventHasStarted);
 
   return (
@@ -1764,11 +1824,38 @@ export default function EventDetailPage() {
                         <>
                           {event.maxTickets && (
                             <>
-                              <div className="d-flex justify-content-between mb-2">
+                              <div className="d-flex justify-content-between align-items-center mb-2">
                                 <span>Tickets Sold:</span>
-                                <span>
-                                  {event.ticketsSold} / {event.maxTickets}
-                                </span>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span>
+                                    {event.ticketsSold} / {event.maxTickets}
+                                  </span>
+                                  {/* Show +5 button only for event owner with sufficient credits and event hasn't started */}
+                                  {isOwner && userBalance && parseFloat(userBalance.balance) >= 5 && !eventHasStarted && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                            onClick={handleExpandTickets}
+                                            disabled={isExpanding}
+                                            style={{ padding: "2px 8px", minWidth: "auto" }}
+                                          >
+                                            <img
+                                              src={expandIcon}
+                                              alt=""
+                                              style={{ width: "14px", height: "14px" }}
+                                            />
+                                            <span style={{ fontSize: "12px" }}>+5</span>
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Add five more for five credits.</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </div>
                               </div>
                               <div className="progress mb-3">
                                 <div
@@ -1881,7 +1968,7 @@ export default function EventDetailPage() {
               {/* Boost Button for event owners and ticket holders - not shown for private events */}
               {!event.isPrivate &&
                 (isOwner || (userTickets && userTickets.length > 0)) &&
-                new Date(event.startTime) > new Date() && (
+                !eventHasStarted && (
                   <button
                     onClick={() => setIsBoostModalOpen(true)}
                     className="btn btn-warning w-100 mb-3"
