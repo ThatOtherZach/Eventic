@@ -52,11 +52,11 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
 
     if (!hasValidatedTickets) {
       return (
-        <div className="text-center text-muted p-3">
+        <div className="text-center p-3">
           <img 
-            src="/attached_assets/image_1756973534350.png" 
-            alt="Powered by" 
-            style={{ maxHeight: "32px", opacity: 0.7 }}
+            src="/attached_assets/image_1756973626753.png" 
+            alt="" 
+            style={{ maxHeight: "32px" }}
           />
         </div>
       );
