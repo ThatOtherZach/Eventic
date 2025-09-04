@@ -6,6 +6,7 @@ import BadgeBar from "@/components/events/badge-bar";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
 import goldenTicketIcon from "@assets/utopia_smiley_1756934814087.png";
 import votingIcon from "@assets/bar_graph_default-1_1756934950559.png";
+import huntIcon from "@assets/image_1756972815757.png";
 
 interface Event {
   id: string;
@@ -94,7 +95,7 @@ const eventTypeConfig: Record<string, {
   hunt: { 
     label: 'Treasure Hunt Events', 
     color: '#FF6B35',
-    imageIcon: '/hunt-icon.png',
+    imageIcon: huntIcon,
     checkField: (e) => !!e.treasureHunt 
   },
   voting: { 
