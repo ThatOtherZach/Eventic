@@ -1433,29 +1433,52 @@ export default function AccountPage() {
 
                     {/* Payment Method Selection */}
                     <div className="border-top mt-4 pt-4">
-                      <div className="row g-2">
-                        <div className="col-8">
-                          <select
-                            className="form-select"
-                            value={paymentMethod}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                            data-testid="select-payment-method"
-                          >
-                            <option value="Stripe">Stripe</option>
-                            <option value="Coinbase">Coinbase</option>
-                          </select>
-                        </div>
-                        <div className="col-4">
-                          <button
-                            className="btn btn-primary w-100 py-2"
-                            onClick={handlePurchaseTickets}
-                            disabled={isPurchasing || ticketQuantity < 12}
-                            data-testid="button-checkout"
-                          >
-                            {isPurchasing ? "Processing..." : "Checkout"}
-                          </button>
+                      <div className="mb-3">
+                        <label className="form-label small text-muted">Payment Method</label>
+                        <div className="row g-2">
+                          <div className="col-6">
+                            <button
+                              className={`btn w-100 py-2 d-flex align-items-center justify-content-center gap-2 ${
+                                paymentMethod === "Stripe" ? "btn-primary" : "btn-outline-secondary"
+                              }`}
+                              onClick={() => setPaymentMethod("Stripe")}
+                              data-testid="button-payment-stripe"
+                            >
+                              <img
+                                src="/stripe-icon.png"
+                                alt=""
+                                style={{ width: "20px", height: "20px" }}
+                              />
+                              Stripe
+                            </button>
+                          </div>
+                          <div className="col-6">
+                            <button
+                              className={`btn w-100 py-2 d-flex align-items-center justify-content-center gap-2 ${
+                                paymentMethod === "Coinbase" ? "btn-primary" : "btn-outline-secondary"
+                              }`}
+                              onClick={() => setPaymentMethod("Coinbase")}
+                              data-testid="button-payment-coinbase"
+                            >
+                              <img
+                                src="/coinbase-icon.png"
+                                alt=""
+                                style={{ width: "20px", height: "20px" }}
+                              />
+                              Coinbase
+                            </button>
+                          </div>
                         </div>
                       </div>
+                      <button
+                        className="btn btn-success w-100 py-3 fw-semibold"
+                        onClick={handlePurchaseTickets}
+                        disabled={isPurchasing || ticketQuantity < 12}
+                        data-testid="button-checkout"
+                        style={{ fontSize: "1.1rem" }}
+                      >
+                        {isPurchasing ? "Processing..." : `Checkout with ${paymentMethod}`}
+                      </button>
                     </div>
                   </div>
                 )}
