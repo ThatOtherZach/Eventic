@@ -1255,7 +1255,7 @@ export default function EventDetailPage() {
                 <button
                   className="btn btn-sm btn-outline-danger"
                   onClick={() => {
-                    const eventUrl = `${window.location.origin}/event/${event.id}`;
+                    const eventUrl = `${window.location.origin}/events/${event.id}`;
                     navigator.clipboard.writeText(eventUrl).then(() => {
                       // Optional: Add a toast or some feedback that link was copied
                     });
