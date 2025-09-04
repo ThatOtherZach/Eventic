@@ -3215,13 +3215,22 @@ export class DatabaseStorage implements IStorage {
       // Generate unique ticket number with username
       const ticketNumber = `${event.id.slice(0, 8)}-${displayName}-${(currentCount + 1).toString().padStart(6, '0')}`;
       
+      // Calculate scheduled deletion date (69 days after event end)
+      let scheduledDeletion: Date | null = null;
+      if (event.endDate || event.startDate) {
+        const eventEndDate = event.endDate ? new Date(event.endDate) : new Date(event.startDate);
+        scheduledDeletion = new Date(eventEndDate);
+        scheduledDeletion.setDate(scheduledDeletion.getDate() + 69);
+      }
+      
       // Create the ticket
       const [newTicket] = await tx
         .insert(tickets)
         .values({
           ...ticket,
           ticketNumber,
-          qrData: ticket.qrData || ticketNumber
+          qrData: ticket.qrData || ticketNumber,
+          scheduledDeletion
         })
         .returning();
       

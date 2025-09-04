@@ -2,6 +2,7 @@ import { db } from "./db";
 import { scheduledJobs, InsertScheduledJob, events } from "@shared/schema";
 import { and, eq, lte, or } from "drizzle-orm";
 import { storage } from "./storage";
+import { migrateExistingTickets } from "./migrateExistingTickets";
 
 let jobInterval: NodeJS.Timeout | null = null;
 
@@ -172,6 +173,9 @@ async function processJob(job: typeof scheduledJobs.$inferSelect): Promise<void>
 export async function initializeJobScheduler(): Promise<void> {
   // Schedule jobs for any existing events that don't have them yet
   await scheduleJobsForExistingEvents();
+  
+  // Migrate existing tickets to have deletion dates
+  await migrateExistingTickets();
   
   // Process jobs immediately on startup
   await processScheduledJobs();
