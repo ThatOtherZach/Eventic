@@ -42,7 +42,7 @@ export default function AccountPage() {
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [secretCode, setSecretCode] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState(12);
-  const [purchaseExpanded, setPurchaseExpanded] = useState(true);
+  const [purchaseExpanded, setPurchaseExpanded] = useState(false);
   const [secretCodeExpanded, setSecretCodeExpanded] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
