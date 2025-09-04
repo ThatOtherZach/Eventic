@@ -893,11 +893,15 @@ export default function NerdStats() {
       {/* Leaderboard Section */}
       <div className="row mt-4">
         <div className="col-12">
-          <h4 className="fw-semibold mb-3">
+          <h4 className="fw-semibold mb-2">
             <Trophy className="text-warning me-2" size={24} style={{ verticalAlign: 'text-bottom' }} />
             Reputation Leaderboard - Top 100 Users
             {selectedCountry !== 'Global' && ` (${selectedCountry})`}
           </h4>
+          <div className="mb-3 text-center text-muted small">
+            <Shield size={16} className="me-1" style={{ verticalAlign: 'text-bottom' }} />
+            Reputations decay every 69 days to keep things fresh and fair
+          </div>
           <div className="card shadow-sm">
             <div className="card-body p-0">
               <div className="table-responsive">
@@ -1014,10 +1018,6 @@ export default function NerdStats() {
                 </table>
               </div>
             </div>
-          </div>
-          <div className="mt-3 text-center text-muted small">
-            <Shield size={16} className="me-1" style={{ verticalAlign: 'text-bottom' }} />
-            Reputation resets every 69 days to keep things fresh and fair
           </div>
         </div>
       </div>
