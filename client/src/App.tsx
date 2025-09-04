@@ -26,6 +26,7 @@ import Manifesto from "@/pages/manifesto";
 import NerdStats from "@/pages/nerd-stats";
 import { RegistryPage } from "@/pages/registry-page";
 import { RegistryTicketPage } from "@/pages/registry-ticket-page";
+import { HuntRedirect } from "@/components/hunt-redirect";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/sys/nerd" component={NerdStats} />
       <Route path="/registry" component={RegistryPage} />
       <Route path="/registry/:id" component={RegistryTicketPage} />
+      <Route path="/hunt/:huntCode" component={HuntRedirect} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/hashtag/:hashtag">{(params) => <HashtagEventsPage />}</Route>
       <Route path="/type/:type">{(params) => <EventTypePage />}</Route>

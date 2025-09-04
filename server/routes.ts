@@ -1917,6 +1917,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Hunt validation endpoint
+  // Get event by hunt code (for redirects)
+  app.get('/api/hunt/:huntCode/event', async (req, res) => {
+    try {
+      const { huntCode } = req.params;
+      
+      // Get event by hunt code
+      const event = await storage.getEventByHuntCode(huntCode);
+      if (!event || !event.treasureHunt) {
+        return res.status(404).json({ message: "Hunt code not found" });
+      }
+      
+      res.json(event);
+    } catch (error) {
+      console.error('Hunt code lookup error:', error);
+      res.status(500).json({ message: 'Error looking up Hunt code' });
+    }
+  });
+
   app.post('/api/hunt/:huntCode/validate', async (req: AuthenticatedRequest, res) => {
     try {
       const { huntCode } = req.params;
