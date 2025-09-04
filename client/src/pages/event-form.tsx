@@ -993,13 +993,11 @@ export default function EventForm() {
                       </>
                     )}
 
-                    {/* Date/Time fields - only show in create mode */}
-                    {!isEditMode && (
-                      <>
-                        <div className="col-md-6">
-                          <FormField
-                            control={form.control}
-                            name="date"
+                    {/* Date/Time fields */}
+                    <div className="col-md-6">
+                      <FormField
+                        control={form.control}
+                        name="date"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
@@ -1022,14 +1020,14 @@ export default function EventForm() {
                             </FormControl>
                             <FormMessage />
                           </FormItem>
-                          )}
-                        />
-                        </div>
+                        )}
+                      />
+                    </div>
 
-                        <div className="col-md-6">
-                          <FormField
-                            control={form.control}
-                            name="time"
+                    <div className="col-md-6">
+                      <FormField
+                        control={form.control}
+                        name="time"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
@@ -1129,14 +1127,14 @@ export default function EventForm() {
                               })()}
                             <FormMessage />
                           </FormItem>
-                          )}
-                        />
-                        </div>
+                        )}
+                      />
+                    </div>
 
-                        <div className="col-md-6">
-                          <FormField
-                            control={form.control}
-                            name="endDate"
+                    <div className="col-md-6">
+                      <FormField
+                        control={form.control}
+                        name="endDate"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
@@ -1163,14 +1161,14 @@ export default function EventForm() {
                             </div>
                             <FormMessage />
                           </FormItem>
-                          )}
-                        />
-                        </div>
+                        )}
+                      />
+                    </div>
 
-                        <div className="col-md-6">
-                          <FormField
-                            control={form.control}
-                            name="endTime"
+                    <div className="col-md-6">
+                      <FormField
+                        control={form.control}
+                        name="endTime"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>
@@ -1193,18 +1191,14 @@ export default function EventForm() {
                             <div className="form-text">When the event ends</div>
                             <FormMessage />
                           </FormItem>
-                          )}
-                        />
-                        </div>
-                      </>
-                    )}
+                        )}
+                      />
+                    </div>
 
-                    {/* Timezone field - only show in create mode (already in Place and Time for edit mode) */}
-                    {!isEditMode && (
-                      <div className="col-md-6">
-                        <FormField
-                          control={form.control}
-                          name="timezone"
+                    <div className="col-md-6">
+                      <FormField
+                        control={form.control}
+                        name="timezone"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Timezone</FormLabel>
@@ -1293,10 +1287,9 @@ export default function EventForm() {
                             </div>
                             <FormMessage />
                           </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
+                        )}
+                      />
+                    </div>
 
                     {/* Tickets & Pricing Section - Windows 98 Style */}
                     <div className="col-12">
