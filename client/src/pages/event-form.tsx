@@ -1225,7 +1225,7 @@ export default function EventForm() {
                                         <Input
                                           {...field}
                                           type="number"
-                                          min="5"
+                                          min="2"
                                           max={maxTicketsAllowed}
                                           placeholder={maxTicketsAllowed.toString()}
                                           className="form-control"
@@ -1241,8 +1241,8 @@ export default function EventForm() {
                                               const numValue = parseInt(value);
                                               if (numValue > maxTicketsAllowed) {
                                                 field.onChange(maxTicketsAllowed);
-                                              } else if (numValue < 5) {
-                                                field.onChange(5);
+                                              } else if (numValue < 2) {
+                                                field.onChange(2);
                                               } else {
                                                 field.onChange(numValue);
                                               }
@@ -1255,11 +1255,11 @@ export default function EventForm() {
                                             className="btn btn-outline-secondary btn-sm"
                                             onClick={() => {
                                               const currentValue = field.value || 100;
-                                              if (currentValue > 5) {
+                                              if (currentValue > 2) {
                                                 field.onChange(currentValue - 1);
                                               }
                                             }}
-                                            disabled={field.value <= 5}
+                                            disabled={field.value <= 2}
                                             style={{ padding: '4px 8px', minWidth: '32px' }}
                                           >
                                             -
