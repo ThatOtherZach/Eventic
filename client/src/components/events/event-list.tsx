@@ -356,7 +356,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                               title={`${event.recurringType.charAt(0).toUpperCase() + event.recurringType.slice(1)} Recurring`}
                             />
                           )}
-                          {event.endDate && (
+                          {event.endDate && event.endDate !== event.date && (
                             <div 
                               style={{ width: '5px', height: '5px', backgroundColor: '#6B7280' }}
                               title="Multi-day Event"

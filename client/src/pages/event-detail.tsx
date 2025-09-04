@@ -974,7 +974,7 @@ export default function EventDetailPage() {
                   </span>
                 </Link>
               )}
-              {event.endDate && (
+              {event.endDate && event.endDate !== event.date && (
                 <Link href="/type/multiday">
                   <span
                     className="badge"

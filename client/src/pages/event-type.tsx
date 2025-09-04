@@ -107,7 +107,7 @@ const eventTypeConfig: Record<string, {
     label: 'Multi-day Events', 
     color: '#6B7280',
     imageIcon: '/multiday-icon.png',
-    checkField: (e) => !!e.endDate 
+    checkField: (e) => !!e.endDate && e.endDate !== e.date 
   },
   limited: { 
     label: 'Limited Tickets Events', 

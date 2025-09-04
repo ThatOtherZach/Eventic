@@ -226,7 +226,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         if (event.stickerUrl) colorSegments.push('#EC4899'); // Pink
         if (event.recurringType) colorSegments.push('#059669'); // Green
         if (event.maxTickets) colorSegments.push('#14B8A6'); // Teal
-        if (event.endDate) colorSegments.push('#6B7280'); // Gray for multi-day
+        if (event.endDate && event.endDate !== event.date) colorSegments.push('#6B7280'); // Gray for multi-day
         
         // Add special ticket status to colors
         if (showBadges) {

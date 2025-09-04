@@ -15,6 +15,7 @@ interface EventTypesBarProps {
       enableVoting?: boolean | null;
       recurringType?: string | null;
       endDate?: string | null;
+      date?: string;
     };
   }>;
 }
@@ -45,7 +46,7 @@ export function EventTypesBar({ events }: EventTypesBarProps) {
     badgeTypes.forEach(badge => {
       const count = events.filter(e => {
         if (badge.key === 'endDate') {
-          return !!e.event.endDate;
+          return !!e.event.endDate && e.event.endDate !== e.event.date;
         }
         return !!e.event[badge.key as keyof typeof e.event];
       }).length;

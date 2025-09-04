@@ -135,7 +135,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({ event }) => {
       description: `Limited to ${event.maxTickets} tickets`
     },
     {
-      enabled: !!event.endDate,
+      enabled: !!event.endDate && event.endDate !== event.date,
       color: '#6B7280',
       label: 'Multi-day',
       href: '/events',
