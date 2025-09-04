@@ -156,6 +156,24 @@ export default function EventForm() {
     }
   }, [userBalance, creditBalance, isEditMode, form]);
 
+  // Generate Hunt code when Treasure Hunt is enabled
+  useEffect(() => {
+    const treasureHunt = form.watch("treasureHunt");
+    const currentHuntCode = form.watch("huntCode");
+    
+    if (treasureHunt && !currentHuntCode && !isEditMode) {
+      const colors = ['Red', 'Blue', 'Green', 'Purple', 'Orange', 'Yellow', 'Pink', 'Silver', 'Golden', 'Black', 'White', 'Emerald', 'Ruby', 'Sapphire', 'Diamond'];
+      const nouns = ['Tiger', 'Dragon', 'Eagle', 'Wolf', 'Bear', 'Lion', 'Falcon', 'Phoenix', 'Raven', 'Shark', 'Panther', 'Cobra', 'Hawk', 'Lynx', 'Jaguar'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+      const huntCode = `${randomColor}${randomNoun}`;
+      
+      form.setValue("huntCode", huntCode);
+    } else if (!treasureHunt && !isEditMode) {
+      form.setValue("huntCode", "");
+    }
+  }, [form.watch("treasureHunt"), form, isEditMode]);
+
   // Load event data into form when in edit mode
   useEffect(() => {
     if (event && isEditMode) {
@@ -387,6 +405,15 @@ export default function EventForm() {
       }
     }
 
+    // Generate Hunt code if Treasure Hunt is enabled
+    const generateHuntCode = () => {
+      const colors = ['Red', 'Blue', 'Green', 'Purple', 'Orange', 'Yellow', 'Pink', 'Silver', 'Golden', 'Black', 'White', 'Emerald', 'Ruby', 'Sapphire', 'Diamond'];
+      const nouns = ['Tiger', 'Dragon', 'Eagle', 'Wolf', 'Bear', 'Lion', 'Falcon', 'Phoenix', 'Raven', 'Shark', 'Panther', 'Cobra', 'Hawk', 'Lynx', 'Jaguar'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+      return `${randomColor}${randomNoun}`;
+    };
+
     // Ensure maxTickets has a default value of 100 if not set
     const submitData = {
       ...data,
@@ -403,6 +430,8 @@ export default function EventForm() {
       latitude: latitude ? String(latitude) : undefined,
       longitude: longitude ? String(longitude) : undefined,
       geofence: watchedValues.geofence || false,
+      treasureHunt: data.treasureHunt || false,
+      huntCode: data.treasureHunt ? generateHuntCode() : undefined,
     };
 
     // If in edit mode, perform update with proper validation

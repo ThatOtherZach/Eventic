@@ -3891,6 +3891,37 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  async createSecretCode(codeData: {
+    code: string;
+    ticketAmount: number;
+    maxUses?: number | null;
+    expiresAt?: Date | null;
+    createdBy?: string | null;
+    codeType?: string;
+    eventId?: string | null;
+    huntLatitude?: string | null;
+    huntLongitude?: string | null;
+  }): Promise<SecretCode> {
+    try {
+      const [newCode] = await db.insert(secretCodes).values({
+        code: codeData.code,
+        ticketAmount: codeData.ticketAmount,
+        maxUses: codeData.maxUses || null,
+        expiresAt: codeData.expiresAt || null,
+        createdBy: codeData.createdBy || null,
+        codeType: codeData.codeType || 'regular',
+        eventId: codeData.eventId || null,
+        huntLatitude: codeData.huntLatitude || null,
+        huntLongitude: codeData.huntLongitude || null,
+      }).returning();
+      
+      return newCode;
+    } catch (error) {
+      console.error('Error creating secret code:', error);
+      throw error;
+    }
+  }
   
   // Ticket Purchases
   async createTicketPurchase(purchase: InsertTicketPurchase): Promise<TicketPurchase> {

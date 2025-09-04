@@ -1288,6 +1288,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId, // Now we can use the actual userId since user exists in DB
       });
       
+      // Create Hunt secret code if Treasure Hunt is enabled
+      if (createData.treasureHunt && createData.huntCode && createData.latitude && createData.longitude) {
+        try {
+          await storage.createSecretCode({
+            code: createData.huntCode.toUpperCase(),
+            ticketAmount: 5, // Default ticket reward for Hunt codes
+            maxUses: null, // Unlimited uses
+            createdBy: userId,
+            codeType: 'hunt',
+            eventId: event.id,
+            huntLatitude: createData.latitude,
+            huntLongitude: createData.longitude,
+          });
+        } catch (error) {
+          console.error('Failed to create Hunt secret code:', error);
+          // Don't fail the event creation if secret code creation fails
+        }
+      }
+      
       res.status(201).json(event);
     } catch (error) {
       await logError(error, "POST /api/events", {
