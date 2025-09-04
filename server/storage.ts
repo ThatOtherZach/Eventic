@@ -30,6 +30,7 @@ export interface IStorage {
   updateEventMaxTickets(id: string, maxTickets: number): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
   archiveEvent(eventId: string): Promise<boolean>;
+  getEventByHuntCode(huntCode: string): Promise<Event | undefined>;
   
   // Tickets
   getTickets(): Promise<Ticket[]>;
@@ -475,6 +476,14 @@ export class DatabaseStorage implements IStorage {
       ...result.event,
       creatorEmail: result.creatorEmail || undefined,
     };
+  }
+
+  async getEventByHuntCode(huntCode: string): Promise<Event | undefined> {
+    const [event] = await db
+      .select()
+      .from(events)
+      .where(eq(events.huntCode, huntCode));
+    return event || undefined;
   }
 
   async getEventsByUserId(userId: string): Promise<Event[]> {

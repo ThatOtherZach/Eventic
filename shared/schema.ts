@@ -116,7 +116,10 @@ export const events = pgTable("events", {
   // GPS location fields for venue
   latitude: decimal("latitude", { precision: 10, scale: 7 }), // Latitude coordinate
   longitude: decimal("longitude", { precision: 10, scale: 7 }), // Longitude coordinate
-  geofence: boolean("geofence").default(false), // Restrict validation to within 690 meters of GPS coordinates
+  geofence: boolean("geofence").default(false), // Restrict validation to within 300 meters of GPS coordinates
+  // Hunt feature fields (geocaching-style validation)
+  treasureHunt: boolean("treasure_hunt").default(false), // Enable hunt feature (requires geofence)
+  huntCode: varchar("hunt_code", { length: 50 }), // Unique ColorNoun code for hunt URL (e.g., "BlueTiger")
   // Recurring event fields
   recurringType: text("recurring_type"), // "weekly", "monthly", "annual", or null for non-recurring
   recurringEndDate: text("recurring_end_date"), // When to stop creating recurring events

@@ -1793,13 +1793,95 @@ export default function EventForm() {
                                   </label>
                                 </div>
                                 <div className="form-text">
-                                  Tickets can only be validated within 690
+                                  Tickets can only be validated within 300
                                   meters of the GPS coordinates set on the map.
                                 </div>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
+                        )}
+
+                        {form.watch("geofence") && !isEditMode && (
+                          <FormField
+                            control={form.control}
+                            name="treasureHunt"
+                            render={({ field }) => (
+                                <FormItem className="mt-3 ms-4">
+                                  <div className="form-check">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      id="treasureHunt"
+                                      checked={field.value || false}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.checked)
+                                      }
+                                      data-testid="checkbox-treasurehunt"
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="treasureHunt"
+                                    >
+                                      <span className="badge bg-info me-2">
+                                        🗺️
+                                      </span>
+                                      Treasure Hunt
+                                    </label>
+                                  </div>
+                                  <div className="form-text">
+                                    Enable geocaching-style validation. Hide a unique URL in the real world for attendees to discover.
+                                    {form.watch("treasureHunt") && form.watch("huntCode") && (
+                                      <div className="mt-2 p-2 bg-light border rounded">
+                                        <strong>Your hunt URL:</strong>
+                                        <br />
+                                        <code className="text-primary">www.eventic.quest/hunt/{form.watch("huntCode")}</code>
+                                        <br />
+                                        <small className="text-muted">
+                                          Share this URL at the venue or hide it for attendees to find!
+                                        </small>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                        )}
+                        
+                        {form.watch("geofence") && isEditMode && event?.treasureHunt && (
+                            <div className="mt-3 ms-4">
+                              <div className="form-check">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  id="treasureHunt"
+                                  checked={true}
+                                  disabled={true}
+                                />
+                                <label
+                                  className="form-check-label"
+                                  htmlFor="treasureHunt"
+                                >
+                                  <span className="badge bg-info me-2">
+                                    🗺️
+                                  </span>
+                                  Treasure Hunt
+                                  <span className="text-muted ms-2">
+                                    (read-only)
+                                  </span>
+                                </label>
+                              </div>
+                              <div className="form-text">
+                                {event?.huntCode && (
+                                  <div className="mt-2 p-2 bg-light border rounded">
+                                    <strong>Hunt URL:</strong>
+                                    <br />
+                                    <code className="text-primary">www.eventic.quest/hunt/{event.huntCode}</code>
+                                  </div>
+                                )}
+                              </div>
+                          </div>
                         )}
                       </div>
                     </div>
