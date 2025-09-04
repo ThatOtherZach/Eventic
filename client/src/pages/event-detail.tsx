@@ -66,7 +66,6 @@ import userWorldIcon from "@assets/user_world-1_1756936174601.png";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
 import expandIcon from "@assets/image_1756959756931.png";
 import huntIcon from "@assets/image_1756971767387.png";
-import signinIcon from "@assets/image_1756973798840.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -2095,12 +2094,10 @@ export default function EventDetailPage() {
               )}
 
               {!user && !isOwner && (
-                <div className="text-center mt-3 p-3">
-                  <img 
-                    src={signinIcon} 
-                    alt="" 
-                    style={{ maxHeight: "32px" }}
-                  />
+                <div className="alert alert-warning mt-3">
+                  <small>
+                    <Link href="/auth">Sign in</Link> to RVSP
+                  </small>
                 </div>
               )}
             </div>
