@@ -284,6 +284,40 @@ export default function AccountPage() {
     }
   };
 
+  // Helper function to detect if code might be a Hunt code
+  const isLikelyHuntCode = (code: string): boolean => {
+    // Hunt codes follow the ColorNoun format (e.g., BlueTiger, RedDragon)
+    const huntPattern = /^[A-Z][a-z]+[A-Z][a-z]+$/;
+    return huntPattern.test(code);
+  };
+
+  // Helper function to get GPS location
+  const getCurrentLocation = (): Promise<{ latitude: number; longitude: number }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported by this browser"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000, // Use cached location up to 1 minute old
+        }
+      );
+    });
+  };
+
   // Handle secret code redemption
   const handleRedeemCode = async () => {
     if (!secretCode.trim()) {
@@ -297,15 +331,28 @@ export default function AccountPage() {
 
     setIsRedeeming(true);
     try {
-      const response = await apiRequest("POST", "/api/currency/redeem-code", {
-        code: secretCode.trim(),
-      });
+      let requestBody: any = { code: secretCode.trim() };
+
+      // Check if this looks like a Hunt code and get GPS if so
+      if (isLikelyHuntCode(secretCode.trim())) {
+        try {
+          const location = await getCurrentLocation();
+          requestBody.latitude = location.latitude;
+          requestBody.longitude = location.longitude;
+        } catch (locationError) {
+          // If GPS fails for a Hunt code, still try redemption
+          // The server will provide a proper error message
+          console.warn("Could not get location for Hunt code:", locationError);
+        }
+      }
+
+      const response = await apiRequest("POST", "/api/currency/redeem-code", requestBody);
       const data = await response.json();
 
       if (response.ok) {
         toast({
           title: "Success!",
-          description: data.message,
+          description: data.message || `Successfully redeemed ${data.ticketAmount} tickets!`,
           variant: "success",
         });
         setSecretCode("");

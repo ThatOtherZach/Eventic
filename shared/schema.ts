@@ -499,6 +499,10 @@ export const secretCodes = pgTable("secret_codes", {
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   isActive: boolean("is_active").default(true),
+  codeType: text("code_type").default("regular"), // "regular" or "hunt"
+  eventId: varchar("event_id").references(() => events.id), // For hunt codes, links to event
+  huntLatitude: decimal("hunt_latitude", { precision: 10, scale: 7 }), // GPS coordinates for hunt codes
+  huntLongitude: decimal("hunt_longitude", { precision: 11, scale: 7 }),
 });
 
 // Track who redeemed secret codes

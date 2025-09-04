@@ -4168,18 +4168,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const { code } = req.body;
+      const { code, latitude, longitude } = req.body;
       if (!code) {
         return res.status(400).json({ message: "Code is required" });
       }
       
-      const result = await storage.redeemSecretCode(code, userId);
+      const result = await storage.redeemSecretCode(code, userId, latitude, longitude);
       
       if (result.success) {
         res.json({
           success: true,
           ticketAmount: result.ticketAmount,
-          message: `Successfully redeemed ${result.ticketAmount} tickets!`
+          message: result.message || `Successfully redeemed ${result.ticketAmount} tickets!`
         });
       } else {
         res.status(400).json({ 

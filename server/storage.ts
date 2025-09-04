@@ -3763,7 +3763,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async redeemSecretCode(code: string, userId: string): Promise<{ success: boolean; ticketAmount?: number; error?: string }> {
+  async redeemSecretCode(code: string, userId: string, latitude?: number, longitude?: number): Promise<{ success: boolean; ticketAmount?: number; error?: string; message?: string }> {
     try {
       // Validate the code
       const secretCode = await this.validateSecretCode(code);
@@ -3777,7 +3777,77 @@ export class DatabaseStorage implements IStorage {
         return { success: false, error: 'You have already redeemed this code' };
       }
       
-      // Start transaction
+      // Special handling for Hunt codes
+      if (secretCode.codeType === 'hunt') {
+        if (!latitude || !longitude) {
+          return { success: false, error: 'Hunt codes require your location. Please enable GPS and try again.' };
+        }
+        
+        if (!secretCode.huntLatitude || !secretCode.huntLongitude) {
+          return { success: false, error: 'This Hunt code is missing location data' };
+        }
+        
+        // Calculate distance from Hunt location (Haversine formula)
+        const R = 6371000; // Earth's radius in meters
+        const lat1Rad = (latitude * Math.PI) / 180;
+        const lat2Rad = (Number(secretCode.huntLatitude) * Math.PI) / 180;
+        const deltaLatRad = ((Number(secretCode.huntLatitude) - latitude) * Math.PI) / 180;
+        const deltaLngRad = ((Number(secretCode.huntLongitude) - longitude) * Math.PI) / 180;
+        
+        const a = Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
+                 Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+                 Math.sin(deltaLngRad / 2) * Math.sin(deltaLngRad / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+        
+        // Check if within 300 meters
+        if (distance > 300) {
+          const distanceKm = (distance / 1000).toFixed(1);
+          return { 
+            success: false, 
+            error: `You're ${distanceKm}km away from the Hunt location. You need to be within 300 meters to redeem this code.` 
+          };
+        }
+        
+        // Get event info for special message
+        let eventInfo = '';
+        if (secretCode.eventId) {
+          const event = await this.getEvent(secretCode.eventId);
+          if (event) {
+            eventInfo = ` for ${event.name}`;
+          }
+        }
+        
+        // Start transaction
+        await db.transaction(async (tx) => {
+          // Record the redemption
+          await tx.insert(codeRedemptions).values({
+            codeId: secretCode.id,
+            userId
+          });
+          
+          // Update the usage count
+          await tx.update(secretCodes)
+            .set({ currentUses: (secretCode.currentUses || 0) + 1 })
+            .where(eq(secretCodes.id, secretCode.id));
+          
+          // Credit user account with tickets
+          await this.creditUserAccount(
+            userId, 
+            secretCode.ticketAmount, 
+            `Hunt discovery: ${code}${eventInfo}`,
+            { codeId: secretCode.id, huntLocation: true, distance: Math.round(distance) }
+          );
+        });
+        
+        return { 
+          success: true, 
+          ticketAmount: secretCode.ticketAmount,
+          message: `🎉 Hunt successful! You discovered the hidden ${code} code${eventInfo} and earned ${secretCode.ticketAmount} tickets!`
+        };
+      }
+      
+      // Regular secret code handling
       await db.transaction(async (tx) => {
         // Record the redemption
         await tx.insert(codeRedemptions).values({
