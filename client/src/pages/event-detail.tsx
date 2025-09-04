@@ -1009,7 +1009,7 @@ export default function EventDetailPage() {
                 style={{ width: "18px", height: "18px", marginRight: "8px" }}
               />
               <span>
-                {event.endDate ? (
+                {event.endDate && event.endDate !== event.date ? (
                   <>
                     {eventDate ? format(eventDate, "MMMM d, yyyy") : event.date}{" "}
                     -{" "}
