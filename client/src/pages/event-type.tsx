@@ -33,6 +33,8 @@ interface Event {
   enableVoting?: boolean | null;
   recurringType?: string | null;
   maxTickets?: number | null;
+  rollingTimezone?: boolean | null;
+  treasureHunt?: boolean | null;
 }
 
 // Map URL parameters to display names and field checks
@@ -121,6 +123,12 @@ const eventTypeConfig: Record<string, {
     color: '#14B8A6',
     imageIcon: '/limited-icon.png',
     checkField: (e) => !!e.maxTickets 
+  },
+  sync: { 
+    label: "Global Sync'd Events", 
+    color: '#0EA5E9',
+    imageIcon: '/global-sync-icon.png',
+    checkField: (e) => !!e.rollingTimezone 
   },
 };
 

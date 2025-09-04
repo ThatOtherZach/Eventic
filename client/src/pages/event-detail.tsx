@@ -1020,6 +1020,28 @@ export default function EventDetailPage() {
                   </span>
                 </Link>
               )}
+              {event.rollingTimezone && (
+                <Link href="/type/sync">
+                  <span
+                    className="badge"
+                    style={{
+                      backgroundColor: "#0EA5E9",
+                      color: "#fff",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    <img
+                      src="/global-sync-icon.png"
+                      alt=""
+                      style={{ width: "14px", height: "14px" }}
+                    />
+                    Global Sync
+                  </span>
+                </Link>
+              )}
             </div>
           )}
 
@@ -1112,21 +1134,6 @@ export default function EventDetailPage() {
                   </span>
                 )}
               </span>
-              {event.rollingTimezone && (
-                <span className="ms-2">
-                  <span className="badge bg-info text-white">
-                    <img 
-                      src="/global-sync-icon.png" 
-                      alt="" 
-                      width="14" 
-                      height="14" 
-                      className="me-1" 
-                      style={{ display: "inline-block", verticalAlign: "text-bottom" }}
-                    />
-                    Global Sync
-                  </span>
-                </span>
-              )}
             </div>
             <div className="d-flex align-items-center text-muted">
               <img
