@@ -710,13 +710,24 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>
                               Event Name <span className="text-danger">*</span>
+                              {isEditMode && (
+                                <span className="text-muted small ms-2">
+                                  (read-only)
+                                </span>
+                              )}
                             </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 placeholder="Enter event name"
-                                className="form-control"
+                                className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                 data-testid="input-event-name"
+                                readOnly={isEditMode}
+                                style={
+                                  isEditMode
+                                    ? { cursor: "not-allowed", opacity: 0.7 }
+                                    : {}
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -730,23 +741,46 @@ export default function EventForm() {
                         <label className="form-label">
                           <Image size={18} className="me-2" />
                           Featured Image
+                          {isEditMode && (
+                            <span className="text-muted small ms-2">
+                              (read-only)
+                            </span>
+                          )}
                         </label>
                         <div className="form-text mb-2">
                           Maximum file size: 5MB. Accepted formats: JPEG, JPG,
                           PNG, GIF
+                          {isEditMode && (
+                            <span className="text-muted">
+                              {" "}- Featured image cannot be changed after event creation
+                            </span>
+                          )}
                         </div>
-                        <ObjectUploader
-                          onGetUploadParameters={handleImageUpload}
-                          onComplete={(result) => handleImageComplete(result)}
-                          buttonClassName="btn btn-secondary"
-                          currentImageUrl={imageUrl}
-                          showPreview={true}
-                          accept="image/jpeg,image/jpg,image/png,image/gif"
-                          maxFileSize={5 * 1024 * 1024}
-                        >
-                          <Image size={18} className="me-2" />
-                          Choose Image
-                        </ObjectUploader>
+                        {!isEditMode ? (
+                          <ObjectUploader
+                            onGetUploadParameters={handleImageUpload}
+                            onComplete={(result) => handleImageComplete(result)}
+                            buttonClassName="btn btn-secondary"
+                            currentImageUrl={imageUrl}
+                            showPreview={true}
+                            accept="image/jpeg,image/jpg,image/png,image/gif"
+                            maxFileSize={5 * 1024 * 1024}
+                          >
+                            <Image size={18} className="me-2" />
+                            Choose Image
+                          </ObjectUploader>
+                        ) : (
+                          imageUrl && (
+                            <div className="border rounded p-2" style={{ backgroundColor: "#f0f0f0" }}>
+                              <img
+                                src={imageUrl}
+                                alt="Event featured image"
+                                style={{ maxWidth: "200px", maxHeight: "150px" }}
+                                className="d-block"
+                              />
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
 
@@ -808,35 +842,58 @@ export default function EventForm() {
                             <FormLabel className="text-dark">
                               Venue Location{" "}
                               <span className="text-danger">*</span>
+                              {isEditMode && (
+                                <span className="text-muted small ms-2">
+                                  (read-only)
+                                </span>
+                              )}
                             </FormLabel>
                             <input type="hidden" {...field} />
                             <div className="row g-2">
                               <div className="col-12">
                                 <input
                                   type="text"
-                                  className="form-control"
+                                  className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                   placeholder="Street Address, GPS Coordinates, Online, etc."
                                   value={address}
-                                  onChange={(e) => setAddress(e.target.value)}
+                                  onChange={(e) => !isEditMode && setAddress(e.target.value)}
                                   data-testid="input-address"
+                                  readOnly={isEditMode}
+                                  style={
+                                    isEditMode
+                                      ? { cursor: "not-allowed", opacity: 0.7 }
+                                      : {}
+                                  }
                                 />
                               </div>
                               <div className="col-md-6">
                                 <input
                                   type="text"
-                                  className="form-control"
+                                  className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                   placeholder="City"
                                   value={city}
-                                  onChange={(e) => setCity(e.target.value)}
+                                  onChange={(e) => !isEditMode && setCity(e.target.value)}
                                   data-testid="input-city"
+                                  readOnly={isEditMode}
+                                  style={
+                                    isEditMode
+                                      ? { cursor: "not-allowed", opacity: 0.7 }
+                                      : {}
+                                  }
                                 />
                               </div>
                               <div className="col-md-6">
                                 <select
-                                  className="form-control"
+                                  className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                   value={country}
-                                  onChange={(e) => setCountry(e.target.value)}
+                                  onChange={(e) => !isEditMode && setCountry(e.target.value)}
                                   data-testid="input-country"
+                                  disabled={isEditMode}
+                                  style={
+                                    isEditMode
+                                      ? { cursor: "not-allowed", opacity: 0.7 }
+                                      : {}
+                                  }
                                 >
                                   <option value="">Select Country</option>
                                   {countries.map((countryName) => (
@@ -1786,7 +1843,14 @@ export default function EventForm() {
                                   name="maxUses"
                                   render={({ field }) => (
                                     <FormItem>
-                                      <FormLabel>Number of Uses</FormLabel>
+                                      <FormLabel>
+                                        Number of Uses
+                                        {isEditMode && (
+                                          <span className="text-muted small ms-2">
+                                            (read-only)
+                                          </span>
+                                        )}
+                                      </FormLabel>
                                       <FormControl>
                                         <Input
                                           {...field}
@@ -1794,25 +1858,34 @@ export default function EventForm() {
                                           min="2"
                                           max="24"
                                           placeholder="Number of uses (2-24)"
-                                          className="form-control"
+                                          className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                           data-testid="input-max-uses"
                                           value={field.value || 2}
                                           onChange={(e) => {
-                                            const value =
-                                              parseInt(e.target.value) || 2;
-                                            if (value < 2) {
-                                              field.onChange(2);
-                                            } else if (value > 24) {
-                                              field.onChange(24);
-                                            } else {
-                                              field.onChange(value);
+                                            if (!isEditMode) {
+                                              const value =
+                                                parseInt(e.target.value) || 2;
+                                              if (value < 2) {
+                                                field.onChange(2);
+                                              } else if (value > 24) {
+                                                field.onChange(24);
+                                              } else {
+                                                field.onChange(value);
+                                              }
                                             }
                                           }}
+                                          readOnly={isEditMode}
+                                          style={
+                                            isEditMode
+                                              ? { cursor: "not-allowed", opacity: 0.7 }
+                                              : {}
+                                          }
                                         />
                                       </FormControl>
                                       <div className="form-text">
                                         How many times the ticket can be used
                                         (minimum 2, maximum 24)
+                                        {isEditMode && " - Cannot be changed after event creation"}
                                       </div>
                                       <FormMessage />
                                     </FormItem>
