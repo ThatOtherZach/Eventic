@@ -906,9 +906,7 @@ export default function NerdStats() {
                     <tr>
                       <th style={{ width: '60px', textAlign: 'center' }}>#</th>
                       <th>User</th>
-                      <th style={{ textAlign: 'center' }}>Approval</th>
                       <th style={{ textAlign: 'center' }}>Validations</th>
-                      <th style={{ textAlign: 'center' }}>Badge</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -951,9 +949,40 @@ export default function NerdStats() {
                             <td style={{ verticalAlign: 'middle' }}>
                               <div className="d-flex align-items-center gap-2">
                                 <Users size={20} className="text-muted" />
-                                <div>
-                                  <div style={{ fontWeight: '500' }}>
-                                    {user.displayName}
+                                <div className="flex-grow-1">
+                                  <div className="d-flex align-items-center gap-2">
+                                    <div style={{ fontWeight: '500' }}>
+                                      {user.displayName}
+                                    </div>
+                                    <div style={{
+                                      fontSize: '16px',
+                                      fontWeight: 'bold',
+                                      color: user.percentage !== null && user.percentage >= 80 
+                                        ? '#28a745'
+                                        : user.percentage !== null && user.percentage >= 50
+                                        ? '#ffc107'
+                                        : user.percentage !== null
+                                        ? '#dc3545'
+                                        : '#6c757d'
+                                    }}>
+                                      {user.percentage !== null ? `${user.percentage}%` : '—'}
+                                    </div>
+                                    {reputationInfo.badge === '😎' ? (
+                                      <span style={{ fontSize: '16px' }}>
+                                        {reputationInfo.badge}
+                                      </span>
+                                    ) : (
+                                      <span className="badge" style={{
+                                        backgroundColor: reputationInfo.color || '#6c757d',
+                                        color: '#fff',
+                                        fontSize: '10px',
+                                        padding: '3px 6px',
+                                        borderRadius: '0',
+                                        fontWeight: '500'
+                                      }}>
+                                        {reputationInfo.badge}
+                                      </span>
+                                    )}
                                   </div>
                                   <small className="text-muted">
                                     {user.memberStatus}
@@ -962,49 +991,16 @@ export default function NerdStats() {
                               </div>
                             </td>
                             <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                              <div style={{
-                                fontSize: '20px',
-                                fontWeight: 'bold',
-                                color: user.percentage !== null && user.percentage >= 80 
-                                  ? '#28a745'
-                                  : user.percentage !== null && user.percentage >= 50
-                                  ? '#ffc107'
-                                  : user.percentage !== null
-                                  ? '#dc3545'
-                                  : '#6c757d'
-                              }}>
-                                {user.percentage !== null ? `${user.percentage}%` : '—'}
-                              </div>
-                            </td>
-                            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                               <span style={{ fontWeight: '600' }}>
                                 {formatNumber(user.validatedCount)}
                               </span>
-                            </td>
-                            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                              {reputationInfo.badge === '😎' ? (
-                                <span style={{ fontSize: '20px' }}>
-                                  {reputationInfo.badge}
-                                </span>
-                              ) : (
-                                <span className="badge" style={{
-                                  backgroundColor: reputationInfo.color || '#6c757d',
-                                  color: '#fff',
-                                  fontSize: '11px',
-                                  padding: '5px 10px',
-                                  borderRadius: '0',
-                                  fontWeight: '500'
-                                }}>
-                                  {reputationInfo.badge}
-                                </span>
-                              )}
                             </td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={6} className="text-center py-5">
+                        <td colSpan={3} className="text-center py-5">
                           <div className="text-muted">
                             <Trophy size={48} className="mb-3 opacity-25" />
                             <p>No users with reputation yet</p>
