@@ -45,6 +45,8 @@ import statsIcon from "@assets/chart1-4_1756850194937.png";
 import ticketingTrendsIcon from "@assets/image_1756851232451.png";
 import tealBg from "@assets/win98-teal_1756850231196.png";
 import hashtagIcon from "@assets/modem-4_1756868854727.png";
+import userWorldIcon from "@assets/user_world-1_1756976313764.png";
+import eraseIcon from "@assets/erase_file-1_1756976362158.png";
 import { countries as allCountries } from "@/lib/countries";
 
 export default function NerdStats() {
@@ -894,12 +896,12 @@ export default function NerdStats() {
       <div className="row mt-4">
         <div className="col-12">
           <h4 className="fw-semibold mb-2">
-            <img src="/attached_assets/user_world-1_1756976313764.png" alt="Leaderboard" className="me-2" style={{ width: 24, height: 24, verticalAlign: 'text-bottom' }} />
+            <img src={userWorldIcon} alt="Leaderboard" className="me-2" style={{ width: 24, height: 24, verticalAlign: 'text-bottom' }} />
             Reputation Leaderboard - Top 100 Users
             {selectedCountry !== 'Global' && ` (${selectedCountry})`}
           </h4>
           <div className="mb-3 text-center text-muted small">
-            <img src="/attached_assets/erase_file-1_1756976362158.png" alt="Info" className="me-1" style={{ width: 16, height: 16, verticalAlign: 'text-bottom' }} />
+            <img src={eraseIcon} alt="Info" className="me-1" style={{ width: 16, height: 16, verticalAlign: 'text-bottom' }} />
             Reputations decay every 69 days to keep things fresh and fair
           </div>
           <div className="card shadow-sm">
