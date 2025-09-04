@@ -13,11 +13,11 @@ import {
   AlertTriangle,
   Shield,
   Users,
-  Zap,
   HelpCircle,
 } from "lucide-react";
 import QRCode from "qrcode";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
+import batteryIcon from "@assets/image_1756977732648.png";
 import type { Ticket, Event } from "@shared/schema";
 
 interface ValidationSession {
@@ -676,7 +676,7 @@ export default function TicketViewPage(): React.ReactElement {
               <div className="card mb-4">
                 <div className="card-body">
                   <h6 className="card-title mb-3">
-                    <Zap size={18} className="me-2 text-warning" />
+                    <img src={batteryIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
                     Charge Ticket
                   </h6>
                   <p className="text-muted small mb-3">
@@ -758,12 +758,12 @@ export default function TicketViewPage(): React.ReactElement {
                       </>
                     ) : userCredits < 3 ? (
                       <>
-                        <Zap size={18} className="me-2" />
+                        <img src={batteryIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
                         Insufficient Credits
                       </>
                     ) : (
                       <>
-                        <Zap size={18} className="me-2" />
+                        <img src={batteryIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
                         Charge Ticket (3 Credits)
                       </>
                     )}
@@ -777,7 +777,7 @@ export default function TicketViewPage(): React.ReactElement {
             <div className="card mb-4">
               <div className="card-body">
                 <div className="d-flex align-items-center">
-                  <Zap size={20} className="text-warning me-2" />
+                  <img src={batteryIcon} alt="" style={{ width: "20px", height: "20px" }} className="me-2" />
                   <div>
                     <h6 className="mb-0">Ticket Charged!</h6>
                     <p className="text-muted small mb-0">
