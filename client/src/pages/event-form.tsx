@@ -1216,183 +1216,179 @@ export default function EventForm() {
                     </div>
 
                     <div className="col-md-6">
-                      <div className="row">
-                        <div className="col-6">
-                          <FormField
-                            control={form.control}
-                            name="timezone"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>
-                                  Timezone
-                                  {isEditMode && event?.rollingTimezone && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Lock size={14} className="ms-2 text-muted" />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Timezone is locked for Global Sync events</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
-                                </FormLabel>
-                                <FormControl>
-                                  <select
-                                    className={`form-select ${isEditMode && event?.rollingTimezone ? "bg-light text-muted" : ""}`}
-                                    data-testid="select-timezone"
-                                    value={field.value || "America/New_York"}
-                                    onChange={(e) => field.onChange(e.target.value)}
-                                    disabled={isEditMode && event?.rollingTimezone}
-                                    style={
-                                      isEditMode && event?.rollingTimezone
-                                        ? { cursor: "not-allowed", opacity: 0.7 }
-                                        : {}
-                                    }
-                                  >
-                                    <optgroup label="US & Canada">
-                                      <option value="America/New_York">
-                                        Eastern Time (ET)
-                                      </option>
-                                      <option value="America/Chicago">
-                                        Central Time (CT)
-                                      </option>
-                                      <option value="America/Denver">
-                                        Mountain Time (MT)
-                                      </option>
-                                      <option value="America/Phoenix">
-                                        Arizona Time (MST)
-                                      </option>
-                                      <option value="America/Los_Angeles">
-                                        Pacific Time (PT)
-                                      </option>
-                                      <option value="America/Anchorage">
-                                        Alaska Time (AKT)
-                                      </option>
-                                      <option value="Pacific/Honolulu">
-                                        Hawaii Time (HST)
-                                      </option>
-                                    </optgroup>
-                                    <optgroup label="Europe">
-                                      <option value="Europe/London">
-                                        London (GMT/BST)
-                                      </option>
-                                      <option value="Europe/Paris">
-                                        Paris (CET)
-                                      </option>
-                                      <option value="Europe/Berlin">
-                                        Berlin (CET)
-                                      </option>
-                                      <option value="Europe/Moscow">
-                                        Moscow (MSK)
-                                      </option>
-                                    </optgroup>
-                                    <optgroup label="Asia">
-                                      <option value="Asia/Tokyo">
-                                        Tokyo (JST)
-                                      </option>
-                                      <option value="Asia/Shanghai">
-                                        Shanghai (CST)
-                                      </option>
-                                      <option value="Asia/Hong_Kong">
-                                        Hong Kong (HKT)
-                                      </option>
-                                      <option value="Asia/Singapore">
-                                        Singapore (SGT)
-                                      </option>
-                                      <option value="Asia/Dubai">
-                                        Dubai (GST)
-                                      </option>
-                                      <option value="Asia/Kolkata">
-                                        India (IST)
-                                      </option>
-                                    </optgroup>
-                                    <optgroup label="Australia & Pacific">
-                                      <option value="Australia/Sydney">
-                                        Sydney (AEDT)
-                                      </option>
-                                      <option value="Australia/Melbourne">
-                                        Melbourne (AEDT)
-                                      </option>
-                                      <option value="Pacific/Auckland">
-                                        Auckland (NZDT)
-                                      </option>
-                                    </optgroup>
-                                    <optgroup label="Other">
-                                      <option value="UTC">UTC</option>
-                                    </optgroup>
-                                  </select>
-                                </FormControl>
-                                <div className="form-text">
-                                  Event times will be displayed in this timezone
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="col-6">
-                          {/* Rolling Timezone Option */}
-                          <FormField
-                            control={form.control}
-                            name="rollingTimezone"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>&nbsp;</FormLabel>
-                                <div className="form-check">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      className={`form-check-input ${isEditMode ? "bg-light" : ""}`}
-                                      data-testid="checkbox-rolling-timezone"
-                                      checked={field.value || false}
-                                      onChange={(e) => field.onChange(e.target.checked)}
-                                      disabled={isEditMode}
-                                      style={
-                                        isEditMode
-                                          ? { cursor: "not-allowed", opacity: 0.7 }
-                                          : {}
-                                      }
-                                    />
-                                  </FormControl>
-                                  <label className="form-check-label ms-2">
-                                    <img 
-                                      src="/global-sync-icon.png" 
-                                      alt="" 
-                                      width="16" 
-                                      height="16" 
-                                      className="me-1" 
-                                      style={{ verticalAlign: "text-bottom" }}
-                                    />
-                                    Global Sync Event
-                                    {isEditMode && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Lock size={14} className="ms-2 text-muted" />
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Global Sync cannot be changed after event creation</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                  </label>
-                                </div>
-                                <div className="form-text">
-                                  Synchronizes across all timezones - starts at the same local time worldwide.
-                                  {isEditMode && (
-                                    <span className="text-muted"> (Locked)</span>
-                                  )}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="timezone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Timezone
+                              {isEditMode && event?.rollingTimezone && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Lock size={14} className="ms-2 text-muted" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Timezone is locked for Global Sync events</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </FormLabel>
+                            <FormControl>
+                              <select
+                                className={`form-select ${isEditMode && event?.rollingTimezone ? "bg-light text-muted" : ""}`}
+                                data-testid="select-timezone"
+                                value={field.value || "America/New_York"}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                disabled={isEditMode && event?.rollingTimezone}
+                                style={
+                                  isEditMode && event?.rollingTimezone
+                                    ? { cursor: "not-allowed", opacity: 0.7 }
+                                    : {}
+                                }
+                              >
+                                <optgroup label="US & Canada">
+                                  <option value="America/New_York">
+                                    Eastern Time (ET)
+                                  </option>
+                                  <option value="America/Chicago">
+                                    Central Time (CT)
+                                  </option>
+                                  <option value="America/Denver">
+                                    Mountain Time (MT)
+                                  </option>
+                                  <option value="America/Phoenix">
+                                    Arizona Time (MST)
+                                  </option>
+                                  <option value="America/Los_Angeles">
+                                    Pacific Time (PT)
+                                  </option>
+                                  <option value="America/Anchorage">
+                                    Alaska Time (AKT)
+                                  </option>
+                                  <option value="Pacific/Honolulu">
+                                    Hawaii Time (HST)
+                                  </option>
+                                </optgroup>
+                                <optgroup label="Europe">
+                                  <option value="Europe/London">
+                                    London (GMT/BST)
+                                  </option>
+                                  <option value="Europe/Paris">
+                                    Paris (CET)
+                                  </option>
+                                  <option value="Europe/Berlin">
+                                    Berlin (CET)
+                                  </option>
+                                  <option value="Europe/Moscow">
+                                    Moscow (MSK)
+                                  </option>
+                                </optgroup>
+                                <optgroup label="Asia">
+                                  <option value="Asia/Tokyo">
+                                    Tokyo (JST)
+                                  </option>
+                                  <option value="Asia/Shanghai">
+                                    Shanghai (CST)
+                                  </option>
+                                  <option value="Asia/Hong_Kong">
+                                    Hong Kong (HKT)
+                                  </option>
+                                  <option value="Asia/Singapore">
+                                    Singapore (SGT)
+                                  </option>
+                                  <option value="Asia/Dubai">
+                                    Dubai (GST)
+                                  </option>
+                                  <option value="Asia/Kolkata">
+                                    India (IST)
+                                  </option>
+                                </optgroup>
+                                <optgroup label="Australia & Pacific">
+                                  <option value="Australia/Sydney">
+                                    Sydney (AEDT)
+                                  </option>
+                                  <option value="Australia/Melbourne">
+                                    Melbourne (AEDT)
+                                  </option>
+                                  <option value="Pacific/Auckland">
+                                    Auckland (NZDT)
+                                  </option>
+                                </optgroup>
+                                <optgroup label="Other">
+                                  <option value="UTC">UTC</option>
+                                </optgroup>
+                              </select>
+                            </FormControl>
+                            <div className="form-text">
+                              Event times will be displayed in this timezone
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="col-md-6">
+                      {/* Rolling Timezone Option */}
+                      <FormField
+                        control={form.control}
+                        name="rollingTimezone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>&nbsp;</FormLabel>
+                            <div className="form-check">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  className={`form-check-input ${isEditMode ? "bg-light" : ""}`}
+                                  data-testid="checkbox-rolling-timezone"
+                                  checked={field.value || false}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  disabled={isEditMode}
+                                  style={
+                                    isEditMode
+                                      ? { cursor: "not-allowed", opacity: 0.7 }
+                                      : {}
+                                  }
+                                />
+                              </FormControl>
+                              <label className="form-check-label ms-2">
+                                <img 
+                                  src="/global-sync-icon.png" 
+                                  alt="" 
+                                  width="16" 
+                                  height="16" 
+                                  className="me-1" 
+                                  style={{ verticalAlign: "text-bottom" }}
+                                />
+                                Global Sync Event
+                                {isEditMode && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Lock size={14} className="ms-2 text-muted" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Global Sync cannot be changed after event creation</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </label>
+                            </div>
+                            <div className="form-text">
+                              Synchronizes across all timezones - starts at the same local time worldwide.
+                              {isEditMode && (
+                                <span className="text-muted"> (Locked)</span>
+                              )}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
 
                     {/* Tickets & Pricing Section - Windows 98 Style - Only show when creating new event */}
