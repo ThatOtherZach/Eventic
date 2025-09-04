@@ -1186,6 +1186,11 @@ export default function EventForm() {
                                         className="form-check-label"
                                         htmlFor="surgePricingCheck"
                                       >
+                                        <img 
+                                          src="/surge-pricing-icon.png" 
+                                          alt="Surge Pricing" 
+                                          style={{ width: "21px", height: "21px", marginRight: "8px", display: "inline-block", verticalAlign: "middle" }}
+                                        />
                                         <strong>Surge Pricing</strong>
                                         <div className="text-muted small">
                                           Ticket prices increase with demand.
