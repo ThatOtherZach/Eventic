@@ -53,7 +53,11 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
     if (!hasValidatedTickets) {
       return (
         <div className="text-center text-muted p-3">
-          <p className="small mb-0">Powered by Saym Services Inc.</p>
+          <img 
+            src="/attached_assets/image_1756973534350.png" 
+            alt="Powered by" 
+            style={{ maxHeight: "32px", opacity: 0.7 }}
+          />
         </div>
       );
     }
