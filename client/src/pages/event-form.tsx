@@ -799,6 +799,7 @@ export default function EventForm() {
                                 min={minDate}
                                 max={maxDate}
                                 data-testid="input-date"
+                                readOnly={isEditMode}
                               />
                             </FormControl>
                             <FormMessage />
@@ -822,6 +823,7 @@ export default function EventForm() {
                                 type="time"
                                 className="form-control"
                                 data-testid="input-time"
+                                readOnly={isEditMode}
                                 onChange={(e) => {
                                   field.onChange(e);
                                   // Clear any existing date/time errors when user changes the time
@@ -925,6 +927,7 @@ export default function EventForm() {
                                 min={form.watch("date") || minDate}
                                 max={maxDate}
                                 data-testid="input-end-date"
+                                readOnly={isEditMode}
                               />
                             </FormControl>
                             <div className="form-text">
@@ -950,6 +953,7 @@ export default function EventForm() {
                                 type="time"
                                 className="form-control"
                                 data-testid="input-end-time"
+                                readOnly={isEditMode}
                               />
                             </FormControl>
                             <div className="form-text">When the event ends</div>

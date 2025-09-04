@@ -518,6 +518,20 @@ export const ticketPurchases = pgTable("ticket_purchases", {
   purchasedAt: timestamp("purchased_at").defaultNow(),
 });
 
+// Scheduled deletion jobs table for efficient event archiving
+export const scheduledJobs = pgTable("scheduled_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobType: text("job_type").notNull(), // 'archive_event'
+  targetId: varchar("target_id").notNull(), // Event ID to archive
+  scheduledFor: timestamp("scheduled_for").notNull(), // When to run this job
+  status: text("status").default("pending"), // pending, processing, completed, failed
+  attempts: integer("attempts").default(0), // Number of execution attempts
+  lastAttemptAt: timestamp("last_attempt_at"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -889,6 +903,14 @@ export const insertTicketPurchaseSchema = createInsertSchema(ticketPurchases).om
   purchasedAt: true,
 });
 
+export const insertScheduledJobSchema = createInsertSchema(scheduledJobs).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+  lastAttemptAt: true,
+  attempts: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -951,3 +973,5 @@ export type InsertCodeRedemption = z.infer<typeof insertCodeRedemptionSchema>;
 export type CodeRedemption = typeof codeRedemptions.$inferSelect;
 export type InsertTicketPurchase = z.infer<typeof insertTicketPurchaseSchema>;
 export type TicketPurchase = typeof ticketPurchases.$inferSelect;
+export type InsertScheduledJob = z.infer<typeof insertScheduledJobSchema>;
+export type ScheduledJob = typeof scheduledJobs.$inferSelect;

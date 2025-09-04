@@ -1,5 +1,6 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases } from "@shared/schema";
 import { db } from "./db";
+import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -28,6 +29,7 @@ export interface IStorage {
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event | undefined>;
   updateEventMaxTickets(id: string, maxTickets: number): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
+  archiveEvent(eventId: string): Promise<boolean>;
   
   // Tickets
   getTickets(): Promise<Ticket[]>;
@@ -485,6 +487,11 @@ export class DatabaseStorage implements IStorage {
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
     const [event] = await db.insert(events).values(insertEvent).returning();
+    
+    // Schedule automatic deletion 69 days after event ends (or starts if no end date)
+    const deletionDate = calculateDeletionDate(event.date, event.endDate);
+    await scheduleEventDeletion(event.id, deletionDate);
+    
     return event;
   }
 
@@ -494,6 +501,13 @@ export class DatabaseStorage implements IStorage {
       .set(updateData)
       .where(eq(events.id, id))
       .returning();
+    
+    // If dates were updated, update the deletion schedule
+    if (event && (updateData.date || updateData.endDate)) {
+      const deletionDate = calculateDeletionDate(event.date, event.endDate);
+      await updateEventDeletionSchedule(event.id, deletionDate);
+    }
+    
     return event || undefined;
   }
 

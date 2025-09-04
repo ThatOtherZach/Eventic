@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError, scheduleLogCleanup } from "./logger";
-import { scheduleEventArchiving } from "./archiveScheduler";
+import { initializeJobScheduler } from "./jobScheduler";
 import { storage } from "./storage";
 
 const app = express();
@@ -43,8 +43,8 @@ app.use((req, res, next) => {
   // Initialize log cleanup scheduler
   scheduleLogCleanup();
   
-  // Initialize event archiving scheduler
-  scheduleEventArchiving();
+  // Initialize job scheduler for event archiving
+  await initializeJobScheduler();
   
   // Initialize currency system accounts
   await storage.initializeSystemAccounts();
