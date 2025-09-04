@@ -948,24 +948,23 @@ export default function NerdStats() {
                             </td>
                             <td style={{ verticalAlign: 'middle' }}>
                               <div className="d-flex align-items-center gap-2">
-                                <Users size={20} className="text-muted" />
+                                <div style={{
+                                  fontSize: '16px',
+                                  fontWeight: 'bold',
+                                  color: user.percentage !== null && user.percentage >= 80 
+                                    ? '#28a745'
+                                    : user.percentage !== null && user.percentage >= 50
+                                    ? '#ffc107'
+                                    : user.percentage !== null
+                                    ? '#dc3545'
+                                    : '#6c757d'
+                                }}>
+                                  {user.percentage !== null ? `${user.percentage}%` : '—'}
+                                </div>
                                 <div className="flex-grow-1">
                                   <div className="d-flex align-items-center gap-2">
                                     <div style={{ fontWeight: '500' }}>
                                       {user.displayName}
-                                    </div>
-                                    <div style={{
-                                      fontSize: '16px',
-                                      fontWeight: 'bold',
-                                      color: user.percentage !== null && user.percentage >= 80 
-                                        ? '#28a745'
-                                        : user.percentage !== null && user.percentage >= 50
-                                        ? '#ffc107'
-                                        : user.percentage !== null
-                                        ? '#dc3545'
-                                        : '#6c757d'
-                                    }}>
-                                      {user.percentage !== null ? `${user.percentage}%` : '—'}
                                     </div>
                                     {reputationInfo.badge === '😎' ? (
                                       <span style={{ fontSize: '16px' }}>
