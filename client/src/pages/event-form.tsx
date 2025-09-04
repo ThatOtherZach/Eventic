@@ -1757,6 +1757,7 @@ export default function EventForm() {
                                       field.onChange(e.target.checked)
                                     }
                                     data-testid="checkbox-geofence"
+                                    disabled={isEditMode} // Disable if editing existing event
                                   />
                                   <label
                                     className="form-check-label"
@@ -1766,6 +1767,11 @@ export default function EventForm() {
                                       🌎
                                     </span>
                                     Geofence
+                                    {isEditMode && (
+                                      <span className="text-muted ms-2">
+                                        (read-only)
+                                      </span>
+                                    )}
                                   </label>
                                 </div>
                                 <div className="form-text">
