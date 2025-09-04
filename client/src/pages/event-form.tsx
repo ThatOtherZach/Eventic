@@ -1338,7 +1338,7 @@ export default function EventForm() {
                           <FormItem>
                             <div className="form-check mt-3">
                               <FormControl>
-                                <Input
+                                <input
                                   type="checkbox"
                                   className={`form-check-input ${isEditMode ? "bg-light" : ""}`}
                                   data-testid="checkbox-rolling-timezone"
@@ -1352,7 +1352,7 @@ export default function EventForm() {
                                   }
                                 />
                               </FormControl>
-                              <FormLabel className="form-check-label ms-2">
+                              <label className="form-check-label ms-2">
                                 <Globe size={16} className="me-1" />
                                 Global Sync Event
                                 {isEditMode && (
@@ -1367,7 +1367,7 @@ export default function EventForm() {
                                     </Tooltip>
                                   </TooltipProvider>
                                 )}
-                              </FormLabel>
+                              </label>
                             </div>
                             <div className="form-text ms-4">
                               Synchronizes your event across all timezones - starts at the same local time worldwide.
