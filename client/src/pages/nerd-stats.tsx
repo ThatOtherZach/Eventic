@@ -907,7 +907,6 @@ export default function NerdStats() {
                       <th style={{ width: '60px', textAlign: 'center' }}>#</th>
                       <th>User</th>
                       <th style={{ textAlign: 'center' }}>Validations</th>
-                      <th style={{ textAlign: 'center' }}>Votes</th>
                       <th style={{ textAlign: 'center' }}>Approval</th>
                       <th style={{ textAlign: 'center' }}>Badge</th>
                     </tr>
@@ -966,22 +965,6 @@ export default function NerdStats() {
                               <span style={{ fontWeight: '600' }}>
                                 {formatNumber(user.validatedCount)}
                               </span>
-                            </td>
-                            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                              <div style={{ display: 'inline-flex', gap: '12px', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <ThumbsUp size={14} className="text-success" />
-                                  <span style={{ fontSize: '14px', fontWeight: '500' }}>
-                                    {formatNumber(user.thumbsUp)}
-                                  </span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <ThumbsDown size={14} className="text-danger" />
-                                  <span style={{ fontSize: '14px', fontWeight: '500' }}>
-                                    {formatNumber(user.thumbsDown)}
-                                  </span>
-                                </div>
-                              </div>
                             </td>
                             <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                               <div style={{
