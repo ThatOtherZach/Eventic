@@ -1205,91 +1205,35 @@ export default function EventForm() {
                                 name="maxTickets"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <FormLabel style={{ cursor: "help" }}>
-                                            Tickets
-                                          </FormLabel>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Whose in? Issue tickets here.</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                    <div className="d-flex align-items-center">
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          type="number"
-                                          min="2"
-                                          max={maxTicketsAllowed}
-                                          placeholder={maxTicketsAllowed.toString()}
-                                          className="form-control"
-                                          data-testid="input-max-tickets"
-                                          value={field.value || ""}
-                                          onChange={(e) => {
-                                            const value = e.target.value;
-                                            if (value === "") {
-                                              field.onChange(
-                                                Math.min(100, maxTicketsAllowed),
-                                              );
-                                            } else {
-                                              const numValue = parseInt(value);
-                                              if (numValue > maxTicketsAllowed) {
-                                                field.onChange(maxTicketsAllowed);
-                                              } else if (numValue < 2) {
-                                                field.onChange(2);
-                                              } else {
-                                                field.onChange(numValue);
-                                              }
-                                            }
-                                          }}
-                                        />
-                                      </FormControl>
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-secondary btn-sm ms-1"
-                                        onClick={() => {
-                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                          if (val > 2) {
-                                            field.onChange(val - 1);
+                                    <FormLabel>Tickets</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        type="number"
+                                        min="1"
+                                        max="5000"
+                                        placeholder="Enter number of tickets"
+                                        className="form-control"
+                                        data-testid="input-max-tickets"
+                                        value={field.value || ""}
+                                        onChange={(e) => {
+                                          const value = parseInt(e.target.value) || 0;
+                                          field.onChange(value);
+                                          
+                                          // Check if value exceeds user's credit balance
+                                          if (value > creditBalance) {
+                                            form.setError("maxTickets", {
+                                              type: "manual",
+                                              message: "Not Enough Credits"
+                                            });
+                                          } else {
+                                            form.clearErrors("maxTickets");
                                           }
                                         }}
-                                        disabled={(() => {
-                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                          return val <= 2;
-                                        })()}
-                                        style={{ padding: '4px 8px', minWidth: '32px' }}
-                                        data-testid="button-decrease-tickets"
-                                      >
-                                        -
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-secondary btn-sm ms-1"
-                                        onClick={() => {
-                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                          if (val < maxTicketsAllowed) {
-                                            field.onChange(val + 1);
-                                          }
-                                        }}
-                                        disabled={(() => {
-                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                          return val >= maxTicketsAllowed;
-                                        })()}
-                                        style={{ padding: '4px 8px', minWidth: '32px' }}
-                                        data-testid="button-increase-tickets"
-                                      >
-                                        +
-                                      </button>
-                                    </div>
+                                      />
+                                    </FormControl>
                                     <div className="form-text">
-                                      maximum 5,000 tickets
+                                      Your balance: {creditBalance} credits
                                     </div>
                                     <FormMessage />
                                   </FormItem>
