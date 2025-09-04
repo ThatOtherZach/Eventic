@@ -1217,8 +1217,8 @@ export default function EventForm() {
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
-                                    <FormControl>
-                                      <div className="d-flex align-items-center">
+                                    <div className="d-flex align-items-center">
+                                      <FormControl>
                                         <Input
                                           {...field}
                                           type="number"
@@ -1246,46 +1246,48 @@ export default function EventForm() {
                                             }
                                           }}
                                         />
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-secondary btn-sm ms-1"
-                                          onClick={() => {
-                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                            if (val > 2) {
-                                              field.onChange(val - 1);
-                                            }
-                                          }}
-                                          disabled={(() => {
-                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                            return val <= 2;
-                                          })()}
-                                          style={{ padding: '4px 8px', minWidth: '32px' }}
-                                        >
-                                          -
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-secondary btn-sm ms-1"
-                                          onClick={() => {
-                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                            if (val < maxTicketsAllowed) {
-                                              field.onChange(val + 1);
-                                            }
-                                          }}
-                                          disabled={(() => {
-                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
-                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
-                                            return val >= maxTicketsAllowed;
-                                          })()}
-                                          style={{ padding: '4px 8px', minWidth: '32px' }}
-                                        >
-                                          +
-                                        </button>
-                                      </div>
-                                    </FormControl>
+                                      </FormControl>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm ms-1"
+                                        onClick={() => {
+                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
+                                          if (val > 2) {
+                                            field.onChange(val - 1);
+                                          }
+                                        }}
+                                        disabled={(() => {
+                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
+                                          return val <= 2;
+                                        })()}
+                                        style={{ padding: '4px 8px', minWidth: '32px' }}
+                                        data-testid="button-decrease-tickets"
+                                      >
+                                        -
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm ms-1"
+                                        onClick={() => {
+                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
+                                          if (val < maxTicketsAllowed) {
+                                            field.onChange(val + 1);
+                                          }
+                                        }}
+                                        disabled={(() => {
+                                          const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                          const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
+                                          return val >= maxTicketsAllowed;
+                                        })()}
+                                        style={{ padding: '4px 8px', minWidth: '32px' }}
+                                        data-testid="button-increase-tickets"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
                                     <div className="form-text">
                                       maximum 5,000 tickets
                                     </div>
