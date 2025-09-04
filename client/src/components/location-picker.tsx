@@ -17,7 +17,6 @@ interface LocationPickerProps {
   onLocationSelect?: (lat: number, lng: number) => void;
   readOnly?: boolean;
   height?: string;
-  hideLockedOverlay?: boolean;
 }
 
 function LocationMarker({ 
@@ -51,8 +50,7 @@ export function LocationPicker({
   longitude, 
   onLocationSelect, 
   readOnly = false,
-  height = "400px",
-  hideLockedOverlay = false
+  height = "400px"
 }: LocationPickerProps) {
   const position: [number, number] | null = 
     latitude && longitude ? [Number(latitude), Number(longitude)] : null;
@@ -90,18 +88,6 @@ export function LocationPicker({
       {!readOnly && (
         <div className="position-absolute top-0 start-0 m-2 bg-white rounded px-2 py-1" style={{ zIndex: 1000 }}>
           <small className="text-muted">Click on the map to set venue location</small>
-        </div>
-      )}
-      {readOnly && !hideLockedOverlay && (
-        <div className="position-absolute top-50 start-50 translate-middle bg-light rounded px-3 py-2 shadow" 
-             style={{ 
-               zIndex: 1000,
-               pointerEvents: "none"
-             }}>
-          <small className="text-muted fw-bold">
-            <span className="me-1">🔒</span>
-            GPS coordinates are locked
-          </small>
         </div>
       )}
     </div>

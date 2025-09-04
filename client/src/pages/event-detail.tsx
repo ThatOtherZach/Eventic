@@ -1322,7 +1322,6 @@ export default function EventDetailPage() {
                 longitude={Number(event.longitude)}
                 readOnly={true}
                 height="300px"
-                hideLockedOverlay={event.treasureHunt}
               />
             </div>
           )}
