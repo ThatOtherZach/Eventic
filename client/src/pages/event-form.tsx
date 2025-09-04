@@ -369,7 +369,7 @@ export default function EventForm() {
       if (endDateTime <= startDateTime) {
         form.setError("endDate", {
           type: "manual",
-          message: "End date/time must be after start date/time",
+          message: "End date/time must be after start date/time (cannot be the same)",
         });
         return;
       }
