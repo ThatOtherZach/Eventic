@@ -1401,35 +1401,6 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    {/* Demand indicator and stats link */}
-                    <div className="d-flex justify-content-between align-items-center mt-2">
-                      <div className="small text-muted">
-                        {demandData && (
-                          <>
-                            <span style={{ fontSize: "0.75rem" }}>
-                              ${demandData.currentUnitPrice.toFixed(3)}/credit
-                              {demandData.demandMultiplier !== 1 && (
-                                <span className="ms-1">
-                                  (
-                                  {demandData.demandMultiplier < 1
-                                    ? `-${Math.round((1 - demandData.demandMultiplier) * 100)}%`
-                                    : `+${Math.round((demandData.demandMultiplier - 1) * 100)}%`}
-                                  )
-                                </span>
-                              )}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <Link
-                        to="/sys/nerd"
-                        className="text-muted small text-decoration-none"
-                        style={{ fontSize: "0.75rem" }}
-                        data-testid="link-stats-nerds"
-                      >
-                        Stats for nerds
-                      </Link>
-                    </div>
 
                     {/* Payment Method Selection */}
                     <div className="border-top mt-4 pt-4">
@@ -1479,6 +1450,34 @@ export default function AccountPage() {
                       >
                         {isPurchasing ? "Processing..." : `Checkout with ${paymentMethod}`}
                       </button>
+                      
+                      {/* Pricing info and stats link below checkout button */}
+                      <div className="d-flex justify-content-between align-items-center mt-3">
+                        <div className="small text-muted">
+                          {demandData && (
+                            <span style={{ fontSize: "0.75rem" }}>
+                              ${demandData.currentUnitPrice.toFixed(3)}/credit
+                              {demandData.demandMultiplier !== 1 && (
+                                <span className="ms-1">
+                                  (
+                                  {demandData.demandMultiplier < 1
+                                    ? `-${Math.round((1 - demandData.demandMultiplier) * 100)}%`
+                                    : `+${Math.round((demandData.demandMultiplier - 1) * 100)}%`}
+                                  )
+                                </span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                        <Link
+                          to="/sys/nerd"
+                          className="text-muted small text-decoration-none"
+                          style={{ fontSize: "0.75rem" }}
+                          data-testid="link-stats-nerds"
+                        >
+                          Stats for nerds
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 )}
