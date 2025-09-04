@@ -1411,7 +1411,8 @@ export default function EventForm() {
                       </div>
                     )}
 
-                    {/* Additional Event Options - Windows 98 Style */}
+                    {/* Additional Event Options - Windows 98 Style - Only show when creating new event */}
+                    {!isEditMode ? (
                     <div className="col-12">
                       <div
                         style={{
@@ -1779,6 +1780,17 @@ export default function EventForm() {
                         )}
                       </div>
                     </div>
+                    ) : (
+                      <div className="col-12">
+                        <div className="alert alert-info">
+                          <i className="bi bi-info-circle me-2"></i>
+                          <strong>Additional Options are locked after event creation</strong>
+                          <div className="small mt-1">
+                            P2P validation, voting, ticket type, and validation settings cannot be changed once an event is created.
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Ticket Preview Section */}
                     <div className="col-12">
