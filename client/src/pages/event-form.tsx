@@ -1162,18 +1162,15 @@ export default function EventForm() {
                                           checked={field.value}
                                           onChange={(e) => {
                                             field.onChange(e);
-                                            // Validate ticket price when enabling surge pricing
+                                            // Update ticket price to $1.00 when enabling surge pricing if it's less
                                             if (e.target.checked) {
                                               const ticketPrice = parseFloat(
                                                 form.getValues("ticketPrice") ||
                                                   "0",
                                               );
                                               if (ticketPrice < 1.0) {
-                                                form.setError("ticketPrice", {
-                                                  type: "manual",
-                                                  message:
-                                                    "Ticket price must be at least $1.00 for surge pricing",
-                                                });
+                                                form.setValue("ticketPrice", "1.00");
+                                                form.clearErrors("ticketPrice");
                                               }
                                             } else {
                                               // Clear the error when disabling surge pricing
