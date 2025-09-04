@@ -1250,12 +1250,17 @@ export default function EventForm() {
                                           type="button"
                                           className="btn btn-outline-secondary btn-sm ms-1"
                                           onClick={() => {
-                                            const val = parseInt(field.value?.toString() || maxTicketsAllowed.toString());
+                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
                                             if (val > 2) {
                                               field.onChange(val - 1);
                                             }
                                           }}
-                                          disabled={parseInt(field.value?.toString() || maxTicketsAllowed.toString()) <= 2}
+                                          disabled={(() => {
+                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
+                                            return val <= 2;
+                                          })()}
                                           style={{ padding: '4px 8px', minWidth: '32px' }}
                                         >
                                           -
@@ -1264,12 +1269,17 @@ export default function EventForm() {
                                           type="button"
                                           className="btn btn-outline-secondary btn-sm ms-1"
                                           onClick={() => {
-                                            const val = parseInt(field.value?.toString() || maxTicketsAllowed.toString());
+                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
                                             if (val < maxTicketsAllowed) {
                                               field.onChange(val + 1);
                                             }
                                           }}
-                                          disabled={parseInt(field.value?.toString() || maxTicketsAllowed.toString()) >= maxTicketsAllowed}
+                                          disabled={(() => {
+                                            const currentVal = field.value ? parseInt(field.value.toString()) : Math.min(100, maxTicketsAllowed);
+                                            const val = isNaN(currentVal) ? Math.min(100, maxTicketsAllowed) : currentVal;
+                                            return val >= maxTicketsAllowed;
+                                          })()}
                                           style={{ padding: '4px 8px', minWidth: '32px' }}
                                         >
                                           +
