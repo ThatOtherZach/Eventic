@@ -906,8 +906,8 @@ export default function NerdStats() {
                     <tr>
                       <th style={{ width: '60px', textAlign: 'center' }}>#</th>
                       <th>User</th>
-                      <th style={{ textAlign: 'center' }}>Validations</th>
                       <th style={{ textAlign: 'center' }}>Approval</th>
+                      <th style={{ textAlign: 'center' }}>Validations</th>
                       <th style={{ textAlign: 'center' }}>Badge</th>
                     </tr>
                   </thead>
@@ -962,11 +962,6 @@ export default function NerdStats() {
                               </div>
                             </td>
                             <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                              <span style={{ fontWeight: '600' }}>
-                                {formatNumber(user.validatedCount)}
-                              </span>
-                            </td>
-                            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                               <div style={{
                                 fontSize: '20px',
                                 fontWeight: 'bold',
@@ -980,6 +975,11 @@ export default function NerdStats() {
                               }}>
                                 {user.percentage !== null ? `${user.percentage}%` : '—'}
                               </div>
+                            </td>
+                            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                              <span style={{ fontWeight: '600' }}>
+                                {formatNumber(user.validatedCount)}
+                              </span>
                             </td>
                             <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                               {reputationInfo.badge === '😎' ? (
