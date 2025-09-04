@@ -9,6 +9,7 @@ interface BadgeBarProps {
     stickerUrl?: string | null;
     allowMinting?: boolean;
     geofence?: boolean;
+    treasureHunt?: boolean;
     enableVoting?: boolean;
     recurringType?: string | null;
     p2pValidation?: boolean;
@@ -41,6 +42,7 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
   if (event.p2pValidation) colorSegments.push('#3B82F6'); // Blue
   if (event.allowMinting) colorSegments.push('#000000'); // Black
   if (event.geofence) colorSegments.push('#F59E0B'); // Orange
+  if (event.treasureHunt) colorSegments.push('#8B5CF6'); // Purple for Hunt
   if (event.enableVoting) colorSegments.push('#EAB308'); // Yellow
   if (event.recurringType) colorSegments.push('#059669'); // Green
   if (event.maxTickets) colorSegments.push('#14B8A6'); // Teal

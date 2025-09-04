@@ -294,7 +294,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                       {/* Color squares for event features */}
                       {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || 
                         event.surgePricing || event.stickerUrl || event.p2pValidation || event.allowMinting || 
-                        event.geofence || event.enableVoting || event.recurringType || event.endDate) && (
+                        event.geofence || event.treasureHunt || event.enableVoting || event.recurringType || event.endDate) && (
                         <div className="d-flex mb-1" style={{ gap: '2px' }}>
                           {event.isAdminCreated && (
                             <div 
@@ -342,6 +342,12 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                             <div 
                               style={{ width: '5px', height: '5px', backgroundColor: '#F59E0B' }}
                               title="Location Lock"
+                            />
+                          )}
+                          {event.treasureHunt && (
+                            <div 
+                              style={{ width: '5px', height: '5px', backgroundColor: '#8B5CF6' }}
+                              title="Treasure Hunt"
                             />
                           )}
                           {event.enableVoting && (

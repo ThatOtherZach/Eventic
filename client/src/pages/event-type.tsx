@@ -91,6 +91,12 @@ const eventTypeConfig: Record<string, {
     imageIcon: '/geofenced-icon.png',
     checkField: (e) => !!e.geofence 
   },
+  hunt: { 
+    label: 'Treasure Hunt Events', 
+    color: '#8B5CF6',
+    imageIcon: '/hunt-icon.png',
+    checkField: (e) => !!e.treasureHunt 
+  },
   voting: { 
     label: 'Voting Events', 
     color: '#EAB308',

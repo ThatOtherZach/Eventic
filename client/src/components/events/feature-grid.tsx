@@ -109,6 +109,14 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({ event }) => {
       description: 'GPS-restricted validation'
     },
     {
+      enabled: !!event.treasureHunt,
+      color: '#8B5CF6',
+      label: 'Treasure Hunt',
+      href: '/type/hunt',
+      icon: gpsIcon,
+      description: 'Geocaching-style validation'
+    },
+    {
       enabled: !!event.enableVoting,
       color: '#EAB308',
       label: 'Voting',

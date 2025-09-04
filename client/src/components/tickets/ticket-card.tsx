@@ -221,6 +221,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         if (event.p2pValidation) colorSegments.push('#3B82F6'); // Blue
         if (event.allowMinting) colorSegments.push('#000000'); // Black
         if (event.geofence) colorSegments.push('#F59E0B'); // Orange
+        if (event.treasureHunt) colorSegments.push('#8B5CF6'); // Purple for Hunt
         if (event.enableVoting) colorSegments.push('#EAB308'); // Yellow
         if (event.surgePricing) colorSegments.push('#DC2626'); // Red
         if (event.stickerUrl) colorSegments.push('#EC4899'); // Pink

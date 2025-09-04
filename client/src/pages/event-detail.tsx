@@ -65,6 +65,7 @@ import rsvpIcon from "@assets/printer-0_1756935612816.png";
 import userWorldIcon from "@assets/user_world-1_1756936174601.png";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
 import expandIcon from "@assets/image_1756959756931.png";
+import huntIcon from "@assets/image_1756971767387.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -903,6 +904,28 @@ export default function EventDetailPage() {
                       style={{ width: "14px", height: "14px" }}
                     />
                     Location Lock
+                  </span>
+                </Link>
+              )}
+              {event.treasureHunt && (
+                <Link href="/type/hunt">
+                  <span
+                    className="badge"
+                    style={{
+                      backgroundColor: "#8B5CF6",
+                      color: "#fff",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    <img
+                      src={huntIcon}
+                      alt=""
+                      style={{ width: "14px", height: "14px" }}
+                    />
+                    Treasure Hunt
                   </span>
                 </Link>
               )}
