@@ -89,6 +89,37 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   const startDateTime = `${event.date}T${event.time}:00`;
   const startDate = new Date(startDateTime);
   
+  // Check if this is a rolling timezone event
+  if (event.rollingTimezone) {
+    // For rolling timezone events, check if the current time in ANY timezone
+    // matches or has passed the event start time
+    const eventHour = parseInt(event.time.split(':')[0]);
+    const eventMinute = parseInt(event.time.split(':')[1]);
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const eventDate = new Date(event.date + 'T00:00:00');
+    const todayDate = new Date(now.toISOString().split('T')[0] + 'T00:00:00');
+    
+    // Check if we're on the same day or after the event date
+    if (todayDate >= eventDate) {
+      // Check if current local time has passed the event start time
+      if (currentHour > eventHour || (currentHour === eventHour && currentMinute >= eventMinute)) {
+        // Event is valid in this timezone
+        return { valid: true };
+      } else {
+        return {
+          valid: false,
+          message: `Rolling event starts at ${event.time} in your local timezone`
+        };
+      }
+    } else {
+      return {
+        valid: false,
+        message: `Rolling event starts on ${event.date} at ${event.time} in each timezone`
+      };
+    }
+  }
+  
   // Check early validation setting
   const earlyValidation = event.earlyValidation || "Allow at Anytime";
   
@@ -124,7 +155,25 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   if (event.endDate && event.endTime) {
     const endDateTime = `${event.endDate}T${event.endTime}:00`;
     const endDate = new Date(endDateTime);
-    if (now > endDate) {
+    
+    // For rolling timezone events, check against local time
+    if (event.rollingTimezone) {
+      const eventEndHour = parseInt(event.endTime.split(':')[0]);
+      const eventEndMinute = parseInt(event.endTime.split(':')[1]);
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const eventEndDateObj = new Date(event.endDate + 'T00:00:00');
+      const todayDate = new Date(now.toISOString().split('T')[0] + 'T00:00:00');
+      
+      if (todayDate > eventEndDateObj || 
+          (todayDate.getTime() === eventEndDateObj.getTime() && 
+           (currentHour > eventEndHour || (currentHour === eventEndHour && currentMinute > eventEndMinute)))) {
+        return {
+          valid: false,
+          message: `Rolling event ended at ${event.endTime} in your local timezone`
+        };
+      }
+    } else if (now > endDate) {
       return {
         valid: false,
         message: `Event has ended. It ended on ${endDate.toLocaleString()}`
@@ -132,12 +181,32 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
     }
   } else {
     // No end date - check if we're within 24 hours of start
-    const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
-    if (now > twentyFourHoursAfterStart) {
-      return {
-        valid: false,
-        message: `Ticket has expired. It was valid for 24 hours after ${startDate.toLocaleString()}`
-      };
+    if (event.rollingTimezone) {
+      // For rolling events without end date, valid for 24 hours after local start time
+      const eventHour = parseInt(event.time.split(':')[0]);
+      const eventMinute = parseInt(event.time.split(':')[1]);
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const eventDate = new Date(event.date + 'T00:00:00');
+      const todayDate = new Date(now.toISOString().split('T')[0] + 'T00:00:00');
+      const dayAfterEvent = new Date(eventDate);
+      dayAfterEvent.setDate(dayAfterEvent.getDate() + 1);
+      
+      // Check if we're more than 24 hours past the event date
+      if (todayDate > dayAfterEvent) {
+        return {
+          valid: false,
+          message: `Rolling event expired. It was valid for 24 hours after ${event.time} in each timezone`
+        };
+      }
+    } else {
+      const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+      if (now > twentyFourHoursAfterStart) {
+        return {
+          valid: false,
+          message: `Ticket has expired. It was valid for 24 hours after ${startDate.toLocaleString()}`
+        };
+      }
     }
   }
   

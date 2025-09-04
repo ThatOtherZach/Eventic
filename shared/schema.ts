@@ -123,6 +123,7 @@ export const events = pgTable("events", {
   // Recurring event fields
   recurringType: text("recurring_type"), // "weekly", "monthly", "annual", or null for non-recurring
   recurringEndDate: text("recurring_end_date"), // When to stop creating recurring events
+  rollingTimezone: boolean("rolling_timezone").default(false), // Event remains valid as start time hits each timezone
   parentEventId: varchar("parent_event_id"), // Reference to the original event if this is a recurring instance
   lastRecurrenceCreated: timestamp("last_recurrence_created"), // Track when we last created a recurrence
   // Timezone field

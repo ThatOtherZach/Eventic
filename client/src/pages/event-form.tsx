@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-notifications";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { ArrowLeft, ArrowRight, CreditCard, Image, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, Image, Lock, Globe } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { countries } from "@/lib/countries";
@@ -142,6 +142,7 @@ export default function EventForm() {
       recurringEndDate: null,
       ticketPurchasesEnabled: true,
       timezone: "America/New_York",
+      rollingTimezone: false,
     },
   });
 
@@ -497,6 +498,7 @@ export default function EventForm() {
       geofence: watchedValues.geofence || false,
       treasureHunt: data.treasureHunt || false,
       huntCode: data.treasureHunt ? generateHuntCode() : undefined,
+      rollingTimezone: data.rollingTimezone || false,
     };
 
     // If in edit mode, perform update with proper validation
@@ -540,6 +542,7 @@ export default function EventForm() {
         latitude: latitude ? String(latitude) : undefined,
         longitude: longitude ? String(longitude) : undefined,
         geofence: watchedValues.geofence || false,
+        rollingTimezone: data.rollingTimezone || false,
       };
 
       updateEventMutation.mutate(updateData);
@@ -1199,6 +1202,36 @@ export default function EventForm() {
                             </FormControl>
                             <div className="form-text">
                               Event times will be displayed in this timezone
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Rolling Timezone Option */}
+                      <FormField
+                        control={form.control}
+                        name="rollingTimezone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="form-check mt-3">
+                              <FormControl>
+                                <Input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  data-testid="checkbox-rolling-timezone"
+                                  checked={field.value || false}
+                                  onChange={(e) => field.onChange(e.target.checked)}
+                                />
+                              </FormControl>
+                              <FormLabel className="form-check-label ms-2">
+                                <Globe size={16} className="me-1" />
+                                Rolling Timezone Event
+                              </FormLabel>
+                            </div>
+                            <div className="form-text ms-4">
+                              Event stays valid as the start time occurs in each timezone around the world.
+                              Perfect for global celebrations like New Year's Eve.
                             </div>
                             <FormMessage />
                           </FormItem>

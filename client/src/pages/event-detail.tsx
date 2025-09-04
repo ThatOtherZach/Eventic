@@ -20,6 +20,7 @@ import {
   Shield,
   HelpCircle,
   AlertTriangle,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -1111,6 +1112,14 @@ export default function EventDetailPage() {
                   </span>
                 )}
               </span>
+              {event.rollingTimezone && (
+                <span className="ms-2">
+                  <span className="badge bg-info text-white">
+                    <Globe size={12} className="me-1" />
+                    Rolling Timezone
+                  </span>
+                </span>
+              )}
             </div>
             <div className="d-flex align-items-center text-muted">
               <img
