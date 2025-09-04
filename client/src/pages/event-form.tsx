@@ -1251,12 +1251,12 @@ export default function EventForm() {
                                             type="button"
                                             className="btn btn-outline-secondary btn-sm"
                                             onClick={() => {
-                                              const currentValue = field.value || 100;
+                                              const currentValue = field.value || Math.min(creditBalance || 100, 5000);
                                               if (currentValue > 2) {
                                                 field.onChange(currentValue - 1);
                                               }
                                             }}
-                                            disabled={field.value <= 2}
+                                            disabled={(field.value || Math.min(creditBalance || 100, 5000)) <= 2}
                                             style={{ padding: '4px 8px', minWidth: '32px' }}
                                           >
                                             -
@@ -1265,12 +1265,12 @@ export default function EventForm() {
                                             type="button"
                                             className="btn btn-outline-secondary btn-sm"
                                             onClick={() => {
-                                              const currentValue = field.value || 100;
+                                              const currentValue = field.value || Math.min(creditBalance || 100, 5000);
                                               if (currentValue < maxTicketsAllowed) {
                                                 field.onChange(currentValue + 1);
                                               }
                                             }}
-                                            disabled={field.value >= maxTicketsAllowed}
+                                            disabled={(field.value || Math.min(creditBalance || 100, 5000)) >= maxTicketsAllowed}
                                             style={{ padding: '4px 8px', minWidth: '32px' }}
                                           >
                                             +
