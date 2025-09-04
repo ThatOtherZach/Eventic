@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Event } from "@shared/schema";
+import compassIcon from "@assets/image_1756971767387.png";
 
 export function HuntRedirect() {
   const { huntCode } = useParams();
@@ -37,16 +38,16 @@ export function HuntRedirect() {
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
         <div className="text-center">
           <div className="mb-4">
-            {/* Compass icon spinning slowly */}
-            <div 
+            {/* Hunt icon spinning slowly */}
+            <img 
+              src={compassIcon}
+              alt="Hunt Loading"
               style={{
-                fontSize: "4rem",
-                animation: "spin 3s linear infinite",
-                color: "#6f42c1"
+                width: "64px",
+                height: "64px",
+                animation: "spin 3s linear infinite"
               }}
-            >
-              🧭
-            </div>
+            />
           </div>
           <div>
             <h5>Routing to event. Please hold...</h5>
