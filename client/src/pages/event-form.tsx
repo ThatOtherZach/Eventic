@@ -1129,7 +1129,7 @@ export default function EventForm() {
                                       <Lock size={14} className="ms-2 text-muted" />
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>Timezone is locked for rolling timezone events</p>
+                                      <p>Timezone is locked for Global Sync events</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -1253,7 +1253,7 @@ export default function EventForm() {
                               </FormControl>
                               <FormLabel className="form-check-label ms-2">
                                 <Globe size={16} className="me-1" />
-                                Rolling Timezone Event
+                                Global Sync Event
                                 {isEditMode && (
                                   <TooltipProvider>
                                     <Tooltip>
@@ -1261,7 +1261,7 @@ export default function EventForm() {
                                         <Lock size={14} className="ms-2 text-muted" />
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Rolling timezone cannot be changed after event creation</p>
+                                        <p>Global Sync cannot be changed after event creation</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -1269,8 +1269,8 @@ export default function EventForm() {
                               </FormLabel>
                             </div>
                             <div className="form-text ms-4">
-                              Event stays valid as the start time occurs in each timezone around the world.
-                              Perfect for global celebrations like New Year's Eve.
+                              Synchronizes your event across all timezones - starts at the same local time worldwide.
+                              Perfect for global celebrations and coordinated releases.
                               {isEditMode && (
                                 <span className="text-muted"> (Locked after creation)</span>
                               )}

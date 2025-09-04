@@ -109,13 +109,13 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
       } else {
         return {
           valid: false,
-          message: `Rolling event starts at ${event.time} in your local timezone`
+          message: `Global Sync event starts at ${event.time} in your local timezone`
         };
       }
     } else {
       return {
         valid: false,
-        message: `Rolling event starts on ${event.date} at ${event.time} in each timezone`
+        message: `Global Sync event starts on ${event.date} at ${event.time} in each timezone`
       };
     }
   }
@@ -170,7 +170,7 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
            (currentHour > eventEndHour || (currentHour === eventEndHour && currentMinute > eventEndMinute)))) {
         return {
           valid: false,
-          message: `Rolling event ended at ${event.endTime} in your local timezone`
+          message: `Global Sync event ended at ${event.endTime} in your local timezone`
         };
       }
     } else if (now > endDate) {
@@ -196,7 +196,7 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
       if (todayDate > dayAfterEvent) {
         return {
           valid: false,
-          message: `Rolling event expired. It was valid for 24 hours after ${event.time} in each timezone`
+          message: `Global Sync event expired. It was valid for 24 hours after ${event.time} in each timezone`
         };
       }
     } else {

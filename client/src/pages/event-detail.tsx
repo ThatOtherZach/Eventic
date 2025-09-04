@@ -1116,7 +1116,7 @@ export default function EventDetailPage() {
                 <span className="ms-2">
                   <span className="badge bg-info text-white">
                     <Globe size={12} className="me-1" />
-                    Rolling Timezone
+                    Global Sync
                   </span>
                 </span>
               )}
