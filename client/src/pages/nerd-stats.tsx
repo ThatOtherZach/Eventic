@@ -962,7 +962,7 @@ export default function NerdStats() {
                                     ? '#dc3545'
                                     : '#6c757d'
                                 }}>
-                                  {user.percentage !== null ? `${user.percentage}%` : '—'}
+                                  {user.percentage !== null ? `${user.percentage}%` : ':)'}
                                 </div>
                                 <div className="flex-grow-1">
                                   <div className="d-flex align-items-center gap-2">
