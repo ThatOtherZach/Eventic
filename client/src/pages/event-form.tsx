@@ -1249,12 +1249,13 @@ export default function EventForm() {
                                         <button
                                           type="button"
                                           className="btn btn-outline-secondary btn-sm ms-1"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            const currentValue = field.value || maxTicketsAllowed;
-                                            const newValue = Math.max(2, currentValue - 1);
-                                            field.onChange(newValue);
+                                          onClick={() => {
+                                            const val = parseInt(field.value?.toString() || maxTicketsAllowed.toString());
+                                            if (val > 2) {
+                                              field.onChange(val - 1);
+                                            }
                                           }}
+                                          disabled={parseInt(field.value?.toString() || maxTicketsAllowed.toString()) <= 2}
                                           style={{ padding: '4px 8px', minWidth: '32px' }}
                                         >
                                           -
@@ -1262,12 +1263,13 @@ export default function EventForm() {
                                         <button
                                           type="button"
                                           className="btn btn-outline-secondary btn-sm ms-1"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            const currentValue = field.value || maxTicketsAllowed;
-                                            const newValue = Math.min(maxTicketsAllowed, currentValue + 1);
-                                            field.onChange(newValue);
+                                          onClick={() => {
+                                            const val = parseInt(field.value?.toString() || maxTicketsAllowed.toString());
+                                            if (val < maxTicketsAllowed) {
+                                              field.onChange(val + 1);
+                                            }
                                           }}
+                                          disabled={parseInt(field.value?.toString() || maxTicketsAllowed.toString()) >= maxTicketsAllowed}
                                           style={{ padding: '4px 8px', minWidth: '32px' }}
                                         >
                                           +
