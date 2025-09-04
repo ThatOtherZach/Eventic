@@ -1451,31 +1451,26 @@ export default function AccountPage() {
                         {isPurchasing ? "Processing..." : `Checkout with ${paymentMethod}`}
                       </button>
                       
-                      {/* Pricing info and stats link below checkout button */}
-                      <div className="d-flex justify-content-between align-items-center mt-3">
-                        <div className="small text-muted">
-                          {demandData && (
-                            <span style={{ fontSize: "0.75rem" }}>
-                              ${demandData.currentUnitPrice.toFixed(3)}/credit
-                              {demandData.demandMultiplier !== 1 && (
-                                <span className="ms-1">
-                                  (
-                                  {demandData.demandMultiplier < 1
-                                    ? `-${Math.round((1 - demandData.demandMultiplier) * 100)}%`
-                                    : `+${Math.round((demandData.demandMultiplier - 1) * 100)}%`}
-                                  )
-                                </span>
-                              )}
-                            </span>
-                          )}
-                        </div>
+                      {/* Stats for nerds link with pricing info */}
+                      <div className="d-flex justify-content-end mt-3">
                         <Link
                           to="/sys/nerd"
                           className="text-muted small text-decoration-none"
                           style={{ fontSize: "0.75rem" }}
                           data-testid="link-stats-nerds"
                         >
-                          Stats for nerds
+                          Stats for nerds: {demandData && (
+                            <>
+                              ${demandData.currentUnitPrice.toFixed(3)}/credit
+                              {demandData.demandMultiplier !== 1 && (
+                                <>
+                                  {demandData.demandMultiplier < 1
+                                    ? ` (-${Math.round((1 - demandData.demandMultiplier) * 100)}%)`
+                                    : ` (+${Math.round((demandData.demandMultiplier - 1) * 100)}%)`}
+                                </>
+                              )}
+                            </>
+                          )}
                         </Link>
                       </div>
                     </div>
