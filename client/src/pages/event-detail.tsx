@@ -1253,7 +1253,7 @@ export default function EventDetailPage() {
             <div className="mb-4">
               <div className="d-flex gap-2 flex-wrap">
                 <button
-                  className="btn btn-sm btn-outline-primary"
+                  className="btn btn-sm btn-outline-danger"
                   onClick={() => {
                     const eventUrl = `${window.location.origin}/event/${event.id}`;
                     navigator.clipboard.writeText(eventUrl).then(() => {
