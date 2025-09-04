@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   Clock,
-  CheckCircle,
   RefreshCw,
   MapPin,
   AlertTriangle,
@@ -1471,7 +1470,7 @@ export default function TicketViewPage(): React.ReactElement {
                     <h5 className="card-title mb-1">Rate Event</h5>
                     <p className="text-muted mb-0 small">
                       {hasRated
-                        ? "You can change your rating for free"
+                        ? "Thank you for rating :)"
                         : "Thumbs up earns 1 credit, thumbs down costs 1 credit"}
                     </p>
                   </div>
@@ -1556,17 +1555,6 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           )}
 
-          {/* Show rating status if already rated */}
-          {hasRated && (
-            <div className="card mt-3">
-              <div className="card-body">
-                <div className="text-center">
-                  <CheckCircle size={24} className="text-success mb-2" />
-                  <h6 className="mb-0">Thank you for rating this event!</h6>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* NFT Minting Section */}
           {ticket.isValidated && event.allowMinting && (
