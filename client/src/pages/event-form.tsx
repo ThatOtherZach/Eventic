@@ -1086,7 +1086,18 @@ export default function EventForm() {
                       />
                     </div>
 
-                    {/* Tickets & Pricing Section - Windows 98 Style */}
+                    {/* Tickets & Pricing Section - Windows 98 Style - Only show when creating new event */}
+                    {isEditMode ? (
+                      <div className="col-12">
+                        <div className="alert alert-info">
+                          <i className="bi bi-info-circle me-2"></i>
+                          <strong>Tickets & Pricing are locked after event creation</strong>
+                          <div className="small mt-1">
+                            Ticket price, quantity, and surge pricing settings cannot be changed once an event is created to maintain fairness for existing ticket holders.
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
                     <div className="col-12">
                       <div
                         style={{
@@ -1324,7 +1335,7 @@ export default function EventForm() {
                         </div>
                       </div>
                     </div>
-
+                    )}
 
                     {/* Repeat Section - Admin Only */}
                     {user?.email?.endsWith("@saymservices.com") && (
