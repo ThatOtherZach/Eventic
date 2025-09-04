@@ -702,6 +702,50 @@ export default function EventForm() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                   <div className="row g-3">
+                    {/* Admin-only Suspend Event checkbox - Show at top in edit mode */}
+                    {isAdmin && isEditMode && (
+                      <div className="col-12">
+                        <div className="alert alert-warning p-3">
+                          <FormField
+                            control={form.control}
+                            name="ticketPurchasesEnabled"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="ticketPurchasesEnabled"
+                                    checked={!field.value}
+                                    onChange={(e) =>
+                                      field.onChange(!e.target.checked)
+                                    }
+                                    data-testid="checkbox-disable-ticket-sales"
+                                  />
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="ticketPurchasesEnabled"
+                                  >
+                                    <span className="badge bg-danger me-2">
+                                      ⚠️
+                                    </span>
+                                    <strong>Suspend Event</strong>
+                                  </label>
+                                </div>
+                                <div className="form-text mt-2">
+                                  Suspend this event from public view
+                                  and stop new ticket sales. Existing
+                                  ticket holders can still access and
+                                  return tickets. Admin moderation tool.
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="col-12">
                       <FormField
                         control={form.control}
@@ -1561,8 +1605,8 @@ export default function EventForm() {
                               </div>
                             </div>
 
-                            {/* Admin-only Disable Ticket Sales checkbox */}
-                            {isAdmin && (
+                            {/* Admin-only Disable Ticket Sales checkbox - Show here only when creating */}
+                            {isAdmin && !isEditMode && (
                               <div className="row mt-3">
                                 <div className="col-12">
                                   <FormField
@@ -1574,7 +1618,7 @@ export default function EventForm() {
                                           <input
                                             type="checkbox"
                                             className="form-check-input"
-                                            id="ticketPurchasesEnabled"
+                                            id="ticketPurchasesEnabledCreate"
                                             checked={!field.value}
                                             onChange={(e) =>
                                               field.onChange(!e.target.checked)
@@ -1583,7 +1627,7 @@ export default function EventForm() {
                                           />
                                           <label
                                             className="form-check-label"
-                                            htmlFor="ticketPurchasesEnabled"
+                                            htmlFor="ticketPurchasesEnabledCreate"
                                           >
                                             <span className="badge bg-danger me-2">
                                               ⚠️
