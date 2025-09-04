@@ -1405,21 +1405,6 @@ export default function AccountPage() {
                       <div className="small text-muted">
                         {demandData && (
                           <>
-                            <span
-                              className={`badge ${
-                                demandData.demandMultiplier <= 1.0
-                                  ? "bg-success"
-                                  : demandData.demandMultiplier < 1.15
-                                    ? "bg-warning"
-                                    : "bg-danger"
-                              } me-1`}
-                            >
-                              {demandData.demandMultiplier <= 1.0
-                                ? "Base Price"
-                                : demandData.demandMultiplier < 1.15
-                                  ? "Moderate Demand"
-                                  : "High Demand"}
-                            </span>
                             <span style={{ fontSize: "0.75rem" }}>
                               ${demandData.currentUnitPrice.toFixed(3)}/credit
                               {demandData.demandMultiplier !== 1 && (
