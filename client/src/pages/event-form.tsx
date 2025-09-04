@@ -1221,33 +1221,65 @@ export default function EventForm() {
                                       </Tooltip>
                                     </TooltipProvider>
                                     <FormControl>
-                                      <Input
-                                        {...field}
-                                        type="number"
-                                        min="5"
-                                        max={maxTicketsAllowed}
-                                        placeholder={maxTicketsAllowed.toString()}
-                                        className="form-control"
-                                        data-testid="input-max-tickets"
-                                        value={field.value || ""}
-                                        onChange={(e) => {
-                                          const value = e.target.value;
-                                          if (value === "") {
-                                            field.onChange(
-                                              Math.min(100, maxTicketsAllowed),
-                                            );
-                                          } else {
-                                            const numValue = parseInt(value);
-                                            if (numValue > maxTicketsAllowed) {
-                                              field.onChange(maxTicketsAllowed);
-                                            } else if (numValue < 5) {
-                                              field.onChange(5);
+                                      <div className="d-flex align-items-center">
+                                        <Input
+                                          {...field}
+                                          type="number"
+                                          min="5"
+                                          max={maxTicketsAllowed}
+                                          placeholder={maxTicketsAllowed.toString()}
+                                          className="form-control"
+                                          data-testid="input-max-tickets"
+                                          value={field.value || ""}
+                                          onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value === "") {
+                                              field.onChange(
+                                                Math.min(100, maxTicketsAllowed),
+                                              );
                                             } else {
-                                              field.onChange(numValue);
+                                              const numValue = parseInt(value);
+                                              if (numValue > maxTicketsAllowed) {
+                                                field.onChange(maxTicketsAllowed);
+                                              } else if (numValue < 5) {
+                                                field.onChange(5);
+                                              } else {
+                                                field.onChange(numValue);
+                                              }
                                             }
-                                          }
-                                        }}
-                                      />
+                                          }}
+                                        />
+                                        <div className="btn-group ms-2" role="group">
+                                          <button
+                                            type="button"
+                                            className="btn btn-outline-secondary btn-sm"
+                                            onClick={() => {
+                                              const currentValue = field.value || 100;
+                                              if (currentValue > 5) {
+                                                field.onChange(currentValue - 1);
+                                              }
+                                            }}
+                                            disabled={field.value <= 5}
+                                            style={{ padding: '4px 8px', minWidth: '32px' }}
+                                          >
+                                            -
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="btn btn-outline-secondary btn-sm"
+                                            onClick={() => {
+                                              const currentValue = field.value || 100;
+                                              if (currentValue < maxTicketsAllowed) {
+                                                field.onChange(currentValue + 1);
+                                              }
+                                            }}
+                                            disabled={field.value >= maxTicketsAllowed}
+                                            style={{ padding: '4px 8px', minWidth: '32px' }}
+                                          >
+                                            +
+                                          </button>
+                                        </div>
+                                      </div>
                                     </FormControl>
                                     <div className="form-text">
                                       maximum 5,000 tickets
