@@ -894,7 +894,7 @@ export default function NerdStats() {
       <div className="row mt-4">
         <div className="col-12">
           <h4 className="fw-semibold mb-2">
-            <Trophy className="text-warning me-2" size={24} style={{ verticalAlign: 'text-bottom' }} />
+            <img src="/attached_assets/user_world-1_1756976313764.png" alt="Leaderboard" className="me-2" style={{ width: 24, height: 24, verticalAlign: 'text-bottom' }} />
             Reputation Leaderboard - Top 100 Users
             {selectedCountry !== 'Global' && ` (${selectedCountry})`}
           </h4>
