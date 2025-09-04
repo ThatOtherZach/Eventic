@@ -31,6 +31,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface EventWithTicketInfo extends Event {
   ticketsSold?: number;
@@ -48,6 +54,15 @@ export default function EventForm() {
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = user?.email?.endsWith("@saymservices.com") || false;
+  
+  // Get user's credit balance
+  const { data: userBalance } = useQuery<{ balance: string }>({
+    queryKey: ["/api/currency/balance"],
+    enabled: !!user,
+  });
+  
+  const creditBalance = userBalance ? parseFloat(userBalance.balance) : 0;
+  const maxTicketsAllowed = Math.min(creditBalance, 5000);
 
   // Address component states
   const [address, setAddress] = useState<string>("");
@@ -105,7 +120,7 @@ export default function EventForm() {
       endDate: "",
       endTime: "",
       ticketPrice: "0",
-      maxTickets: 100,
+      maxTickets: Math.min(creditBalance || 100, 5000),
       imageUrl: undefined,
       ticketBackgroundUrl: undefined,
       earlyValidation: "Allow at Anytime",
@@ -1112,25 +1127,34 @@ export default function EventForm() {
                               name="maxTickets"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Maximum Tickets</FormLabel>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <FormLabel style={{ cursor: "help" }}>Tickets</FormLabel>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Whose in? Issue tickets here.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   <FormControl>
                                     <Input
                                       {...field}
                                       type="number"
                                       min="5"
-                                      max="5000"
-                                      placeholder="100"
+                                      max={maxTicketsAllowed}
+                                      placeholder={maxTicketsAllowed.toString()}
                                       className="form-control"
                                       data-testid="input-max-tickets"
                                       value={field.value || ""}
                                       onChange={(e) => {
                                         const value = e.target.value;
                                         if (value === "") {
-                                          field.onChange(100);
+                                          field.onChange(Math.min(100, maxTicketsAllowed));
                                         } else {
                                           const numValue = parseInt(value);
-                                          if (numValue > 5000) {
-                                            field.onChange(5000);
+                                          if (numValue > maxTicketsAllowed) {
+                                            field.onChange(maxTicketsAllowed);
                                           } else if (numValue < 5) {
                                             field.onChange(5);
                                           } else {
@@ -1141,8 +1165,7 @@ export default function EventForm() {
                                     />
                                   </FormControl>
                                   <div className="form-text">
-                                    Minimum 5, maximum 5,000 tickets. Default is
-                                    100.
+                                    maximum 5,000 tickets
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -2053,13 +2076,17 @@ export default function EventForm() {
                           className="btn btn-primary"
                           disabled={
                             createEventMutation.isPending ||
-                            updateEventMutation.isPending
+                            updateEventMutation.isPending ||
+                            (!isEditMode && (form.watch("maxTickets") || 100) > creditBalance)
                           }
                           data-testid="button-save-event"
                         >
-                          {createEventMutation.isPending ||
-                          updateEventMutation.isPending
+                          {createEventMutation.isPending || updateEventMutation.isPending
                             ? "Saving..."
+                            : !isEditMode
+                            ? (form.watch("maxTickets") || 100) > creditBalance
+                              ? "Not Enough Credits"
+                              : `Create for +${form.watch("maxTickets") || 100} Credits`
                             : "Save"}
                         </button>
                         <button
