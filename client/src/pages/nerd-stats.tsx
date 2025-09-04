@@ -27,8 +27,6 @@ import {
   Coins,
   Trophy,
   Hash,
-  ThumbsUp,
-  ThumbsDown,
   Shield,
 } from "lucide-react";
 import starIcon from "@assets/world_star-0_1756849251180.png";

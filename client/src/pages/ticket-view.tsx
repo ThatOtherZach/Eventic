@@ -10,8 +10,6 @@ import {
   Clock,
   CheckCircle,
   RefreshCw,
-  ThumbsUp,
-  ThumbsDown,
   MapPin,
   AlertTriangle,
   Shield,
@@ -797,7 +795,7 @@ export default function TicketViewPage(): React.ReactElement {
             <div className="card mb-4">
               <div className="card-body">
                 <h6 className="card-title mb-3">
-                  <ThumbsUp size={18} className="me-2" />
+                  <span style={{ fontSize: "18px", fontWeight: "bold" }} className="me-2">+1</span>
                   Vote Count
                 </h6>
                 <div className="text-center">
@@ -1130,7 +1128,7 @@ export default function TicketViewPage(): React.ReactElement {
 
                       <div className="alert alert-light">
                         <h6 className="mb-2">
-                          <ThumbsUp size={18} className="me-2" />
+                          <span style={{ fontSize: "18px", fontWeight: "bold" }} className="me-2">+1</span>
                           Vote for Another Attendee
                         </h6>
                         <p className="small mb-2">Enter their vote code:</p>
@@ -1492,11 +1490,8 @@ export default function TicketViewPage(): React.ReactElement {
                           hasRated ? "Change rating (free)" : "Earns 1 credit"
                         }
                       >
-                        <ThumbsUp size={20} />
+                        +1
                       </button>
-                      <small className="text-success mt-1">
-                        {hasRated ? "" : "+1"}
-                      </small>
                     </div>
 
                     <div className="d-flex flex-column align-items-center">
@@ -1512,11 +1507,8 @@ export default function TicketViewPage(): React.ReactElement {
                           hasRated ? "Change rating (free)" : "Costs 1 credit"
                         }
                       >
-                        <ThumbsDown size={20} />
+                        -1
                       </button>
-                      <small className="text-danger mt-1">
-                        {hasRated ? "" : "-1"}
-                      </small>
                     </div>
                   </div>
                 </div>
@@ -1550,12 +1542,12 @@ export default function TicketViewPage(): React.ReactElement {
                   </div>
                   <div>
                     {selectedRating === "thumbs_up" ? (
-                      <span className="text-success">
-                        <ThumbsUp size={20} />
+                      <span className="text-success" style={{ fontSize: "20px", fontWeight: "bold" }}>
+                        +1
                       </span>
                     ) : (
-                      <span className="text-danger">
-                        <ThumbsDown size={20} />
+                      <span className="text-danger" style={{ fontSize: "20px", fontWeight: "bold" }}>
+                        -1
                       </span>
                     )}
                   </div>
