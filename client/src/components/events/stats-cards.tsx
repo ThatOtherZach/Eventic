@@ -75,56 +75,101 @@ export function StatsCards() {
         const barColors = ['#dc3545', '#ffc107', '#0d6efd']; // Red, Gold, Blue
         return (
           <div key={card.title} className="col-12 col-md-4 mb-3">
-            <div className="card h-100 border-0 shadow-sm position-relative overflow-hidden">
-              {/* Color bar at the top */}
+            <div 
+              className="position-relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #c0c0c0 0%, #808080 100%)',
+                border: '2px outset #c0c0c0',
+                borderRadius: '0px',
+                boxShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+              }}
+            >
+              {/* Windows 98 style title bar */}
               <div 
                 style={{ 
-                  height: '4px', 
-                  backgroundColor: barColors[index],
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0
-                }} 
-              />
-              <div className="card-body d-flex align-items-center">
-                <div className={`bg-${card.bgColor} bg-opacity-${card.bgOpacity} rounded-circle p-3 me-3 d-flex align-items-center justify-content-center`}>
-                  <img 
-                    src={card.iconSrc} 
-                    alt="" 
-                    style={{ 
-                      width: card.title === 'Total Events' ? '24px' : '30px', 
-                      height: card.title === 'Total Events' ? '24px' : '30px' 
-                    }} 
-                  />
+                  background: `linear-gradient(90deg, ${barColors[index]} 0%, ${barColors[index]}dd 100%)`,
+                  color: 'white',
+                  padding: '4px 8px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  fontFamily: 'MS Sans Serif, sans-serif',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <span>{card.title}</span>
+                <div style={{ 
+                  width: '16px', 
+                  height: '14px', 
+                  background: '#c0c0c0', 
+                  border: '1px outset #c0c0c0',
+                  fontSize: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'black'
+                }}>
+                  ×
                 </div>
-                <div className="flex-grow-1">
-                  <p className="text-muted small mb-1 fw-medium">{card.title}</p>
-                  <p 
-                    className="h4 fw-semibold text-dark mb-0"
-                    data-testid={`text-${card.title.toLowerCase().replace(' ', '-')}`}
-                  >
-                    {card.value.toLocaleString()}
-                  </p>
-                  {card.title === "Tickets (48h)" && demandData && (
-                    <div className="mt-2">
-                      <Link
-                        to="/sys/nerd"
-                        className="text-muted small text-decoration-none"
-                        style={{ fontSize: "0.65rem" }}
-                        data-testid="link-stats-nerds-tickets"
-                      >
-                        Stats for nerds: ${demandData.currentUnitPrice.toFixed(3)}/credit
-                        {demandData.demandMultiplier !== 1 && (
-                          <>
-                            {demandData.demandMultiplier < 1
-                              ? ` (-${Math.round((1 - demandData.demandMultiplier) * 100)}%)`
-                              : ` (+${Math.round((demandData.demandMultiplier - 1) * 100)}%)`}
-                          </>
-                        )}
-                      </Link>
-                    </div>
-                  )}
+              </div>
+              
+              {/* Content area */}
+              <div 
+                className="p-3"
+                style={{
+                  background: '#f0f0f0',
+                  border: '1px inset #c0c0c0',
+                  minHeight: '80px'
+                }}
+              >
+                <div className="d-flex align-items-center">
+                  <div className="me-3">
+                    <img 
+                      src={card.iconSrc} 
+                      alt="" 
+                      style={{ 
+                        width: '32px', 
+                        height: '32px',
+                        filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.5))'
+                      }} 
+                    />
+                  </div>
+                  <div className="flex-grow-1">
+                    <p 
+                      className="h4 fw-bold mb-0"
+                      style={{ 
+                        color: '#000080',
+                        fontFamily: 'MS Sans Serif, sans-serif'
+                      }}
+                      data-testid={`text-${card.title.toLowerCase().replace(' ', '-')}`}
+                    >
+                      {card.value.toLocaleString()}
+                    </p>
+                    {card.title === "Tickets (48h)" && demandData && (
+                      <div className="mt-2">
+                        <Link
+                          to="/sys/nerd"
+                          className="text-decoration-none"
+                          style={{ 
+                            fontSize: "0.7rem",
+                            color: '#000080',
+                            fontFamily: 'MS Sans Serif, sans-serif'
+                          }}
+                          data-testid="link-stats-nerds-tickets"
+                        >
+                          Stats for nerds: ${demandData.currentUnitPrice.toFixed(3)}/credit
+                          {demandData.demandMultiplier !== 1 && (
+                            <>
+                              {demandData.demandMultiplier < 1
+                                ? ` (-${Math.round((1 - demandData.demandMultiplier) * 100)}%)`
+                                : ` (+${Math.round((demandData.demandMultiplier - 1) * 100)}%)`}
+                            </>
+                          )}
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
