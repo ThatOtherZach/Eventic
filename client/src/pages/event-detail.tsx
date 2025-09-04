@@ -683,16 +683,16 @@ export default function EventDetailPage() {
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
   const isAdmin = user?.email?.endsWith("@saymservices.com");
-  
+
   // Calculate if event has started using date and time
   const eventHasStarted = (() => {
     if (!event.date || !event.time) return false;
-    const [year, month, day] = event.date.split('-').map(Number);
-    const [hours, minutes] = event.time.split(':').map(Number);
+    const [year, month, day] = event.date.split("-").map(Number);
+    const [hours, minutes] = event.time.split(":").map(Number);
     const eventStartTime = new Date(year, month - 1, day, hours, minutes);
     return eventStartTime <= new Date();
   })();
-  
+
   const canEdit = isAdmin || (isOwner && !eventHasStarted);
 
   return (
@@ -1267,7 +1267,11 @@ export default function EventDetailPage() {
                     let searchQuery = "";
 
                     // For Hunt events, never use GPS coordinates - only use general venue info
-                    if (event.treasureHunt || !event.latitude || !event.longitude) {
+                    if (
+                      event.treasureHunt ||
+                      !event.latitude ||
+                      !event.longitude
+                    ) {
                       // Use city and country from venue
                       const venueParts = event.venue
                         .split(",")
@@ -1511,9 +1515,9 @@ export default function EventDetailPage() {
                               }
 
                               // Different colors for each badge level
-                              let badgeColor = "#28a745"; // Green for NPC
+                              let badgeColor = "#4181c0"; // Blue for NPC
                               if (reputationInfo.badge === "Interesting") {
-                                badgeColor = "#ffc107"; // Yellow
+                                badgeColor = "#28a745"; // Green
                               } else if (reputationInfo.badge === "Nice") {
                                 badgeColor = "#17a2b8"; // Teal
                               }
@@ -1538,7 +1542,6 @@ export default function EventDetailPage() {
                             })()}
                         </div>
                       </div>
-
                     </>
                   );
                 })()}
@@ -1730,7 +1733,7 @@ export default function EventDetailPage() {
             <div className="card-body">
               <h5 className="card-title">Ticket Information</h5>
 
-              {/* Organizer Details */}
+              {/* Creator Details */}
               {(organizerDetails || organizerReputation) && (
                 <div className="mb-3 p-3 bg-light rounded">
                   {organizerDetails && (
@@ -1814,30 +1817,45 @@ export default function EventDetailPage() {
                                     {event.ticketsSold} / {event.maxTickets}
                                   </span>
                                   {/* Show +5 button only for event owner with sufficient credits and event hasn't started */}
-                                  {isOwner && userBalance && parseFloat(userBalance.balance) >= 5 && !eventHasStarted && (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button
-                                            className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
-                                            onClick={handleExpandTickets}
-                                            disabled={isExpanding}
-                                            style={{ padding: "2px 8px", minWidth: "auto" }}
-                                          >
-                                            <img
-                                              src={expandIcon}
-                                              alt=""
-                                              style={{ width: "14px", height: "14px" }}
-                                            />
-                                            <span style={{ fontSize: "12px" }}>+5</span>
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Add five more for five credits.</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
+                                  {isOwner &&
+                                    userBalance &&
+                                    parseFloat(userBalance.balance) >= 5 &&
+                                    !eventHasStarted && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <button
+                                              className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+                                              onClick={handleExpandTickets}
+                                              disabled={isExpanding}
+                                              style={{
+                                                padding: "2px 8px",
+                                                minWidth: "auto",
+                                              }}
+                                            >
+                                              <img
+                                                src={expandIcon}
+                                                alt=""
+                                                style={{
+                                                  width: "14px",
+                                                  height: "14px",
+                                                }}
+                                              />
+                                              <span
+                                                style={{ fontSize: "12px" }}
+                                              >
+                                                +5
+                                              </span>
+                                            </button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>
+                                              Add five more for five credits.
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
                                 </div>
                               </div>
                               <div className="progress mb-3">
@@ -1909,7 +1927,9 @@ export default function EventDetailPage() {
                   !(event?.ticketPurchasesEnabled ?? true) ||
                   ((event?.oneTicketPerUser ?? false) &&
                     userTickets &&
-                    userTickets.filter(t => (t as any).resellStatus !== "for_resale").length > 0)
+                    userTickets.filter(
+                      (t) => (t as any).resellStatus !== "for_resale",
+                    ).length > 0)
                 }
                 data-testid="button-purchase"
               >
@@ -1926,7 +1946,9 @@ export default function EventDetailPage() {
                   "Suspended"
                 ) : event?.oneTicketPerUser &&
                   userTickets &&
-                  userTickets.filter(t => (t as any).resellStatus !== "for_resale").length > 0 ? (
+                  userTickets.filter(
+                    (t) => (t as any).resellStatus !== "for_resale",
+                  ).length > 0 ? (
                   "Good 2 Go"
                 ) : (
                   <>
