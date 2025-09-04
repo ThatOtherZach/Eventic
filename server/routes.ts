@@ -3926,14 +3926,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found or has no owner" });
       }
 
-      // Check if event rating period is still valid (within 24 hours after start)
-      const eventStartDateTime = `${event.date}T${event.time}:00`;
-      const eventStart = new Date(eventStartDateTime);
-      const now = new Date();
-      const hoursSinceStart = (now.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
+      // Check if event rating period is still valid (within 24 hours after event ends)
+      let eventEndDateTime: string;
+      if (event.endDate && event.endTime) {
+        // Use end date/time if available
+        eventEndDateTime = `${event.endDate}T${event.endTime}:00`;
+      } else if (event.endTime) {
+        // If only end time is provided, use event date with end time
+        eventEndDateTime = `${event.date}T${event.endTime}:00`;
+      } else {
+        // If no end time, use start time as the end
+        eventEndDateTime = `${event.date}T${event.time}:00`;
+      }
       
-      if (hoursSinceStart > 24) {
-        return res.status(400).json({ message: "Rating period has ended (24 hours after event start)" });
+      const eventEnd = new Date(eventEndDateTime);
+      const now = new Date();
+      const hoursSinceEnd = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceEnd > 24) {
+        return res.status(400).json({ message: "Rating period has ended (24 hours after event ends)" });
       }
 
       // Check if user has already rated this event
@@ -4028,12 +4039,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if within rating period (24 hours after event start)
-      const eventStartDateTime = `${event.date}T${event.time}:00`;
-      const eventStart = new Date(eventStartDateTime);
+      // Check if within rating period (24 hours after event ends)
+      let eventEndDateTime: string;
+      if (event.endDate && event.endTime) {
+        // Use end date/time if available
+        eventEndDateTime = `${event.endDate}T${event.endTime}:00`;
+      } else if (event.endTime) {
+        // If only end time is provided, use event date with end time
+        eventEndDateTime = `${event.date}T${event.endTime}:00`;
+      } else {
+        // If no end time, use start time as the end
+        eventEndDateTime = `${event.date}T${event.time}:00`;
+      }
+      
+      const eventEnd = new Date(eventEndDateTime);
       const now = new Date();
-      const hoursSinceStart = (now.getTime() - eventStart.getTime()) / (1000 * 60 * 60);
-      const canRate = hoursSinceStart <= 24;
+      const hoursSinceEnd = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60);
+      const canRate = hoursSinceEnd <= 24;
       
       // Get user's existing rating if any
       const existingRating = await storage.getUserEventRating(userId, ticket.eventId);
@@ -4042,7 +4064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasRated: !!existingRating,
         currentRating: existingRating?.rating || null,
         canRate,
-        ratingPeriodEnded: hoursSinceStart > 24
+        ratingPeriodEnded: hoursSinceEnd > 24
       });
     } catch (error) {
       await logError(error, "GET /api/tickets/:ticketId/rating", {
