@@ -160,14 +160,46 @@ export default function EventForm() {
   useEffect(() => {
     const treasureHunt = form.watch("treasureHunt");
     const currentHuntCode = form.watch("huntCode");
-    
+
     if (treasureHunt && !currentHuntCode && !isEditMode) {
-      const colors = ['Red', 'Blue', 'Green', 'Purple', 'Orange', 'Yellow', 'Pink', 'Silver', 'Golden', 'Black', 'White', 'Emerald', 'Ruby', 'Sapphire', 'Diamond'];
-      const nouns = ['Tiger', 'Dragon', 'Eagle', 'Wolf', 'Bear', 'Lion', 'Falcon', 'Phoenix', 'Raven', 'Shark', 'Panther', 'Cobra', 'Hawk', 'Lynx', 'Jaguar'];
+      const colors = [
+        "Red",
+        "Blue",
+        "Green",
+        "Purple",
+        "Orange",
+        "Yellow",
+        "Pink",
+        "Silver",
+        "Golden",
+        "Black",
+        "White",
+        "Emerald",
+        "Ruby",
+        "Sapphire",
+        "Diamond",
+      ];
+      const nouns = [
+        "Tiger",
+        "Dragon",
+        "Eagle",
+        "Wolf",
+        "Bear",
+        "Lion",
+        "Falcon",
+        "Phoenix",
+        "Raven",
+        "Shark",
+        "Panther",
+        "Cobra",
+        "Hawk",
+        "Lynx",
+        "Jaguar",
+      ];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
       const huntCode = `${randomColor}${randomNoun}`;
-      
+
       form.setValue("huntCode", huntCode);
     } else if (!treasureHunt && !isEditMode) {
       form.setValue("huntCode", "");
@@ -387,7 +419,8 @@ export default function EventForm() {
       if (endDateTime <= startDateTime) {
         form.setError("endDate", {
           type: "manual",
-          message: "End date/time must be after start date/time (cannot be the same)",
+          message:
+            "End date/time must be after start date/time (cannot be the same)",
         });
         return;
       }
@@ -407,8 +440,40 @@ export default function EventForm() {
 
     // Generate Hunt code if Treasure Hunt is enabled
     const generateHuntCode = () => {
-      const colors = ['Red', 'Blue', 'Green', 'Purple', 'Orange', 'Yellow', 'Pink', 'Silver', 'Golden', 'Black', 'White', 'Emerald', 'Ruby', 'Sapphire', 'Diamond'];
-      const nouns = ['Tiger', 'Dragon', 'Eagle', 'Wolf', 'Bear', 'Lion', 'Falcon', 'Phoenix', 'Raven', 'Shark', 'Panther', 'Cobra', 'Hawk', 'Lynx', 'Jaguar'];
+      const colors = [
+        "Red",
+        "Blue",
+        "Green",
+        "Purple",
+        "Orange",
+        "Yellow",
+        "Pink",
+        "Silver",
+        "Golden",
+        "Black",
+        "White",
+        "Emerald",
+        "Ruby",
+        "Sapphire",
+        "Diamond",
+      ];
+      const nouns = [
+        "Tiger",
+        "Dragon",
+        "Eagle",
+        "Wolf",
+        "Bear",
+        "Lion",
+        "Falcon",
+        "Phoenix",
+        "Raven",
+        "Shark",
+        "Panther",
+        "Cobra",
+        "Hawk",
+        "Lynx",
+        "Jaguar",
+      ];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
       const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
       return `${randomColor}${randomNoun}`;
@@ -793,7 +858,9 @@ export default function EventForm() {
                         <label className="form-label">
                           Map
                           {isEditMode && (
-                            <span className="text-muted small ms-2">(GPS coordinates locked)</span>
+                            <span className="text-muted small ms-2">
+                              (GPS coordinates locked)
+                            </span>
                           )}
                         </label>
                       </div>
@@ -827,19 +894,25 @@ export default function EventForm() {
                             <FormLabel>
                               Starts on <span className="text-danger">*</span>
                               {isEditMode && (
-                                <span className="text-muted small ms-2">(read-only)</span>
+                                <span className="text-muted small ms-2">
+                                  (read-only)
+                                </span>
                               )}
                             </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="date"
-                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
+                                className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                 min={minDate}
                                 max={maxDate}
                                 data-testid="input-date"
                                 readOnly={isEditMode}
-                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
+                                style={
+                                  isEditMode
+                                    ? { cursor: "not-allowed", opacity: 0.7 }
+                                    : {}
+                                }
                               />
                             </FormControl>
                             <FormMessage />
@@ -857,17 +930,23 @@ export default function EventForm() {
                             <FormLabel>
                               Start Time <span className="text-danger">*</span>
                               {isEditMode && (
-                                <span className="text-muted small ms-2">(read-only)</span>
+                                <span className="text-muted small ms-2">
+                                  (read-only)
+                                </span>
                               )}
                             </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="time"
-                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
+                                className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                 data-testid="input-time"
                                 readOnly={isEditMode}
-                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
+                                style={
+                                  isEditMode
+                                    ? { cursor: "not-allowed", opacity: 0.7 }
+                                    : {}
+                                }
                                 onChange={(e) => {
                                   field.onChange(e);
                                   // Clear any existing date/time errors when user changes the time
@@ -964,7 +1043,9 @@ export default function EventForm() {
                             <FormLabel>
                               Ends on
                               {isEditMode && (
-                                <span className="text-muted small ms-2">(read-only)</span>
+                                <span className="text-muted small ms-2">
+                                  (read-only)
+                                </span>
                               )}
                             </FormLabel>
                             <FormControl>
@@ -972,12 +1053,16 @@ export default function EventForm() {
                                 {...field}
                                 value={field.value || ""}
                                 type="date"
-                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
+                                className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                 min={form.watch("date") || minDate}
                                 max={maxDate}
                                 data-testid="input-end-date"
                                 readOnly={isEditMode}
-                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
+                                style={
+                                  isEditMode
+                                    ? { cursor: "not-allowed", opacity: 0.7 }
+                                    : {}
+                                }
                               />
                             </FormControl>
                             <div className="form-text">
@@ -998,7 +1083,9 @@ export default function EventForm() {
                             <FormLabel>
                               End Time
                               {isEditMode && (
-                                <span className="text-muted small ms-2">(read-only)</span>
+                                <span className="text-muted small ms-2">
+                                  (read-only)
+                                </span>
                               )}
                             </FormLabel>
                             <FormControl>
@@ -1006,10 +1093,14 @@ export default function EventForm() {
                                 {...field}
                                 value={field.value || ""}
                                 type="time"
-                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
+                                className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                 data-testid="input-end-time"
                                 readOnly={isEditMode}
-                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
+                                style={
+                                  isEditMode
+                                    ? { cursor: "not-allowed", opacity: 0.7 }
+                                    : {}
+                                }
                               />
                             </FormControl>
                             <div className="form-text">When the event ends</div>
@@ -1120,239 +1211,216 @@ export default function EventForm() {
                       <div className="col-12">
                         <div className="alert alert-info">
                           <i className="bi bi-info-circle me-2"></i>
-                          <strong>Tickets & Pricing are locked after event creation</strong>
+                          <strong>
+                            Tickets & Pricing are locked after event creation
+                          </strong>
                           <div className="small mt-1">
-                            Ticket price, quantity, and surge pricing settings cannot be changed once an event is created to maintain fairness for existing ticket holders.
+                            Ticket price, quantity, and surge pricing settings
+                            cannot be changed once an event is created to
+                            maintain fairness for existing ticket holders.
                           </div>
                         </div>
                       </div>
                     ) : (
-                    <div className="col-12">
-                      <div
-                        style={{
-                          background: "#c0c0c0",
-                          border: "3px solid",
-                          borderColor: "#ffffff #000000 #000000 #ffffff",
-                          boxShadow: "1px 1px 0 #808080",
-                          marginBottom: "20px",
-                        }}
-                      >
+                      <div className="col-12">
                         <div
                           style={{
-                            background:
-                              "linear-gradient(to right, #000080, #1084d0)",
-                            padding: "2px 4px",
-                            marginBottom: "1px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
+                            background: "#c0c0c0",
+                            border: "3px solid",
+                            borderColor: "#ffffff #000000 #000000 #ffffff",
+                            boxShadow: "1px 1px 0 #808080",
+                            marginBottom: "20px",
                           }}
                         >
                           <div
-                            className="text-white fw-bold"
                             style={{
-                              fontSize: "11px",
-                              fontFamily: "Tahoma, sans-serif",
-                            }}
-                          >
-                            Tickets & Pricing
-                          </div>
-                          <div
-                            style={{
-                              width: "13px",
-                              height: "11px",
-                              background: "#c0c0c0",
-                              border: "1px solid",
-                              borderColor: "#ffffff #000000 #000000 #ffffff",
+                              background:
+                                "linear-gradient(to right, #000080, #1084d0)",
+                              padding: "2px 4px",
+                              marginBottom: "1px",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "9px",
-                              fontWeight: "bold",
-                              lineHeight: "1",
-                              cursor: "pointer",
+                              justifyContent: "space-between",
                             }}
                           >
-                            ×
-                          </div>
-                        </div>
-                        <div className="p-3" style={{ background: "#c0c0c0" }}>
-                          <div className="row">
-                            <div className="col-md-6">
-                              <FormField
-                                control={form.control}
-                                name="ticketPrice"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Ticket Price ($)</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        placeholder="0.00"
-                                        className="form-control"
-                                        data-testid="input-price"
-                                        onChange={(e) => {
-                                          field.onChange(e);
-                                          // Clear surge pricing error if price meets requirement
-                                          const surgePricing =
-                                            form.getValues("surgePricing");
-                                          if (surgePricing) {
-                                            const ticketPrice = parseFloat(
-                                              e.target.value || "0",
-                                            );
-                                            if (ticketPrice >= 1.0) {
-                                              form.clearErrors("ticketPrice");
-                                            } else {
-                                              form.setError("ticketPrice", {
-                                                type: "manual",
-                                                message:
-                                                  "Ticket price must be at least $1.00 for surge pricing",
-                                              });
-                                            }
-                                          }
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={form.control}
-                                name="surgePricing"
-                                render={({ field }) => (
-                                  <FormItem className="mt-3">
-                                    <div className="form-check">
-                                      <FormControl>
-                                        <input
-                                          type="checkbox"
-                                          checked={field.value}
-                                          onChange={(e) => {
-                                            field.onChange(e);
-                                            // Update ticket price to $1.00 when enabling surge pricing if it's less
-                                            if (e.target.checked) {
-                                              const ticketPrice = parseFloat(
-                                                form.getValues("ticketPrice") ||
-                                                  "0",
-                                              );
-                                              if (ticketPrice < 1.0) {
-                                                form.setValue("ticketPrice", "1.00");
-                                                form.clearErrors("ticketPrice");
-                                              }
-                                            } else {
-                                              // Clear the error when disabling surge pricing
-                                              form.clearErrors("ticketPrice");
-                                            }
-                                          }}
-                                          className="form-check-input"
-                                          id="surgePricingCheck"
-                                          data-testid="checkbox-surge-pricing"
-                                        />
-                                      </FormControl>
-                                      <label
-                                        className="form-check-label"
-                                        htmlFor="surgePricingCheck"
-                                      >
-                                        <img 
-                                          src="/surge-pricing-icon.png" 
-                                          alt="Surge Pricing" 
-                                          style={{ width: "21px", height: "21px", marginRight: "8px", display: "inline-block", verticalAlign: "middle" }}
-                                        />
-                                        <strong>Surge Pricing</strong>
-                                        <div className="text-muted small">
-                                          Ticket prices increase with demand.
-                                          Minimum $1.00 ticket price.
-                                        </div>
-                                      </label>
-                                    </div>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                            <div
+                              className="text-white fw-bold"
+                              style={{
+                                fontSize: "11px",
+                                fontFamily: "Tahoma, sans-serif",
+                              }}
+                            >
+                              Tickets & Pricing
                             </div>
-
-                            <div className="col-md-6">
-                              <FormField
-                                control={form.control}
-                                name="maxTickets"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Tickets</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        {...field}
-                                        type="number"
-                                        min="1"
-                                        max="4999"
-                                        placeholder="Enter number of tickets"
-                                        className="form-control"
-                                        data-testid="input-max-tickets"
-                                        value={field.value || ""}
-                                        onChange={(e) => {
-                                          const value = parseInt(e.target.value) || 0;
-                                          field.onChange(value);
-                                          
-                                          // Check if value exceeds user's credit balance
-                                          if (value > creditBalance) {
-                                            form.setError("maxTickets", {
-                                              type: "manual",
-                                              message: "Not Enough Credits"
-                                            });
-                                          } else {
-                                            form.clearErrors("maxTickets");
-                                          }
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <div className="form-text">
-                                      Your balance: {creditBalance} credits
-                                    </div>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                            <div
+                              style={{
+                                width: "13px",
+                                height: "11px",
+                                background: "#c0c0c0",
+                                border: "1px solid",
+                                borderColor: "#ffffff #000000 #000000 #ffffff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "9px",
+                                fontWeight: "bold",
+                                lineHeight: "1",
+                                cursor: "pointer",
+                              }}
+                            >
+                              ×
                             </div>
                           </div>
-
-                          {/* Admin-only Disable Ticket Sales checkbox */}
-                          {isAdmin && (
-                            <div className="row mt-3">
-                              <div className="col-12">
+                          <div
+                            className="p-3"
+                            style={{ background: "#c0c0c0" }}
+                          >
+                            <div className="row">
+                              <div className="col-md-6">
                                 <FormField
                                   control={form.control}
-                                  name="ticketPurchasesEnabled"
+                                  name="ticketPrice"
                                   render={({ field }) => (
                                     <FormItem>
-                                      <div className="form-check">
-                                        <input
-                                          type="checkbox"
-                                          className="form-check-input"
-                                          id="ticketPurchasesEnabled"
-                                          checked={!field.value}
-                                          onChange={(e) =>
-                                            field.onChange(!e.target.checked)
-                                          }
-                                          data-testid="checkbox-disable-ticket-sales"
+                                      <FormLabel>Ticket Price ($)</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          type="number"
+                                          step="0.01"
+                                          min="0"
+                                          placeholder="0.00"
+                                          className="form-control"
+                                          data-testid="input-price"
+                                          onChange={(e) => {
+                                            field.onChange(e);
+                                            // Clear surge pricing error if price meets requirement
+                                            const surgePricing =
+                                              form.getValues("surgePricing");
+                                            if (surgePricing) {
+                                              const ticketPrice = parseFloat(
+                                                e.target.value || "0",
+                                              );
+                                              if (ticketPrice >= 1.0) {
+                                                form.clearErrors("ticketPrice");
+                                              } else {
+                                                form.setError("ticketPrice", {
+                                                  type: "manual",
+                                                  message:
+                                                    "Ticket price must be at least $1.00 for surge pricing",
+                                                });
+                                              }
+                                            }
+                                          }}
                                         />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="surgePricing"
+                                  render={({ field }) => (
+                                    <FormItem className="mt-3">
+                                      <div className="form-check">
+                                        <FormControl>
+                                          <input
+                                            type="checkbox"
+                                            checked={field.value}
+                                            onChange={(e) => {
+                                              field.onChange(e);
+                                              // Update ticket price to $1.00 when enabling surge pricing if it's less
+                                              if (e.target.checked) {
+                                                const ticketPrice = parseFloat(
+                                                  form.getValues(
+                                                    "ticketPrice",
+                                                  ) || "0",
+                                                );
+                                                if (ticketPrice < 1.0) {
+                                                  form.setValue(
+                                                    "ticketPrice",
+                                                    "1.00",
+                                                  );
+                                                  form.clearErrors(
+                                                    "ticketPrice",
+                                                  );
+                                                }
+                                              } else {
+                                                // Clear the error when disabling surge pricing
+                                                form.clearErrors("ticketPrice");
+                                              }
+                                            }}
+                                            className="form-check-input"
+                                            id="surgePricingCheck"
+                                            data-testid="checkbox-surge-pricing"
+                                          />
+                                        </FormControl>
                                         <label
                                           className="form-check-label"
-                                          htmlFor="ticketPurchasesEnabled"
+                                          htmlFor="surgePricingCheck"
                                         >
-                                          <span className="badge bg-danger me-2">
-                                            ⚠️
-                                          </span>
-                                          Suspend Event
+                                          <img
+                                            src="/surge-pricing-icon.png"
+                                            alt="Surge Pricing"
+                                            style={{
+                                              width: "21px",
+                                              height: "21px",
+                                              marginRight: "8px",
+                                              display: "inline-block",
+                                              verticalAlign: "middle",
+                                            }}
+                                          />
+                                          <strong>Surge Pricing</strong>
+                                          <div className="text-muted small">
+                                            Ticket prices increase with demand.
+                                            Minimum $1.00 ticket price.
+                                          </div>
                                         </label>
                                       </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              <div className="col-md-6">
+                                <FormField
+                                  control={form.control}
+                                  name="maxTickets"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Tickets</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          type="number"
+                                          min="1"
+                                          max="4999"
+                                          placeholder="Enter number of tickets"
+                                          className="form-control"
+                                          data-testid="input-max-tickets"
+                                          value={field.value || ""}
+                                          onChange={(e) => {
+                                            const value =
+                                              parseInt(e.target.value) || 0;
+                                            field.onChange(value);
+
+                                            // Check if value exceeds user's credit balance
+                                            if (value > creditBalance) {
+                                              form.setError("maxTickets", {
+                                                type: "manual",
+                                                message: "Not Enough Credits",
+                                              });
+                                            } else {
+                                              form.clearErrors("maxTickets");
+                                            }
+                                          }}
+                                        />
+                                      </FormControl>
                                       <div className="form-text">
-                                        Suspend this event from public view and
-                                        stop new ticket sales. Existing ticket
-                                        holders can still access and return
-                                        tickets. Admin moderation tool.
+                                        Your balance: {creditBalance} credits
                                       </div>
                                       <FormMessage />
                                     </FormItem>
@@ -1360,10 +1428,53 @@ export default function EventForm() {
                                 />
                               </div>
                             </div>
-                          )}
+
+                            {/* Admin-only Disable Ticket Sales checkbox */}
+                            {isAdmin && (
+                              <div className="row mt-3">
+                                <div className="col-12">
+                                  <FormField
+                                    control={form.control}
+                                    name="ticketPurchasesEnabled"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <div className="form-check">
+                                          <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="ticketPurchasesEnabled"
+                                            checked={!field.value}
+                                            onChange={(e) =>
+                                              field.onChange(!e.target.checked)
+                                            }
+                                            data-testid="checkbox-disable-ticket-sales"
+                                          />
+                                          <label
+                                            className="form-check-label"
+                                            htmlFor="ticketPurchasesEnabled"
+                                          >
+                                            <span className="badge bg-danger me-2">
+                                              ⚠️
+                                            </span>
+                                            Suspend Event
+                                          </label>
+                                        </div>
+                                        <div className="form-text">
+                                          Suspend this event from public view
+                                          and stop new ticket sales. Existing
+                                          ticket holders can still access and
+                                          return tickets. Admin moderation tool.
+                                        </div>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
                     )}
 
                     {/* Repeat Section - Admin Only */}
@@ -1382,7 +1493,9 @@ export default function EventForm() {
                                     {...field}
                                     className="form-control"
                                     value={field.value || ""}
-                                    onChange={(e) => field.onChange(e.target.value || null)}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.value || null)
+                                    }
                                     data-testid="select-recurring-type"
                                   >
                                     <option value="">None</option>
@@ -1512,7 +1625,14 @@ export default function EventForm() {
                                         className="form-control"
                                         data-testid="select-early-validation"
                                         disabled={isEditMode}
-                                        style={isEditMode ? { backgroundColor: '#f0f0f0', color: '#6c757d' } : {}}
+                                        style={
+                                          isEditMode
+                                            ? {
+                                                backgroundColor: "#f0f0f0",
+                                                color: "#6c757d",
+                                              }
+                                            : {}
+                                        }
                                       >
                                         <option value="Allow at Anytime">
                                           Allow at Anytime
@@ -1557,7 +1677,14 @@ export default function EventForm() {
                                         className="form-control"
                                         data-testid="select-reentry-type"
                                         disabled={isEditMode}
-                                        style={isEditMode ? { backgroundColor: '#f0f0f0', color: '#6c757d' } : {}}
+                                        style={
+                                          isEditMode
+                                            ? {
+                                                backgroundColor: "#f0f0f0",
+                                                color: "#6c757d",
+                                              }
+                                            : {}
+                                        }
                                       >
                                         <option value="No Reentry (Single Use)">
                                           No Reentry (Single Use)
@@ -1576,7 +1703,8 @@ export default function EventForm() {
                               />
                             </div>
 
-                            {form.watch("reentryType") === "Pass (Multiple Use)" && (
+                            {form.watch("reentryType") ===
+                              "Pass (Multiple Use)" && (
                               <div className="col-12">
                                 <FormField
                                   control={form.control}
@@ -1595,7 +1723,8 @@ export default function EventForm() {
                                           data-testid="input-max-uses"
                                           value={field.value || 2}
                                           onChange={(e) => {
-                                            const value = parseInt(e.target.value) || 2;
+                                            const value =
+                                              parseInt(e.target.value) || 2;
                                             if (value < 2) {
                                               field.onChange(2);
                                             } else if (value > 24) {
@@ -1607,8 +1736,8 @@ export default function EventForm() {
                                         />
                                       </FormControl>
                                       <div className="form-text">
-                                        How many times the ticket can be used (minimum
-                                        2, maximum 24)
+                                        How many times the ticket can be used
+                                        (minimum 2, maximum 24)
                                       </div>
                                       <FormMessage />
                                     </FormItem>
@@ -1620,222 +1749,236 @@ export default function EventForm() {
 
                           {/* Private Event Setting */}
                           <FormField
-                          control={form.control}
-                          name="isPrivate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id="isPrivate"
-                                  checked={field.value}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.checked)
-                                  }
-                                  disabled={
-                                    !form.watch("ticketPurchasesEnabled")
-                                  }
-                                  data-testid="checkbox-is-private"
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="isPrivate"
-                                >
-                                  <img 
-                                    src="/lock-icon.png" 
-                                    alt="Private" 
-                                    style={{ width: "21px", height: "21px", marginRight: "8px" }}
+                            control={form.control}
+                            name="isPrivate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <div className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="isPrivate"
+                                    checked={field.value}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.checked)
+                                    }
+                                    disabled={
+                                      !form.watch("ticketPurchasesEnabled")
+                                    }
+                                    data-testid="checkbox-is-private"
                                   />
-                                  Private Event
-                                </label>
-                              </div>
-                              <div className="form-text">
-                                Private events won't appear in search results or
-                                be featured. Only accessible via direct link.
-                                {!form.watch("ticketPurchasesEnabled") && (
-                                  <span className="text-warning">
-                                    {" "}
-                                    <strong>
-                                      Automatically enabled when event is
-                                      suspended.
-                                    </strong>
-                                  </span>
-                                )}
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="isPrivate"
+                                  >
+                                    <img
+                                      src="/lock-icon.png"
+                                      alt="Private"
+                                      style={{
+                                        width: "21px",
+                                        height: "21px",
+                                        marginRight: "8px",
+                                      }}
+                                    />
+                                    Private Event
+                                  </label>
+                                </div>
+                                <div className="form-text">
+                                  Private events won't appear in search results
+                                  or be featured. Only accessible via direct
+                                  link.
+                                  {!form.watch("ticketPurchasesEnabled") && (
+                                    <span className="text-warning">
+                                      {" "}
+                                      <strong>
+                                        Automatically enabled when event is
+                                        suspended.
+                                      </strong>
+                                    </span>
+                                  )}
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
                           <FormField
                             control={form.control}
                             name="oneTicketPerUser"
                             render={({ field }) => (
                               <FormItem className="mt-3">
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id="oneTicketPerUser"
-                                  checked={field.value}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.checked)
-                                  }
-                                  data-testid="checkbox-one-ticket-per-user"
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="oneTicketPerUser"
-                                >
-                                  <img 
-                                    src="/limit-sales-icon.png" 
-                                    alt="Limit Sales" 
-                                    style={{ width: "21px", height: "21px", marginRight: "8px" }}
+                                <div className="form-check">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    id="oneTicketPerUser"
+                                    checked={field.value}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.checked)
+                                    }
+                                    data-testid="checkbox-one-ticket-per-user"
                                   />
-                                  Limit Ticket Sales
-                                </label>
-                              </div>
-                              <div className="form-text">
-                                Prevent scalping by restricting users to
-                                purchasing only one ticket.
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="oneTicketPerUser"
+                                  >
+                                    <img
+                                      src="/limit-sales-icon.png"
+                                      alt="Limit Sales"
+                                      style={{
+                                        width: "21px",
+                                        height: "21px",
+                                        marginRight: "8px",
+                                      }}
+                                    />
+                                    Limit Ticket Sales
+                                  </label>
+                                </div>
+                                <div className="form-text">
+                                  Prevent scalping by restricting users to
+                                  purchasing only one ticket.
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
                           <FormField
                             control={form.control}
                             name="p2pValidation"
                             render={({ field }) => (
                               <FormItem className="mt-3">
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id="p2pValidation"
-                                  checked={field.value || false}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.checked)
-                                  }
-                                  data-testid="checkbox-p2p-validation"
-                                  disabled={isEditMode} // Disable if editing existing event
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="p2pValidation"
-                                >
-                                  <img 
-                                    src="/p2p-icon.png" 
-                                    alt="P2P" 
-                                    style={{ width: "21px", height: "21px", marginRight: "8px" }}
-                                  />
-                                  P2P Validation
-                                </label>
-                              </div>
-                              <div className="form-text">
-                                Allow any ticket holder the ability to validate
-                                other tickets
-                                {isEditMode
-                                  ? " (This setting is read-only after event creation)"
-                                  : ""}
-                                .
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Nested Enable Voting setting - only shown when P2P Validation is enabled */}
-                        {form.watch("p2pValidation") && (
-                          <FormField
-                            control={form.control}
-                            name="enableVoting"
-                            render={({ field }) => (
-                              <FormItem className="mt-3 ms-4">
                                 <div className="form-check">
                                   <input
                                     type="checkbox"
                                     className="form-check-input"
-                                    id="enableVoting"
+                                    id="p2pValidation"
                                     checked={field.value || false}
                                     onChange={(e) =>
                                       field.onChange(e.target.checked)
                                     }
-                                    data-testid="checkbox-enable-voting"
+                                    data-testid="checkbox-p2p-validation"
                                     disabled={isEditMode} // Disable if editing existing event
                                   />
                                   <label
                                     className="form-check-label"
-                                    htmlFor="enableVoting"
+                                    htmlFor="p2pValidation"
                                   >
-                                    <span className="badge bg-warning text-dark me-2">
-                                      🗳️
-                                    </span>
-                                    Enable Voting
+                                    <img
+                                      src="/p2p-icon.png"
+                                      alt="P2P"
+                                      style={{
+                                        width: "21px",
+                                        height: "21px",
+                                        marginRight: "8px",
+                                      }}
+                                    />
+                                    P2P Validation
                                   </label>
                                 </div>
                                 <div className="form-text">
-                                  Tickets can collect votes! The most voted
-                                  ticket becomes golden. Use the validator to
-                                  vote/validate someones ticket.
+                                  Allow any ticket holder the ability to
+                                  validate other tickets
+                                  {isEditMode
+                                    ? " (This setting is read-only after event creation)"
+                                    : ""}
+                                  .
                                 </div>
                                 <FormMessage />
                               </FormItem>
                             )}
                           />
-                        )}
 
-                        {/* Geofence setting - only shown when GPS coordinates are set */}
-                        {latitude && longitude && (
-                          <FormField
-                            control={form.control}
-                            name="geofence"
-                            render={({ field }) => (
-                              <FormItem className="mt-3">
-                                <div className="form-check">
-                                  <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="geofence"
-                                    checked={field.value || false}
-                                    onChange={(e) =>
-                                      field.onChange(e.target.checked)
-                                    }
-                                    data-testid="checkbox-geofence"
-                                    disabled={isEditMode} // Disable if editing existing event
-                                  />
-                                  <label
-                                    className="form-check-label"
-                                    htmlFor="geofence"
-                                  >
-                                    <span className="badge bg-success me-2">
-                                      🌎
-                                    </span>
-                                    Geofence
-                                    {isEditMode && (
-                                      <span className="text-muted ms-2">
-                                        (read-only)
+                          {/* Nested Enable Voting setting - only shown when P2P Validation is enabled */}
+                          {form.watch("p2pValidation") && (
+                            <FormField
+                              control={form.control}
+                              name="enableVoting"
+                              render={({ field }) => (
+                                <FormItem className="mt-3 ms-4">
+                                  <div className="form-check">
+                                    <input
+                                      type="checkbox"
+                                      className="form-check-input"
+                                      id="enableVoting"
+                                      checked={field.value || false}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.checked)
+                                      }
+                                      data-testid="checkbox-enable-voting"
+                                      disabled={isEditMode} // Disable if editing existing event
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="enableVoting"
+                                    >
+                                      <span className="badge bg-warning text-dark me-2">
+                                        🗳️
                                       </span>
-                                    )}
-                                  </label>
-                                </div>
-                                <div className="form-text">
-                                  Tickets can only be validated within 300
-                                  meters of the GPS coordinates set on the map.
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
+                                      Enable Voting
+                                    </label>
+                                  </div>
+                                  <div className="form-text">
+                                    Tickets can collect votes! The most voted
+                                    ticket becomes golden. Use the validator to
+                                    vote/validate someones ticket.
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
 
-                        {form.watch("geofence") && !isEditMode && (
-                          <FormField
-                            control={form.control}
-                            name="treasureHunt"
-                            render={({ field }) => (
+                          {/* Geofence setting - only shown when GPS coordinates are set */}
+                          {latitude && longitude && (
+                            <FormField
+                              control={form.control}
+                              name="geofence"
+                              render={({ field }) => (
+                                <FormItem className="mt-3">
+                                  <div className="form-check">
+                                    <input
+                                      type="checkbox"
+                                      className="form-check-input"
+                                      id="geofence"
+                                      checked={field.value || false}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.checked)
+                                      }
+                                      data-testid="checkbox-geofence"
+                                      disabled={isEditMode} // Disable if editing existing event
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="geofence"
+                                    >
+                                      <span className="badge bg-success me-2">
+                                        🌎
+                                      </span>
+                                      Geofence
+                                      {isEditMode && (
+                                        <span className="text-muted ms-2">
+                                          (read-only)
+                                        </span>
+                                      )}
+                                    </label>
+                                  </div>
+                                  <div className="form-text">
+                                    Tickets can only be validated within 300
+                                    meters of the GPS coordinates set on the
+                                    map.
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+
+                          {form.watch("geofence") && !isEditMode && (
+                            <FormField
+                              control={form.control}
+                              name="treasureHunt"
+                              render={({ field }) => (
                                 <FormItem className="mt-3 ms-4">
                                   <div className="form-check">
                                     <input
@@ -1859,547 +2002,576 @@ export default function EventForm() {
                                     </label>
                                   </div>
                                   <div className="form-text">
-                                    Enable geocaching-style validation. Hide a unique URL in the real world for attendees to discover. Ticket holders can enter the Hunt code on their account page for instant validation.
-                                    {form.watch("treasureHunt") && form.watch("huntCode") && (
-                                      <div className="mt-2 p-2 bg-light border rounded">
-                                        <strong>Your hunt URL:</strong>
-                                        <br />
-                                        <code className="text-primary">www.eventic.quest/hunt/{form.watch("huntCode")}</code>
-                                        <br />
-                                        <small className="text-muted">
-                                          Share this URL at the venue or hide it for attendees to find! They can also enter just the code "{form.watch("huntCode")}" on their account page.
-                                        </small>
-                                      </div>
-                                    )}
+                                    Enable geocaching-style validation. Hide a
+                                    unique URL in the real world for attendees
+                                    to discover. Ticket holders can enter the
+                                    Hunt code on their account page for instant
+                                    validation.
+                                    {form.watch("treasureHunt") &&
+                                      form.watch("huntCode") && (
+                                        <div className="mt-2 p-2 bg-light border rounded">
+                                          <strong>Your hunt URL:</strong>
+                                          <br />
+                                          <code className="text-primary">
+                                            www.eventic.quest/hunt/
+                                            {form.watch("huntCode")}
+                                          </code>
+                                          <br />
+                                          <small className="text-muted">
+                                            Share this URL, or hide it for
+                                            anyoneone to find! They can also
+                                            enter just the code "
+                                            {form.watch("huntCode")}" on their
+                                            account page in the Secret Codes
+                                            section.
+                                          </small>
+                                        </div>
+                                      )}
                                   </div>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
-                        )}
-                        
-                        {form.watch("geofence") && isEditMode && event?.treasureHunt && (
-                            <div className="mt-3 ms-4">
-                              <div className="form-check">
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  id="treasureHunt"
-                                  checked={true}
-                                  disabled={true}
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="treasureHunt"
-                                >
-                                  <span className="badge bg-info me-2">
-                                    🗺️
-                                  </span>
-                                  Treasure Hunt
-                                  <span className="text-muted ms-2">
-                                    (read-only)
-                                  </span>
-                                </label>
-                              </div>
-                              <div className="form-text">
-                                {event?.huntCode && (
-                                  <div className="mt-2 p-2 bg-light border rounded">
-                                    <strong>Hunt URL:</strong>
-                                    <br />
-                                    <code className="text-primary">www.eventic.quest/hunt/{event.huntCode}</code>
-                                  </div>
-                                )}
-                              </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                          )}
 
-                    {/* Ticket Preview Section */}
-                    <div className="col-12">
-                      <div className="mb-4">
-                        <label className="form-label">
-                          <CreditCard size={18} className="me-2" />
-                          Ticket Preview
-                        </label>
-                        <p className="text-muted small mb-3">
-                          This is how your event tickets will appear to
-                          attendees. The featured image will be used as the
-                          ticket background.
-                        </p>
-
-                        {/* Ticket Preview */}
-                        <div className="mb-3">
-                          <div
-                            className="bg-light rounded p-4"
-                            style={{ backgroundColor: "#f8f9fa" }}
-                          >
-                            <div
-                              className="mx-auto"
-                              style={{ maxWidth: "400px" }}
-                            >
-                              <TicketCard
-                                ticket={sampleTicket}
-                                event={previewEvent}
-                                showQR={false}
-                              />
-                            </div>
-                            {/* Special Effects Preview Controls */}
-                            {specialEffectsEnabled && (
-                              <div className="d-flex justify-content-center align-items-center mt-3 gap-3">
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-secondary"
-                                  onClick={() =>
-                                    setPreviewEffectIndex(
-                                      (prev) =>
-                                        (prev - 1 + availableEffects.length) %
-                                        availableEffects.length,
-                                    )
-                                  }
-                                  data-testid="button-prev-effect"
-                                  title="Previous effect"
-                                >
-                                  <ArrowLeft size={16} />
-                                </button>
-                                <span
-                                  className="text-muted small text-center"
-                                  style={{ minWidth: "180px" }}
-                                >
-                                  <strong>
-                                    {availableEffects[previewEffectIndex]?.name}
-                                  </strong>
-                                </span>
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-secondary"
-                                  onClick={() =>
-                                    setPreviewEffectIndex(
-                                      (prev) =>
-                                        (prev + 1) % availableEffects.length,
-                                    )
-                                  }
-                                  data-testid="button-next-effect"
-                                  title="Next effect"
-                                >
-                                  <ArrowRight size={16} />
-                                </button>
+                          {form.watch("geofence") &&
+                            isEditMode &&
+                            event?.treasureHunt && (
+                              <div className="mt-3 ms-4">
+                                <div className="form-check">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id="treasureHunt"
+                                    checked={true}
+                                    disabled={true}
+                                  />
+                                  <label
+                                    className="form-check-label"
+                                    htmlFor="treasureHunt"
+                                  >
+                                    <span className="badge bg-info me-2">
+                                      🗺️
+                                    </span>
+                                    Treasure Hunt
+                                    <span className="text-muted ms-2">
+                                      (read-only)
+                                    </span>
+                                  </label>
+                                </div>
+                                <div className="form-text">
+                                  {event?.huntCode && (
+                                    <div className="mt-2 p-2 bg-light border rounded">
+                                      <strong>Hunt URL:</strong>
+                                      <br />
+                                      <code className="text-primary">
+                                        www.eventic.quest/hunt/{event.huntCode}
+                                      </code>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             )}
-                            <p className="text-center text-muted small mt-3 mb-0">
-                              <i className="bi bi-info-circle me-1"></i>
-                              {imageUrl
-                                ? "Your featured image is being used as the ticket background"
-                                : "Upload a featured image to customize the ticket background"}
-                            </p>
+                        </div>
+                      </div>
+
+                      {/* Ticket Preview Section */}
+                      <div className="col-12">
+                        <div className="mb-4">
+                          <label className="form-label">
+                            <CreditCard size={18} className="me-2" />
+                            Ticket Preview
+                          </label>
+                          <p className="text-muted small mb-3">
+                            This is how your event tickets will appear to
+                            attendees. The featured image will be used as the
+                            ticket background.
+                          </p>
+
+                          {/* Ticket Preview */}
+                          <div className="mb-3">
+                            <div
+                              className="bg-light rounded p-4"
+                              style={{ backgroundColor: "#f8f9fa" }}
+                            >
+                              <div
+                                className="mx-auto"
+                                style={{ maxWidth: "400px" }}
+                              >
+                                <TicketCard
+                                  ticket={sampleTicket}
+                                  event={previewEvent}
+                                  showQR={false}
+                                />
+                              </div>
+                              {/* Special Effects Preview Controls */}
+                              {specialEffectsEnabled && (
+                                <div className="d-flex justify-content-center align-items-center mt-3 gap-3">
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() =>
+                                      setPreviewEffectIndex(
+                                        (prev) =>
+                                          (prev - 1 + availableEffects.length) %
+                                          availableEffects.length,
+                                      )
+                                    }
+                                    data-testid="button-prev-effect"
+                                    title="Previous effect"
+                                  >
+                                    <ArrowLeft size={16} />
+                                  </button>
+                                  <span
+                                    className="text-muted small text-center"
+                                    style={{ minWidth: "180px" }}
+                                  >
+                                    <strong>
+                                      {
+                                        availableEffects[previewEffectIndex]
+                                          ?.name
+                                      }
+                                    </strong>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={() =>
+                                      setPreviewEffectIndex(
+                                        (prev) =>
+                                          (prev + 1) % availableEffects.length,
+                                      )
+                                    }
+                                    data-testid="button-next-effect"
+                                    title="Next effect"
+                                  >
+                                    <ArrowRight size={16} />
+                                  </button>
+                                </div>
+                              )}
+                              <p className="text-center text-muted small mt-3 mb-0">
+                                <i className="bi bi-info-circle me-1"></i>
+                                {imageUrl
+                                  ? "Your featured image is being used as the ticket background"
+                                  : "Upload a featured image to customize the ticket background"}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Special Features Section */}
-                    <div className="col-12">
-                      <div
-                        style={{
-                          background: "#c0c0c0",
-                          border: "3px solid",
-                          borderColor: "#ffffff #000000 #000000 #ffffff",
-                          boxShadow: "1px 1px 0 #808080",
-                          marginBottom: "20px",
-                        }}
-                      >
+                      {/* Special Features Section */}
+                      <div className="col-12">
                         <div
                           style={{
-                            background:
-                              "linear-gradient(to right, #000080, #1084d0)",
-                            padding: "2px 4px",
-                            marginBottom: "1px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
+                            background: "#c0c0c0",
+                            border: "3px solid",
+                            borderColor: "#ffffff #000000 #000000 #ffffff",
+                            boxShadow: "1px 1px 0 #808080",
+                            marginBottom: "20px",
                           }}
                         >
                           <div
-                            className="text-white fw-bold"
                             style={{
-                              fontSize: "11px",
-                              fontFamily: "Tahoma, sans-serif",
-                            }}
-                          >
-                            Special Features
-                          </div>
-                          <div
-                            style={{
-                              width: "13px",
-                              height: "11px",
-                              background: "#c0c0c0",
-                              border: "1px solid",
-                              borderColor: "#ffffff #000000 #000000 #ffffff",
+                              background:
+                                "linear-gradient(to right, #000080, #1084d0)",
+                              padding: "2px 4px",
+                              marginBottom: "1px",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "9px",
-                              fontWeight: "bold",
-                              lineHeight: "1",
-                              cursor: "pointer",
+                              justifyContent: "space-between",
                             }}
                           >
-                            ×
+                            <div
+                              className="text-white fw-bold"
+                              style={{
+                                fontSize: "11px",
+                                fontFamily: "Tahoma, sans-serif",
+                              }}
+                            >
+                              Special Features
+                            </div>
+                            <div
+                              style={{
+                                width: "13px",
+                                height: "11px",
+                                background: "#c0c0c0",
+                                border: "1px solid",
+                                borderColor: "#ffffff #000000 #000000 #ffffff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "9px",
+                                fontWeight: "bold",
+                                lineHeight: "1",
+                                cursor: "pointer",
+                              }}
+                            >
+                              ×
+                            </div>
                           </div>
-                        </div>
-                        <div style={{ padding: "12px" }}>
-                        <FormField
-                          control={form.control}
-                          name="goldenTicketEnabled"
-                          render={({ field }) => (
-                            <FormItem className="mb-3">
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id="goldenTicketEnabled"
-                                  checked={field.value}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.checked)
-                                  }
-                                  data-testid="checkbox-golden-ticket"
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="goldenTicketEnabled"
-                                >
-                                  <span className="badge bg-warning text-dark me-2">
-                                    🎫
-                                  </span>
-                                  Enable Golden Tickets
-                                </label>
-                              </div>
-                              <div className="form-text">
-                                Random ticket(s) will be golden when validated.
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {form.watch("goldenTicketEnabled") && (
-                          <FormField
-                            control={form.control}
-                            name="goldenTicketCount"
-                            render={({ field }) => (
-                              <FormItem className="mb-3">
-                                <FormLabel>Number of Golden Tickets</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    type="number"
-                                    min="1"
-                                    max="100"
-                                    placeholder="Enter number of golden tickets"
-                                    className="form-control"
-                                    data-testid="input-golden-number"
-                                    value={field.value || ""}
-                                    onKeyPress={(e) => {
-                                      // Prevent non-numeric characters
-                                      if (
-                                        !/[0-9]/.test(e.key) &&
-                                        e.key !== "Backspace" &&
-                                        e.key !== "Delete"
-                                      ) {
-                                        e.preventDefault();
-                                      }
-                                    }}
-                                    onChange={(e) => {
-                                      // Only allow numbers
-                                      const rawValue = e.target.value.replace(
-                                        /[^0-9]/g,
-                                        "",
-                                      );
-                                      if (rawValue === "") {
-                                        field.onChange(undefined);
-                                        return;
-                                      }
-
-                                      const value = parseInt(rawValue);
-                                      const maxTickets =
-                                        form.getValues("maxTickets");
-                                      const maxGoldenTickets = maxTickets
-                                        ? Math.floor(maxTickets / 2)
-                                        : 100;
-
-                                      if (value < 1) {
-                                        field.onChange(1);
-                                      } else if (value > maxGoldenTickets) {
-                                        field.onChange(maxGoldenTickets);
-                                      } else {
-                                        field.onChange(value);
-                                      }
-                                    }}
-                                  />
-                                </FormControl>
-                                <div className="form-text">
-                                  Maximum number of golden tickets that can be
-                                  won for this event
-                                  {form.watch("maxTickets") && (
-                                    <span className="text-muted">
-                                      {" "}
-                                      (limit:{" "}
-                                      {Math.floor(
-                                        (form.watch("maxTickets") || 0) / 2,
-                                      )}{" "}
-                                      - half of total tickets)
-                                    </span>
-                                  )}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
-
-                        <FormField
-                          control={form.control}
-                          name="specialEffectsEnabled"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id="specialEffectsEnabled"
-                                  checked={field.value || false}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.checked)
-                                  }
-                                  data-testid="checkbox-special-effects"
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="specialEffectsEnabled"
-                                >
-                                  <span className="badge bg-primary me-2">
-                                    ✨
-                                  </span>
-                                  Enable Special Effects
-                                </label>
-                              </div>
-                              <div className="form-text">
-                                Validated tickets may display special visual
-                                effects on holidays and themed events. These
-                                effects are randomly assigned, not all tickets
-                                will get an effect.
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Custom Sticker Checkbox */}
-                        <div className="form-check mt-3">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="stickerEnabled"
-                            checked={
-                              stickerEnabled || !!form.watch("stickerUrl")
-                            }
-                            onChange={(e) => {
-                              if (!form.watch("stickerUrl")) {
-                                setStickerEnabled(e.target.checked);
-                              }
-                            }}
-                            disabled={isEditMode && !!event?.stickerUrl}
-                            data-testid="checkbox-sticker-enabled"
-                          />
-                          <label
-                            className="form-check-label"
-                            htmlFor="stickerEnabled"
-                          >
-                            <span className="badge bg-success me-2">🎯</span>
-                            Enable Custom Sticker
-                          </label>
-                        </div>
-                        {isEditMode && event?.stickerUrl && (
-                          <div className="form-text text-info">
-                            <small>
-                              ✓ Sticker configured. This feature cannot be
-                              removed once added.
-                            </small>
-                          </div>
-                        )}
-                        {!form.watch("stickerUrl") && stickerEnabled && (
-                          <div className="form-text">
-                            Enter a URL for a custom sticker that will float on
-                            lucky tickets
-                          </div>
-                        )}
-
-                        {/* Custom Sticker URL - shows when checkbox is checked */}
-                        {(stickerEnabled || form.watch("stickerUrl")) && (
-                          <div className="mt-3 p-3 border rounded bg-light">
+                          <div style={{ padding: "12px" }}>
                             <FormField
                               control={form.control}
-                              name="stickerUrl"
+                              name="goldenTicketEnabled"
                               render={({ field }) => (
                                 <FormItem className="mb-3">
-                                  <FormLabel>Sticker URL</FormLabel>
-                                  <FormControl>
+                                  <div className="form-check">
                                     <input
-                                      type="url"
-                                      className="form-control"
-                                      placeholder="https://example.com/sticker.png"
-                                      {...field}
-                                      value={field.value || ""}
-                                      disabled={
-                                        isEditMode && !!event?.stickerUrl
+                                      type="checkbox"
+                                      className="form-check-input"
+                                      id="goldenTicketEnabled"
+                                      checked={field.value}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.checked)
                                       }
-                                      data-testid="input-sticker-url"
+                                      data-testid="checkbox-golden-ticket"
                                     />
-                                  </FormControl>
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="goldenTicketEnabled"
+                                    >
+                                      <span className="badge bg-warning text-dark me-2">
+                                        🎫
+                                      </span>
+                                      Enable Golden Tickets
+                                    </label>
+                                  </div>
                                   <div className="form-text">
-                                    Enter a direct URL to a PNG or GIF image
-                                    (transparent PNGs work best)
+                                    Random ticket(s) will be golden when
+                                    validated.
                                   </div>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
 
-                            {form.watch("stickerUrl") && (
-                              <div className="d-flex align-items-center gap-3 mb-3">
-                                <img
-                                  src={form.watch("stickerUrl") || ""}
-                                  alt="Sticker preview"
-                                  style={{
-                                    maxHeight: "60px",
-                                    maxWidth: "60px",
-                                  }}
-                                  onError={(e) => {
-                                    (
-                                      e.target as HTMLImageElement
-                                    ).style.display = "none";
-                                  }}
-                                />
-                                <span className="text-success small">
-                                  ✓ Sticker URL configured
-                                </span>
-                              </div>
+                            {form.watch("goldenTicketEnabled") && (
+                              <FormField
+                                control={form.control}
+                                name="goldenTicketCount"
+                                render={({ field }) => (
+                                  <FormItem className="mb-3">
+                                    <FormLabel>
+                                      Number of Golden Tickets
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        placeholder="Enter number of golden tickets"
+                                        className="form-control"
+                                        data-testid="input-golden-number"
+                                        value={field.value || ""}
+                                        onKeyPress={(e) => {
+                                          // Prevent non-numeric characters
+                                          if (
+                                            !/[0-9]/.test(e.key) &&
+                                            e.key !== "Backspace" &&
+                                            e.key !== "Delete"
+                                          ) {
+                                            e.preventDefault();
+                                          }
+                                        }}
+                                        onChange={(e) => {
+                                          // Only allow numbers
+                                          const rawValue =
+                                            e.target.value.replace(
+                                              /[^0-9]/g,
+                                              "",
+                                            );
+                                          if (rawValue === "") {
+                                            field.onChange(undefined);
+                                            return;
+                                          }
+
+                                          const value = parseInt(rawValue);
+                                          const maxTickets =
+                                            form.getValues("maxTickets");
+                                          const maxGoldenTickets = maxTickets
+                                            ? Math.floor(maxTickets / 2)
+                                            : 100;
+
+                                          if (value < 1) {
+                                            field.onChange(1);
+                                          } else if (value > maxGoldenTickets) {
+                                            field.onChange(maxGoldenTickets);
+                                          } else {
+                                            field.onChange(value);
+                                          }
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <div className="form-text">
+                                      Maximum number of golden tickets that can
+                                      be won for this event
+                                      {form.watch("maxTickets") && (
+                                        <span className="text-muted">
+                                          {" "}
+                                          (limit:{" "}
+                                          {Math.floor(
+                                            (form.watch("maxTickets") || 0) / 2,
+                                          )}{" "}
+                                          - half of total tickets)
+                                        </span>
+                                      )}
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
                             )}
 
                             <FormField
                               control={form.control}
-                              name="stickerOdds"
+                              name="specialEffectsEnabled"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Sticker Odds (%)</FormLabel>
-                                  <div className="d-flex align-items-center gap-3">
+                                  <div className="form-check">
                                     <input
-                                      type="number"
-                                      className="form-control"
-                                      style={{ width: "100px" }}
-                                      min="1"
-                                      max="100"
-                                      value={field.value || 25}
-                                      onChange={(e) => {
-                                        const val = parseInt(e.target.value);
-                                        if (val >= 1 && val <= 100) {
-                                          field.onChange(val);
-                                        }
-                                      }}
-                                      disabled={!form.watch("stickerUrl")}
-                                      data-testid="input-sticker-odds"
+                                      type="checkbox"
+                                      className="form-check-input"
+                                      id="specialEffectsEnabled"
+                                      checked={field.value || false}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.checked)
+                                      }
+                                      data-testid="checkbox-special-effects"
                                     />
-                                    <span className="text-muted">%</span>
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="specialEffectsEnabled"
+                                    >
+                                      <span className="badge bg-primary me-2">
+                                        ✨
+                                      </span>
+                                      Enable Special Effects
+                                    </label>
                                   </div>
                                   <div className="form-text">
-                                    Percentage of validated tickets that will
-                                    display the custom sticker (1-100)
+                                    Validated tickets may display special visual
+                                    effects on holidays and themed events. These
+                                    effects are randomly assigned, not all
+                                    tickets will get an effect.
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            {/* Custom Sticker Checkbox */}
+                            <div className="form-check mt-3">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="stickerEnabled"
+                                checked={
+                                  stickerEnabled || !!form.watch("stickerUrl")
+                                }
+                                onChange={(e) => {
+                                  if (!form.watch("stickerUrl")) {
+                                    setStickerEnabled(e.target.checked);
+                                  }
+                                }}
+                                disabled={isEditMode && !!event?.stickerUrl}
+                                data-testid="checkbox-sticker-enabled"
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor="stickerEnabled"
+                              >
+                                <span className="badge bg-success me-2">
+                                  🎯
+                                </span>
+                                Enable Custom Sticker
+                              </label>
+                            </div>
+                            {isEditMode && event?.stickerUrl && (
+                              <div className="form-text text-info">
+                                <small>
+                                  ✓ Sticker configured. This feature cannot be
+                                  removed once added.
+                                </small>
+                              </div>
+                            )}
+                            {!form.watch("stickerUrl") && stickerEnabled && (
+                              <div className="form-text">
+                                Enter a URL for a custom sticker that will float
+                                on lucky tickets
+                              </div>
+                            )}
+
+                            {/* Custom Sticker URL - shows when checkbox is checked */}
+                            {(stickerEnabled || form.watch("stickerUrl")) && (
+                              <div className="mt-3 p-3 border rounded bg-light">
+                                <FormField
+                                  control={form.control}
+                                  name="stickerUrl"
+                                  render={({ field }) => (
+                                    <FormItem className="mb-3">
+                                      <FormLabel>Sticker URL</FormLabel>
+                                      <FormControl>
+                                        <input
+                                          type="url"
+                                          className="form-control"
+                                          placeholder="https://example.com/sticker.png"
+                                          {...field}
+                                          value={field.value || ""}
+                                          disabled={
+                                            isEditMode && !!event?.stickerUrl
+                                          }
+                                          data-testid="input-sticker-url"
+                                        />
+                                      </FormControl>
+                                      <div className="form-text">
+                                        Enter a direct URL to a PNG or GIF image
+                                        (transparent PNGs work best)
+                                      </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                {form.watch("stickerUrl") && (
+                                  <div className="d-flex align-items-center gap-3 mb-3">
+                                    <img
+                                      src={form.watch("stickerUrl") || ""}
+                                      alt="Sticker preview"
+                                      style={{
+                                        maxHeight: "60px",
+                                        maxWidth: "60px",
+                                      }}
+                                      onError={(e) => {
+                                        (
+                                          e.target as HTMLImageElement
+                                        ).style.display = "none";
+                                      }}
+                                    />
+                                    <span className="text-success small">
+                                      ✓ Sticker URL configured
+                                    </span>
+                                  </div>
+                                )}
+
+                                <FormField
+                                  control={form.control}
+                                  name="stickerOdds"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Sticker Odds (%)</FormLabel>
+                                      <div className="d-flex align-items-center gap-3">
+                                        <input
+                                          type="number"
+                                          className="form-control"
+                                          style={{ width: "100px" }}
+                                          min="1"
+                                          max="100"
+                                          value={field.value || 25}
+                                          onChange={(e) => {
+                                            const val = parseInt(
+                                              e.target.value,
+                                            );
+                                            if (val >= 1 && val <= 100) {
+                                              field.onChange(val);
+                                            }
+                                          }}
+                                          disabled={!form.watch("stickerUrl")}
+                                          data-testid="input-sticker-odds"
+                                        />
+                                        <span className="text-muted">%</span>
+                                      </div>
+                                      <div className="form-text">
+                                        Percentage of validated tickets that
+                                        will display the custom sticker (1-100)
+                                      </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            )}
+
+                            {/* Allow Minting - moved to bottom */}
+                            <FormField
+                              control={form.control}
+                              name="allowMinting"
+                              render={({ field }) => (
+                                <FormItem className="mt-3">
+                                  <div className="form-check">
+                                    <input
+                                      type="checkbox"
+                                      className="form-check-input"
+                                      id="allowMinting"
+                                      checked={field.value}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.checked)
+                                      }
+                                      data-testid="checkbox-allow-minting"
+                                    />
+                                    <label
+                                      className="form-check-label"
+                                      htmlFor="allowMinting"
+                                    >
+                                      <span className="badge bg-info text-dark me-2">
+                                        🎨
+                                      </span>
+                                      Allow Minting
+                                    </label>
+                                  </div>
+                                  <div className="form-text">
+                                    Attendees will be allowed to mint a digital
+                                    collectible of the event ticket. The details
+                                    seen in the ticket preview will be publicly
+                                    accessible if enabled. Digital collectible
+                                    will be issued on the Coinbase L2 network
+                                    (Base, Ethereum).
                                   </div>
                                   <FormMessage />
                                 </FormItem>
                               )}
                             />
                           </div>
-                        )}
-
-                        {/* Allow Minting - moved to bottom */}
-                        <FormField
-                          control={form.control}
-                          name="allowMinting"
-                          render={({ field }) => (
-                            <FormItem className="mt-3">
-                              <div className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  id="allowMinting"
-                                  checked={field.value}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.checked)
-                                  }
-                                  data-testid="checkbox-allow-minting"
-                                />
-                                <label
-                                  className="form-check-label"
-                                  htmlFor="allowMinting"
-                                >
-                                  <span className="badge bg-info text-dark me-2">
-                                    🎨
-                                  </span>
-                                  Allow Minting
-                                </label>
-                              </div>
-                              <div className="form-text">
-                                Attendees will be allowed to mint a digital
-                                collectible of the event ticket. The details
-                                seen in the ticket preview will be publicly
-                                accessible if enabled. Digital collectible will
-                                be issued on the Coinbase L2 network (Base,
-                                Ethereum).
-                              </div>
-                              <FormMessage />
-                              </FormItem>
-                            )}
-                          />
                         </div>
                       </div>
-                    </div>
 
-                    <div className="col-12">
-                      <div className="d-flex gap-2">
-                        <button
-                          type="submit"
-                          className="btn btn-primary"
-                          disabled={
-                            createEventMutation.isPending ||
-                            updateEventMutation.isPending ||
-                            (!isEditMode &&
-                              (form.watch("maxTickets") || 100) > creditBalance)
-                          }
-                          data-testid="button-save-event"
-                        >
-                          {createEventMutation.isPending ||
-                          updateEventMutation.isPending
-                            ? "Please hold..."
-                            : !isEditMode
-                              ? (form.watch("maxTickets") || 100) >
-                                creditBalance
-                                ? "Not Enough Credits"
-                                : `Create for -${form.watch("maxTickets") || 100} Credits`
-                              : "Save"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          onClick={() => setLocation("/events")}
-                          data-testid="button-cancel"
-                        >
-                          Cancel
-                        </button>
+                      <div className="col-12">
+                        <div className="d-flex gap-2">
+                          <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={
+                              createEventMutation.isPending ||
+                              updateEventMutation.isPending ||
+                              (!isEditMode &&
+                                (form.watch("maxTickets") || 100) >
+                                  creditBalance)
+                            }
+                            data-testid="button-save-event"
+                          >
+                            {createEventMutation.isPending ||
+                            updateEventMutation.isPending
+                              ? "Please hold..."
+                              : !isEditMode
+                                ? (form.watch("maxTickets") || 100) >
+                                  creditBalance
+                                  ? "Not Enough Credits"
+                                  : `Create for -${form.watch("maxTickets") || 100} Credits`
+                                : "Save"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => setLocation("/events")}
+                            data-testid="button-cancel"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 </form>
               </Form>
             </div>
