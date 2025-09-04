@@ -910,26 +910,11 @@ export default function NerdStats() {
                   <thead>
                     <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
                       <th style={{ 
-                        width: '60px', 
-                        textAlign: 'center',
-                        padding: '12px 8px',
-                        fontWeight: '600',
-                        color: '#495057',
-                        border: '1px solid #dee2e6'
-                      }}>#</th>
-                      <th style={{ 
                         padding: '12px 16px',
                         fontWeight: '600',
                         color: '#495057',
                         border: '1px solid #dee2e6'
                       }}>User</th>
-                      <th style={{ 
-                        textAlign: 'center',
-                        padding: '12px 8px',
-                        fontWeight: '600',
-                        color: '#495057',
-                        border: '1px solid #dee2e6'
-                      }}>Validations</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -960,33 +945,15 @@ export default function NerdStats() {
                             borderBottom: '1px solid #dee2e6'
                           }}>
                             <td style={{ 
-                              textAlign: 'center', 
-                              verticalAlign: 'middle',
-                              padding: '12px 8px',
-                              border: '1px solid #dee2e6'
-                            }}>
-                              {isTop3 ? (
-                                <div style={{ fontSize: '20px' }}>
-                                  {index === 0 && '🥇'}
-                                  {index === 1 && '🥈'}
-                                  {index === 2 && '🥉'}
-                                </div>
-                              ) : (
-                                <span style={{ fontWeight: '600', color: '#6c757d' }}>
-                                  {index + 1}
-                                </span>
-                              )}
-                            </td>
-                            <td style={{ 
                               verticalAlign: 'middle',
                               padding: '12px 16px',
                               border: '1px solid #dee2e6'
                             }}>
                               <div className="d-flex align-items-center gap-2">
                                 <div style={{
-                                  fontSize: '16px',
+                                  fontSize: '18px',
                                   fontWeight: 'bold',
-                                  minWidth: '40px',
+                                  minWidth: '50px',
                                   color: user.percentage !== null && user.percentage >= 80 
                                     ? '#28a745'
                                     : user.percentage !== null && user.percentage >= 50
@@ -999,7 +966,7 @@ export default function NerdStats() {
                                 </div>
                                 <div className="flex-grow-1">
                                   <div className="d-flex align-items-center gap-2">
-                                    <div style={{ fontWeight: '500', color: '#212529' }}>
+                                    <div style={{ fontWeight: '500', color: '#212529', fontSize: '14px' }}>
                                       {user.displayName}
                                     </div>
                                     {reputationInfo.badge === '😎' ? (
@@ -1025,22 +992,12 @@ export default function NerdStats() {
                                 </div>
                               </div>
                             </td>
-                            <td style={{ 
-                              textAlign: 'center', 
-                              verticalAlign: 'middle',
-                              padding: '12px 8px',
-                              border: '1px solid #dee2e6'
-                            }}>
-                              <span style={{ fontWeight: '600', color: '#212529' }}>
-                                {formatNumber(user.validatedCount)}
-                              </span>
-                            </td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr style={{ backgroundColor: '#ffffff' }}>
-                        <td colSpan={3} style={{
+                        <td colSpan={1} style={{
                           textAlign: 'center',
                           padding: '40px 20px',
                           border: '1px solid #dee2e6'
