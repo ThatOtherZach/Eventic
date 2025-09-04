@@ -1217,7 +1217,7 @@ export default function EventForm() {
 
                     <div className="col-md-6">
                       <div className="row">
-                        <div className="col-md-6">
+                        <div className="col-6">
                           <FormField
                             control={form.control}
                             name="timezone"
@@ -1333,7 +1333,7 @@ export default function EventForm() {
                           />
                         </div>
                         
-                        <div className="col-md-6">
+                        <div className="col-6">
                           {/* Rolling Timezone Option */}
                           <FormField
                             control={form.control}
