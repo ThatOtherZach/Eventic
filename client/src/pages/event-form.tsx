@@ -1607,7 +1607,7 @@ export default function EventForm() {
                                   htmlFor="isPrivate"
                                 >
                                   <span className="badge bg-secondary me-2">
-                                    🔒
+                                    🔐
                                   </span>
                                   Private Event
                                 </label>
