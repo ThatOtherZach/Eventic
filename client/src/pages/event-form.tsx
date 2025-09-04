@@ -1246,36 +1246,34 @@ export default function EventForm() {
                                             }
                                           }}
                                         />
-                                        <div className="btn-group ms-2" role="group">
-                                          <button
-                                            type="button"
-                                            className="btn btn-outline-secondary btn-sm"
-                                            onClick={() => {
-                                              const currentValue = field.value || Math.min(creditBalance || 100, 5000);
-                                              if (currentValue > 2) {
-                                                field.onChange(currentValue - 1);
-                                              }
-                                            }}
-                                            disabled={(field.value || Math.min(creditBalance || 100, 5000)) <= 2}
-                                            style={{ padding: '4px 8px', minWidth: '32px' }}
-                                          >
-                                            -
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="btn btn-outline-secondary btn-sm"
-                                            onClick={() => {
-                                              const currentValue = field.value || Math.min(creditBalance || 100, 5000);
-                                              if (currentValue < maxTicketsAllowed) {
-                                                field.onChange(currentValue + 1);
-                                              }
-                                            }}
-                                            disabled={(field.value || Math.min(creditBalance || 100, 5000)) >= maxTicketsAllowed}
-                                            style={{ padding: '4px 8px', minWidth: '32px' }}
-                                          >
-                                            +
-                                          </button>
-                                        </div>
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-secondary btn-sm ms-1"
+                                          onClick={() => {
+                                            const currentValue = parseInt(form.getValues("maxTickets")?.toString() || maxTicketsAllowed.toString());
+                                            if (currentValue > 2) {
+                                              form.setValue("maxTickets", currentValue - 1);
+                                            }
+                                          }}
+                                          disabled={parseInt(form.watch("maxTickets")?.toString() || maxTicketsAllowed.toString()) <= 2}
+                                          style={{ padding: '4px 8px', minWidth: '32px' }}
+                                        >
+                                          -
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-secondary btn-sm ms-1"
+                                          onClick={() => {
+                                            const currentValue = parseInt(form.getValues("maxTickets")?.toString() || maxTicketsAllowed.toString());
+                                            if (currentValue < maxTicketsAllowed) {
+                                              form.setValue("maxTickets", currentValue + 1);
+                                            }
+                                          }}
+                                          disabled={parseInt(form.watch("maxTickets")?.toString() || maxTicketsAllowed.toString()) >= maxTicketsAllowed}
+                                          style={{ padding: '4px 8px', minWidth: '32px' }}
+                                        >
+                                          +
+                                        </button>
                                       </div>
                                     </FormControl>
                                     <div className="form-text">
