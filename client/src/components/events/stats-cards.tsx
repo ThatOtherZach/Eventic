@@ -118,7 +118,7 @@ export function StatsCards() {
               <div 
                 className="p-3"
                 style={{
-                  background: '#f0f0f0',
+                  background: '#c0c0c0',
                   border: '1px inset #c0c0c0',
                   minHeight: '80px'
                 }}
