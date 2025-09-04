@@ -2222,6 +2222,7 @@ export default function EventForm() {
                       </div>
                     </div>
                   </div>
+                </div>
                 </form>
               </Form>
             </div>
