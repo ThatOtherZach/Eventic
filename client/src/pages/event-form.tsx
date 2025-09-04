@@ -1609,7 +1609,7 @@ export default function EventForm() {
                                   <img 
                                     src="/lock-icon.png" 
                                     alt="Private" 
-                                    style={{ width: "16px", height: "16px", marginRight: "8px" }}
+                                    style={{ width: "21px", height: "21px", marginRight: "8px" }}
                                   />
                                   Private Event
                                 </label>
@@ -1655,7 +1655,7 @@ export default function EventForm() {
                                   <img 
                                     src="/limit-sales-icon.png" 
                                     alt="Limit Sales" 
-                                    style={{ width: "16px", height: "16px", marginRight: "8px" }}
+                                    style={{ width: "21px", height: "21px", marginRight: "8px" }}
                                   />
                                   Limit Ticket Sales
                                 </label>
@@ -1690,9 +1690,11 @@ export default function EventForm() {
                                   className="form-check-label"
                                   htmlFor="p2pValidation"
                                 >
-                                  <span className="badge bg-primary me-2">
-                                    🤝
-                                  </span>
+                                  <img 
+                                    src="/p2p-icon.png" 
+                                    alt="P2P" 
+                                    style={{ width: "21px", height: "21px", marginRight: "8px" }}
+                                  />
                                   P2P Validation
                                 </label>
                               </div>
