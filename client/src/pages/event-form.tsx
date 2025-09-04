@@ -1830,7 +1830,7 @@ export default function EventForm() {
                                     </label>
                                   </div>
                                   <div className="form-text">
-                                    Enable geocaching-style validation. Hide a unique URL in the real world for attendees to discover.
+                                    Enable geocaching-style validation. Hide a unique URL in the real world for attendees to discover. Ticket holders can enter the Hunt code on their account page for instant validation.
                                     {form.watch("treasureHunt") && form.watch("huntCode") && (
                                       <div className="mt-2 p-2 bg-light border rounded">
                                         <strong>Your hunt URL:</strong>
@@ -1838,7 +1838,7 @@ export default function EventForm() {
                                         <code className="text-primary">www.eventic.quest/hunt/{form.watch("huntCode")}</code>
                                         <br />
                                         <small className="text-muted">
-                                          Share this URL at the venue or hide it for attendees to find!
+                                          Share this URL at the venue or hide it for attendees to find! They can also enter just the code "{form.watch("huntCode")}" on their account page.
                                         </small>
                                       </div>
                                     )}
