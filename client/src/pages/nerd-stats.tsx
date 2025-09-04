@@ -920,7 +920,7 @@ export default function NerdStats() {
                         fontWeight: '600',
                         color: '#495057',
                         border: '1px solid #dee2e6'
-                      }}>User</th>
+                      }}>Creator</th>
                     </tr>
                   </thead>
                   <tbody>
