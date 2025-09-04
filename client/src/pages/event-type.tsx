@@ -93,7 +93,7 @@ const eventTypeConfig: Record<string, {
   },
   hunt: { 
     label: 'Treasure Hunt Events', 
-    color: '#8B5CF6',
+    color: '#FF6B35',
     imageIcon: '/hunt-icon.png',
     checkField: (e) => !!e.treasureHunt 
   },

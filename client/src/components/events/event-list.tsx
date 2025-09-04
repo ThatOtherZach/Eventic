@@ -346,7 +346,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                           )}
                           {event.treasureHunt && (
                             <div 
-                              style={{ width: '5px', height: '5px', backgroundColor: '#8B5CF6' }}
+                              style={{ width: '5px', height: '5px', backgroundColor: '#FF6B35' }}
                               title="Treasure Hunt"
                             />
                           )}

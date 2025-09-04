@@ -912,7 +912,7 @@ export default function EventDetailPage() {
                   <span
                     className="badge"
                     style={{
-                      backgroundColor: "#8B5CF6",
+                      backgroundColor: "#FF6B35",
                       color: "#fff",
                       cursor: "pointer",
                       display: "inline-flex",

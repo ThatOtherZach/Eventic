@@ -31,7 +31,7 @@ const badgeTypes = [
   { key: 'p2pValidation', color: '#3B82F6', label: 'P2P Validation', searchParam: 'p2p' },
   { key: 'allowMinting', color: '#000000', label: 'Collectable', searchParam: 'collectable' },
   { key: 'geofence', color: '#F59E0B', label: 'Location Lock', searchParam: 'geofenced' },
-  { key: 'treasureHunt', color: '#8B5CF6', label: 'Treasure Hunt', searchParam: 'hunt' },
+  { key: 'treasureHunt', color: '#FF6B35', label: 'Treasure Hunt', searchParam: 'hunt' },
   { key: 'enableVoting', color: '#EAB308', label: 'Voting Enabled', searchParam: 'voting' },
   { key: 'recurringType', color: '#059669', label: 'Recurring', searchParam: 'recurring' },
   { key: 'endDate', color: '#6B7280', label: 'Multi-day', searchParam: 'multiday' },

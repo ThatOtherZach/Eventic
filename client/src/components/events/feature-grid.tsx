@@ -110,7 +110,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({ event }) => {
     },
     {
       enabled: !!event.treasureHunt,
-      color: '#8B5CF6',
+      color: '#FF6B35',
       label: 'Treasure Hunt',
       href: '/type/hunt',
       icon: gpsIcon,
