@@ -1606,9 +1606,11 @@ export default function EventForm() {
                                   className="form-check-label"
                                   htmlFor="isPrivate"
                                 >
-                                  <span className="badge bg-secondary me-2">
-                                    <Lock className="h-4 w-4" />
-                                  </span>
+                                  <img 
+                                    src="/lock-icon.png" 
+                                    alt="Private" 
+                                    style={{ width: "16px", height: "16px", marginRight: "8px" }}
+                                  />
                                   Private Event
                                 </label>
                               </div>
