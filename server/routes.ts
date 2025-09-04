@@ -3121,6 +3121,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventLastRecurrenceCreated: event.lastRecurrenceCreated || null,
         eventTimezone: event.timezone || "America/New_York",
         eventHashtags: event.hashtags || [],
+        eventTreasureHunt: event.treasureHunt || false,
+        eventHuntCode: event.huntCode || null,
         
         // User data preservation
         creatorUsername: creator?.displayName || "unknown",

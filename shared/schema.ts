@@ -426,6 +426,8 @@ export const registryRecords = pgTable("registry_records", {
   eventLastRecurrenceCreated: timestamp("event_last_recurrence_created"), // Last recurrence creation
   eventTimezone: text("event_timezone"), // Event timezone
   eventHashtags: text("event_hashtags").array(), // Hashtags from description
+  eventTreasureHunt: boolean("event_treasure_hunt").default(false), // Hunt feature enabled
+  eventHuntCode: text("event_hunt_code"), // Unique Hunt code (e.g., "BlueTiger")
   
   // User data preservation
   creatorUsername: text("creator_username").notNull(),
