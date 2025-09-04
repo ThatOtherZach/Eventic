@@ -1359,12 +1359,12 @@ export default function EventForm() {
                                 <img 
                                   src="/global-sync-icon.png" 
                                   alt="" 
-                                  width="16" 
-                                  height="16" 
+                                  width="18" 
+                                  height="18" 
                                   className="me-1" 
                                   style={{ verticalAlign: "text-bottom" }}
                                 />
-                                Global Sync Event
+                                Global Sync
                                 {isEditMode && (
                                   <TooltipProvider>
                                     <Tooltip>
