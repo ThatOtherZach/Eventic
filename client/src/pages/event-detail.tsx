@@ -972,7 +972,7 @@ export default function EventDetailPage() {
                     />
                     {event.recurringType === "weekly" && "Weekly Recurring"}
                     {event.recurringType === "monthly" && "Monthly Recurring"}
-                    {event.recurringType === "annually" && "Annual Recurring"}
+                    {event.recurringType === "annually" && "Annual"}
                   </span>
                 </Link>
               )}
