@@ -1289,112 +1289,6 @@ export default function EventForm() {
                       </div>
                     </div>
 
-                    <div className="col-md-6">
-                      <FormField
-                        control={form.control}
-                        name="earlyValidation"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Early Validation</FormLabel>
-                            <FormControl>
-                              <select
-                                {...field}
-                                className="form-control"
-                                data-testid="select-early-validation"
-                              >
-                                <option value="Allow at Anytime">
-                                  Allow at Anytime
-                                </option>
-                                <option value="At Start Time">
-                                  At Start Time
-                                </option>
-                                <option value="One Hour Before">
-                                  One Hour Before
-                                </option>
-                                <option value="Two Hours Before">
-                                  Two Hours Before
-                                </option>
-                              </select>
-                            </FormControl>
-                            <div className="form-text">
-                              When attendees can validate their tickets
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="col-md-6">
-                      <FormField
-                        control={form.control}
-                        name="reentryType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ticket Type</FormLabel>
-                            <FormControl>
-                              <select
-                                {...field}
-                                className="form-control"
-                                data-testid="select-reentry-type"
-                              >
-                                <option value="No Reentry (Single Use)">
-                                  No Reentry (Single Use)
-                                </option>
-                                <option value="Pass (Multiple Use)">
-                                  Pass (Multiple Use)
-                                </option>
-                              </select>
-                            </FormControl>
-                            <div className="form-text">
-                              Single use tickets or multi-use passes
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {form.watch("reentryType") === "Pass (Multiple Use)" && (
-                      <div className="col-12">
-                        <FormField
-                          control={form.control}
-                          name="maxUses"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Number of Uses</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  min="2"
-                                  max="24"
-                                  placeholder="Number of uses (2-24)"
-                                  className="form-control"
-                                  data-testid="input-max-uses"
-                                  value={field.value || 2}
-                                  onChange={(e) => {
-                                    const value = parseInt(e.target.value) || 2;
-                                    if (value < 2) {
-                                      field.onChange(2);
-                                    } else if (value > 24) {
-                                      field.onChange(24);
-                                    } else {
-                                      field.onChange(value);
-                                    }
-                                  }}
-                                />
-                              </FormControl>
-                              <div className="form-text">
-                                How many times the ticket can be used (minimum
-                                2, maximum 24)
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
 
                     {/* Repeat Section - Admin Only */}
                     {user?.email?.endsWith("@saymservices.com") && (
@@ -1528,13 +1422,168 @@ export default function EventForm() {
                       </div>
                     )}
 
-                    {/* Additional Event Options */}
+                    {/* Additional Event Options - Windows 98 Style */}
                     <div className="col-12">
-                      <div className="border rounded p-3 bg-light">
-                        <h6 className="mb-3">Additional Options</h6>
+                      <div
+                        style={{
+                          background: "#c0c0c0",
+                          border: "3px solid",
+                          borderColor: "#ffffff #000000 #000000 #ffffff",
+                          boxShadow: "1px 1px 0 #808080",
+                          marginBottom: "20px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            background:
+                              "linear-gradient(to right, #000080, #1084d0)",
+                            padding: "2px 4px",
+                            marginBottom: "1px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div
+                            className="text-white fw-bold"
+                            style={{
+                              fontSize: "11px",
+                              fontFamily: "Tahoma, sans-serif",
+                            }}
+                          >
+                            Additional Options
+                          </div>
+                          <div
+                            style={{
+                              width: "13px",
+                              height: "11px",
+                              background: "#c0c0c0",
+                              border: "1px solid",
+                              borderColor: "#ffffff #000000 #000000 #ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "9px",
+                              fontWeight: "bold",
+                              lineHeight: "1",
+                              cursor: "pointer",
+                            }}
+                          >
+                            ×
+                          </div>
+                        </div>
+                        <div className="p-3" style={{ background: "#c0c0c0" }}>
+                          <div className="row mb-3">
+                            <div className="col-md-6">
+                              <FormField
+                                control={form.control}
+                                name="earlyValidation"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Early Validation</FormLabel>
+                                    <FormControl>
+                                      <select
+                                        {...field}
+                                        className="form-control"
+                                        data-testid="select-early-validation"
+                                      >
+                                        <option value="Allow at Anytime">
+                                          Allow at Anytime
+                                        </option>
+                                        <option value="At Start Time">
+                                          At Start Time
+                                        </option>
+                                        <option value="One Hour Before">
+                                          One Hour Before
+                                        </option>
+                                        <option value="Two Hours Before">
+                                          Two Hours Before
+                                        </option>
+                                      </select>
+                                    </FormControl>
+                                    <div className="form-text">
+                                      When attendees can validate their tickets
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
 
-                        {/* Private Event Setting - moved to top */}
-                        <FormField
+                            <div className="col-md-6">
+                              <FormField
+                                control={form.control}
+                                name="reentryType"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Ticket Type</FormLabel>
+                                    <FormControl>
+                                      <select
+                                        {...field}
+                                        className="form-control"
+                                        data-testid="select-reentry-type"
+                                      >
+                                        <option value="No Reentry (Single Use)">
+                                          No Reentry (Single Use)
+                                        </option>
+                                        <option value="Pass (Multiple Use)">
+                                          Pass (Multiple Use)
+                                        </option>
+                                      </select>
+                                    </FormControl>
+                                    <div className="form-text">
+                                      Single use tickets or multi-use passes
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            {form.watch("reentryType") === "Pass (Multiple Use)" && (
+                              <div className="col-12">
+                                <FormField
+                                  control={form.control}
+                                  name="maxUses"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Number of Uses</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          {...field}
+                                          type="number"
+                                          min="2"
+                                          max="24"
+                                          placeholder="Number of uses (2-24)"
+                                          className="form-control"
+                                          data-testid="input-max-uses"
+                                          value={field.value || 2}
+                                          onChange={(e) => {
+                                            const value = parseInt(e.target.value) || 2;
+                                            if (value < 2) {
+                                              field.onChange(2);
+                                            } else if (value > 24) {
+                                              field.onChange(24);
+                                            } else {
+                                              field.onChange(value);
+                                            }
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <div className="form-text">
+                                        How many times the ticket can be used (minimum
+                                        2, maximum 24)
+                                      </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Private Event Setting */}
+                          <FormField
                           control={form.control}
                           name="isPrivate"
                           render={({ field }) => (
@@ -1581,11 +1630,11 @@ export default function EventForm() {
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="oneTicketPerUser"
-                          render={({ field }) => (
-                            <FormItem className="mt-3">
+                          <FormField
+                            control={form.control}
+                            name="oneTicketPerUser"
+                            render={({ field }) => (
+                              <FormItem className="mt-3">
                               <div className="form-check">
                                 <input
                                   type="checkbox"
@@ -1616,11 +1665,11 @@ export default function EventForm() {
                           )}
                         />
 
-                        <FormField
-                          control={form.control}
-                          name="p2pValidation"
-                          render={({ field }) => (
-                            <FormItem className="mt-3">
+                          <FormField
+                            control={form.control}
+                            name="p2pValidation"
+                            render={({ field }) => (
+                              <FormItem className="mt-3">
                               <div className="form-check">
                                 <input
                                   type="checkbox"
@@ -2132,9 +2181,10 @@ export default function EventForm() {
                                 Ethereum).
                               </div>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                     </div>
 
