@@ -3,6 +3,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Check, Calendar, Ticket } from "lucide-react";
 import { format } from "date-fns";
+import poweredByImage from "@assets/image_1756973626753.png";
 
 interface ValidatedTicket {
   ticketId: string;
@@ -54,7 +55,7 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
       return (
         <div className="text-center p-3">
           <img 
-            src="/attached_assets/image_1756973626753.png" 
+            src={poweredByImage} 
             alt="" 
             style={{ maxHeight: "32px" }}
           />
