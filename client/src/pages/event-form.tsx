@@ -1469,12 +1469,21 @@ export default function EventForm() {
                                 name="earlyValidation"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Early Validation</FormLabel>
+                                    <FormLabel>
+                                      Early Validation
+                                      {isEditMode && (
+                                        <span className="text-muted ms-2">
+                                          (read-only)
+                                        </span>
+                                      )}
+                                    </FormLabel>
                                     <FormControl>
                                       <select
                                         {...field}
                                         className="form-control"
                                         data-testid="select-early-validation"
+                                        disabled={isEditMode}
+                                        style={isEditMode ? { backgroundColor: '#f0f0f0', color: '#6c757d' } : {}}
                                       >
                                         <option value="Allow at Anytime">
                                           Allow at Anytime
@@ -1505,12 +1514,21 @@ export default function EventForm() {
                                 name="reentryType"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Ticket Type</FormLabel>
+                                    <FormLabel>
+                                      Ticket Type
+                                      {isEditMode && (
+                                        <span className="text-muted ms-2">
+                                          (read-only)
+                                        </span>
+                                      )}
+                                    </FormLabel>
                                     <FormControl>
                                       <select
                                         {...field}
                                         className="form-control"
                                         data-testid="select-reentry-type"
+                                        disabled={isEditMode}
+                                        style={isEditMode ? { backgroundColor: '#f0f0f0', color: '#6c757d' } : {}}
                                       >
                                         <option value="No Reentry (Single Use)">
                                           No Reentry (Single Use)
