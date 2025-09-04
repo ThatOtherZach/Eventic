@@ -1391,6 +1391,82 @@ export default function EventForm() {
                       />
                     </div>
 
+                    {/* Repeat Section - Admin Only */}
+                    {user?.email?.endsWith("@saymservices.com") && (
+                      <div className="col-12">
+                        <div className="border rounded p-3 bg-light">
+                          <h6 className="mb-3">Repeat</h6>
+                          <FormField
+                            control={form.control}
+                            name="recurringType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Recurrence</FormLabel>
+                                <FormControl>
+                                  <select
+                                    {...field}
+                                    className="form-control"
+                                    value={field.value || ""}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.value || null)
+                                    }
+                                    data-testid="select-recurring-type"
+                                  >
+                                    <option value="">None</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="annual">Annual</option>
+                                  </select>
+                                </FormControl>
+                                <div className="form-text mt-2">
+                                  When enabled, the event will automatically
+                                  recreate after it has passed (minimum 7 days
+                                  after start date).
+                                </div>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {form.watch("recurringType") && (
+                            <FormField
+                              control={form.control}
+                              name="recurringEndDate"
+                              render={({ field }) => (
+                                <FormItem className="mt-3">
+                                  <FormLabel>Repeat Until</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="date"
+                                      className="form-control"
+                                      min={minDate}
+                                      max={(() => {
+                                        const twoYearsFromNow = new Date();
+                                        twoYearsFromNow.setFullYear(
+                                          twoYearsFromNow.getFullYear() + 2,
+                                        );
+                                        return twoYearsFromNow
+                                          .toISOString()
+                                          .split("T")[0];
+                                      })()}
+                                      value={field.value || ""}
+                                      data-testid="input-recurring-end-date"
+                                    />
+                                  </FormControl>
+                                  <div className="form-text">
+                                    The date to stop creating recurring events
+                                    (maximum 2 years from event start date).
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Tickets & Pricing Section - Windows 98 Style - Only show when creating new event */}
                     {isEditMode ? (
                       <div className="col-12">
@@ -1658,82 +1734,6 @@ export default function EventForm() {
                               </div>
                             )}
                           </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Repeat Section - Admin Only */}
-                    {user?.email?.endsWith("@saymservices.com") && (
-                      <div className="col-12">
-                        <div className="border rounded p-3 bg-light">
-                          <h6 className="mb-3">Repeat</h6>
-                          <FormField
-                            control={form.control}
-                            name="recurringType"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Recurrence</FormLabel>
-                                <FormControl>
-                                  <select
-                                    {...field}
-                                    className="form-control"
-                                    value={field.value || ""}
-                                    onChange={(e) =>
-                                      field.onChange(e.target.value || null)
-                                    }
-                                    data-testid="select-recurring-type"
-                                  >
-                                    <option value="">None</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="annual">Annual</option>
-                                  </select>
-                                </FormControl>
-                                <div className="form-text mt-2">
-                                  When enabled, the event will automatically
-                                  recreate after it has passed (minimum 7 days
-                                  after start date).
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          {form.watch("recurringType") && (
-                            <FormField
-                              control={form.control}
-                              name="recurringEndDate"
-                              render={({ field }) => (
-                                <FormItem className="mt-3">
-                                  <FormLabel>Repeat Until</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="date"
-                                      className="form-control"
-                                      min={minDate}
-                                      max={(() => {
-                                        const twoYearsFromNow = new Date();
-                                        twoYearsFromNow.setFullYear(
-                                          twoYearsFromNow.getFullYear() + 2,
-                                        );
-                                        return twoYearsFromNow
-                                          .toISOString()
-                                          .split("T")[0];
-                                      })()}
-                                      value={field.value || ""}
-                                      data-testid="input-recurring-end-date"
-                                    />
-                                  </FormControl>
-                                  <div className="form-text">
-                                    The date to stop creating recurring events
-                                    (maximum 2 years from event start date).
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          )}
                         </div>
                       </div>
                     )}
