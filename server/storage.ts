@@ -3765,9 +3765,17 @@ export class DatabaseStorage implements IStorage {
   
   async redeemSecretCode(code: string, userId: string, latitude?: number, longitude?: number): Promise<{ success: boolean; ticketAmount?: number; error?: string; message?: string }> {
     try {
+      // Check if it looks like a Hunt code pattern but doesn't exist
+      const huntPattern = /^[A-Z][a-z]+[A-Z][a-z]+$/;
+      const looksLikeHuntCode = huntPattern.test(code);
+      
       // Validate the code
       const secretCode = await this.validateSecretCode(code);
       if (!secretCode) {
+        // If it looks like a Hunt code but doesn't exist, show hunt-specific message
+        if (looksLikeHuntCode) {
+          return { success: false, error: 'Sorry, it\'s gone :(' };
+        }
         return { success: false, error: 'Invalid or expired code' };
       }
       
@@ -3809,14 +3817,28 @@ export class DatabaseStorage implements IStorage {
           };
         }
         
-        // Get event info for special message
-        let eventInfo = '';
-        if (secretCode.eventId) {
-          const event = await this.getEvent(secretCode.eventId);
-          if (event) {
-            eventInfo = ` for ${event.name}`;
-          }
+        // Get event info and check availability
+        if (!secretCode.eventId) {
+          return { success: false, error: 'Sorry, it\'s gone :(' };
         }
+        
+        const event = await this.getEvent(secretCode.eventId);
+        if (!event) {
+          return { success: false, error: 'Sorry, it\'s gone :(' };
+        }
+        
+        // Check if event has available tickets
+        const existingTickets = await this.getTicketsByEventId(event.id);
+        const ticketsSold = existingTickets.length;
+        const ticketsAvailable = event.maxTickets ? event.maxTickets - ticketsSold : 1;
+        
+        if (ticketsAvailable <= 0) {
+          return { success: false, error: 'Sorry, it\'s gone :(' };
+        }
+        
+        // Check if user already has a ticket for this event
+        const userTickets = await this.getTicketsByEventAndUser(event.id, userId);
+        let ticket = userTickets.length > 0 ? userTickets[0] : null;
         
         // Start transaction
         await db.transaction(async (tx) => {
@@ -3831,19 +3853,52 @@ export class DatabaseStorage implements IStorage {
             .set({ currentUses: (secretCode.currentUses || 0) + 1 })
             .where(eq(secretCodes.id, secretCode.id));
           
-          // Credit user account with tickets
+          // If user doesn't have a ticket, create one (auto-signup!)
+          if (!ticket) {
+            const user = await this.getUser(userId);
+            ticket = await this.createTicket({
+              eventId: event.id,
+              userId: userId,
+              recipientName: user?.displayName || 'Hunt Discoverer',
+              recipientEmail: user?.email || 'unknown@hunt.quest',
+              status: 'validated', // Auto-validate Hunt tickets
+              validatedAt: new Date(),
+              useCount: 1,
+              maxUses: event.maxUses || 1,
+              isGoldenTicket: false,
+              purchasePrice: null, // Free Hunt ticket
+              purchaserEmail: user?.email || null,
+              purchaserIp: null,
+              resellStatus: 'not_for_resale',
+              originalOwnerId: userId,
+              isCharged: false,
+            });
+          } else {
+            // User has ticket, just validate it if not already validated
+            if (ticket.status !== 'validated') {
+              await tx.update(tickets)
+                .set({ 
+                  status: 'validated', 
+                  validatedAt: new Date(),
+                  useCount: (ticket.useCount || 0) + 1
+                })
+                .where(eq(tickets.id, ticket.id));
+            }
+          }
+          
+          // Credit user account with tickets (bonus reward)
           await this.creditUserAccount(
             userId, 
             secretCode.ticketAmount, 
-            `Hunt discovery: ${code}${eventInfo}`,
-            { codeId: secretCode.id, huntLocation: true, distance: Math.round(distance) }
+            `Hunt discovery: ${code} for ${event.name}`,
+            { codeId: secretCode.id, huntLocation: true, distance: Math.round(distance), eventId: event.id }
           );
         });
         
         return { 
           success: true, 
           ticketAmount: secretCode.ticketAmount,
-          message: `🎉 Hunt successful! You discovered the hidden ${code} code${eventInfo} and earned ${secretCode.ticketAmount} tickets!`
+          message: `You found ${event.name} and earned a validated ticket! Nice.`
         };
       }
       
