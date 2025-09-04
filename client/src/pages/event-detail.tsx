@@ -1837,7 +1837,7 @@ export default function EventDetailPage() {
                                 <span>Tickets Sold:</span>
                                 <div className="d-flex align-items-center gap-2">
                                   <span>
-                                    {event.ticketsSold} / {event.maxTickets}
+                                    {event.ticketsSold === 0 ? "Be the first :)" : `${event.ticketsSold} / ${event.maxTickets}`}
                                   </span>
                                   {/* Show +5 button only for event owner with sufficient credits and event hasn't started */}
                                   {isOwner &&
