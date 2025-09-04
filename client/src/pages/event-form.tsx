@@ -1305,79 +1305,21 @@ export default function EventForm() {
                             name="recurringType"
                             render={({ field }) => (
                               <FormItem>
-                                <div className="d-flex gap-3">
-                                  <div className="form-check">
-                                    <input
-                                      type="radio"
-                                      className="form-check-input"
-                                      id="recurring-none"
-                                      name="recurringType"
-                                      checked={!field.value}
-                                      onChange={() => field.onChange(null)}
-                                      data-testid="radio-recurring-none"
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      htmlFor="recurring-none"
-                                    >
-                                      None
-                                    </label>
-                                  </div>
-                                  <div className="form-check">
-                                    <input
-                                      type="radio"
-                                      className="form-check-input"
-                                      id="recurring-weekly"
-                                      name="recurringType"
-                                      value="weekly"
-                                      checked={field.value === "weekly"}
-                                      onChange={() => field.onChange("weekly")}
-                                      data-testid="radio-recurring-weekly"
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      htmlFor="recurring-weekly"
-                                    >
-                                      Weekly
-                                    </label>
-                                  </div>
-                                  <div className="form-check">
-                                    <input
-                                      type="radio"
-                                      className="form-check-input"
-                                      id="recurring-monthly"
-                                      name="recurringType"
-                                      value="monthly"
-                                      checked={field.value === "monthly"}
-                                      onChange={() => field.onChange("monthly")}
-                                      data-testid="radio-recurring-monthly"
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      htmlFor="recurring-monthly"
-                                    >
-                                      Monthly
-                                    </label>
-                                  </div>
-                                  <div className="form-check">
-                                    <input
-                                      type="radio"
-                                      className="form-check-input"
-                                      id="recurring-annual"
-                                      name="recurringType"
-                                      value="annual"
-                                      checked={field.value === "annual"}
-                                      onChange={() => field.onChange("annual")}
-                                      data-testid="radio-recurring-annual"
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      htmlFor="recurring-annual"
-                                    >
-                                      Annual
-                                    </label>
-                                  </div>
-                                </div>
+                                <FormLabel>Recurrence</FormLabel>
+                                <FormControl>
+                                  <select
+                                    {...field}
+                                    className="form-control"
+                                    value={field.value || ""}
+                                    onChange={(e) => field.onChange(e.target.value || null)}
+                                    data-testid="select-recurring-type"
+                                  >
+                                    <option value="">None</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="annual">Annual</option>
+                                  </select>
+                                </FormControl>
                                 <div className="form-text mt-2">
                                   When enabled, the event will automatically
                                   recreate after it has passed (minimum 7 days
