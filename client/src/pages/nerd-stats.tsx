@@ -9,17 +9,17 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from "recharts";
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Users, 
-  Ticket, 
-  Calendar, 
-  Zap, 
-  ChevronLeft, 
-  Activity, 
+import {
+  BarChart3,
+  TrendingUp,
+  Users,
+  Ticket,
+  Calendar,
+  Zap,
+  ChevronLeft,
+  Activity,
   Award,
   DollarSign,
   Gift,
@@ -29,7 +29,7 @@ import {
   Hash,
   ThumbsUp,
   ThumbsDown,
-  Shield
+  Shield,
 } from "lucide-react";
 import starIcon from "@assets/world_star-0_1756849251180.png";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
@@ -50,7 +50,7 @@ import eraseIcon from "@assets/erase_file-1_1756976362158.png";
 import { countries as allCountries } from "@/lib/countries";
 
 export default function NerdStats() {
-  const [selectedCountry, setSelectedCountry] = useState<string>('Global');
+  const [selectedCountry, setSelectedCountry] = useState<string>("Global");
 
   // Fetch various stats
   const { data: stats } = useQuery({
@@ -74,20 +74,27 @@ export default function NerdStats() {
   const { data: analyticsData } = useQuery({
     queryKey: ["/api/analytics/dashboard", selectedCountry],
     queryFn: async () => {
-      const params = selectedCountry && selectedCountry !== 'Global' 
-        ? `?country=${encodeURIComponent(selectedCountry)}` 
-        : '';
-      const response = await apiRequest("GET", `/api/analytics/dashboard${params}`);
+      const params =
+        selectedCountry && selectedCountry !== "Global"
+          ? `?country=${encodeURIComponent(selectedCountry)}`
+          : "";
+      const response = await apiRequest(
+        "GET",
+        `/api/analytics/dashboard${params}`,
+      );
       return response.json();
     },
   });
 
   // Prepare chart data for ticket sales trend (2-day periods)
-  const periodData = analyticsData?.charts?.ticketsByMonth ? 
-    analyticsData.charts.ticketsByMonth.labels.map((label: string, index: number) => ({
-      period: label,
-      tickets: analyticsData.charts.ticketsByMonth.data[index]
-    })) : [];
+  const periodData = analyticsData?.charts?.ticketsByMonth
+    ? analyticsData.charts.ticketsByMonth.labels.map(
+        (label: string, index: number) => ({
+          period: label,
+          tickets: analyticsData.charts.ticketsByMonth.data[index],
+        }),
+      )
+    : [];
 
   const { data: events } = useQuery({
     queryKey: ["/api/events"],
@@ -128,7 +135,7 @@ export default function NerdStats() {
   // Filter events by selected country
   const filteredEvents = useMemo(() => {
     if (!events) return [];
-    if (selectedCountry === 'Global') return events;
+    if (selectedCountry === "Global") return events;
     return events.filter((event: any) => event.country === selectedCountry);
   }, [events, selectedCountry]);
 
@@ -137,46 +144,78 @@ export default function NerdStats() {
     if (!filteredEvents || !stats) return null;
 
     const now = new Date();
-    const activeEvents = filteredEvents.filter((e: any) => new Date(e.date) > now);
-    const pastEvents = filteredEvents.filter((e: any) => new Date(e.date) <= now);
-    
+    const activeEvents = filteredEvents.filter(
+      (e: any) => new Date(e.date) > now,
+    );
+    const pastEvents = filteredEvents.filter(
+      (e: any) => new Date(e.date) <= now,
+    );
+
     // Calculate average tickets per event
-    const avgTicketsPerEvent = filteredEvents.length > 0 
-      ? Math.round(stats.totalTickets / filteredEvents.length * 100) / 100 
-      : 0;
+    const avgTicketsPerEvent =
+      filteredEvents.length > 0
+        ? Math.round((stats.totalTickets / filteredEvents.length) * 100) / 100
+        : 0;
 
     // Calculate validation rate
-    const validationRate = stats.totalTickets > 0 
-      ? Math.round((stats.validatedTickets / stats.totalTickets) * 10000) / 100 
-      : 0;
+    const validationRate =
+      stats.totalTickets > 0
+        ? Math.round((stats.validatedTickets / stats.totalTickets) * 10000) /
+          100
+        : 0;
 
     // Events by day of week
     const dayStats = filteredEvents.reduce((acc: any, event: any) => {
       const day = new Date(event.date).getDay();
-      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day];
+      const dayName = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ][day];
       acc[dayName] = (acc[dayName] || 0) + 1;
       return acc;
     }, {});
 
     // Price statistics
-    const ticketPrices = filteredEvents.map((e: any) => parseFloat(e.ticketPrice)).filter((p: any) => p > 0);
-    const avgPrice = ticketPrices.length > 0 
-      ? Math.round(ticketPrices.reduce((a: number, b: number) => a + b, 0) / ticketPrices.length * 100) / 100
-      : 0;
+    const ticketPrices = filteredEvents
+      .map((e: any) => parseFloat(e.ticketPrice))
+      .filter((p: any) => p > 0);
+    const avgPrice =
+      ticketPrices.length > 0
+        ? Math.round(
+            (ticketPrices.reduce((a: number, b: number) => a + b, 0) /
+              ticketPrices.length) *
+              100,
+          ) / 100
+        : 0;
     const maxPrice = ticketPrices.length > 0 ? Math.max(...ticketPrices) : 0;
     const minPrice = ticketPrices.length > 0 ? Math.min(...ticketPrices) : 0;
 
     // Badge statistics
     const featuredEvents = 0; // Featured events are tracked separately in featuredEvents table
-    const specialEffectsEvents = filteredEvents.filter((e: any) => e.specialEffectsEnabled).length;
-    const locationSpecificEvents = filteredEvents.filter((e: any) => e.geofence).length;
+    const specialEffectsEvents = filteredEvents.filter(
+      (e: any) => e.specialEffectsEnabled,
+    ).length;
+    const locationSpecificEvents = filteredEvents.filter(
+      (e: any) => e.geofence,
+    ).length;
     const p2pEvents = filteredEvents.filter((e: any) => e.p2pValidation).length;
 
     // Ticket economy stats
-    const freeEvents = filteredEvents.filter((e: any) => parseFloat(e.ticketPrice) === 0).length;
-    const paidEvents = filteredEvents.filter((e: any) => parseFloat(e.ticketPrice) > 0).length;
-    const goldenTickets = tickets?.filter((t: any) => t.isGoldenTicket).length || 0;
-    const resaleTickets = tickets?.filter((t: any) => t.resalePrice !== null).length || 0;
+    const freeEvents = filteredEvents.filter(
+      (e: any) => parseFloat(e.ticketPrice) === 0,
+    ).length;
+    const paidEvents = filteredEvents.filter(
+      (e: any) => parseFloat(e.ticketPrice) > 0,
+    ).length;
+    const goldenTickets =
+      tickets?.filter((t: any) => t.isGoldenTicket).length || 0;
+    const resaleTickets =
+      tickets?.filter((t: any) => t.resalePrice !== null).length || 0;
 
     return {
       activeEvents: activeEvents.length,
@@ -208,19 +247,27 @@ export default function NerdStats() {
     return num.toString();
   };
 
-
   return (
     <div className="container py-4">
       {/* Header */}
       <div className="row mb-4">
         <div className="col">
           <div className="d-flex align-items-center gap-3 mb-3">
-            <Link to="/account" className="btn btn-sm btn-outline-secondary" data-testid="link-back-account">
+            <Link
+              to="/account"
+              className="btn btn-sm btn-outline-secondary"
+              data-testid="link-back-account"
+            >
               <ChevronLeft size={16} className="me-1" />
               Back
             </Link>
             <h1 className="h3 fw-bold mb-0 flex-grow-1">
-              <img src={statsIcon} alt="Stats" className="me-2" style={{ width: 28, height: 28, verticalAlign: 'text-bottom' }} />
+              <img
+                src={statsIcon}
+                alt="Stats"
+                className="me-2"
+                style={{ width: 28, height: 28, verticalAlign: "text-bottom" }}
+              />
               Stats for Nerds
             </h1>
           </div>
@@ -232,118 +279,208 @@ export default function NerdStats() {
         <div className="col-12">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="fw-semibold mb-0">
-              <img src={coreMetricsIcon} alt="Numbers & Stuff" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+              <img
+                src={coreMetricsIcon}
+                alt="Numbers & Stuff"
+                className="me-2"
+                style={{ width: 20, height: 20, verticalAlign: "text-bottom" }}
+              />
               Numbers & Stuff
             </h5>
-            <select 
-              className="form-select" 
-              style={{ width: '200px', fontSize: '14px', padding: '4px 8px', height: 'auto' }}
+            <select
+              className="form-select"
+              style={{
+                width: "200px",
+                fontSize: "14px",
+                padding: "4px 8px",
+                height: "auto",
+              }}
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
             >
               <option value="Global">🌍 Global</option>
-              {allCountries.filter(country => countriesWithEvents.has(country)).map(country => (
-                <option key={country} value={country}>{country}</option>
-              ))}
-              <optgroup label="All Countries">
-                {allCountries.filter(country => !countriesWithEvents.has(country)).map(country => (
-                  <option key={country} value={country} style={{ color: '#999' }}>{country}</option>
+              {allCountries
+                .filter((country) => countriesWithEvents.has(country))
+                .map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
                 ))}
+              <optgroup label="All Countries">
+                {allCountries
+                  .filter((country) => !countriesWithEvents.has(country))
+                  .map((country) => (
+                    <option
+                      key={country}
+                      value={country}
+                      style={{ color: "#999" }}
+                    >
+                      {country}
+                    </option>
+                  ))}
               </optgroup>
             </select>
           </div>
           <div className="row g-3">
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Total Events</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Total Events
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={calendarIcon} alt="Calendar" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <img
+                        src={calendarIcon}
+                        alt="Calendar"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{formatNumber(stats?.totalEvents || 0)}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {formatNumber(stats?.totalEvents || 0)}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Total Tickets</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Total Tickets
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-start gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080',
-                      marginTop: '2px'
-                    }}>
-                      <img src={ticketsIcon} alt="Tickets" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                        marginTop: "2px",
+                      }}
+                    >
+                      <img
+                        src={ticketsIcon}
+                        alt="Tickets"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
                     <div>
-                      <div className="h3 fw-bold mb-1" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{formatNumber(stats?.totalTickets || 0)}</div>
-                      <div style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', color: '#000000' }}>
+                      <div
+                        className="h3 fw-bold mb-1"
+                        style={{
+                          fontFamily: "Tahoma, sans-serif",
+                          color: "#000080",
+                        }}
+                      >
+                        {formatNumber(stats?.totalTickets || 0)}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          fontFamily: "Tahoma, sans-serif",
+                          color: "#000000",
+                        }}
+                      >
                         {advancedStats?.avgTicketsPerEvent || 0} avg/event
                       </div>
                     </div>
@@ -352,50 +489,87 @@ export default function NerdStats() {
               </div>
             </div>
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Ticket Demand</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Ticket Demand
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-start gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080',
-                      marginTop: '2px'
-                    }}>
-                      <img src={demandIcon} alt="Demand" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                        marginTop: "2px",
+                      }}
+                    >
+                      <img
+                        src={demandIcon}
+                        alt="Demand"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
                     <div>
-                      <div className="h3 fw-bold mb-1" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{demandData?.demand || 0}</div>
-                      <div style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif', color: '#000000' }}>
+                      <div
+                        className="h3 fw-bold mb-1"
+                        style={{
+                          fontFamily: "Tahoma, sans-serif",
+                          color: "#000080",
+                        }}
+                      >
+                        {demandData?.demand || 0}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          fontFamily: "Tahoma, sans-serif",
+                          color: "#000000",
+                        }}
+                      >
                         Tickets/hour
                       </div>
                     </div>
@@ -404,47 +578,78 @@ export default function NerdStats() {
               </div>
             </div>
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Validation Rate</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Validation Rate
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={checkIcon} alt="Validation" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <img
+                        src={checkIcon}
+                        alt="Validation"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.validationRate || 0}%</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {advancedStats?.validationRate || 0}%
+                    </div>
                   </div>
                 </div>
               </div>
@@ -458,185 +663,309 @@ export default function NerdStats() {
         <div className="col-12">
           <div className="row g-3 mb-3">
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Boosted Events</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Boosted Events
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={starIcon} alt="Star" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <img
+                        src={starIcon}
+                        alt="Star"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.featuredEvents || 0}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {advancedStats?.featuredEvents || 0}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Special Effects</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Special Effects
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={specialEffectsIcon} alt="Special Effects" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <img
+                        src={specialEffectsIcon}
+                        alt="Special Effects"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.specialEffectsEvents || 0}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {advancedStats?.specialEffectsEvents || 0}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>P2P Validation</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    P2P Validation
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={p2pIcon} alt="P2P Validation" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <img
+                        src={p2pIcon}
+                        alt="P2P Validation"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.p2pEvents || 0}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {advancedStats?.p2pEvents || 0}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Location Specific</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Location Specific
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <img src={gpsIcon} alt="Location Specific" style={{ width: 20, height: 20, display: 'block' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <img
+                        src={gpsIcon}
+                        alt="Location Specific"
+                        style={{ width: 20, height: 20, display: "block" }}
+                      />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.locationSpecificEvents || 0}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {advancedStats?.locationSpecificEvents || 0}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -644,139 +973,220 @@ export default function NerdStats() {
           </div>
           <div className="row g-3 mt-2">
             <div className="col-md-4">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Free Events</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Free Events
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <Gift size={20} style={{ color: '#000080' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <Gift size={20} style={{ color: "#000080" }} />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.freeEvents || 0}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {advancedStats?.freeEvents || 0}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-4">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Golden Tickets</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Golden Tickets
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <Award size={20} style={{ color: '#FFD700' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <Award size={20} style={{ color: "#FFD700" }} />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.goldenTickets || 0}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      {advancedStats?.goldenTickets || 0}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="col-md-4">
-              <div className="h-100" style={{ 
-                background: '#c0c0c0',
-                border: '3px solid',
-                borderColor: '#ffffff #000000 #000000 #ffffff',
-                boxShadow: '1px 1px 0 #808080'
-              }}>
-                <div style={{ 
-                  background: 'linear-gradient(to right, #000080, #1084d0)',
-                  padding: '2px 4px',
-                  marginBottom: '1px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Average Price</div>
-                  <div style={{ 
-                    width: '13px', 
-                    height: '11px', 
-                    background: '#c0c0c0',
-                    border: '1px solid',
-                    borderColor: '#ffffff #000000 #000000 #ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '9px',
-                    fontWeight: 'bold',
-                    lineHeight: '1',
-                    cursor: 'pointer'
-                  }}>×</div>
+              <div
+                className="h-100"
+                style={{
+                  background: "#c0c0c0",
+                  border: "3px solid",
+                  borderColor: "#ffffff #000000 #000000 #ffffff",
+                  boxShadow: "1px 1px 0 #808080",
+                }}
+              >
+                <div
+                  style={{
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "2px 4px",
+                    marginBottom: "1px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    className="text-white fw-bold"
+                    style={{
+                      fontSize: "11px",
+                      fontFamily: "Tahoma, sans-serif",
+                    }}
+                  >
+                    Average Price
+                  </div>
+                  <div
+                    style={{
+                      width: "13px",
+                      height: "11px",
+                      background: "#c0c0c0",
+                      border: "1px solid",
+                      borderColor: "#ffffff #000000 #000000 #ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ×
+                  </div>
                 </div>
-                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                <div className="p-3" style={{ background: "#c0c0c0" }}>
                   <div className="d-flex align-items-center gap-3">
-                    <div style={{ 
-                      padding: '4px',
-                      background: '#ffffff',
-                      border: '1px solid',
-                      borderColor: '#808080 #ffffff #ffffff #808080'
-                    }}>
-                      <DollarSign size={20} style={{ color: '#000080' }} />
+                    <div
+                      style={{
+                        padding: "4px",
+                        background: "#ffffff",
+                        border: "1px solid",
+                        borderColor: "#808080 #ffffff #ffffff #808080",
+                      }}
+                    >
+                      <DollarSign size={20} style={{ color: "#000080" }} />
                     </div>
-                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>${(advancedStats?.avgPrice || 0).toFixed(2)}</div>
+                    <div
+                      className="h3 fw-bold mb-0"
+                      style={{
+                        fontFamily: "Tahoma, sans-serif",
+                        color: "#000080",
+                      }}
+                    >
+                      ${(advancedStats?.avgPrice || 0).toFixed(2)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -786,48 +1196,72 @@ export default function NerdStats() {
       </div>
 
       {/* Event Distribution */}
-      {analyticsData?.charts?.eventDistribution && analyticsData.charts.eventDistribution.length > 0 && (
-        <div className="row mb-4">
-          <div className="col-12">
-            <h5 className="fw-semibold mb-3">
-              <img src={distributionIcon} alt="Event Distribution" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
-              Next 7 Days
-            </h5>
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <div className="row g-2">
-                  {analyticsData.charts.eventDistribution.map((item: { date: string; count: number; badges?: any }) => {
-                    const maxCount = 24;
-                    const percentage = (item.count / maxCount) * 100;
-                    
-                    return (
-                      <div key={item.date} className="col">
-                        <div className="text-center">
-                          <div className="text-muted small mb-1">{item.date}</div>
-                          <div className="h5 fw-bold mb-2">{item.count}</div>
-                          <div className="progress" style={{ height: '6px' }}>
-                            <div 
-                              className="progress-bar bg-primary" 
-                              style={{ width: `${percentage}%` }}
-                            />
+      {analyticsData?.charts?.eventDistribution &&
+        analyticsData.charts.eventDistribution.length > 0 && (
+          <div className="row mb-4">
+            <div className="col-12">
+              <h5 className="fw-semibold mb-3">
+                <img
+                  src={distributionIcon}
+                  alt="Event Distribution"
+                  className="me-2"
+                  style={{
+                    width: 20,
+                    height: 20,
+                    verticalAlign: "text-bottom",
+                  }}
+                />
+                Next 7 Days
+              </h5>
+              <div className="card shadow-sm">
+                <div className="card-body">
+                  <div className="row g-2">
+                    {analyticsData.charts.eventDistribution.map(
+                      (item: { date: string; count: number; badges?: any }) => {
+                        const maxCount = 24;
+                        const percentage = (item.count / maxCount) * 100;
+
+                        return (
+                          <div key={item.date} className="col">
+                            <div className="text-center">
+                              <div className="text-muted small mb-1">
+                                {item.date}
+                              </div>
+                              <div className="h5 fw-bold mb-2">
+                                {item.count}
+                              </div>
+                              <div
+                                className="progress"
+                                style={{ height: "6px" }}
+                              >
+                                <div
+                                  className="progress-bar bg-primary"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        );
+                      },
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Ticket Sales Trend and Top Hashtags */}
       {periodData.length > 0 && (
         <div className="row mb-4">
           <div className="col-md-8">
             <h5 className="fw-semibold mb-3">
-              <img src={ticketingTrendsIcon} alt="Ticketing Trends" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+              <img
+                src={ticketingTrendsIcon}
+                alt="Ticketing Trends"
+                className="me-2"
+                style={{ width: 20, height: 20, verticalAlign: "text-bottom" }}
+              />
               Ticketing Trends
             </h5>
             <div className="card shadow-sm">
@@ -835,23 +1269,23 @@ export default function NerdStats() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={periodData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="period" 
+                    <XAxis
+                      dataKey="period"
                       tick={{ fontSize: 12 }}
                       interval="preserveStartEnd"
                     />
                     <YAxis />
-                    <Tooltip 
+                    <Tooltip
                       labelFormatter={(value) => `Period ending: ${value}`}
-                      formatter={(value) => [`${value} tickets`, '2-Day Total']}
+                      formatter={(value) => [`${value} tickets`, "2-Day Total"]}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="tickets" 
-                      stroke="#0d6efd" 
+                    <Line
+                      type="monotone"
+                      dataKey="tickets"
+                      stroke="#0d6efd"
                       strokeWidth={2}
                       dot={false}
-                      activeDot={{ r: 4, fill: '#0d6efd' }}
+                      activeDot={{ r: 4, fill: "#0d6efd" }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -860,31 +1294,60 @@ export default function NerdStats() {
           </div>
           <div className="col-md-4">
             <h5 className="fw-semibold mb-3">
-              <img src={hashtagIcon} alt="Hashtags" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
+              <img
+                src={hashtagIcon}
+                alt="Hashtags"
+                className="me-2"
+                style={{ width: 20, height: 20, verticalAlign: "text-bottom" }}
+              />
               Top 10 Hashtags
             </h5>
             <div className="card shadow-sm">
               <div className="card-body">
-                {analyticsData?.charts?.topHashtags && analyticsData.charts.topHashtags.length > 0 ? (
+                {analyticsData?.charts?.topHashtags &&
+                analyticsData.charts.topHashtags.length > 0 ? (
                   <div className="list-group list-group-flush">
-                    {analyticsData.charts.topHashtags.map((item: { hashtag: string; count: number }, index: number) => {
-                      const rankEmoji = index === 0 ? '🔥' : (index + 1).toString();
-                      const formattedHashtag = item.hashtag.charAt(0).toUpperCase() + item.hashtag.slice(1).toLowerCase();
-                      return (
-                        <div key={item.hashtag} className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                          <div className="d-flex align-items-center">
-                            <span className="me-2" style={{ minWidth: '25px', fontSize: '16px' }}>{rankEmoji}</span>
-                            <Link href={`/hashtag/${encodeURIComponent(item.hashtag)}`} className="text-decoration-none text-primary">
-                              #{formattedHashtag}
-                            </Link>
+                    {analyticsData.charts.topHashtags.map(
+                      (
+                        item: { hashtag: string; count: number },
+                        index: number,
+                      ) => {
+                        const rankEmoji =
+                          index === 0 ? "🔥" : (index + 1).toString();
+                        const formattedHashtag =
+                          item.hashtag.charAt(0).toUpperCase() +
+                          item.hashtag.slice(1).toLowerCase();
+                        return (
+                          <div
+                            key={item.hashtag}
+                            className="d-flex justify-content-between align-items-center py-2 border-bottom"
+                          >
+                            <div className="d-flex align-items-center">
+                              <span
+                                className="me-2"
+                                style={{ minWidth: "25px", fontSize: "16px" }}
+                              >
+                                {rankEmoji}
+                              </span>
+                              <Link
+                                href={`/hashtag/${encodeURIComponent(item.hashtag)}`}
+                                className="text-decoration-none text-primary"
+                              >
+                                #{formattedHashtag}
+                              </Link>
+                            </div>
+                            <span className="badge bg-light text-dark">
+                              {item.count} Events
+                            </span>
                           </div>
-                          <span className="badge bg-light text-dark">{item.count} Events</span>
-                        </div>
-                      );
-                    })}
+                        );
+                      },
+                    )}
                   </div>
                 ) : (
-                  <p className="text-muted text-center mb-0">No hashtags found</p>
+                  <p className="text-muted text-center mb-0">
+                    No hashtags found
+                  </p>
                 )}
               </div>
             </div>
@@ -896,40 +1359,66 @@ export default function NerdStats() {
       <div className="row mt-4">
         <div className="col-12">
           <h4 className="fw-semibold mb-2">
-            <img src={userWorldIcon} alt="Leaderboard" className="me-2" style={{ width: 24, height: 24, verticalAlign: 'text-bottom' }} />
-            Reputation Leaderboard - Top 100 Users
-            {selectedCountry !== 'Global' && ` (${selectedCountry})`}
+            <img
+              src={userWorldIcon}
+              alt="Leaderboard"
+              className="me-2"
+              style={{ width: 24, height: 24, verticalAlign: "text-bottom" }}
+            />
+            Top 100 Leaderboard
+            {selectedCountry !== "Global" && ` (${selectedCountry})`}
           </h4>
-          <div className="mb-3 text-center text-muted small">
-            <img src={eraseIcon} alt="Info" className="me-1" style={{ width: 16, height: 16, verticalAlign: 'text-bottom' }} />
-            Reputations decay every 69 days to keep things fresh and fair
+          <div className="mb-3 text-left text-muted small">
+            <img
+              src={eraseIcon}
+              alt="Info"
+              className="me-1"
+              style={{ width: 16, height: 16, verticalAlign: "text-bottom" }}
+            />
+            Reputations decay every 69 days
           </div>
           <div className="card shadow-sm">
             <div className="card-body p-0">
               <div className="table-responsive">
-                <table className="mb-0" style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontFamily: 'Tahoma, Arial, sans-serif',
-                  fontSize: '13px'
-                }}>
+                <table
+                  className="mb-0"
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontFamily: "Tahoma, Arial, sans-serif",
+                    fontSize: "13px",
+                  }}
+                >
                   <thead>
-                    <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                      <th style={{ 
-                        padding: '12px 16px',
-                        fontWeight: '600',
-                        color: '#495057',
-                        border: '1px solid #dee2e6'
-                      }}>Creator</th>
+                    <tr
+                      style={{
+                        backgroundColor: "#f8f9fa",
+                        borderBottom: "2px solid #dee2e6",
+                      }}
+                    >
+                      <th
+                        style={{
+                          padding: "12px 16px",
+                          fontWeight: "600",
+                          color: "#495057",
+                          border: "1px solid #dee2e6",
+                        }}
+                      >
+                        Creator
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {leaderboard && leaderboard.length > 0 ? (
                       leaderboard.map((user: any, index: number) => {
                         const totalVotes = user.thumbsUp + user.thumbsDown;
-                        const getReputationBadge = (percentage: number | null, thumbsUp: number, thumbsDown: number) => {
+                        const getReputationBadge = (
+                          percentage: number | null,
+                          thumbsUp: number,
+                          thumbsDown: number,
+                        ) => {
                           const total = thumbsUp + thumbsDown;
-                          
+
                           if (total === 0 || percentage === null) {
                             return { badge: "NPC", color: "#28a745" };
                           } else if (percentage >= 1 && percentage <= 49) {
@@ -942,57 +1431,89 @@ export default function NerdStats() {
                             return { badge: "NPC", color: "#28a745" };
                           }
                         };
-                        const reputationInfo = getReputationBadge(user.percentage, user.thumbsUp, user.thumbsDown);
+                        const reputationInfo = getReputationBadge(
+                          user.percentage,
+                          user.thumbsUp,
+                          user.thumbsDown,
+                        );
                         const isTop3 = index < 3;
-                        
+
                         return (
-                          <tr key={user.userId} style={{
-                            backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8f9fa',
-                            borderBottom: '1px solid #dee2e6'
-                          }}>
-                            <td style={{ 
-                              verticalAlign: 'middle',
-                              padding: '12px 16px',
-                              border: '1px solid #dee2e6'
-                            }}>
+                          <tr
+                            key={user.userId}
+                            style={{
+                              backgroundColor:
+                                index % 2 === 0 ? "#ffffff" : "#f8f9fa",
+                              borderBottom: "1px solid #dee2e6",
+                            }}
+                          >
+                            <td
+                              style={{
+                                verticalAlign: "middle",
+                                padding: "12px 16px",
+                                border: "1px solid #dee2e6",
+                              }}
+                            >
                               <div className="d-flex align-items-center gap-2">
-                                <div style={{
-                                  fontSize: '18px',
-                                  fontWeight: 'bold',
-                                  minWidth: '50px',
-                                  color: user.percentage !== null && user.percentage >= 80 
-                                    ? '#28a745'
-                                    : user.percentage !== null && user.percentage >= 50
-                                    ? '#ffc107'
-                                    : user.percentage !== null
-                                    ? '#dc3545'
-                                    : '#6c757d'
-                                }}>
-                                  {user.percentage !== null ? `${user.percentage}%` : ':)'}
+                                <div
+                                  style={{
+                                    fontSize: "18px",
+                                    fontWeight: "bold",
+                                    minWidth: "50px",
+                                    color:
+                                      user.percentage !== null &&
+                                      user.percentage >= 80
+                                        ? "#28a745"
+                                        : user.percentage !== null &&
+                                            user.percentage >= 50
+                                          ? "#ffc107"
+                                          : user.percentage !== null
+                                            ? "#dc3545"
+                                            : "#6c757d",
+                                  }}
+                                >
+                                  {user.percentage !== null
+                                    ? `${user.percentage}%`
+                                    : ":)"}
                                 </div>
                                 <div className="flex-grow-1">
                                   <div className="d-flex align-items-center gap-2">
-                                    <div style={{ fontWeight: '500', color: '#212529', fontSize: '14px' }}>
+                                    <div
+                                      style={{
+                                        fontWeight: "500",
+                                        color: "#212529",
+                                        fontSize: "14px",
+                                      }}
+                                    >
                                       {user.displayName}
                                     </div>
-                                    {reputationInfo.badge === '😎' ? (
-                                      <span style={{ fontSize: '16px' }}>
+                                    {reputationInfo.badge === "😎" ? (
+                                      <span style={{ fontSize: "16px" }}>
                                         {reputationInfo.badge}
                                       </span>
                                     ) : (
-                                      <span style={{
-                                        backgroundColor: reputationInfo.color || '#6c757d',
-                                        color: '#fff',
-                                        fontSize: '10px',
-                                        padding: '2px 6px',
-                                        borderRadius: '2px',
-                                        fontWeight: '500'
-                                      }}>
+                                      <span
+                                        style={{
+                                          backgroundColor:
+                                            reputationInfo.color || "#6c757d",
+                                          color: "#fff",
+                                          fontSize: "10px",
+                                          padding: "2px 6px",
+                                          borderRadius: "2px",
+                                          fontWeight: "500",
+                                        }}
+                                      >
                                         {reputationInfo.badge}
                                       </span>
                                     )}
                                   </div>
-                                  <div style={{ fontSize: '11px', color: '#6c757d', marginTop: '2px' }}>
+                                  <div
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "#6c757d",
+                                      marginTop: "2px",
+                                    }}
+                                  >
                                     {user.memberStatus}
                                   </div>
                                 </div>
@@ -1002,16 +1523,22 @@ export default function NerdStats() {
                         );
                       })
                     ) : (
-                      <tr style={{ backgroundColor: '#ffffff' }}>
-                        <td colSpan={1} style={{
-                          textAlign: 'center',
-                          padding: '40px 20px',
-                          border: '1px solid #dee2e6'
-                        }}>
+                      <tr style={{ backgroundColor: "#ffffff" }}>
+                        <td
+                          colSpan={1}
+                          style={{
+                            textAlign: "center",
+                            padding: "40px 20px",
+                            border: "1px solid #dee2e6",
+                          }}
+                        >
                           <div className="text-muted">
                             <Trophy size={48} className="mb-3 opacity-25" />
-                            <p>No users with reputation yet</p>
-                            <p className="small">Be the first to earn reputation by hosting or rating events!</p>
+                            <p>No creators with reputation yet</p>
+                            <p className="small">
+                              Be the first to earn reputation by creating
+                              events!
+                            </p>
                           </div>
                         </td>
                       </tr>
@@ -1028,7 +1555,6 @@ export default function NerdStats() {
       <div className="text-center mt-5 pt-4 border-top">
         <p className="text-muted small">Designed by Saym Services Inc.</p>
       </div>
-
     </div>
   );
 }
