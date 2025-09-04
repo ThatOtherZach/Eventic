@@ -758,242 +758,30 @@ export default function EventForm() {
                       />
                     </div>
 
-                    {/* Place and Time Section for Edit Mode */}
-                    {isEditMode ? (
-                      <div className="col-12">
-                        <div
-                          style={{
-                            background: "#c0c0c0",
-                            border: "3px solid",
-                            borderColor: "#ffffff #000000 #000000 #ffffff",
-                            boxShadow: "1px 1px 0 #808080",
-                            marginBottom: "20px",
-                          }}
-                        >
-                          <div
-                            style={{
-                              background:
-                                "linear-gradient(to right, #000080, #1084d0)",
-                              padding: "2px 4px",
-                              marginBottom: "1px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <div
-                              style={{
-                                color: "white",
-                                fontWeight: "bold",
-                                fontSize: "14px",
-                                fontFamily: '"MS Sans Serif", Geneva, sans-serif',
-                                display: "flex",
-                                alignItems: "center",
-                              }}
-                            >
-                              <MapPin size={16} className="me-1" />
-                              Place and Time
-                            </div>
-                          </div>
-                          <div style={{ padding: "12px", background: "#c0c0c0" }}>
-                            <div className="row">
-                              <div className="col-md-6">
-                                {/* Timezone at the top */}
-                                <FormField
-                                  control={form.control}
-                                  name="timezone"
-                                  render={({ field }) => (
-                                    <FormItem className="mb-3">
-                                      <FormLabel>Timezone</FormLabel>
-                                      <FormControl>
-                                        <select
-                                          className="form-select"
-                                          data-testid="select-timezone"
-                                          value={field.value || "America/New_York"}
-                                          onChange={(e) => field.onChange(e.target.value)}
-                                        >
-                                          <optgroup label="US & Canada">
-                                            <option value="America/New_York">
-                                              Eastern Time (ET)
-                                            </option>
-                                            <option value="America/Chicago">
-                                              Central Time (CT)
-                                            </option>
-                                            <option value="America/Denver">
-                                              Mountain Time (MT)
-                                            </option>
-                                            <option value="America/Phoenix">
-                                              Arizona Time (MST)
-                                            </option>
-                                            <option value="America/Los_Angeles">
-                                              Pacific Time (PT)
-                                            </option>
-                                            <option value="America/Anchorage">
-                                              Alaska Time (AKT)
-                                            </option>
-                                            <option value="Pacific/Honolulu">
-                                              Hawaii Time (HST)
-                                            </option>
-                                          </optgroup>
-                                          <optgroup label="Europe">
-                                            <option value="Europe/London">
-                                              London (GMT/BST)
-                                            </option>
-                                            <option value="Europe/Paris">
-                                              Paris (CET)
-                                            </option>
-                                            <option value="Europe/Berlin">
-                                              Berlin (CET)
-                                            </option>
-                                            <option value="Europe/Moscow">
-                                              Moscow (MSK)
-                                            </option>
-                                          </optgroup>
-                                          <optgroup label="Asia">
-                                            <option value="Asia/Tokyo">
-                                              Tokyo (JST)
-                                            </option>
-                                            <option value="Asia/Shanghai">
-                                              Shanghai (CST)
-                                            </option>
-                                            <option value="Asia/Hong_Kong">
-                                              Hong Kong (HKT)
-                                            </option>
-                                            <option value="Asia/Singapore">
-                                              Singapore (SGT)
-                                            </option>
-                                            <option value="Asia/Dubai">
-                                              Dubai (GST)
-                                            </option>
-                                            <option value="Asia/Kolkata">
-                                              India (IST)
-                                            </option>
-                                          </optgroup>
-                                          <optgroup label="Australia & Pacific">
-                                            <option value="Australia/Sydney">
-                                              Sydney (AEDT)
-                                            </option>
-                                            <option value="Australia/Melbourne">
-                                              Melbourne (AEDT)
-                                            </option>
-                                            <option value="Pacific/Auckland">
-                                              Auckland (NZDT)
-                                            </option>
-                                          </optgroup>
-                                          <optgroup label="Other">
-                                            <option value="UTC">UTC</option>
-                                          </optgroup>
-                                        </select>
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                
-                                {/* Read-only date/time fields */}
-                                <div className="mb-2">
-                                  <strong>Starts on:</strong>
-                                  <div className="text-muted">
-                                    {form.watch("date") ? new Date(form.watch("date") + "T00:00:00").toLocaleDateString('en-US', { 
-                                      weekday: 'long', 
-                                      year: 'numeric', 
-                                      month: 'long', 
-                                      day: 'numeric' 
-                                    }) : "Not set"}
-                                  </div>
-                                </div>
-                                
-                                <div className="mb-2">
-                                  <strong>Start Time:</strong>
-                                  <div className="text-muted">
-                                    {form.watch("time") || "Not set"}
-                                  </div>
-                                </div>
-                                
-                                {form.watch("endDate") && (
-                                  <div className="mb-2">
-                                    <strong>Ends on:</strong>
-                                    <div className="text-muted">
-                                      {new Date(form.watch("endDate") + "T00:00:00").toLocaleDateString('en-US', { 
-                                        weekday: 'long', 
-                                        year: 'numeric', 
-                                        month: 'long', 
-                                        day: 'numeric' 
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                {form.watch("endTime") && (
-                                  <div className="mb-2">
-                                    <strong>End Time:</strong>
-                                    <div className="text-muted">
-                                      {form.watch("endTime")}
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                {(latitude && longitude) && (
-                                  <div className="mb-2">
-                                    <strong>GPS Coordinates:</strong>
-                                    <div className="text-muted">
-                                      {latitude.toFixed(6)}, {longitude.toFixed(6)}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Small static map on the right */}
-                              <div className="col-md-6">
-                                {latitude && longitude && (
-                                  <div>
-                                    <div className="mb-2">
-                                      <strong>Event Location</strong>
-                                    </div>
-                                    <div style={{ pointerEvents: 'none', opacity: 0.8 }}>
-                                      <LocationPicker
-                                        latitude={latitude}
-                                        longitude={longitude}
-                                        onLocationSelect={() => {}}
-                                        height="250px"
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    {/* Interactive Map for Location Selection */}
+                    <div className="col-12 mt-3">
+                      <div className="mb-2">
+                        <label className="form-label">Map</label>
                       </div>
-                    ) : (
-                      <>
-                        {/* Interactive Map for Location Selection (Create Mode) */}
-                        <div className="col-12 mt-3">
-                          <div className="mb-2">
-                            <label className="form-label">Map</label>
-                          </div>
-                          <LocationPicker
-                            latitude={latitude}
-                            longitude={longitude}
-                            onLocationSelect={(lat, lng) => {
-                              setLatitude(lat);
-                              setLongitude(lng);
-                            }}
-                            height="300px"
-                          />
-                          {latitude && longitude && (
-                            <div className="mt-2">
-                              <small className="text-muted">
-                                Location set: {latitude.toFixed(6)},{" "}
-                                {longitude.toFixed(6)}
-                              </small>
-                            </div>
-                          )}
+                      <LocationPicker
+                        latitude={latitude}
+                        longitude={longitude}
+                        onLocationSelect={(lat, lng) => {
+                          setLatitude(lat);
+                          setLongitude(lng);
+                        }}
+                        height="300px"
+                      />
+                      {latitude && longitude && (
+                        <div className="mt-2">
+                          <small className="text-muted">
+                            Location set: {latitude.toFixed(6)},{" "}
+                            {longitude.toFixed(6)}
+                          </small>
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
 
-                    {/* Date/Time fields */}
                     <div className="col-md-6">
                       <FormField
                         control={form.control}
