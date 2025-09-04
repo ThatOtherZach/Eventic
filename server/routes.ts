@@ -3943,10 +3943,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const now = new Date();
       const hoursSinceEnd = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60);
       
-      // Check if event has ended and if we're within the 24-hour rating window
-      if (hoursSinceEnd < 0) {
-        return res.status(400).json({ message: "Cannot rate event before it has ended" });
-      }
       if (hoursSinceEnd > 24) {
         return res.status(400).json({ message: "Rating period has ended (24 hours after event ends)" });
       }
@@ -4059,8 +4055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const eventEnd = new Date(eventEndDateTime);
       const now = new Date();
       const hoursSinceEnd = (now.getTime() - eventEnd.getTime()) / (1000 * 60 * 60);
-      // Only allow rating if event has ended (hoursSinceEnd >= 0) AND within 24 hours
-      const canRate = hoursSinceEnd >= 0 && hoursSinceEnd <= 24;
+      const canRate = hoursSinceEnd <= 24;
       
       // Get user's existing rating if any
       const existingRating = await storage.getUserEventRating(userId, ticket.eventId);
