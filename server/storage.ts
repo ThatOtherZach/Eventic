@@ -1807,50 +1807,11 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      // Process refunds for unvalidated tickets before archiving
+      // No refunds for unvalidated tickets - all tickets spent for an event are consumed permanently
+      // This creates true economic scarcity and commitment to events
       const unvalidatedTickets = eventTickets.filter(ticket => !ticket.isValidated);
       if (unvalidatedTickets.length > 0) {
-        console.log(`[ARCHIVE] Processing ${unvalidatedTickets.length} refunds for unvalidated tickets`);
-        
-        // Group unvalidated tickets by user for batch refunds
-        const refundsByUser = new Map<string, number>();
-        for (const ticket of unvalidatedTickets) {
-          if (ticket.userId && ticket.purchasePrice) {
-            const price = parseFloat(ticket.purchasePrice);
-            if (price > 0) {
-              const currentTotal = refundsByUser.get(ticket.userId) || 0;
-              refundsByUser.set(ticket.userId, currentTotal + price);
-            }
-          }
-        }
-        
-        // Process refunds for each user
-        for (const [userId, refundAmount] of Array.from(refundsByUser.entries())) {
-          try {
-            // Currency account should exist from initial purchase
-            
-            // Create refund transaction
-            await this.createLedgerTransaction({
-              transactionType: 'TICKET_REFUND',
-              description: `Refund for unvalidated tickets - Event: ${event.name} (archived)`,
-              debits: [{ accountId: 'system_revenue', accountType: 'system', amount: refundAmount }],
-              credits: [{ accountId: userId, accountType: 'user', amount: refundAmount }],
-              metadata: {
-                eventId: event.id,
-                eventName: event.name,
-                reason: 'event_archived',
-                ticketCount: unvalidatedTickets.filter(t => t.userId === userId).length,
-              },
-              relatedEntityId: eventId,
-              relatedEntityType: 'event',
-              createdBy: 'system',
-            });
-            
-            console.log(`[ARCHIVE] Refunded ${refundAmount} Tickets to user ${userId} for event ${event.name}`);
-          } catch (error) {
-            console.error(`[ARCHIVE] Failed to refund user ${userId}:`, error);
-          }
-        }
+        console.log(`[ARCHIVE] ${unvalidatedTickets.length} unvalidated tickets will be permanently removed (no refunds)`);
       }
 
       // Archive the event for each ticket holder (attendees)
