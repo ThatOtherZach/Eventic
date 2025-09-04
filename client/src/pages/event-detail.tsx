@@ -1266,11 +1266,9 @@ export default function EventDetailPage() {
                   onClick={() => {
                     let searchQuery = "";
 
-                    // Use GPS coordinates if available
-                    if (event.latitude && event.longitude) {
-                      searchQuery = `${event.latitude},${event.longitude}`;
-                    } else {
-                      // Fall back to city and country from venue
+                    // For Hunt events, never use GPS coordinates - only use general venue info
+                    if (event.treasureHunt || !event.latitude || !event.longitude) {
+                      // Use city and country from venue
                       const venueParts = event.venue
                         .split(",")
                         .map((part) => part.trim());
@@ -1288,6 +1286,9 @@ export default function EventDetailPage() {
                         // Last resort: use the full venue string
                         searchQuery = encodeURIComponent(event.venue);
                       }
+                    } else {
+                      // For non-Hunt events, use GPS coordinates if available
+                      searchQuery = `${event.latitude},${event.longitude}`;
                     }
 
                     window.open(
@@ -1312,8 +1313,8 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Venue Location Map - Only for signed-in users */}
-          {user && event.latitude && event.longitude && (
+          {/* Venue Location Map - Only for signed-in users and non-Hunt events */}
+          {user && event.latitude && event.longitude && !event.treasureHunt && (
             <div className="mb-4">
               <h5>Map</h5>
               <LocationPicker
