@@ -1211,7 +1211,7 @@ export default function EventForm() {
                                         {...field}
                                         type="number"
                                         min="1"
-                                        max="5000"
+                                        max="4999"
                                         placeholder="Enter number of tickets"
                                         className="form-control"
                                         data-testid="input-max-tickets"
