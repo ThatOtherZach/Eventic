@@ -789,7 +789,7 @@ export default function NerdStats() {
           <div className="col-12">
             <h5 className="fw-semibold mb-3">
               <img src={distributionIcon} alt="Event Distribution" className="me-2" style={{ width: 20, height: 20, verticalAlign: 'text-bottom' }} />
-              Next 10 Days
+              Next 7 Days
             </h5>
             <div className="card shadow-sm">
               <div className="card-body">
