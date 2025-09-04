@@ -54,13 +54,13 @@ export default function EventForm() {
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = user?.email?.endsWith("@saymservices.com") || false;
-  
+
   // Get user's credit balance
   const { data: userBalance } = useQuery<{ balance: string }>({
     queryKey: ["/api/currency/balance"],
     enabled: !!user,
   });
-  
+
   const creditBalance = userBalance ? parseFloat(userBalance.balance) : 0;
   const maxTicketsAllowed = Math.min(creditBalance, 5000);
 
@@ -321,7 +321,8 @@ export default function EventForm() {
       const eventDate = new Date(`${data.date}T${data.time}`);
 
       if (eventDate < threeHoursFromNow) {
-        const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        const hoursUntilEvent =
+          (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
         if (hoursUntilEvent < 0) {
           form.setError("time", {
             type: "manual",
@@ -814,22 +815,29 @@ export default function EventForm() {
                                   field.onChange(e);
                                   // Clear any existing date/time errors when user changes the time
                                   form.clearErrors(["date", "time"]);
-                                  
+
                                   // Validate 3-hour rule if both date and time are set
                                   const dateValue = form.getValues("date");
                                   const timeValue = e.target.value;
-                                  
+
                                   if (dateValue && timeValue && !isEditMode) {
-                                    const eventDate = new Date(`${dateValue}T${timeValue}`);
+                                    const eventDate = new Date(
+                                      `${dateValue}T${timeValue}`,
+                                    );
                                     const now = new Date();
-                                    const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-                                    
+                                    const threeHoursFromNow = new Date(
+                                      now.getTime() + 3 * 60 * 60 * 1000,
+                                    );
+
                                     if (eventDate < threeHoursFromNow) {
-                                      const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+                                      const hoursUntilEvent =
+                                        (eventDate.getTime() - now.getTime()) /
+                                        (1000 * 60 * 60);
                                       if (hoursUntilEvent < 0) {
                                         form.setError("time", {
                                           type: "manual",
-                                          message: "Event cannot be scheduled in the past",
+                                          message:
+                                            "Event cannot be scheduled in the past",
                                         });
                                       } else {
                                         form.setError("time", {
@@ -843,32 +851,47 @@ export default function EventForm() {
                               />
                             </FormControl>
                             {/* Show validation status when both date and time are selected */}
-                            {form.watch("date") && form.watch("time") && !isEditMode && (() => {
-                              const dateValue = form.watch("date");
-                              const timeValue = form.watch("time");
-                              if (!dateValue || !timeValue) return null;
-                              
-                              const eventDate = new Date(`${dateValue}T${timeValue}`);
-                              const now = new Date();
-                              const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-                              
-                              if (hoursUntilEvent >= 3) {
-                                return (
-                                  <div className="text-success small mt-1">
-                                    <Clock size={14} className="d-inline me-1" />
-                                    Event starts in {hoursUntilEvent.toFixed(1)} hours ✓
-                                  </div>
+                            {form.watch("date") &&
+                              form.watch("time") &&
+                              !isEditMode &&
+                              (() => {
+                                const dateValue = form.watch("date");
+                                const timeValue = form.watch("time");
+                                if (!dateValue || !timeValue) return null;
+
+                                const eventDate = new Date(
+                                  `${dateValue}T${timeValue}`,
                                 );
-                              } else if (hoursUntilEvent >= 0) {
-                                return (
-                                  <div className="text-warning small mt-1">
-                                    <Clock size={14} className="d-inline me-1" />
-                                    Too soon: {hoursUntilEvent.toFixed(1)} hours (minimum 3 hours required)
-                                  </div>
-                                );
-                              }
-                              return null;
-                            })()}
+                                const now = new Date();
+                                const hoursUntilEvent =
+                                  (eventDate.getTime() - now.getTime()) /
+                                  (1000 * 60 * 60);
+
+                                if (hoursUntilEvent >= 3) {
+                                  return (
+                                    <div className="text-success small mt-1">
+                                      <Clock
+                                        size={14}
+                                        className="d-inline me-1"
+                                      />
+                                      Event starts in{" "}
+                                      {hoursUntilEvent.toFixed(1)} hours ✓
+                                    </div>
+                                  );
+                                } else if (hoursUntilEvent >= 0) {
+                                  return (
+                                    <div className="text-warning small mt-1">
+                                      <Clock
+                                        size={14}
+                                        className="d-inline me-1"
+                                      />
+                                      Too soon: {hoursUntilEvent.toFixed(1)}{" "}
+                                      hours (minimum 3 hours required)
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1023,222 +1046,200 @@ export default function EventForm() {
 
                     {/* Tickets & Pricing Section - Windows 98 Style */}
                     <div className="col-12">
-                      <div style={{
-                        background: '#c0c0c0',
-                        border: '3px solid',
-                        borderColor: '#ffffff #000000 #000000 #ffffff',
-                        boxShadow: '1px 1px 0 #808080',
-                        marginBottom: '20px'
-                      }}>
-                        <div style={{
-                          background: 'linear-gradient(to right, #000080, #1084d0)',
-                          padding: '2px 4px',
-                          marginBottom: '1px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between'
-                        }}>
-                          <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Tickets & Pricing</div>
-                          <div style={{
-                            width: '13px',
-                            height: '11px',
-                            background: '#c0c0c0',
-                            border: '1px solid',
-                            borderColor: '#ffffff #000000 #000000 #ffffff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '9px',
-                            fontWeight: 'bold',
-                            lineHeight: '1',
-                            cursor: 'pointer'
-                          }}>×</div>
+                      <div
+                        style={{
+                          background: "#c0c0c0",
+                          border: "3px solid",
+                          borderColor: "#ffffff #000000 #000000 #ffffff",
+                          boxShadow: "1px 1px 0 #808080",
+                          marginBottom: "20px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            background:
+                              "linear-gradient(to right, #000080, #1084d0)",
+                            padding: "2px 4px",
+                            marginBottom: "1px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div
+                            className="text-white fw-bold"
+                            style={{
+                              fontSize: "11px",
+                              fontFamily: "Tahoma, sans-serif",
+                            }}
+                          >
+                            Tickets & Pricing
+                          </div>
+                          <div
+                            style={{
+                              width: "13px",
+                              height: "11px",
+                              background: "#c0c0c0",
+                              border: "1px solid",
+                              borderColor: "#ffffff #000000 #000000 #ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "9px",
+                              fontWeight: "bold",
+                              lineHeight: "1",
+                              cursor: "pointer",
+                            }}
+                          >
+                            ×
+                          </div>
                         </div>
-                        <div className="p-3" style={{ background: '#c0c0c0' }}>
+                        <div className="p-3" style={{ background: "#c0c0c0" }}>
                           <div className="row">
-                          <div className="col-md-6">
-                            <FormField
-                              control={form.control}
-                              name="ticketPrice"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Ticket Price ($)</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="number"
-                                      step="0.01"
-                                      min="0"
-                                      placeholder="0.00"
-                                      className="form-control"
-                                      data-testid="input-price"
-                                      onChange={(e) => {
-                                        field.onChange(e);
-                                        // Clear surge pricing error if price meets requirement
-                                        const surgePricing =
-                                          form.getValues("surgePricing");
-                                        if (surgePricing) {
-                                          const ticketPrice = parseFloat(
-                                            e.target.value || "0",
-                                          );
-                                          if (ticketPrice >= 1.0) {
-                                            form.clearErrors("ticketPrice");
-                                          } else {
-                                            form.setError("ticketPrice", {
-                                              type: "manual",
-                                              message:
-                                                "Ticket price must be at least $1.00 for surge pricing",
-                                            });
-                                          }
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="surgePricing"
-                              render={({ field }) => (
-                                <FormItem className="mt-3">
-                                  <div className="form-check">
+                            <div className="col-md-6">
+                              <FormField
+                                control={form.control}
+                                name="ticketPrice"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Ticket Price ($)</FormLabel>
                                     <FormControl>
-                                      <input
-                                        type="checkbox"
-                                        checked={field.value}
+                                      <Input
+                                        {...field}
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="0.00"
+                                        className="form-control"
+                                        data-testid="input-price"
                                         onChange={(e) => {
                                           field.onChange(e);
-                                          // Validate ticket price when enabling surge pricing
-                                          if (e.target.checked) {
+                                          // Clear surge pricing error if price meets requirement
+                                          const surgePricing =
+                                            form.getValues("surgePricing");
+                                          if (surgePricing) {
                                             const ticketPrice = parseFloat(
-                                              form.getValues("ticketPrice") ||
-                                                "0",
+                                              e.target.value || "0",
                                             );
-                                            if (ticketPrice < 1.0) {
+                                            if (ticketPrice >= 1.0) {
+                                              form.clearErrors("ticketPrice");
+                                            } else {
                                               form.setError("ticketPrice", {
                                                 type: "manual",
                                                 message:
                                                   "Ticket price must be at least $1.00 for surge pricing",
                                               });
                                             }
-                                          } else {
-                                            // Clear the error when disabling surge pricing
-                                            form.clearErrors("ticketPrice");
                                           }
                                         }}
-                                        className="form-check-input"
-                                        id="surgePricingCheck"
-                                        data-testid="checkbox-surge-pricing"
                                       />
                                     </FormControl>
-                                    <label
-                                      className="form-check-label"
-                                      htmlFor="surgePricingCheck"
-                                    >
-                                      <strong>Surge Pricing</strong>
-                                      <div className="text-muted small">
-                                        Ticket prices increase with demand.
-                                        Minimum $1.00 ticket price.
-                                      </div>
-                                    </label>
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                          <div className="col-md-6">
-                            <FormField
-                              control={form.control}
-                              name="maxTickets"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <FormLabel style={{ cursor: "help" }}>Tickets</FormLabel>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Whose in? Issue tickets here.</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="number"
-                                      min="5"
-                                      max={maxTicketsAllowed}
-                                      placeholder={maxTicketsAllowed.toString()}
-                                      className="form-control"
-                                      data-testid="input-max-tickets"
-                                      value={field.value || ""}
-                                      onChange={(e) => {
-                                        const value = e.target.value;
-                                        if (value === "") {
-                                          field.onChange(Math.min(100, maxTicketsAllowed));
-                                        } else {
-                                          const numValue = parseInt(value);
-                                          if (numValue > maxTicketsAllowed) {
-                                            field.onChange(maxTicketsAllowed);
-                                          } else if (numValue < 5) {
-                                            field.onChange(5);
-                                          } else {
-                                            field.onChange(numValue);
-                                          }
-                                        }
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <div className="form-text">
-                                    maximum 5,000 tickets
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Admin-only Disable Ticket Sales checkbox */}
-                        {isAdmin && (
-                          <div className="row mt-3">
-                            <div className="col-12">
                               <FormField
                                 control={form.control}
-                                name="ticketPurchasesEnabled"
+                                name="surgePricing"
                                 render={({ field }) => (
-                                  <FormItem>
+                                  <FormItem className="mt-3">
                                     <div className="form-check">
-                                      <input
-                                        type="checkbox"
-                                        className="form-check-input"
-                                        id="ticketPurchasesEnabled"
-                                        checked={!field.value}
-                                        onChange={(e) =>
-                                          field.onChange(!e.target.checked)
-                                        }
-                                        data-testid="checkbox-disable-ticket-sales"
-                                      />
+                                      <FormControl>
+                                        <input
+                                          type="checkbox"
+                                          checked={field.value}
+                                          onChange={(e) => {
+                                            field.onChange(e);
+                                            // Validate ticket price when enabling surge pricing
+                                            if (e.target.checked) {
+                                              const ticketPrice = parseFloat(
+                                                form.getValues("ticketPrice") ||
+                                                  "0",
+                                              );
+                                              if (ticketPrice < 1.0) {
+                                                form.setError("ticketPrice", {
+                                                  type: "manual",
+                                                  message:
+                                                    "Ticket price must be at least $1.00 for surge pricing",
+                                                });
+                                              }
+                                            } else {
+                                              // Clear the error when disabling surge pricing
+                                              form.clearErrors("ticketPrice");
+                                            }
+                                          }}
+                                          className="form-check-input"
+                                          id="surgePricingCheck"
+                                          data-testid="checkbox-surge-pricing"
+                                        />
+                                      </FormControl>
                                       <label
                                         className="form-check-label"
-                                        htmlFor="ticketPurchasesEnabled"
+                                        htmlFor="surgePricingCheck"
                                       >
-                                        <span className="badge bg-danger me-2">
-                                          ⚠️
-                                        </span>
-                                        Suspend Event
+                                        <strong>Surge Pricing</strong>
+                                        <div className="text-muted small">
+                                          Ticket prices increase with demand.
+                                          Minimum $1.00 ticket price.
+                                        </div>
                                       </label>
                                     </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            <div className="col-md-6">
+                              <FormField
+                                control={form.control}
+                                name="maxTickets"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <FormLabel style={{ cursor: "help" }}>
+                                            Tickets
+                                          </FormLabel>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Whose in? Issue tickets here.</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        type="number"
+                                        min="5"
+                                        max={maxTicketsAllowed}
+                                        placeholder={maxTicketsAllowed.toString()}
+                                        className="form-control"
+                                        data-testid="input-max-tickets"
+                                        value={field.value || ""}
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          if (value === "") {
+                                            field.onChange(
+                                              Math.min(100, maxTicketsAllowed),
+                                            );
+                                          } else {
+                                            const numValue = parseInt(value);
+                                            if (numValue > maxTicketsAllowed) {
+                                              field.onChange(maxTicketsAllowed);
+                                            } else if (numValue < 5) {
+                                              field.onChange(5);
+                                            } else {
+                                              field.onChange(numValue);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                    </FormControl>
                                     <div className="form-text">
-                                      Suspend this event from public view and
-                                      stop new ticket sales. Existing ticket
-                                      holders can still access and return
-                                      tickets. Admin moderation tool.
+                                      maximum 5,000 tickets
                                     </div>
                                     <FormMessage />
                                   </FormItem>
@@ -1246,7 +1247,50 @@ export default function EventForm() {
                               />
                             </div>
                           </div>
-                        )}
+
+                          {/* Admin-only Disable Ticket Sales checkbox */}
+                          {isAdmin && (
+                            <div className="row mt-3">
+                              <div className="col-12">
+                                <FormField
+                                  control={form.control}
+                                  name="ticketPurchasesEnabled"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <div className="form-check">
+                                        <input
+                                          type="checkbox"
+                                          className="form-check-input"
+                                          id="ticketPurchasesEnabled"
+                                          checked={!field.value}
+                                          onChange={(e) =>
+                                            field.onChange(!e.target.checked)
+                                          }
+                                          data-testid="checkbox-disable-ticket-sales"
+                                        />
+                                        <label
+                                          className="form-check-label"
+                                          htmlFor="ticketPurchasesEnabled"
+                                        >
+                                          <span className="badge bg-danger me-2">
+                                            ⚠️
+                                          </span>
+                                          Suspend Event
+                                        </label>
+                                      </div>
+                                      <div className="form-text">
+                                        Suspend this event from public view and
+                                        stop new ticket sales. Existing ticket
+                                        holders can still access and return
+                                        tickets. Admin moderation tool.
+                                      </div>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2108,17 +2152,20 @@ export default function EventForm() {
                           disabled={
                             createEventMutation.isPending ||
                             updateEventMutation.isPending ||
-                            (!isEditMode && (form.watch("maxTickets") || 100) > creditBalance)
+                            (!isEditMode &&
+                              (form.watch("maxTickets") || 100) > creditBalance)
                           }
                           data-testid="button-save-event"
                         >
-                          {createEventMutation.isPending || updateEventMutation.isPending
-                            ? "Saving..."
+                          {createEventMutation.isPending ||
+                          updateEventMutation.isPending
+                            ? "Please hold..."
                             : !isEditMode
-                            ? (form.watch("maxTickets") || 100) > creditBalance
-                              ? "Not Enough Credits"
-                              : `Create for +${form.watch("maxTickets") || 100} Credits`
-                            : "Save"}
+                              ? (form.watch("maxTickets") || 100) >
+                                creditBalance
+                                ? "Not Enough Credits"
+                                : `Create for -${form.watch("maxTickets") || 100} Credits`
+                              : "Save"}
                         </button>
                         <button
                           type="button"
