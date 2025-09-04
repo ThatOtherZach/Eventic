@@ -790,16 +790,20 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>
                               Starts on <span className="text-danger">*</span>
+                              {isEditMode && (
+                                <span className="text-muted small ms-2">(read-only)</span>
+                              )}
                             </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="date"
-                                className="form-control"
+                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
                                 min={minDate}
                                 max={maxDate}
                                 data-testid="input-date"
                                 readOnly={isEditMode}
+                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
                               />
                             </FormControl>
                             <FormMessage />
@@ -816,14 +820,18 @@ export default function EventForm() {
                           <FormItem>
                             <FormLabel>
                               Start Time <span className="text-danger">*</span>
+                              {isEditMode && (
+                                <span className="text-muted small ms-2">(read-only)</span>
+                              )}
                             </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 type="time"
-                                className="form-control"
+                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
                                 data-testid="input-time"
                                 readOnly={isEditMode}
+                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
                                 onChange={(e) => {
                                   field.onChange(e);
                                   // Clear any existing date/time errors when user changes the time
@@ -917,17 +925,23 @@ export default function EventForm() {
                         name="endDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Ends on</FormLabel>
+                            <FormLabel>
+                              Ends on
+                              {isEditMode && (
+                                <span className="text-muted small ms-2">(read-only)</span>
+                              )}
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 value={field.value || ""}
                                 type="date"
-                                className="form-control"
+                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
                                 min={form.watch("date") || minDate}
                                 max={maxDate}
                                 data-testid="input-end-date"
                                 readOnly={isEditMode}
+                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
                               />
                             </FormControl>
                             <div className="form-text">
@@ -945,15 +959,21 @@ export default function EventForm() {
                         name="endTime"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>End Time</FormLabel>
+                            <FormLabel>
+                              End Time
+                              {isEditMode && (
+                                <span className="text-muted small ms-2">(read-only)</span>
+                              )}
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
                                 value={field.value || ""}
                                 type="time"
-                                className="form-control"
+                                className={`form-control ${isEditMode ? 'bg-light text-muted' : ''}`}
                                 data-testid="input-end-time"
                                 readOnly={isEditMode}
+                                style={isEditMode ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
                               />
                             </FormControl>
                             <div className="form-text">When the event ends</div>
