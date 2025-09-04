@@ -899,7 +899,7 @@ export default function NerdStats() {
             {selectedCountry !== 'Global' && ` (${selectedCountry})`}
           </h4>
           <div className="mb-3 text-center text-muted small">
-            <img src="/attached_assets/image_1756976272916.png" alt="Info" className="me-1" style={{ width: 16, height: 16, verticalAlign: 'text-bottom' }} />
+            <img src="/attached_assets/erase_file-1_1756976362158.png" alt="Info" className="me-1" style={{ width: 16, height: 16, verticalAlign: 'text-bottom' }} />
             Reputations decay every 69 days to keep things fresh and fair
           </div>
           <div className="card shadow-sm">
