@@ -14,6 +14,7 @@ import {
   Shield,
   Users,
   HelpCircle,
+  CheckCircle,
 } from "lucide-react";
 import QRCode from "qrcode";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
@@ -23,6 +24,18 @@ import type { Ticket, Event } from "@shared/schema";
 interface ValidationSession {
   token: string;
   expiresAt: string;
+}
+
+// Helper function to check if event has started (for NFT minting)
+function hasEventStarted(event: Event | undefined): boolean {
+  if (!event) return false;
+  
+  const now = new Date();
+  const startDateTime = `${event.date}T${event.time}:00`;
+  const startDate = new Date(startDateTime);
+  
+  // Check if event has started yet
+  return now >= startDate;
 }
 
 // Helper function to check if a ticket is within its valid time window
@@ -1590,8 +1603,8 @@ export default function TicketViewPage(): React.ReactElement {
           )}
 
 
-          {/* NFT Minting Section */}
-          {ticket.isValidated && event.allowMinting && (
+          {/* NFT Minting Section - Only show after event starts */}
+          {ticket.isValidated && event.allowMinting && hasEventStarted(event) && (
             <div className="card mt-3">
               <div className="card-body">
                 <h5 className="card-title mb-3">

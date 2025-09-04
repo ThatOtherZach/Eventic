@@ -3401,7 +3401,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Allow minting immediately after validation
+      // Check if the event has started
+      const timeCheck = isTicketWithinValidTime(event);
+      if (!timeCheck.valid) {
+        return res.json({
+          canMint: false,
+          alreadyMinted: false,
+          needsValidation: false,
+          eventNotStarted: true,
+          message: timeCheck.message || "Event has not started yet"
+        });
+      }
+
+      // Allow minting only after event has started
       res.json({
         canMint: true,
         alreadyMinted: false,
