@@ -1897,6 +1897,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return R * c; // Distance in meters
   }
 
+  // Hunt validation endpoint
+  app.post('/api/hunt/:huntCode/validate', async (req: AuthenticatedRequest, res) => {
+    try {
+      const { huntCode } = req.params;
+      const { latitude, longitude } = req.body;
+      const userId = req.user?.id;
+      const userEmail = req.user?.email;
+      
+      if (!userId || !userEmail) {
+        return res.status(401).json({ 
+          message: "Login required to validate Hunt URL", 
+          valid: false,
+          requiresAuth: true 
+        });
+      }
+      
+      // Get event by hunt code
+      const event = await storage.getEventByHuntCode(huntCode);
+      if (!event || !event.treasureHunt) {
+        return res.status(404).json({ 
+          message: "Invalid Hunt URL", 
+          valid: false 
+        });
+      }
+      
+      // Check if user has a ticket for this event
+      const tickets = await storage.getTicketsByEventAndUser(event.id, userId);
+      if (tickets.length === 0) {
+        return res.status(403).json({ 
+          message: "You need a ticket for this event to validate the Hunt URL", 
+          valid: false,
+          needsTicket: true,
+          event 
+        });
+      }
+      
+      // Check if location is provided
+      if (!latitude || !longitude) {
+        return res.status(400).json({
+          message: "GPS location required for Hunt validation",
+          valid: false,
+          requiresLocation: true,
+          event
+        });
+      }
+      
+      // Check geofence - Hunt always requires being within the geofence
+      if (event.latitude && event.longitude) {
+        const distance = calculateDistance(
+          Number(event.latitude),
+          Number(event.longitude),
+          latitude,
+          longitude
+        );
+        
+        // Must be within 300 meters
+        if (distance > 300) {
+          return res.status(400).json({
+            message: `You must be within 300 meters of the venue. You are ${Math.round(distance)}m away`,
+            valid: false,
+            outsideGeofence: true,
+            distance: Math.round(distance),
+            event
+          });
+        }
+      }
+      
+      // Check if ticket is within valid time window
+      const timeCheck = isTicketWithinValidTime(event);
+      if (!timeCheck.valid) {
+        return res.status(400).json({
+          message: timeCheck.message,
+          valid: false,
+          outsideValidTime: true,
+          event
+        });
+      }
+      
+      // Find the first non-validated ticket for the user
+      const validTicket = tickets.find(t => !t.isValidated);
+      if (!validTicket) {
+        return res.json({ 
+          message: "All your tickets for this event are already validated", 
+          valid: false,
+          alreadyValidated: true,
+          event
+        });
+      }
+      
+      // Validate the ticket
+      const validatedTicket = await storage.validateTicket(validTicket.id);
+      
+      return res.json({ 
+        message: "Hunt completed! Your ticket has been validated", 
+        valid: true,
+        huntSuccess: true,
+        ticket: validatedTicket,
+        event 
+      });
+    } catch (error) {
+      await logError(error, `POST /api/hunt/${req.params.huntCode}/validate`, {
+        request: req,
+        metadata: { huntCode: req.params.huntCode }
+      });
+      console.error('Hunt validation error:', error);
+      res.status(500).json({ 
+        message: 'Error validating Hunt URL', 
+        valid: false 
+      });
+    }
+  });
+
   // Validation routes
   app.post("/api/validate", validationRateLimiter, async (req: AuthenticatedRequest, res) => {
     try {
@@ -2065,10 +2177,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ticketHolderLng
         );
         
-        // Both must be within 690 meters
-        if (validatorDistance > 690 || ticketHolderDistance > 690) {
+        // Both must be within 300 meters
+        if (validatorDistance > 300 || ticketHolderDistance > 300) {
           return res.status(400).json({
-            message: `Must be within 690 meters of venue to validate. Validator: ${Math.round(validatorDistance)}m away, Ticket holder: ${Math.round(ticketHolderDistance)}m away`,
+            message: `Must be within 300 meters of venue to validate. Validator: ${Math.round(validatorDistance)}m away, Ticket holder: ${Math.round(ticketHolderDistance)}m away`,
             valid: false,
             outsideGeofence: true,
             validatorDistance: Math.round(validatorDistance),
