@@ -1092,7 +1092,7 @@ export default function EventDetailPage() {
                   style={{ width: "18px", height: "18px", marginRight: "8px" }}
                 />
                 <span style={{ fontSize: "0.9rem" }}>
-                  Recurs until {(() => {
+                  Ends {(() => {
                     try {
                       const [year, month, day] = event.recurringEndDate.split("-").map(Number);
                       const endDate = new Date(year, month - 1, day);
