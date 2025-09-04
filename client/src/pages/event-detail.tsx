@@ -1115,7 +1115,14 @@ export default function EventDetailPage() {
               {event.rollingTimezone && (
                 <span className="ms-2">
                   <span className="badge bg-info text-white">
-                    <Globe size={12} className="me-1" />
+                    <img 
+                      src="/global-sync-icon.png" 
+                      alt="" 
+                      width="14" 
+                      height="14" 
+                      className="me-1" 
+                      style={{ display: "inline-block", verticalAlign: "text-bottom" }}
+                    />
                     Global Sync
                   </span>
                 </span>
