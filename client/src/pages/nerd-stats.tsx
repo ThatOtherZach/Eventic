@@ -456,64 +456,326 @@ export default function NerdStats() {
         <div className="col-12">
           <div className="row g-3 mb-3">
             <div className="col-md-3">
-              <div className="card shadow-sm">
-                <div className="card-body text-center">
-                  <img src={starIcon} alt="Star" className="mb-2" style={{ width: 24, height: 24 }} />
-                  <div className="h5 fw-bold mb-1">{advancedStats?.featuredEvents || 0}</div>
-                  <div className="text-muted small">Boosted Events</div>
+              <div className="h-100" style={{ 
+                background: '#c0c0c0',
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Boosted Events</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
+                </div>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={starIcon} alt="Star" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.featuredEvents || 0}</div>
+                  </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="card shadow-sm">
-                <div className="card-body text-center">
-                  <img src={specialEffectsIcon} alt="Special Effects" className="mb-2" style={{ width: 24, height: 24 }} />
-                  <div className="h5 fw-bold mb-1">{advancedStats?.specialEffectsEvents || 0}</div>
-                  <div className="text-muted small">Special Effects</div>
+              <div className="h-100" style={{ 
+                background: '#c0c0c0',
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Special Effects</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
+                </div>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={specialEffectsIcon} alt="Special Effects" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.specialEffectsEvents || 0}</div>
+                  </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="card shadow-sm">
-                <div className="card-body text-center">
-                  <img src={p2pIcon} alt="P2P Validation" className="mb-2" style={{ width: 24, height: 24 }} />
-                  <div className="h5 fw-bold mb-1">{advancedStats?.p2pEvents || 0}</div>
-                  <div className="text-muted small">P2P Validation</div>
+              <div className="h-100" style={{ 
+                background: '#c0c0c0',
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>P2P Validation</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
+                </div>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={p2pIcon} alt="P2P Validation" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.p2pEvents || 0}</div>
+                  </div>
                 </div>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="card shadow-sm">
-                <div className="card-body text-center">
-                  <img src={gpsIcon} alt="Location Specific" className="mb-2" style={{ width: 24, height: 24 }} />
-                  <div className="h5 fw-bold mb-1">{advancedStats?.locationSpecificEvents || 0}</div>
-                  <div className="text-muted small">Location Specific</div>
+              <div className="h-100" style={{ 
+                background: '#c0c0c0',
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Location Specific</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
+                </div>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <img src={gpsIcon} alt="Location Specific" style={{ width: 20, height: 20, display: 'block' }} />
+                    </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.locationSpecificEvents || 0}</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           <div className="row g-3 mt-2">
             <div className="col-md-4">
-              <div className="card shadow-sm bg-primary text-dark border-0">
-                <div className="card-body text-center">
-                  <div className="h4 fw-bold mb-1">{advancedStats?.freeEvents || 0}</div>
-                  <div className="small">Free Events</div>
+              <div className="h-100" style={{ 
+                background: '#c0c0c0',
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Free Events</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
+                </div>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <Gift size={20} style={{ color: '#000080' }} />
+                    </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.freeEvents || 0}</div>
+                  </div>
                 </div>
               </div>
             </div>
             <div className="col-md-4">
-              <div className="card shadow-sm bg-warning text-dark border-0">
-                <div className="card-body text-center">
-                  <div className="h4 fw-bold mb-1">{advancedStats?.goldenTickets || 0}</div>
-                  <div className="small">Golden Tickets</div>
+              <div className="h-100" style={{ 
+                background: '#c0c0c0',
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Golden Tickets</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
+                </div>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <Award size={20} style={{ color: '#FFD700' }} />
+                    </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>{advancedStats?.goldenTickets || 0}</div>
+                  </div>
                 </div>
               </div>
             </div>
             <div className="col-md-4">
-              <div className="card shadow-sm bg-success text-dark border-0">
-                <div className="card-body text-center">
-                  <div className="h4 fw-bold mb-1">${(advancedStats?.avgPrice || 0).toFixed(2)}</div>
-                  <div className="small">Average Price</div>
+              <div className="h-100" style={{ 
+                background: '#c0c0c0',
+                border: '3px solid',
+                borderColor: '#ffffff #000000 #000000 #ffffff',
+                boxShadow: '1px 1px 0 #808080'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(to right, #000080, #1084d0)',
+                  padding: '2px 4px',
+                  marginBottom: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div className="text-white fw-bold" style={{ fontSize: '11px', fontFamily: 'Tahoma, sans-serif' }}>Average Price</div>
+                  <div style={{ 
+                    width: '13px', 
+                    height: '11px', 
+                    background: '#c0c0c0',
+                    border: '1px solid',
+                    borderColor: '#ffffff #000000 #000000 #ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '9px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    cursor: 'pointer'
+                  }}>×</div>
+                </div>
+                <div className="p-3" style={{ background: '#c0c0c0' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ 
+                      padding: '4px',
+                      background: '#ffffff',
+                      border: '1px solid',
+                      borderColor: '#808080 #ffffff #ffffff #808080'
+                    }}>
+                      <DollarSign size={20} style={{ color: '#000080' }} />
+                    </div>
+                    <div className="h3 fw-bold mb-0" style={{ fontFamily: 'Tahoma, sans-serif', color: '#000080' }}>${(advancedStats?.avgPrice || 0).toFixed(2)}</div>
+                  </div>
                 </div>
               </div>
             </div>
