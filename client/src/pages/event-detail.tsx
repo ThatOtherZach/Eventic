@@ -1087,9 +1087,9 @@ export default function EventDetailPage() {
             {event.recurringType && event.recurringEndDate && (
               <div className="d-flex align-items-center text-muted mb-2">
                 <img
-                  src={dateIcon}
+                  src="/recurrence-end-icon.png"
                   alt=""
-                  style={{ width: "18px", height: "18px", marginRight: "8px", opacity: 0.7 }}
+                  style={{ width: "18px", height: "18px", marginRight: "8px" }}
                 />
                 <span style={{ fontSize: "0.9rem" }}>
                   Recurs until {(() => {
