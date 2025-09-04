@@ -1310,6 +1310,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to check for offensive content in event title
+  function containsOffensiveContent(title: string): boolean {
+    const offensiveWords = ['nigger', 'faggot', 'fuck', 'nazi'];
+    const lowerTitle = title.toLowerCase();
+    return offensiveWords.some(word => lowerTitle.includes(word));
+  }
+
   app.post("/api/events", eventCreationRateLimiter, validateBody(insertEventSchema), async (req: AuthenticatedRequest, res) => {
     const userId = req.user?.id;
     const userEmail = req.user?.email;
@@ -1333,6 +1340,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If ticket purchases are disabled, automatically set event to private
       if (createData.ticketPurchasesEnabled === false) {
         createData.isPrivate = true;
+      }
+      
+      // Content moderation: Check for offensive words in the title
+      if (createData.name && containsOffensiveContent(createData.name)) {
+        createData.isPrivate = true; // Automatically make the event private
+        // Log this moderation action for monitoring
+        await logInfo(
+          "Event auto-moderated due to offensive content",
+          "POST /api/events",
+          {
+            userId,
+            eventName: createData.name,
+            action: "auto-set-private"
+          }
+        );
       }
       
       // Extract hashtags from description
@@ -1413,6 +1435,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle image URL normalization if provided
       let updateData = { ...req.body };
+      
+      // Content moderation: If updating the name (which shouldn't happen in edit mode),
+      // check for offensive content
+      if (updateData.name && containsOffensiveContent(updateData.name)) {
+        updateData.isPrivate = true; // Automatically make the event private
+        // Log this moderation action for monitoring
+        await logInfo(
+          "Event auto-moderated due to offensive content",
+          "PUT /api/events/:id",
+          {
+            userId,
+            eventId: req.params.id,
+            eventName: updateData.name,
+            action: "auto-set-private"
+          }
+        );
+      }
       
       // Remove name, earlyValidation, re-entry, and golden ticket fields to prevent them from being updated
       delete updateData.name;
