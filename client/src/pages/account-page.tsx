@@ -42,6 +42,7 @@ export default function AccountPage() {
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [secretCode, setSecretCode] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState(12);
+  const [paymentMethod, setPaymentMethod] = useState("Stripe");
   const [purchaseExpanded, setPurchaseExpanded] = useState(false);
   const [secretCodeExpanded, setSecretCodeExpanded] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -1433,50 +1434,28 @@ export default function AccountPage() {
                 )}
               </div>
 
-              {/* Payment Buttons */}
+              {/* Payment Method Selection */}
               <div className="border-top mt-4 pt-4">
                 <div className="row g-2">
-                  <div className="col-6">
+                  <div className="col-8">
+                    <select
+                      className="form-select"
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      data-testid="select-payment-method"
+                    >
+                      <option value="Stripe">Stripe</option>
+                      <option value="Coinbase">Coinbase</option>
+                    </select>
+                  </div>
+                  <div className="col-4">
                     <button
-                      className="btn btn-outline-primary w-100 py-2"
+                      className="btn btn-primary w-100 py-2"
                       onClick={handlePurchaseTickets}
                       disabled={isPurchasing || ticketQuantity < 12}
+                      data-testid="button-checkout"
                     >
-                      {isPurchasing ? (
-                        <>Processing...</>
-                      ) : (
-                        <>
-                          <img
-                            src="/stripe-icon.png"
-                            alt=""
-                            style={{
-                              width: "20px",
-                              height: "20px",
-                              marginRight: "8px",
-                            }}
-                          />
-                          Stripe
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <div className="col-6">
-                    <button
-                      className="btn btn-outline-secondary w-100 py-2"
-                      disabled
-                      title="Coinbase payment coming soon"
-                    >
-                      <img
-                        src="/coinbase-icon.png"
-                        alt=""
-                        style={{
-                          width: "20px",
-                          height: "20px",
-                          marginRight: "8px",
-                          opacity: 0.5,
-                        }}
-                      />
-                      <span className="text-muted">Coinbase</span>
+                      {isPurchasing ? "Processing..." : "Checkout"}
                     </button>
                   </div>
                 </div>
