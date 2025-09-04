@@ -118,6 +118,23 @@ export default function TicketViewPage(): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCharging, setIsCharging] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
+  const [currentColorIndex, setCurrentColorIndex] = useState(0);
+  
+  // Event type colors for background cycling
+  const eventTypeColors = [
+    "#3B82F6", // Blue - P2P
+    "#DC2626", // Red - Featured/Surge
+    "#9333EA", // Purple - Special Effects
+    "#EC4899", // Pink - Stickers
+    "#F59E0B", // Orange - Geofence
+    "#FF6B35", // Coral - Treasure Hunt
+    "#EAB308", // Yellow - Vote
+    "#059669", // Green - Recurring
+    "#14B8A6", // Teal - Limited
+    "#6B7280", // Gray - Multi-day
+    "#000000", // Black - Collectable
+    "#FFD700", // Gold - Golden
+  ];
 
   // Fetch ticket details with polling during validation
   const {
@@ -321,10 +338,15 @@ export default function TicketViewPage(): React.ReactElement {
   const startTokenRotation = () => {
     // Fetch initial token
     fetchNewToken();
+    
+    // Reset color index
+    setCurrentColorIndex(0);
 
-    // Set up interval for token rotation
+    // Set up interval for token rotation and color change
     intervalRef.current = setInterval(() => {
       fetchNewToken();
+      // Cycle to next color
+      setCurrentColorIndex((prev) => (prev + 1) % eventTypeColors.length);
     }, 10000); // 10 seconds
   };
 
@@ -937,7 +959,13 @@ export default function TicketViewPage(): React.ReactElement {
                         <div className="alert alert-success">
                           {currentCode && (
                             <div className="my-3">
-                              <div className="bg-primary text-white rounded-3 p-4 mb-3">
+                              <div 
+                                className="text-white rounded-3 p-4 mb-3"
+                                style={{ 
+                                  backgroundColor: eventTypeColors[currentColorIndex],
+                                  transition: "background-color 0.5s ease"
+                                }}
+                              >
                                 <p className="text-white-50 small mb-2">
                                   Tell the validator this code:
                                 </p>
@@ -1194,7 +1222,13 @@ export default function TicketViewPage(): React.ReactElement {
                     <div className="text-center mb-3">
                       {currentCode && (
                         <div>
-                          <div className="bg-primary text-white rounded-3 p-4 mb-3">
+                          <div 
+                            className="text-white rounded-3 p-4 mb-3"
+                            style={{ 
+                              backgroundColor: eventTypeColors[currentColorIndex],
+                              transition: "background-color 0.5s ease"
+                            }}
+                          >
                             <p className="text-white-50 mb-2">
                               Tell the validator this code:
                             </p>
