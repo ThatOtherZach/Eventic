@@ -1391,9 +1391,8 @@ export default function EventForm() {
                       />
                     </div>
 
-                    {/* Repeat Section - Admin Only */}
-                    {user?.email?.endsWith("@saymservices.com") && (
-                      <div className="col-12">
+                    {/* Repeat Section */}
+                    <div className="col-12">
                         <div className="border rounded p-3 bg-light">
                           <h6 className="mb-3">Repeat</h6>
                           <FormField
@@ -1465,7 +1464,6 @@ export default function EventForm() {
                           )}
                         </div>
                       </div>
-                    )}
 
                     {/* Tickets & Pricing Section - Windows 98 Style - Only show when creating new event */}
                     {isEditMode ? (

@@ -1570,6 +1570,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         oneTicketPerUser: z.boolean().optional(),
         surgePricing: z.boolean().optional(),
         timezone: z.string().optional(),
+        recurringType: z.enum(["weekly", "monthly", "annual"]).nullable().optional(),
+        recurringEndDate: z.string().nullable().optional(),
       });
       const validatedData = baseEventSchema.parse(updateData);
       
@@ -1595,10 +1597,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Check if recurrence settings have changed
+      const recurrenceChanged = validatedData.recurringType !== undefined || validatedData.recurringEndDate !== undefined;
+      
       const updatedEvent = await storage.updateEvent(req.params.id, {
         ...validatedData,
         ...(hashtags !== undefined && { hashtags })
       });
+      
+      // If recurrence settings changed, update the archival schedule
+      if (recurrenceChanged && updatedEvent) {
+        const { updateEventDeletionSchedule, cancelEventDeletion, scheduleEventDeletion, calculateDeletionDate } = await import('./jobScheduler');
+        
+        if (updatedEvent.recurringType) {
+          // Event is now recurring or recurrence type changed
+          // The archival will be handled when the event creates its next occurrence
+          // For now, update the deletion schedule to account for potential recurrence
+          const deletionDate = calculateDeletionDate(updatedEvent.date, updatedEvent.endDate);
+          await updateEventDeletionSchedule(updatedEvent.id, deletionDate);
+        } else {
+          // Event is no longer recurring - schedule normal deletion
+          const deletionDate = calculateDeletionDate(updatedEvent.date, updatedEvent.endDate);
+          await updateEventDeletionSchedule(updatedEvent.id, deletionDate);
+        }
+      }
       
       // Send notifications to all ticket holders
       if (updatedEvent) {
