@@ -10,6 +10,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useAdmin } from "@/hooks/use-admin";
 import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +27,7 @@ const SPECIAL_EFFECTS = [
 
 export default function AdminSettings() {
   const { user } = useAuth();
+  const { isAdmin, isLoading: isAdminLoading } = useAdmin();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,7 +41,22 @@ export default function AdminSettings() {
   const [paymentStatus, setPaymentStatus] = useState<any>(null);
 
   // Check if user has admin access
-  if (!user?.email?.endsWith("@saymservices.com")) {
+  if (isAdminLoading) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Loading...</CardTitle>
+            <CardDescription>
+              Checking access permissions...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
     navigate("/");
     return null;
   }
@@ -47,13 +64,13 @@ export default function AdminSettings() {
   // Get all events for management
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ["/api/admin/events"],
-    enabled: !!user?.email?.endsWith("@saymservices.com")
+    enabled: isAdmin
   });
 
   // Get current special effects odds
   const { data: currentOdds } = useQuery({
     queryKey: ["/api/admin/special-effects-odds"],
-    enabled: !!user?.email?.endsWith("@saymservices.com"),
+    enabled: isAdmin,
     onSuccess: (data) => {
       if (data) {
         setEffectOdds(data);
@@ -64,7 +81,7 @@ export default function AdminSettings() {
   // Get payment configuration status
   const { data: paymentData } = useQuery({
     queryKey: ["/api/admin/payment-status"],
-    enabled: !!user?.email?.endsWith("@saymservices.com")
+    enabled: isAdmin
   });
 
   // Update special effects odds

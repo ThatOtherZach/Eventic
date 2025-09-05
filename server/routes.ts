@@ -2798,6 +2798,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user roles
+  app.get("/api/user/roles", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const roles = await storage.getUserRoles(userId);
+      const roleNames = roles.map(r => r.name);
+      const isAdmin = roleNames.includes('admin');
+      
+      res.json({ 
+        roles: roleNames,
+        isAdmin
+      });
+    } catch (error) {
+      await logError(error, "GET /api/user/roles", { request: req });
+      res.status(500).json({ message: "Failed to get user roles" });
+    }
+  });
+
   // Get payment configuration status (admin only)
   app.get("/api/admin/payment-status", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
