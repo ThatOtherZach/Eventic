@@ -1,5 +1,3 @@
-const Client = require('coinbase-commerce-node');
-
 // Ticket package configurations
 export const TICKET_PACKAGES = [
   { 
@@ -39,16 +37,17 @@ export interface CoinbaseSettings {
 }
 
 export class CoinbaseService {
-  private client: any;
-  private charge: any;
-  private webhook: any;
+  private client: any = null;
+  private charge: any = null;
+  private webhook: any = null;
   private settings: CoinbaseSettings | null = null;
+  private initialized: boolean = false;
   
   constructor() {
     this.initialize();
   }
   
-  private initialize() {
+  private async initialize() {
     const apiKey = process.env.COINBASE_API_KEY;
     const webhookSecret = process.env.COINBASE_WEBHOOK_SECRET;
     
@@ -58,20 +57,31 @@ export class CoinbaseService {
     }
     
     try {
-      Client.init(apiKey);
-      this.charge = Client.resources.Charge;
-      this.webhook = Client.Webhook;
+      // Dynamic import to handle CommonJS module
+      const coinbase = await import('coinbase-commerce-node');
+      const Client = coinbase.default || coinbase.Client || coinbase;
       
-      this.settings = {
-        apiKey,
-        webhookSecret,
-        enabled: true
-      };
-      
-      console.log('[COINBASE] Coinbase Commerce initialized successfully');
+      if (Client && Client.init) {
+        Client.init(apiKey);
+        this.client = Client;
+        this.charge = Client.resources?.Charge || coinbase.resources?.Charge;
+        this.webhook = Client.Webhook || coinbase.Webhook;
+        
+        this.settings = {
+          apiKey,
+          webhookSecret,
+          enabled: true
+        };
+        
+        this.initialized = true;
+        console.log('[COINBASE] Coinbase Commerce initialized successfully');
+      } else {
+        throw new Error('Unable to initialize Coinbase Client');
+      }
     } catch (error) {
       console.error('[COINBASE] Failed to initialize:', error);
       this.settings = null;
+      this.initialized = false;
     }
   }
   
@@ -79,7 +89,7 @@ export class CoinbaseService {
    * Check if Coinbase payments are available
    */
   public isAvailable(): boolean {
-    return this.settings?.enabled === true && !!this.charge;
+    return this.settings?.enabled === true && this.initialized && !!this.charge;
   }
   
   /**
@@ -97,29 +107,23 @@ export class CoinbaseService {
    */
   public async updateSettings(apiKey?: string, webhookSecret?: string, enabled?: boolean): Promise<boolean> {
     try {
-      // If new credentials provided, test them
-      if (apiKey) {
-        Client.init(apiKey);
-        this.charge = Client.resources.Charge;
+      // If new credentials provided, reinitialize
+      if (apiKey || webhookSecret !== undefined) {
+        // Store the new values in environment-like structure (in memory only)
+        if (apiKey) {
+          process.env.COINBASE_API_KEY = apiKey;
+        }
+        if (webhookSecret) {
+          process.env.COINBASE_WEBHOOK_SECRET = webhookSecret;
+        }
         
-        // Test the API key by making a simple request
-        await Client.resources.Charge.list({ limit: 1 });
+        // Reinitialize with new settings
+        await this.initialize();
       }
       
-      // Update settings
-      if (apiKey || webhookSecret !== undefined || enabled !== undefined) {
-        this.settings = {
-          apiKey: apiKey || this.settings?.apiKey || '',
-          webhookSecret: webhookSecret || this.settings?.webhookSecret || '',
-          enabled: enabled !== undefined ? enabled : (this.settings?.enabled || false)
-        };
-        
-        // Re-initialize if enabled
-        if (this.settings.enabled && this.settings.apiKey) {
-          Client.init(this.settings.apiKey);
-          this.charge = Client.resources.Charge;
-          this.webhook = Client.Webhook;
-        }
+      // Update enabled state
+      if (enabled !== undefined && this.settings) {
+        this.settings.enabled = enabled;
       }
       
       return true;
@@ -138,7 +142,7 @@ export class CoinbaseService {
     userEmail: string,
     userName: string
   ): Promise<{ chargeId: string; hostedUrl: string } | null> {
-    if (!this.isAvailable()) {
+    if (!this.isAvailable() || !this.charge) {
       return null;
     }
     
@@ -185,7 +189,7 @@ export class CoinbaseService {
    * Verify webhook signature
    */
   public verifyWebhookSignature(rawBody: string, signature: string): boolean {
-    if (!this.settings?.webhookSecret) {
+    if (!this.settings?.webhookSecret || !this.webhook) {
       return false;
     }
     
@@ -237,7 +241,7 @@ export class CoinbaseService {
    * Get charge details
    */
   public async getCharge(chargeId: string): Promise<any> {
-    if (!this.isAvailable()) {
+    if (!this.isAvailable() || !this.charge) {
       return null;
     }
     
