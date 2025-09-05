@@ -6,8 +6,39 @@ import { initializeJobScheduler } from "./jobScheduler";
 import { storage } from "./storage";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' })); // Limit request body size
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Security headers middleware
+app.use((req, res, next) => {
+  // Content Security Policy - prevent XSS attacks
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com data:; " +
+    "img-src 'self' data: https: blob:; " +
+    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://commerce.coinbase.com wss://ws.replit.com; " +
+    "frame-src 'self' https://checkout.stripe.com https://commerce.coinbase.com; " +
+    "object-src 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self'; " +
+    "frame-ancestors 'none';"
+  );
+  
+  // Other security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  
+  // Remove fingerprinting headers
+  res.removeHeader('X-Powered-By');
+  
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -7,11 +7,12 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { supabaseSyncService } from "./supabaseSync";
 import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
 import fetch from 'node-fetch';
-import { logError, logWarning, logInfo } from "./logger";
+import { logError, logWarning, logInfo, logAdminAction } from "./logger";
 import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, requireAdmin, AuthenticatedRequest } from "./auth";
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
+import { sanitizeObject, sanitizeInput } from "./utils/sanitizer";
 import { getTicketCaptureService, getFFmpegPath } from "./ticketCapture";
 import { execFile } from 'child_process';
 import path from 'path';
@@ -44,6 +45,50 @@ const purchaseRateLimiter = rateLimit({
       retryAfter: 60
     });
   }
+});
+
+// Rate limiter for authentication attempts
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Max 5 auth attempts per 15 minutes
+  message: 'Too many authentication attempts. Please wait before trying again.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Use default key generator to avoid IPv6 issues
+  handler: async (req, res) => {
+    await logWarning(
+      'Rate limit exceeded for authentication',
+      req.path,
+      {
+        metadata: { 
+          email: req.body?.email,
+          ip: req.ip
+        }
+      }
+    );
+    res.status(429).json({
+      message: 'Too many authentication attempts. Please wait 15 minutes before trying again.',
+      retryAfter: 900
+    });
+  }
+});
+
+// General API rate limiter (more lenient)
+const apiRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // Max 100 requests per minute
+  message: 'Too many requests. Please slow down.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Strict rate limiter for sensitive operations
+const strictRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // Max 10 requests per hour
+  message: 'Rate limit exceeded for this operation.',
+  standardHeaders: true,
+  legacyHeaders: false
 });
 
 // Rate limiter for event creation  
@@ -227,6 +272,15 @@ const validationRateLimiter = rateLimit({
   skipFailedRequests: false
 });
 
+// Voting rate limiter
+const votingRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // Max 30 votes per minute
+  message: 'Too many voting attempts. Please slow down.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
@@ -240,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(extractAuthUser);
 
   // New login endpoint with rate limiting
-  app.post("/api/auth/login", async (req: AuthenticatedRequest, res) => {
+  app.post("/api/auth/login", authRateLimiter, async (req: AuthenticatedRequest, res) => {
     const { checkLoginRateLimit } = await import('./authLimiter');
     
     // Apply rate limiting check
@@ -1328,8 +1382,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user is an admin
       const isAdminCreated = userId ? await storage.hasRole(userId, 'admin') : false;
       
-      // Handle image URL normalization if provided
-      let createData = { ...req.body };
+      // Sanitize user input to prevent XSS
+      let createData = sanitizeObject(req.body, {
+        name: 'text',
+        description: 'html',
+        venue: 'text',
+        venueStreet: 'text',
+        venueCity: 'text',
+        venueCountry: 'text',
+        imageUrl: 'url',
+        ticketBackgroundUrl: 'url'
+      });
       if (createData.imageUrl && createData.imageUrl.startsWith("https://storage.googleapis.com/")) {
         createData.imageUrl = objectStorageService.normalizeObjectEntityPath(createData.imageUrl);
       }
@@ -1460,8 +1523,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tickets = await storage.getTicketsByEventId(req.params.id);
       const ticketsSold = tickets.length;
       
-      // Handle image URL normalization if provided
-      let updateData = { ...req.body };
+      // Sanitize user input to prevent XSS
+      let updateData = sanitizeObject(req.body, {
+        name: 'text',
+        description: 'html',
+        venue: 'text',
+        venueStreet: 'text',
+        venueCity: 'text', 
+        venueCountry: 'text',
+        contactDetails: 'text',
+        imageUrl: 'url',
+        ticketBackgroundUrl: 'url',
+        stickerUrl: 'url'
+      });
       
       // Content moderation: Check for offensive content in editable fields
       let moderationTriggered = false;
@@ -2869,9 +2943,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/events/:eventId/toggle", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-
+      const adminId = req.user?.id!;
       const { eventId } = req.params;
       const { field, value } = req.body;
+      
+      // Log admin action
+      await logAdminAction(
+        `TOGGLE_EVENT_${field.toUpperCase()}`,
+        adminId,
+        `/api/admin/events/${eventId}/toggle`,
+        {
+          eventId,
+          field,
+          newValue: value,
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'],
+          method: req.method
+        }
+      );
 
       if (!field || !["isEnabled", "ticketPurchasesEnabled"].includes(field)) {
         return res.status(400).json({ message: "Invalid field" });
@@ -2913,8 +3002,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/special-effects-odds", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-
+      const adminId = req.user?.id!;
       const { valentines, halloween, christmas, nice } = req.body;
+      
+      // Log admin action
+      await logAdminAction(
+        'UPDATE_SPECIAL_EFFECTS_ODDS',
+        adminId,
+        '/api/admin/special-effects-odds',
+        {
+          oldOdds: specialEffectsOdds,
+          newOdds: { valentines, halloween, christmas, nice },
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'],
+          method: req.method
+        }
+      );
       
       // Validate odds are reasonable numbers
       if (valentines < 1 || valentines > 1000 ||
@@ -2942,6 +3045,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recurring Events Processing
   app.post("/api/admin/process-recurring-events", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
+      const adminId = req.user?.id!;
+      
+      // Log admin action
+      await logAdminAction(
+        'PROCESS_RECURRING_EVENTS',
+        adminId,
+        '/api/admin/process-recurring-events',
+        {
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'],
+          method: req.method
+        }
+      );
 
       // Get events that need recurrence
       const eventsNeedingRecurrence = await storage.getEventsNeedingRecurrence();
@@ -4181,7 +4297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Event Rating endpoints
-  app.post("/api/tickets/:ticketId/rate", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tickets/:ticketId/rate", requireAuth, votingRateLimiter, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
