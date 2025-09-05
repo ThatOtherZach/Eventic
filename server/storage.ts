@@ -1,7 +1,7 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
-import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -2050,6 +2050,26 @@ export class DatabaseStorage implements IStorage {
       .from(registryRecords)
       .orderBy(desc(registryRecords.mintedAt));
   }
+  
+  async getUnsyncedRegistryRecords(): Promise<RegistryRecord[]> {
+    return db
+      .select()
+      .from(registryRecords)
+      .where(eq(registryRecords.synced, false))
+      .orderBy(asc(registryRecords.mintedAt));
+  }
+  
+  async markRegistryRecordsSynced(recordIds: string[]): Promise<void> {
+    if (recordIds.length === 0) return;
+    
+    await db
+      .update(registryRecords)
+      .set({ 
+        synced: true,
+        syncedAt: new Date()
+      })
+      .where(inArray(registryRecords.id, recordIds));
+  }
 
   async canMintTicket(ticketId: string): Promise<boolean> {
     // Check if ticket exists and has been validated
@@ -3226,8 +3246,8 @@ export class DatabaseStorage implements IStorage {
       
       // Calculate scheduled deletion date (69 days after event end)
       let scheduledDeletion: Date | null = null;
-      if (event.endDate || event.startDate) {
-        const eventEndDate = event.endDate ? new Date(event.endDate) : new Date(event.startDate);
+      if (event.endDate || event.date) {
+        const eventEndDate = event.endDate ? new Date(event.endDate) : new Date(event.date);
         scheduledDeletion = new Date(eventEndDate);
         scheduledDeletion.setDate(scheduledDeletion.getDate() + 69);
       }
@@ -3861,10 +3881,10 @@ export class DatabaseStorage implements IStorage {
               userId: userId,
               recipientName: user?.displayName || 'Hunt Discoverer',
               recipientEmail: user?.email || 'unknown@hunt.quest',
-              status: 'validated', // Auto-validate Hunt tickets
+              status: 'sent', // Auto-sent Hunt tickets
+              isValidated: true, // Auto-validate Hunt tickets
               validatedAt: new Date(),
               useCount: 1,
-              maxUses: event.maxUses || 1,
               isGoldenTicket: false,
               purchasePrice: null, // Free Hunt ticket
               purchaserEmail: user?.email || null,
@@ -3875,10 +3895,10 @@ export class DatabaseStorage implements IStorage {
             });
           } else {
             // User has ticket, just validate it if not already validated
-            if (ticket.status !== 'validated') {
+            if (!ticket.isValidated) {
               await tx.update(tickets)
                 .set({ 
-                  status: 'validated', 
+                  isValidated: true, 
                   validatedAt: new Date(),
                   useCount: (ticket.useCount || 0) + 1
                 })

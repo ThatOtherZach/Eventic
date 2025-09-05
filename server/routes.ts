@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema, insertNotificationSchema, insertNotificationPreferencesSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { supabaseSyncService } from "./supabaseSync";
 import fetch from 'node-fetch';
 import { logError, logWarning, logInfo } from "./logger";
 import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
@@ -4848,6 +4849,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       await logError(error, "POST /api/upload", { request: req });
       res.status(500).json({ message: "Upload failed" });
+    }
+  });
+  
+  // Supabase Sync Management Endpoints
+  
+  // Get sync status
+  app.get("/api/sync/status", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const stats = await supabaseSyncService.getSyncStats();
+      
+      // Get count of unsynced records
+      const unsyncedRecords = await storage.getUnsyncedRegistryRecords();
+      
+      res.json({
+        ...stats,
+        pendingCount: unsyncedRecords.length,
+        message: stats.configured 
+          ? (stats.connected 
+            ? `Supabase sync is active. ${unsyncedRecords.length} records pending sync.`
+            : "Supabase is configured but connection failed. Check your SUPABASE_DATABASE_URL.")
+          : "Supabase sync is not configured. Add SUPABASE_DATABASE_URL to enable."
+      });
+    } catch (error) {
+      await logError(error, "GET /api/sync/status", { request: req });
+      res.status(500).json({ message: "Failed to get sync status" });
+    }
+  });
+  
+  // Manually trigger sync for unsynced records
+  app.post("/api/sync/trigger", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if service is available
+      if (!supabaseSyncService.isAvailable()) {
+        return res.status(503).json({ 
+          message: "Supabase sync is not available. Please configure SUPABASE_DATABASE_URL." 
+        });
+      }
+      
+      // Get all unsynced records
+      const unsyncedRecords = await storage.getUnsyncedRegistryRecords();
+      
+      if (unsyncedRecords.length === 0) {
+        return res.json({ 
+          message: "No records to sync",
+          success: 0,
+          failed: 0 
+        });
+      }
+      
+      // Batch sync the records
+      const result = await supabaseSyncService.batchSyncRegistryRecords(unsyncedRecords);
+      
+      // Mark successfully synced records in local database
+      const successfulIds = unsyncedRecords
+        .filter(r => !result.failedIds.includes(r.id))
+        .map(r => r.id);
+      
+      if (successfulIds.length > 0) {
+        await storage.markRegistryRecordsSynced(successfulIds);
+      }
+      
+      res.json({
+        message: `Sync completed: ${result.success} succeeded, ${result.failed} failed`,
+        ...result
+      });
+    } catch (error) {
+      await logError(error, "POST /api/sync/trigger", { request: req });
+      res.status(500).json({ message: "Failed to trigger sync" });
+    }
+  });
+  
+  // Verify a specific registry record is in Supabase
+  app.get("/api/sync/verify/:registryId", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { registryId } = req.params;
+      
+      if (!supabaseSyncService.isAvailable()) {
+        return res.status(503).json({ 
+          message: "Supabase sync is not available" 
+        });
+      }
+      
+      const exists = await supabaseSyncService.verifyRecordInSupabase(registryId);
+      
+      res.json({
+        registryId,
+        existsInSupabase: exists,
+        message: exists 
+          ? "Record found in Supabase backup" 
+          : "Record not found in Supabase backup"
+      });
+    } catch (error) {
+      await logError(error, "GET /api/sync/verify/:registryId", { request: req });
+      res.status(500).json({ message: "Failed to verify record" });
     }
   });
 
