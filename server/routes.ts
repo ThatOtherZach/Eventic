@@ -8,7 +8,7 @@ import { supabaseSyncService } from "./supabaseSync";
 import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
 import fetch from 'node-fetch';
 import { logError, logWarning, logInfo } from "./logger";
-import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
+import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, requireAdmin, AuthenticatedRequest } from "./auth";
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
@@ -857,8 +857,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if creator is an admin (has @saymservices.com email)
-      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
+      // Check if creator is an admin
+      const isAdminCreated = eventWithCreator.creatorId ? await storage.hasRole(eventWithCreator.creatorId, 'admin') : false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1274,8 +1274,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Anyone with the link who is logged in can view it
       }
       
-      // Check if creator is an admin (has @saymservices.com email)
-      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
+      // Check if creator is an admin
+      const isAdminCreated = eventWithCreator.creatorId ? await storage.hasRole(eventWithCreator.creatorId, 'admin') : false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1325,8 +1325,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userEmail = req.user?.email;
     
     try {
-      // Check if user is an admin (has @saymservices.com email)
-      const isAdminCreated = userEmail?.endsWith("@saymservices.com") || false;
+      // Check if user is an admin
+      const isAdminCreated = userId ? await storage.hasRole(userId, 'admin') : false;
       
       // Handle image URL normalization if provided
       let createData = { ...req.body };
@@ -1448,8 +1448,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if user is admin (has @saymservices.com email)
-      const isAdmin = req.user?.email?.endsWith("@saymservices.com");
+      // Check if user is admin
+      const isAdmin = req.user?.id ? await storage.hasRole(req.user.id, 'admin') : false;
       
       // Allow editing if user owns the event OR is an admin
       if (event.userId !== userId && !isAdmin) {
@@ -2799,15 +2799,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get payment configuration status (admin only)
-  app.get("/api/admin/payment-status", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/admin/payment-status", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       const userEmail = req.user?.email;
-      
-      // Check admin access
-      if (!userEmail?.endsWith("@saymservices.com")) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       // Check Stripe status
       const stripeConfigured = !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY);
@@ -2836,13 +2831,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes (protected - only for @saymservices.com emails)
-  app.get("/api/admin/events", async (req: AuthenticatedRequest, res) => {
+  // Admin routes (protected - admin role required)
+  app.get("/api/admin/events", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       const events = await storage.getAllEventsForAdmin();
       res.json(events);
@@ -2854,12 +2845,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/events/:eventId/toggle", async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/events/:eventId/toggle", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       const { eventId } = req.params;
       const { field, value } = req.body;
@@ -2890,12 +2877,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     nice: 69
   };
 
-  app.get("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/admin/special-effects-odds", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       res.json(specialEffectsOdds);
     } catch (error) {
@@ -2906,12 +2889,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/special-effects-odds", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       const { valentines, halloween, christmas, nice } = req.body;
       
@@ -2939,12 +2918,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recurring Events Processing
-  app.post("/api/admin/process-recurring-events", async (req: AuthenticatedRequest, res) => {
+  app.post("/api/admin/process-recurring-events", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
 
       // Get events that need recurrence
       const eventsNeedingRecurrence = await storage.getEventsNeedingRecurrence();
@@ -3634,7 +3609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add isAdminCreated field and current price to each event
       const featuredEventsWithAdmin = await Promise.all(featuredEvents.map(async (featuredEvent) => {
         const eventWithCreator = await storage.getEventWithCreator(featuredEvent.event.id);
-        const isAdminCreated = eventWithCreator?.creatorEmail?.endsWith("@saymservices.com") || false;
+        const isAdminCreated = eventWithCreator?.creatorId ? await storage.hasRole(eventWithCreator.creatorId, 'admin') : false;
         
         // Get current price with surge pricing
         const currentPrice = await storage.getCurrentPrice(featuredEvent.event.id);
