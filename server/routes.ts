@@ -1413,13 +1413,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       
-      // Extract hashtags from description
+      // Extract hashtags from description (now plain text)
       const hashtags: string[] = [];
       if (createData.description) {
-        // Strip HTML tags first
-        const textContent = createData.description.replace(/<[^>]*>/g, ' ');
-        // Find all hashtags (words starting with #)
-        const matches = textContent.match(/#[a-zA-Z0-9_]+/g);
+        // Extract hashtags directly from plain text
+        const matches = createData.description.match(/#[a-zA-Z0-9_]+/g);
         if (matches) {
           // Remove the # and store unique hashtags
           const uniqueTags = Array.from(new Set(matches.map((tag: string) => tag.substring(1).toLowerCase())));
@@ -1612,15 +1610,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedData.isPrivate = true;
       }
       
-      // Extract hashtags from description if it's being updated
+      // Extract hashtags from description if it's being updated (now plain text)
       let hashtags: string[] | undefined;
       if (validatedData.description !== undefined) {
         hashtags = [];
         if (validatedData.description) {
-          // Strip HTML tags first
-          const textContent = validatedData.description.replace(/<[^>]*>/g, ' ');
-          // Find all hashtags (words starting with #)
-          const matches = textContent.match(/#[a-zA-Z0-9_]+/g);
+          // Extract hashtags directly from plain text
+          const matches = validatedData.description.match(/#[a-zA-Z0-9_]+/g);
           if (matches) {
             // Remove the # and store unique hashtags
             const uniqueTags = Array.from(new Set(matches.map((tag: string) => tag.substring(1).toLowerCase())));

@@ -10,11 +10,12 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/moda
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { CreditCard, Image } from "lucide-react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { Textarea } from "@/components/ui/textarea";
+import { countCharacters } from "@/lib/text-formatter";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -380,24 +381,25 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>
+                      Description
+                      <span className="text-muted small ms-2">
+                        ({countCharacters(field.value || "")}/5000)
+                      </span>
+                    </FormLabel>
                     <FormControl>
-                      <ReactQuill 
-                        theme="snow"
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        placeholder="Enter event description"
-                        modules={{
-                          toolbar: [
-                            [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            ['link'],
-                            ['clean']
-                          ]
-                        }}
+                      <Textarea
+                        {...field}
+                        placeholder="Describe your event... You can include URLs and hashtags (#example)"
+                        className="form-control"
+                        rows={6}
+                        maxLength={5000}
+                        style={{ resize: 'vertical' }}
                       />
                     </FormControl>
+                    <FormDescription>
+                      Plain text with automatic URL detection. Use hashtags (#example) to categorize your event.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -25,6 +25,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
+import { formatDescription } from "@/lib/text-formatter";
 import {
   Tooltip,
   TooltipContent,
@@ -1261,10 +1262,7 @@ export default function EventDetailPage() {
               <div
                 className="text-muted"
                 dangerouslySetInnerHTML={{
-                  __html: event.description.replace(
-                    /#([a-zA-Z0-9_]+)/g,
-                    '<a href="/hashtag/$1" class="text-decoration-none">#$1</a>',
-                  ),
+                  __html: formatDescription(event.description),
                 }}
               />
             </div>

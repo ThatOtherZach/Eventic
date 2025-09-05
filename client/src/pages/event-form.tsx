@@ -16,8 +16,8 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { ArrowLeft, ArrowRight, CreditCard, Image, Lock, Globe } from "lucide-react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { Textarea } from "@/components/ui/textarea";
+import { countCharacters, extractHashtags } from "@/lib/text-formatter";
 import { countries } from "@/lib/countries";
 import { LocationPicker } from "@/components/location-picker";
 import { Clock } from "lucide-react";
@@ -860,17 +860,26 @@ export default function EventForm() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>
+                              Description
+                              <span className="text-muted small ms-2">
+                                ({countCharacters(field.value || "")}/5000)
+                              </span>
+                            </FormLabel>
                             <FormControl>
-                              <ReactQuill
-                                theme="snow"
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                placeholder="Describe your event..."
-                                className="bg-white"
+                              <Textarea
+                                {...field}
+                                placeholder="Describe your event... You can include URLs and hashtags (#example)"
+                                className="form-control"
+                                rows={8}
+                                maxLength={5000}
                                 data-testid="input-description"
+                                style={{ resize: 'vertical' }}
                               />
                             </FormControl>
+                            <FormDescription>
+                              Plain text with automatic URL detection. Use hashtags (#example) to categorize your event.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}

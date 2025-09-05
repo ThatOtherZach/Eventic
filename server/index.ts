@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { logError, scheduleLogCleanup } from "./logger";
 import { initializeJobScheduler } from "./jobScheduler";
 import { storage } from "./storage";
+import { migrateDescriptionsToPlainText } from "./migrate-descriptions";
 
 const app = express();
 app.use(express.json());
@@ -54,6 +55,14 @@ app.use((req, res, next) => {
   
   // Migrate existing admin users to super_admin role
   await storage.migrateExistingAdmins();
+  
+  // Migrate HTML descriptions to plain text
+  try {
+    await migrateDescriptionsToPlainText();
+  } catch (error) {
+    console.error("[MIGRATION] Failed to convert descriptions:", error);
+    // Don't stop server startup if migration fails
+  }
   
   const server = await registerRoutes(app);
 
