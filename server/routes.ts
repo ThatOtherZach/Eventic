@@ -5,6 +5,7 @@ import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema, inser
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { supabaseSyncService } from "./supabaseSync";
+import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
 import fetch from 'node-fetch';
 import { logError, logWarning, logInfo } from "./logger";
 import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
@@ -4948,6 +4949,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       await logError(error, "GET /api/sync/verify/:registryId", { request: req });
       res.status(500).json({ message: "Failed to verify record" });
+    }
+  });
+  
+  // Coinbase Commerce Endpoints
+  
+  // Get available ticket packages and Coinbase status
+  app.get("/api/coinbase/packages", async (req, res) => {
+    try {
+      const settings = coinbaseService.getSettings();
+      
+      res.json({
+        packages: TICKET_PACKAGES,
+        coinbaseEnabled: settings.enabled,
+        coinbaseConfigured: settings.configured
+      });
+    } catch (error) {
+      await logError(error, "GET /api/coinbase/packages", { request: req });
+      res.status(500).json({ message: "Failed to get packages" });
+    }
+  });
+  
+  // Create a Coinbase charge for ticket purchase
+  app.post("/api/coinbase/create-charge", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { packageIndex } = req.body;
+      
+      if (packageIndex === undefined || packageIndex < 0 || packageIndex >= TICKET_PACKAGES.length) {
+        return res.status(400).json({ message: "Invalid package selected" });
+      }
+      
+      if (!coinbaseService.isAvailable()) {
+        return res.status(503).json({ 
+          message: "Coinbase payments are not available. Please try again later or use a different payment method." 
+        });
+      }
+      
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Create the charge
+      const charge = await coinbaseService.createCharge(
+        packageIndex,
+        userId,
+        user.email,
+        user.displayName || 'User'
+      );
+      
+      if (!charge) {
+        return res.status(500).json({ message: "Failed to create payment" });
+      }
+      
+      res.json({
+        chargeId: charge.chargeId,
+        hostedUrl: charge.hostedUrl,
+        package: TICKET_PACKAGES[packageIndex]
+      });
+    } catch (error) {
+      await logError(error, "POST /api/coinbase/create-charge", { request: req });
+      res.status(500).json({ message: "Failed to create charge" });
+    }
+  });
+  
+  // Webhook endpoint for Coinbase payment confirmations
+  app.post("/api/coinbase/webhook", async (req, res) => {
+    try {
+      const signature = req.headers['x-cc-webhook-signature'] as string;
+      const rawBody = JSON.stringify(req.body);
+      
+      // Verify the webhook signature
+      if (!coinbaseService.verifyWebhookSignature(rawBody, signature)) {
+        return res.status(401).json({ message: "Invalid signature" });
+      }
+      
+      // Process the webhook event
+      const result = await coinbaseService.processWebhookEvent(req.body.event);
+      
+      if (result.success && result.userId && result.tickets) {
+        // Credit the user's account with tickets
+        const success = await storage.creditUserAccount(
+          result.userId,
+          result.tickets,
+          `Coinbase purchase: ${result.tickets} tickets`
+        );
+        
+        if (!success) {
+          console.error('[COINBASE] Failed to credit user account:', result.userId);
+          return res.status(500).json({ message: "Failed to credit account" });
+        }
+        
+        console.log(`[COINBASE] Successfully credited ${result.tickets} tickets to user ${result.userId}`);
+      }
+      
+      res.json({ received: true });
+    } catch (error) {
+      await logError(error, "POST /api/coinbase/webhook", { request: req });
+      res.status(500).json({ message: "Webhook processing failed" });
+    }
+  });
+  
+  // Admin endpoint to update Coinbase settings
+  app.post("/api/admin/coinbase/settings", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user is admin (for now, any authenticated user can update settings)
+      // In production, add proper admin role checking
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const { apiKey, webhookSecret, enabled } = req.body;
+      
+      // Update settings
+      const success = await coinbaseService.updateSettings(apiKey, webhookSecret, enabled);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Failed to update settings. Please check your API credentials." });
+      }
+      
+      res.json({ 
+        message: "Coinbase settings updated successfully",
+        settings: coinbaseService.getSettings()
+      });
+    } catch (error) {
+      await logError(error, "POST /api/admin/coinbase/settings", { request: req });
+      res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+  
+  // Get Coinbase settings for admin page
+  app.get("/api/admin/coinbase/settings", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const settings = coinbaseService.getSettings();
+      
+      res.json({
+        ...settings,
+        hasApiKey: !!process.env.COINBASE_API_KEY,
+        hasWebhookSecret: !!process.env.COINBASE_WEBHOOK_SECRET
+      });
+    } catch (error) {
+      await logError(error, "GET /api/admin/coinbase/settings", { request: req });
+      res.status(500).json({ message: "Failed to get settings" });
     }
   });
 
