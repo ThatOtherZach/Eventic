@@ -437,6 +437,16 @@ export const registryRecords = pgTable("registry_records", {
   ownerUsername: text("owner_username").notNull(),
   ownerDisplayName: text("owner_display_name"),
   
+  // Binary data storage for complete preservation
+  eventImageData: text("event_image_data"), // Base64 encoded event featured image
+  eventStickerData: text("event_sticker_data"), // Base64 encoded sticker GIF
+  ticketBackgroundData: text("ticket_background_data"), // Base64 encoded ticket background
+  ticketGifData: text("ticket_gif_data"), // Base64 encoded generated ticket GIF
+  
+  // Sync tracking for Supabase
+  synced: boolean("synced").default(false), // Whether synced to Supabase
+  syncedAt: timestamp("synced_at"), // When last synced to Supabase
+  
   validatedAt: timestamp("validated_at").notNull(), // Preserved for backward compat
 });
 

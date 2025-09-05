@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema, insertNotificationSchema, insertNotificationPreferencesSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import fetch from 'node-fetch';
 import { logError, logWarning, logInfo } from "./logger";
 import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
 import { validateBody, validateQuery, paginationSchema } from "./validation";
@@ -3252,6 +3253,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const permanentNftMediaUrl = await objectStorageService.copyImageToRegistry(ticket.nftMediaUrl);
       const permanentUserImageUrl = imageUrl ? await objectStorageService.copyImageToRegistry(imageUrl) : null;
       
+      // Fetch actual image data as base64 for permanent storage
+      const fetchImageAsBase64 = async (url: string | null): Promise<string | null> => {
+        if (!url) return null;
+        try {
+          // Handle both object storage paths and full URLs
+          let fetchUrl = url;
+          if (url.startsWith('/objects/')) {
+            // It's an object storage path, fetch from our server
+            fetchUrl = `${req.protocol}://${req.get('host')}${url}`;
+          } else if (!url.startsWith('http')) {
+            // It's a relative path
+            fetchUrl = `${req.protocol}://${req.get('host')}${url}`;
+          }
+          
+          const response = await fetch(fetchUrl);
+          if (!response.ok) return null;
+          
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const base64 = buffer.toString('base64');
+          const contentType = response.headers.get('content-type') || 'image/png';
+          
+          // Return as data URL for easy reconstruction
+          return `data:${contentType};base64,${base64}`;
+        } catch (error) {
+          console.error(`Failed to fetch image ${url}:`, error);
+          return null;
+        }
+      };
+      
+      // Fetch all image data in parallel for efficiency
+      const [eventImageData, eventStickerData, ticketBackgroundData, ticketGifData] = await Promise.all([
+        fetchImageAsBase64(event.imageUrl),
+        fetchImageAsBase64(event.stickerUrl),
+        fetchImageAsBase64(event.ticketBackgroundUrl),
+        fetchImageAsBase64(ticket.nftMediaUrl)
+      ]);
+      
       // Create registry record with COMPLETE data preservation
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
@@ -3350,6 +3389,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         creatorDisplayName: creator?.displayName || null,
         ownerUsername: owner?.displayName || "unknown",
         ownerDisplayName: owner?.displayName || null,
+        
+        // Binary data for complete self-contained record
+        eventImageData: eventImageData || null,
+        eventStickerData: eventStickerData || null,
+        ticketBackgroundData: ticketBackgroundData || null,
+        ticketGifData: ticketGifData || null,
+        
+        // Sync tracking
+        synced: false,
+        syncedAt: null,
         
         validatedAt: ticket.validatedAt!,
       });
