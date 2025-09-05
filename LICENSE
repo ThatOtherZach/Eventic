@@ -1,7 +1,9 @@
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
- Copyright (C) 2025 Event Ticket Management System Contributors
+ Copyright (C) 2025 Zachary Jordan, Saym Services Inc. (saymservices.com)
+ Evantic - Event Ticket Management System
+ 
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.
 
@@ -26,7 +28,7 @@ https://www.gnu.org/licenses/agpl-3.0.en.html
 ADDITIONAL TERMS AND CONDITIONS:
 
 1. Attribution: Any use of this software must prominently display:
-   "Based on Event Ticket Management System - AGPLv3 Licensed"
+   "Based on Evantic by Saym Services Inc. - AGPLv3 Licensed"
 
 2. Network Use: If you run a modified version of this software on a server 
    and let users interact with it there, your server must also allow them 
@@ -37,11 +39,16 @@ ADDITIONAL TERMS AND CONDITIONS:
 
 ---
 
-This Event Ticket Management System includes the following key features:
+EVANTIC - Event Ticket Management System
+Developed by: Zachary Jordan
+Company: Saym Services Inc. (saymservices.com)
+Year: 2025
+
+This system includes the following key features:
 - Event creation and management with QR code ticketing
 - NFT minting for validated tickets
 - Cryptocurrency payments via Coinbase Commerce
-- Stripe payment integration
+- Stripe payment integration  
 - P2P ticket validation
 - Event reputation system
 - Ticket resale mechanism
