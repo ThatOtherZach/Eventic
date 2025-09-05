@@ -4970,7 +4970,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create a Coinbase charge for ticket purchase
+  // Create a custom Coinbase charge with calculated pricing
+  app.post("/api/coinbase/create-charge-custom", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { tickets, bonusTickets, price, multiplied, discount } = req.body;
+      
+      if (!tickets || !price) {
+        return res.status(400).json({ message: "Invalid purchase data" });
+      }
+      
+      if (!coinbaseService.isAvailable()) {
+        return res.status(503).json({ 
+          message: "Coinbase payments are not available. Please use Stripe or try again later." 
+        });
+      }
+      
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Create custom charge data
+      const packageName = multiplied ? `${tickets} Tickets*` : `${tickets} Tickets`;
+      const chargeData = {
+        name: `${packageName} (+${bonusTickets} bonus)`,
+        description: `${tickets + bonusTickets} total tickets (includes ${bonusTickets} bonus tickets: ${bonusTickets - 10} from demand + 10 from Coinbase payment)`,
+        local_price: {
+          amount: price.toString(),
+          currency: 'USD'
+        },
+        pricing_type: 'fixed_price',
+        metadata: {
+          userId,
+          userEmail: user.email,
+          userName: user.displayName || 'User',
+          tickets: tickets.toString(),
+          bonusTickets: bonusTickets.toString(),
+          totalTickets: (tickets + bonusTickets).toString(),
+          multiplied: multiplied ? 'true' : 'false',
+          discount: discount.toString()
+        },
+        redirect_url: `${process.env.APP_URL || 'http://localhost:5000'}/account?payment=success`,
+        cancel_url: `${process.env.APP_URL || 'http://localhost:5000'}/account?payment=cancelled`
+      };
+      
+      // Use the coinbase service's internal client if available
+      const service = coinbaseService as any;
+      if (!service.charge) {
+        return res.status(503).json({ message: "Coinbase service not initialized" });
+      }
+      
+      const charge = await service.charge.create(chargeData);
+      
+      res.json({
+        chargeId: charge.id,
+        hostedUrl: charge.hosted_url
+      });
+    } catch (error) {
+      await logError(error, "POST /api/coinbase/create-charge-custom", { request: req });
+      res.status(500).json({ message: "Failed to create Coinbase charge" });
+    }
+  });
+  
+  // Create a Coinbase charge for ticket purchase (original endpoint for packages)
   app.post("/api/coinbase/create-charge", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
@@ -5031,14 +5099,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Process the webhook event
-      const result = await coinbaseService.processWebhookEvent(req.body.event);
+      const event = req.body.event;
+      const result = await coinbaseService.processWebhookEvent(event);
       
       if (result.success && result.userId && result.tickets) {
+        // Get metadata for better description
+        const metadata = event?.data?.metadata || {};
+        const description = metadata.multiplied === 'true' 
+          ? `Coinbase purchase: ${metadata.tickets} tickets* (+${metadata.bonusTickets} bonus)`
+          : `Coinbase purchase: ${metadata.tickets} tickets (+${metadata.bonusTickets} bonus)`;
+        
         // Credit the user's account with tickets
         const success = await storage.creditUserAccount(
           result.userId,
           result.tickets,
-          `Coinbase purchase: ${result.tickets} tickets`
+          description
         );
         
         if (!success) {

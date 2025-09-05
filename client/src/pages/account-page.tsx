@@ -401,27 +401,69 @@ export default function AccountPage() {
       }
 
       const volumeDiscount = calculateVolumeDiscount(ticketQuantity);
-      const response = await apiRequest(
-        "POST",
-        "/api/currency/create-purchase",
-        {
-          quantity: finalQuantity,
-          hasDiscount: multiplyAndSave,
-          reputationDiscount: reputationDiscount,
-          volumeDiscount: volumeDiscount,
-        },
+      const unitPrice = demandData?.currentUnitPrice || 0.23;
+      const basePrice = ticketQuantity * unitPrice;
+      const totalDiscount = Math.min(
+        reputationDiscount + volumeDiscount + (multiplyAndSave ? 10 : 0),
+        30
       );
-      const data = await response.json();
+      const finalPrice = roundToNice(basePrice * (1 - totalDiscount / 100));
 
-      if (response.ok && data.sessionUrl) {
-        // Redirect to Stripe checkout
-        window.location.href = data.sessionUrl;
+      if (paymentMethod === "Coinbase") {
+        // Handle Coinbase payment
+        // Add 10 bonus tickets for Coinbase payments
+        finalQuantity += 10;
+        
+        // Create a simplified package for Coinbase
+        const coinbasePackage = {
+          tickets: ticketQuantity,
+          bonusTickets: finalQuantity - ticketQuantity,
+          price: finalPrice,
+          multiplied: multiplyAndSave,
+          discount: totalDiscount,
+        };
+        
+        const response = await apiRequest(
+          "POST",
+          "/api/coinbase/create-charge-custom",
+          coinbasePackage
+        );
+        const data = await response.json();
+        
+        if (response.ok && data.hostedUrl) {
+          // Redirect to Coinbase checkout
+          window.location.href = data.hostedUrl;
+        } else {
+          toast({
+            title: "Error",
+            description: data.message || "Coinbase payments are not available at this time",
+            variant: "destructive",
+          });
+        }
       } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to create purchase session",
-          variant: "destructive",
-        });
+        // Handle Stripe payment (existing code)
+        const response = await apiRequest(
+          "POST",
+          "/api/currency/create-purchase",
+          {
+            quantity: finalQuantity,
+            hasDiscount: multiplyAndSave,
+            reputationDiscount: reputationDiscount,
+            volumeDiscount: volumeDiscount,
+          },
+        );
+        const data = await response.json();
+
+        if (response.ok && data.sessionUrl) {
+          // Redirect to Stripe checkout
+          window.location.href = data.sessionUrl;
+        } else {
+          toast({
+            title: "Error",
+            description: data.message || "Failed to create purchase session",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -438,8 +480,9 @@ export default function AccountPage() {
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
     const purchase = params.get("purchase");
+    const payment = params.get("payment");
 
-    if (purchase === "success") {
+    if (purchase === "success" || payment === "success") {
       toast({
         title: "Purchase Complete!",
         description: "Your tickets have been added to your balance",
@@ -448,7 +491,7 @@ export default function AccountPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       // Clean up URL
       setLocation("/account");
-    } else if (purchase === "cancelled") {
+    } else if (purchase === "cancelled" || payment === "cancelled") {
       toast({
         title: "Purchase Cancelled",
         description: "Your purchase was cancelled",
