@@ -75,7 +75,7 @@ function App() {
                 </div>
               </main>
               <footer className="text-center py-3 mt-auto">
-                <small className="text-muted">Saym Services Inc.</small>
+                <small className="text-muted">Evantic Core by Saym Services</small>
               </footer>
             </div>
             <Toaster />
