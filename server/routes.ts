@@ -1216,7 +1216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Events routes
-  app.get("/api/events", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/events", async (req, res) => {
     try {
       const events = await storage.getEvents();
       // Filter out private events from general listing
@@ -3706,7 +3706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Featured Events Routes
-  app.get("/api/featured-events", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/featured-events", async (req, res) => {
     try {
       // Clean up expired featured events first
       await storage.cleanupExpiredFeaturedEvents();
@@ -3777,7 +3777,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/featured-grid", async (req: AuthenticatedRequest, res) => {
+  app.get("/api/featured-grid", async (req, res) => {
     try {
       // Clean up expired featured events first
       await storage.cleanupExpiredFeaturedEvents();
