@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import type { JWTPayload } from 'jose';
+import { storage } from './storage';
 
-// Extended Request type with user info
+// Extended Request type with user info and roles
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email?: string;
+    roles?: string[];
+    permissions?: string[];
   };
 }
 
@@ -40,8 +43,8 @@ function getJWKS() {
   return jwks;
 }
 
-// Verify JWT token and extract user info
-export async function verifyToken(token: string): Promise<{ id: string; email?: string } | null> {
+// Verify JWT token and extract user info with roles
+export async function verifyToken(token: string): Promise<{ id: string; email?: string; roles?: string[]; permissions?: string[] } | null> {
   try {
     // First, try to decode without verification to get basic info
     const parts = token.split('.');
@@ -79,9 +82,30 @@ export async function verifyToken(token: string): Promise<{ id: string; email?: 
       // JWKS endpoint temporarily unavailable - token still valid for development
     }
     
+    // Get user roles from database
+    let userRoles: string[] = [];
+    let userPermissions: string[] = [];
+    
+    try {
+      const roles = await storage.getUserRoles(userId);
+      userRoles = roles.map(r => r.name);
+      
+      // Collect all permissions from all roles
+      for (const role of roles) {
+        const rolePermissions = role.permissions as string[] || [];
+        userPermissions.push(...rolePermissions);
+      }
+      // Remove duplicates
+      userPermissions = [...new Set(userPermissions)];
+    } catch (error) {
+      console.error('Failed to fetch user roles:', error);
+    }
+    
     return {
       id: userId,
       email: email || undefined,
+      roles: userRoles,
+      permissions: userPermissions
     };
   } catch (error) {
     console.error('JWT verification failed:', error);
@@ -145,4 +169,53 @@ export function extractUserId(req: AuthenticatedRequest): string | null {
 
 export function extractUserEmail(req: AuthenticatedRequest): string | null {
   return req.user?.email || null;
+}
+
+// Role-based access control middleware
+export function requireRole(roleName: string) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const hasRole = await storage.hasRole(req.user.id, roleName);
+    
+    if (!hasRole) {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+    
+    next();
+  };
+}
+
+// Permission-based access control middleware
+export function requirePermission(permission: string) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const hasPermission = await storage.hasPermission(req.user.id, permission);
+    
+    if (!hasPermission) {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+    
+    next();
+  };
+}
+
+// Admin-only middleware
+export async function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  
+  const isAdmin = await storage.hasRole(req.user.id, 'admin');
+  
+  if (!isAdmin) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  
+  next();
 }
