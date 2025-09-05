@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { logError, scheduleLogCleanup } from "./logger";
@@ -6,6 +7,15 @@ import { initializeJobScheduler } from "./jobScheduler";
 import { storage } from "./storage";
 
 const app = express();
+
+// Enable CORS for all origins to allow external access
+app.use(cors({
+  origin: true, // Allow all origins
+  credentials: true, // Allow cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json({ limit: '10mb' })); // Limit request body size
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
