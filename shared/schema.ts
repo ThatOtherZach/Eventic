@@ -12,6 +12,46 @@ export const users = pgTable("users", {
   lastLoginAt: timestamp("last_login_at"),
 });
 
+// Roles table for defining user roles
+export const roles = pgTable("roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(), // e.g., super_admin, event_moderator, support, user
+  displayName: text("display_name").notNull(), // Human-readable name
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Permissions table for defining specific permissions
+export const permissions = pgTable("permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(), // e.g., manage_events, manage_users, view_analytics
+  displayName: text("display_name").notNull(), // Human-readable name
+  description: text("description"),
+  category: text("category"), // Group permissions by category (events, users, settings, etc.)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Junction table for role-permission associations
+export const rolePermissions = pgTable("role_permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roleId: varchar("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
+  permissionId: varchar("permission_id").references(() => permissions.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueRolePermission: unique().on(table.roleId, table.permissionId),
+}));
+
+// User roles assignment table
+export const userRoles = pgTable("user_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  roleId: varchar("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
+  assignedBy: varchar("assigned_by").references(() => users.id), // Who assigned this role
+  assignedAt: timestamp("assigned_at").defaultNow(),
+}, (table) => ({
+  uniqueUserRole: unique().on(table.userId, table.roleId),
+}));
+
 export const authTokens = pgTable("auth_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
@@ -997,3 +1037,33 @@ export type InsertTicketPurchase = z.infer<typeof insertTicketPurchaseSchema>;
 export type TicketPurchase = typeof ticketPurchases.$inferSelect;
 export type InsertScheduledJob = z.infer<typeof insertScheduledJobSchema>;
 export type ScheduledJob = typeof scheduledJobs.$inferSelect;
+
+// Role and permission schemas
+export const insertRoleSchema = createInsertSchema(roles).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
+  id: true,
+  assignedAt: true,
+});
+
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Role = typeof roles.$inferSelect;
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+export type Permission = typeof permissions.$inferSelect;
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type UserRole = typeof userRoles.$inferSelect;

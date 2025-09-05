@@ -46,14 +46,14 @@ interface EventWithTicketInfo extends Event {
 export default function EventForm() {
   const { id } = useParams<{ id?: string }>();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin: checkIsAdmin } = useAuth();
   const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [stickerEnabled, setStickerEnabled] = useState(false);
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
-  const isAdmin = user?.email?.endsWith("@saymservices.com") || false;
+  const isAdmin = checkIsAdmin();
 
   // Get user's credit balance
   const { data: userBalance } = useQuery<{ balance: string }>({

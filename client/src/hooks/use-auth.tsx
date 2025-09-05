@@ -8,6 +8,9 @@ import { useLocation } from "wouter";
 type ExtendedUser = User & {
   displayName?: string;
   memberStatus?: string;
+  permissions?: string[];
+  roles?: { name: string; displayName: string }[];
+  isAdmin?: boolean;
 };
 
 type AuthContextType = {
@@ -15,6 +18,8 @@ type AuthContextType = {
   isLoading: boolean;
   signUp: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
+  isAdmin: () => boolean;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,6 +56,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
   const hasInitialized = useRef(false);
+  
+  // Helper function to fetch user permissions
+  const fetchPermissions = async (accessToken: string): Promise<Partial<ExtendedUser>> => {
+    try {
+      const permResponse = await fetch('/api/auth/permissions', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+      if (permResponse.ok) {
+        const permData = await permResponse.json();
+        return {
+          permissions: permData.permissions || [],
+          roles: permData.roles || [],
+          isAdmin: permData.isAdmin || false,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to fetch permissions:', error);
+    }
+    return {};
+  };
 
   useEffect(() => {
     if (hasInitialized.current || hasGloballyInitialized) return;
@@ -91,12 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               if (syncResponse.ok) {
                 const userData = await syncResponse.json();
-                // Update user object with any new data (like displayName and memberStatus)
+                // Fetch permissions
+                const permissions = await fetchPermissions(accessToken);
+                // Update user object with any new data (like displayName, memberStatus, and permissions)
                 if (mounted) {
                   const extendedUser = { 
                     ...data.session.user, 
                     displayName: userData.displayName, 
-                    memberStatus: userData.memberStatus 
+                    memberStatus: userData.memberStatus,
+                    ...permissions
                   };
                   setUser(extendedUser);
                 }
@@ -133,12 +163,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               if (syncResponse.ok) {
                 const userData = await syncResponse.json();
-                // Update user object with any new data (like displayName and memberStatus)
+                // Fetch permissions
+                const permissions = await fetchPermissions(session.access_token);
+                // Update user object with any new data (like displayName, memberStatus, and permissions)
                 if (mounted) {
                   const extendedUser = { 
                     ...session.user, 
                     displayName: userData.displayName, 
-                    memberStatus: userData.memberStatus 
+                    memberStatus: userData.memberStatus,
+                    ...permissions
                   };
                   setUser(extendedUser);
                 }
@@ -253,6 +286,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
+  
+  // Permission checking helper functions
+  const hasPermission = (permission: string): boolean => {
+    if (!user) return false;
+    return user.permissions?.includes(permission) || false;
+  };
+  
+  const isAdmin = (): boolean => {
+    if (!user) return false;
+    return user.isAdmin || false;
+  };
 
   return (
     <AuthContext.Provider
@@ -261,6 +305,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         signUp,
         signOut,
+        hasPermission,
+        isAdmin,
       }}
     >
       {children}

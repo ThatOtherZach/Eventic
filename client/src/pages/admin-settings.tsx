@@ -25,7 +25,7 @@ const SPECIAL_EFFECTS = [
 ];
 
 export default function AdminSettings() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,7 +39,7 @@ export default function AdminSettings() {
   const [paymentStatus, setPaymentStatus] = useState<any>(null);
 
   // Check if user has admin access
-  if (!user?.email?.endsWith("@saymservices.com")) {
+  if (!isAdmin()) {
     navigate("/");
     return null;
   }
@@ -47,24 +47,19 @@ export default function AdminSettings() {
   // Get all events for management
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ["/api/admin/events"],
-    enabled: !!user?.email?.endsWith("@saymservices.com")
+    enabled: isAdmin()
   });
 
   // Get current special effects odds
   const { data: currentOdds } = useQuery({
     queryKey: ["/api/admin/special-effects-odds"],
-    enabled: !!user?.email?.endsWith("@saymservices.com"),
-    onSuccess: (data) => {
-      if (data) {
-        setEffectOdds(data);
-      }
-    }
+    enabled: isAdmin()
   });
 
   // Get payment configuration status
   const { data: paymentData } = useQuery({
     queryKey: ["/api/admin/payment-status"],
-    enabled: !!user?.email?.endsWith("@saymservices.com")
+    enabled: isAdmin()
   });
 
   // Update special effects odds

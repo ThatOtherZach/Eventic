@@ -49,6 +49,12 @@ app.use((req, res, next) => {
   // Initialize currency system accounts
   await storage.initializeSystemAccounts();
   
+  // Initialize roles and permissions
+  await storage.initializeRolesAndPermissions();
+  
+  // Migrate existing admin users to super_admin role
+  await storage.migrateExistingAdmins();
+  
   const server = await registerRoutes(app);
 
   app.use(async (err: any, req: Request, res: Response, _next: NextFunction) => {

@@ -8,7 +8,7 @@ import { supabaseSyncService } from "./supabaseSync";
 import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
 import fetch from 'node-fetch';
 import { logError, logWarning, logInfo } from "./logger";
-import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
+import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest, requirePermission, isAdmin } from "./auth";
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
@@ -419,6 +419,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { email: req.body.email }
       });
       res.status(500).json({ message: "Failed to sync user" });
+    }
+  });
+
+  // Get current user's permissions
+  app.get("/api/auth/permissions", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const [roles, permissions] = await Promise.all([
+        storage.getUserRoles(userId),
+        storage.getUserPermissions(userId)
+      ]);
+
+      res.json({
+        roles: roles.map(r => ({
+          name: r.name,
+          displayName: r.displayName
+        })),
+        permissions: permissions.map(p => p.name),
+        isAdmin: roles.some(r => r.name === 'super_admin' || r.name === 'event_moderator')
+      });
+    } catch (error) {
+      await logError(error, "GET /api/auth/permissions", { request: req });
+      res.status(500).json({ message: "Failed to fetch permissions" });
     }
   });
 
@@ -857,8 +884,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if creator is an admin (has @saymservices.com email)
-      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
+      // Check if creator has admin role
+      const creatorId = eventWithCreator.userId;
+      const isAdminCreated = creatorId ? await isAdmin(creatorId) : false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1274,8 +1302,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Anyone with the link who is logged in can view it
       }
       
-      // Check if creator is an admin (has @saymservices.com email)
-      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
+      // Check if creator has admin role
+      const creatorId = eventWithCreator.userId;
+      const isAdminCreated = creatorId ? await isAdmin(creatorId) : false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1325,8 +1354,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userEmail = req.user?.email;
     
     try {
-      // Check if user is an admin (has @saymservices.com email)
-      const isAdminCreated = userEmail?.endsWith("@saymservices.com") || false;
+      // Check if user has admin role
+      const isAdminCreated = userId ? await isAdmin(userId) : false;
       
       // Handle image URL normalization if provided
       let createData = { ...req.body };
@@ -1448,11 +1477,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if user is admin (has @saymservices.com email)
-      const isAdmin = req.user?.email?.endsWith("@saymservices.com");
+      // Check if user has admin role
+      const hasAdminRole = userId ? await isAdmin(userId) : false;
       
       // Allow editing if user owns the event OR is an admin
-      if (event.userId !== userId && !isAdmin) {
+      if (event.userId !== userId && !hasAdminRole) {
         return res.status(403).json({ message: "You can only edit your own events" });
       }
       
@@ -2805,7 +2834,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userEmail = req.user?.email;
       
       // Check admin access
-      if (!userEmail?.endsWith("@saymservices.com")) {
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -2840,7 +2869,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/events", async (req: AuthenticatedRequest, res) => {
     try {
       // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_events'))) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -2857,7 +2887,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/events/:eventId/toggle", async (req: AuthenticatedRequest, res) => {
     try {
       // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_events'))) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -2893,7 +2924,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
     try {
       // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_events'))) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -2909,7 +2941,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
     try {
       // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_events'))) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -2942,7 +2975,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/process-recurring-events", async (req: AuthenticatedRequest, res) => {
     try {
       // Check admin access
-      if (!req.user?.email?.endsWith("@saymservices.com")) {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_events'))) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -3634,7 +3668,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add isAdminCreated field and current price to each event
       const featuredEventsWithAdmin = await Promise.all(featuredEvents.map(async (featuredEvent) => {
         const eventWithCreator = await storage.getEventWithCreator(featuredEvent.event.id);
-        const isAdminCreated = eventWithCreator?.creatorEmail?.endsWith("@saymservices.com") || false;
+        const creatorId = eventWithCreator?.userId;
+        const isAdminCreated = creatorId ? await isAdmin(creatorId) : false;
         
         // Get current price with surge pricing
         const currentPrice = await storage.getCurrentPrice(featuredEvent.event.id);

@@ -84,7 +84,7 @@ export function Navigation() {
             
             {user ? (
               <>
-                {user.email?.endsWith("@saymservices.com") && (
+                {user.isAdmin && (
                   <li className="nav-item">
                     <Link
                       href="/admin"

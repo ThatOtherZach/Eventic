@@ -1,7 +1,7 @@
 # Event Ticket Management System
 
 ## Overview
-This is a full-stack event ticketing application built with React and Express.js. It enables users to create and manage events, generate tickets, and validate them via QR codes. The system provides a complete event management workflow with a modern web interface, robust backend API, comprehensive error logging, and Bootstrap-style user notifications. It includes features like location-based routing, a unified event form, smart event sorting, and a simplified image system. Advanced functionalities include P2P ticket validation, an event reputation system, a ticket resale mechanism, and NFT minting for validated tickets. The system implements a 69-day data retention policy with automated archiving. The interface features subtle Windows 98-inspired styling for a nostalgic touch.
+This is a full-stack event ticketing application built with React and Express.js. It enables users to create and manage events, generate tickets, and validate them via QR codes. The system provides a complete event management workflow with a modern web interface, robust backend API, comprehensive error logging, and Bootstrap-style user notifications. It includes features like location-based routing, a unified event form, smart event sorting, and a simplified image system. Advanced functionalities include P2P ticket validation, an event reputation system, a ticket resale mechanism, and NFT minting for validated tickets. The system implements a 69-day data retention policy with automated archiving and a comprehensive role-based access control (RBAC) system for managing user permissions. The interface features subtle Windows 98-inspired styling for a nostalgic touch.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -24,6 +24,7 @@ The project is configured for seamless development using Vite dev server (with H
 The system includes client-side QR code generation for tickets and server-side validation through QR data lookup, complemented by a web-based QR scanner interface.
 
 ### Key Features & Design Decisions
+- **Role-Based Access Control (RBAC)**: Comprehensive permission system with four user roles (Super Admin, Event Moderator, Support, User) and granular permissions (manage_events, manage_users, manage_settings, view_analytics, manage_payments). Replaces hardcoded email domain checks with proper permission-based authorization. Super Admin role automatically assigned to @saymservices.com users during migration.
 - **Location-Based Routing**: Dynamic URL routing for filtering events by city/country (/NewYork, /UnitedStates), with automatic space conversion and visual effects (Golden Ticket, Monthly Colors). Includes RSS feed functionality for location-based event subscriptions.
 - **Unified Event Form**: A single `event-form.tsx` for creation and editing, intelligently detecting mode and validating ownership.
 - **Smart Event Sorting**: Home page displays active events only, prioritizing those within the next 24 hours, then chronologically.

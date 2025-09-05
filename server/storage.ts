@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
@@ -118,6 +118,22 @@ export interface IStorage {
   // Admin Operations
   getAllEventsForAdmin(): Promise<Event[]>;
   updateEventVisibility(eventId: string, field: "isEnabled" | "ticketPurchasesEnabled", value: boolean): Promise<Event | undefined>;
+  
+  // Roles and Permissions
+  createRole(role: InsertRole): Promise<Role>;
+  getRoles(): Promise<Role[]>;
+  getRoleByName(name: string): Promise<Role | undefined>;
+  createPermission(permission: InsertPermission): Promise<Permission>;
+  getPermissions(): Promise<Permission[]>;
+  assignRolePermission(roleId: string, permissionId: string): Promise<RolePermission>;
+  getRolePermissions(roleId: string): Promise<Permission[]>;
+  assignUserRole(userId: string, roleId: string, assignedBy?: string): Promise<UserRole>;
+  getUserRoles(userId: string): Promise<Role[]>;
+  getUserPermissions(userId: string): Promise<Permission[]>;
+  hasPermission(userId: string, permissionName: string): Promise<boolean>;
+  removeUserRole(userId: string, roleId: string): Promise<void>;
+  initializeRolesAndPermissions(): Promise<void>;
+  migrateExistingAdmins(): Promise<void>;
   
   // Recurring Events
   getEventsNeedingRecurrence(): Promise<Event[]>;
@@ -2353,6 +2369,222 @@ export class DatabaseStorage implements IStorage {
     return updatedEvent;
   }
 
+  // Roles and Permissions
+  async createRole(role: InsertRole): Promise<Role> {
+    const [newRole] = await db.insert(roles).values(role).returning();
+    return newRole;
+  }
+
+  async getRoles(): Promise<Role[]> {
+    return await db.select().from(roles).orderBy(roles.name);
+  }
+
+  async getRoleByName(name: string): Promise<Role | undefined> {
+    const [role] = await db.select().from(roles).where(eq(roles.name, name));
+    return role;
+  }
+
+  async createPermission(permission: InsertPermission): Promise<Permission> {
+    const [newPermission] = await db.insert(permissions).values(permission).returning();
+    return newPermission;
+  }
+
+  async getPermissions(): Promise<Permission[]> {
+    return await db.select().from(permissions).orderBy(permissions.category, permissions.name);
+  }
+
+  async assignRolePermission(roleId: string, permissionId: string): Promise<RolePermission> {
+    const [assignment] = await db
+      .insert(rolePermissions)
+      .values({ roleId, permissionId })
+      .onConflictDoNothing()
+      .returning();
+    return assignment;
+  }
+
+  async getRolePermissions(roleId: string): Promise<Permission[]> {
+    const perms = await db
+      .select({ permission: permissions })
+      .from(rolePermissions)
+      .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+      .where(eq(rolePermissions.roleId, roleId));
+    return perms.map(p => p.permission);
+  }
+
+  async assignUserRole(userId: string, roleId: string, assignedBy?: string): Promise<UserRole> {
+    const [assignment] = await db
+      .insert(userRoles)
+      .values({ userId, roleId, assignedBy })
+      .onConflictDoNothing()
+      .returning();
+    return assignment;
+  }
+
+  async getUserRoles(userId: string): Promise<Role[]> {
+    const userRolesList = await db
+      .select({ role: roles })
+      .from(userRoles)
+      .innerJoin(roles, eq(roles.id, userRoles.roleId))
+      .where(eq(userRoles.userId, userId));
+    return userRolesList.map(ur => ur.role);
+  }
+
+  async getUserPermissions(userId: string): Promise<Permission[]> {
+    // Get all permissions from all user's roles
+    const perms = await db
+      .select({ permission: permissions })
+      .from(userRoles)
+      .innerJoin(rolePermissions, eq(rolePermissions.roleId, userRoles.roleId))
+      .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+      .where(eq(userRoles.userId, userId));
+    
+    // Remove duplicates
+    const uniquePerms = new Map<string, Permission>();
+    perms.forEach(p => uniquePerms.set(p.permission.id, p.permission));
+    return Array.from(uniquePerms.values());
+  }
+
+  async hasPermission(userId: string, permissionName: string): Promise<boolean> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(userRoles)
+      .innerJoin(rolePermissions, eq(rolePermissions.roleId, userRoles.roleId))
+      .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+      .where(and(
+        eq(userRoles.userId, userId),
+        eq(permissions.name, permissionName)
+      ));
+    return (result?.count || 0) > 0;
+  }
+
+  async removeUserRole(userId: string, roleId: string): Promise<void> {
+    await db
+      .delete(userRoles)
+      .where(and(
+        eq(userRoles.userId, userId),
+        eq(userRoles.roleId, roleId)
+      ));
+  }
+
+  async initializeRolesAndPermissions(): Promise<void> {
+    // Check if roles already exist
+    const existingRoles = await this.getRoles();
+    if (existingRoles.length > 0) {
+      return; // Already initialized
+    }
+
+    // Create default roles
+    const superAdminRole = await this.createRole({
+      name: 'super_admin',
+      displayName: 'Super Admin',
+      description: 'Full system access with all permissions'
+    });
+
+    const eventModeratorRole = await this.createRole({
+      name: 'event_moderator',
+      displayName: 'Event Moderator',
+      description: 'Can manage events and view event analytics'
+    });
+
+    const supportRole = await this.createRole({
+      name: 'support',
+      displayName: 'Support',
+      description: 'Can view analytics and help users'
+    });
+
+    const userRole = await this.createRole({
+      name: 'user',
+      displayName: 'User',
+      description: 'Standard user with basic permissions'
+    });
+
+    // Create permissions
+    const manageEvents = await this.createPermission({
+      name: 'manage_events',
+      displayName: 'Manage Events',
+      description: 'Can enable/disable events and manage event settings',
+      category: 'events'
+    });
+
+    const manageUsers = await this.createPermission({
+      name: 'manage_users',
+      displayName: 'Manage Users',
+      description: 'Can manage user accounts and roles',
+      category: 'users'
+    });
+
+    const manageSettings = await this.createPermission({
+      name: 'manage_settings',
+      displayName: 'Manage Settings',
+      description: 'Can change system settings and configuration',
+      category: 'settings'
+    });
+
+    const viewAnalytics = await this.createPermission({
+      name: 'view_analytics',
+      displayName: 'View Analytics',
+      description: 'Can view system analytics and reports',
+      category: 'analytics'
+    });
+
+    const managePayments = await this.createPermission({
+      name: 'manage_payments',
+      displayName: 'Manage Payments',
+      description: 'Can configure payment settings and view transactions',
+      category: 'payments'
+    });
+
+    // Assign permissions to roles
+    // Super Admin gets all permissions
+    await this.assignRolePermission(superAdminRole.id, manageEvents.id);
+    await this.assignRolePermission(superAdminRole.id, manageUsers.id);
+    await this.assignRolePermission(superAdminRole.id, manageSettings.id);
+    await this.assignRolePermission(superAdminRole.id, viewAnalytics.id);
+    await this.assignRolePermission(superAdminRole.id, managePayments.id);
+
+    // Event Moderator gets event and analytics permissions
+    await this.assignRolePermission(eventModeratorRole.id, manageEvents.id);
+    await this.assignRolePermission(eventModeratorRole.id, viewAnalytics.id);
+
+    // Support gets view analytics
+    await this.assignRolePermission(supportRole.id, viewAnalytics.id);
+
+    // User role has no special permissions
+  }
+
+  async migrateExistingAdmins(): Promise<void> {
+    // Find all users with @saymservices.com email
+    const adminUsers = await db
+      .select()
+      .from(users)
+      .where(sql`${users.email} LIKE '%@saymservices.com'`);
+
+    if (adminUsers.length === 0) {
+      return; // No admins to migrate
+    }
+
+    // Get the super_admin role
+    const superAdminRole = await this.getRoleByName('super_admin');
+    if (!superAdminRole) {
+      // Initialize roles first if they don't exist
+      await this.initializeRolesAndPermissions();
+      const role = await this.getRoleByName('super_admin');
+      if (!role) return;
+      
+      // Assign super_admin role to all @saymservices.com users
+      for (const user of adminUsers) {
+        await this.assignUserRole(user.id, role.id);
+        console.log(`Migrated admin user ${user.email} to super_admin role`);
+      }
+    } else {
+      // Assign super_admin role to all @saymservices.com users
+      for (const user of adminUsers) {
+        await this.assignUserRole(user.id, superAdminRole.id);
+        console.log(`Migrated admin user ${user.email} to super_admin role`);
+      }
+    }
+  }
+
   // Recurring Events
   async getEventsNeedingRecurrence(): Promise<Event[]> {
     // Get events that:
@@ -3876,12 +4108,18 @@ export class DatabaseStorage implements IStorage {
           // If user doesn't have a ticket, create one (auto-signup!)
           if (!ticket) {
             const user = await this.getUser(userId);
+            const ticketNumber = `HUNT-${event.id.slice(0, 8)}-${Date.now()}`;
+            const qrData = `HUNT-${secretCode.huntCode}-${ticketNumber}`;
+            
             ticket = await this.createTicket({
               eventId: event.id,
               userId: userId,
+              ticketNumber: ticketNumber,
+              qrData: qrData,
               recipientName: user?.displayName || 'Hunt Discoverer',
               recipientEmail: user?.email || 'unknown@hunt.quest',
               status: 'sent', // Auto-sent Hunt tickets
+              transferable: false, // Hunt tickets are non-transferable
               isValidated: true, // Auto-validate Hunt tickets
               validatedAt: new Date(),
               useCount: 1,
