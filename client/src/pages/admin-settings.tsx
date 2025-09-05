@@ -14,7 +14,7 @@ import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban } from "lucide-react";
+import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle } from "lucide-react";
 
 // Special effects configuration with ticket type previews
 const SPECIAL_EFFECTS = [
@@ -36,6 +36,7 @@ export default function AdminSettings() {
     christmas: 25,
     nice: 69
   });
+  const [paymentStatus, setPaymentStatus] = useState<any>(null);
 
   // Check if user has admin access
   if (!user?.email?.endsWith("@saymservices.com")) {
@@ -58,6 +59,12 @@ export default function AdminSettings() {
         setEffectOdds(data);
       }
     }
+  });
+
+  // Get payment configuration status
+  const { data: paymentData } = useQuery({
+    queryKey: ["/api/admin/payment-status"],
+    enabled: !!user?.email?.endsWith("@saymservices.com")
   });
 
   // Update special effects odds
@@ -123,7 +130,7 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="effects" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="effects" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             Special Effects
@@ -131,6 +138,10 @@ export default function AdminSettings() {
           <TabsTrigger value="events" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Event Management
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Payment Settings
           </TabsTrigger>
         </TabsList>
 
@@ -341,6 +352,153 @@ export default function AdminSettings() {
                   </div>
                 )}
               </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payments" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Stripe Configuration</CardTitle>
+              <CardDescription>
+                Manage your Stripe payment integration settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                {/* Stripe Status */}
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Stripe Integration</p>
+                      <p className="text-sm text-gray-500">
+                        {paymentData?.stripe?.configured ? "Connected" : "Not Configured"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {paymentData?.stripe?.configured ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Stripe Bonus Configuration */}
+                <div className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Stripe Payment Bonus</p>
+                      <p className="text-sm text-gray-500">
+                        Customers receive 2 bonus tickets when paying with Stripe
+                      </p>
+                    </div>
+                    <Badge variant="secondary">+2 Tickets</Badge>
+                  </div>
+                </div>
+
+                {/* Test Mode Indicator */}
+                {paymentData?.stripe?.testMode && (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-600 text-sm font-medium">Test Mode</span>
+                      <p className="text-sm text-gray-600">
+                        Using test API keys. Real payments will not be processed.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Configuration Info */}
+                <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Configuration</p>
+                  <p className="text-xs text-gray-600">
+                    Stripe API keys are managed through environment variables:
+                  </p>
+                  <ul className="text-xs text-gray-600 space-y-1 ml-4">
+                    <li>• STRIPE_SECRET_KEY</li>
+                    <li>• STRIPE_WEBHOOK_SECRET</li>
+                    <li>• STRIPE_PUBLISHABLE_KEY</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Coinbase Commerce Configuration</CardTitle>
+              <CardDescription>
+                Manage your cryptocurrency payment integration
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                {/* Coinbase Status */}
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Coinbase Commerce</p>
+                      <p className="text-sm text-gray-500">
+                        Cryptocurrency payment acceptance
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {paymentData?.coinbase?.enabled ? (
+                      <>
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <span className="text-sm text-green-600">Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-5 w-5 text-red-500" />
+                        <span className="text-sm text-red-600">Not Configured</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Coinbase Bonus Configuration */}
+                <div className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Crypto Payment Bonus</p>
+                      <p className="text-sm text-gray-500">
+                        Customers receive 10 bonus tickets when paying with cryptocurrency
+                      </p>
+                    </div>
+                    <Badge variant="secondary">+10 Tickets</Badge>
+                  </div>
+                </div>
+
+                {/* Accepted Currencies */}
+                <div className="p-4 border rounded-lg space-y-3">
+                  <p className="font-medium text-sm">Accepted Cryptocurrencies</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">Bitcoin (BTC)</Badge>
+                    <Badge variant="outline">Ethereum (ETH)</Badge>
+                    <Badge variant="outline">USDC</Badge>
+                    <Badge variant="outline">Litecoin (LTC)</Badge>
+                    <Badge variant="outline">Dogecoin (DOGE)</Badge>
+                  </div>
+                </div>
+
+                {/* Configuration Info */}
+                <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Configuration</p>
+                  <p className="text-xs text-gray-600">
+                    Coinbase API credentials are managed through environment variables:
+                  </p>
+                  <ul className="text-xs text-gray-600 space-y-1 ml-4">
+                    <li>• COINBASE_API_KEY</li>
+                    <li>• COINBASE_WEBHOOK_SECRET</li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

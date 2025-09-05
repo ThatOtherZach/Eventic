@@ -2798,6 +2798,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get payment configuration status (admin only)
+  app.get("/api/admin/payment-status", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const userEmail = req.user?.email;
+      
+      // Check admin access
+      if (!userEmail?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Check Stripe status
+      const stripeConfigured = !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY);
+      const stripeWebhookConfigured = !!process.env.STRIPE_WEBHOOK_SECRET;
+      
+      // Check Coinbase status  
+      const coinbaseStatus = coinbaseService.getSettings();
+      
+      res.json({
+        stripe: {
+          configured: stripeConfigured,
+          webhookConfigured: stripeWebhookConfigured,
+          testMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') || false,
+          bonus: 2
+        },
+        coinbase: {
+          configured: coinbaseStatus.configured,
+          enabled: coinbaseStatus.enabled,
+          bonus: 10,
+          acceptedCurrencies: ['BTC', 'ETH', 'USDC', 'LTC', 'DOGE']
+        }
+      });
+    } catch (error) {
+      await logError(error, "GET /api/admin/payment-status", { request: req });
+      res.status(500).json({ message: "Failed to get payment status" });
+    }
+  });
+
   // Admin routes (protected - only for @saymservices.com emails)
   app.get("/api/admin/events", async (req: AuthenticatedRequest, res) => {
     try {
