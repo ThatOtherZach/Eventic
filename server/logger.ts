@@ -61,43 +61,6 @@ export async function logError(
   }
 }
 
-// Audit log for tracking admin actions
-export async function logAdminAction(
-  action: string,
-  adminId: string,
-  targetResource: string,
-  details?: any
-): Promise<void> {
-  try {
-    const logEntry = {
-      level: "audit",
-      message: `ADMIN ACTION: ${action}`.substring(0, 1000),
-      source: "ADMIN_AUDIT",
-      userId: adminId,
-      eventId: details?.eventId || null,
-      ticketId: details?.ticketId || null,
-      errorCode: "ADMIN_ACTION",
-      stackTrace: null,
-      metadata: JSON.stringify({
-        action,
-        adminId,
-        targetResource,
-        details,
-        timestamp: new Date().toISOString()
-      }),
-      ipAddress: details?.ipAddress || null,
-      userAgent: details?.userAgent || null,
-      url: targetResource,
-      method: details?.method || null,
-    };
-
-    await db.insert(systemLogs).values(logEntry);
-    console.log(`[ADMIN_AUDIT] ${action} by ${adminId} on ${targetResource}`);
-  } catch (error) {
-    console.error('Failed to write admin audit log:', error);
-  }
-}
-
 export async function logWarning(
   message: string,
   source: string,

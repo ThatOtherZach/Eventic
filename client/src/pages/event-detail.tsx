@@ -23,7 +23,6 @@ import {
   Globe,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useAdmin } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
 import {
@@ -81,7 +80,6 @@ interface EventWithStats extends Event {
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { isAdmin: isAdminRole } = useAdmin();
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
@@ -685,7 +683,7 @@ export default function EventDetailPage() {
 
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
-  const isAdmin = isAdminRole;
+  const isAdmin = user?.email?.endsWith("@saymservices.com");
 
   // Calculate if event has started using date and time
   const eventHasStarted = (() => {

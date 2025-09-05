@@ -8,11 +8,6 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   displayName: text("display_name"),
   memberStatus: text("member_status").default("Legacy"), // Track account signup periods
-  // 2FA fields
-  twoFactorEnabled: boolean("two_factor_enabled").default(false),
-  twoFactorSecret: text("two_factor_secret"), // Encrypted TOTP secret
-  twoFactorBackupCodes: text("two_factor_backup_codes").array(), // Encrypted backup codes
-  twoFactorVerified: boolean("two_factor_verified").default(false), // Whether 2FA has been verified
   createdAt: timestamp("created_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
 });
@@ -72,28 +67,6 @@ export const authEvents = pgTable("auth_events", {
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
-// Roles table for role-based access control
-export const roles = pgTable("roles", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name", { length: 50 }).notNull().unique(),
-  description: text("description"),
-  permissions: jsonb("permissions"), // Array of permission strings
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// User roles junction table
-export const userRoles = pgTable("user_roles", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  roleId: varchar("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
-  grantedBy: varchar("granted_by").references(() => users.id),
-  grantedAt: timestamp("granted_at").defaultNow().notNull(),
-  expiresAt: timestamp("expires_at"), // Optional expiration for temporary roles
-}, (table) => ({
-  userRoleUnique: unique().on(table.userId, table.roleId),
-}));
 
 // Sessions table for managing user sessions
 export const sessions = pgTable("sessions", {
@@ -241,30 +214,6 @@ export const userReputationCache = pgTable("user_reputation_cache", {
   thumbsDown: integer("thumbs_down").default(0).notNull(),
   percentage: integer("percentage"), // null if no ratings
   lastUpdated: timestamp("last_updated").defaultNow(),
-});
-
-// API key management for external services
-export const apiKeys = pgTable("api_keys", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  service: text("service").notNull().unique(), // 'stripe', 'coinbase', 'sendgrid', etc.
-  keyName: text("key_name").notNull(), // Environment variable name
-  encryptedKey: text("encrypted_key").notNull(), // Encrypted API key
-  lastRotated: timestamp("last_rotated").defaultNow(),
-  rotationInterval: integer("rotation_interval").default(90), // Days between rotations
-  nextRotation: timestamp("next_rotation").notNull(),
-  status: text("status").default("active"), // active, pending_rotation, expired
-  createdBy: varchar("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const apiKeyRotationLog = pgTable("api_key_rotation_log", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  keyId: varchar("key_id").references(() => apiKeys.id).notNull(),
-  oldKeyHash: text("old_key_hash").notNull(), // Hash of the old key for audit
-  newKeyHash: text("new_key_hash").notNull(), // Hash of the new key for audit
-  rotatedBy: varchar("rotated_by").references(() => users.id),
-  rotationReason: text("rotation_reason"),
-  rotatedAt: timestamp("rotated_at").defaultNow(),
 });
 
 export const systemLogs = pgTable("system_logs", {
@@ -528,30 +477,6 @@ export const notifications = pgTable("notifications", {
 });
 
 // User notification preferences
-// GDPR compliance tables
-export const dataExportRequests = pgTable("data_export_requests", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  requestedAt: timestamp("requested_at").defaultNow(),
-  status: text("status").default("pending"), // pending, processing, completed, expired
-  downloadUrl: text("download_url"),
-  expiresAt: timestamp("expires_at"),
-  completedAt: timestamp("completed_at"),
-});
-
-export const accountDeletionRequests = pgTable("account_deletion_requests", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id).notNull(),
-  requestedAt: timestamp("requested_at").defaultNow(),
-  reason: text("reason"),
-  status: text("status").default("pending"), // pending, verified, rejected, completed
-  verificationToken: text("verification_token"),
-  verificationExpiresAt: timestamp("verification_expires_at"),
-  scheduledDeletionDate: timestamp("scheduled_deletion_date"),
-  completedAt: timestamp("completed_at"),
-  rejectionReason: text("rejection_reason"), // e.g., "User has active events"
-});
-
 export const notificationPreferences = pgTable("notification_preferences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull().unique(),
@@ -1008,17 +933,6 @@ export const insertScheduledJobSchema = createInsertSchema(scheduledJobs).omit({
   attempts: true,
 });
 
-export const insertRoleSchema = createInsertSchema(roles).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
-  id: true,
-  grantedAt: true,
-});
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -1083,7 +997,3 @@ export type InsertTicketPurchase = z.infer<typeof insertTicketPurchaseSchema>;
 export type TicketPurchase = typeof ticketPurchases.$inferSelect;
 export type InsertScheduledJob = z.infer<typeof insertScheduledJobSchema>;
 export type ScheduledJob = typeof scheduledJobs.$inferSelect;
-export type InsertRole = z.infer<typeof insertRoleSchema>;
-export type Role = typeof roles.$inferSelect;
-export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
-export type UserRole = typeof userRoles.$inferSelect;

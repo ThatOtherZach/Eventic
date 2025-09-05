@@ -7,12 +7,11 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { supabaseSyncService } from "./supabaseSync";
 import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
 import fetch from 'node-fetch';
-import { logError, logWarning, logInfo, logAdminAction } from "./logger";
-import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, requireAdmin, AuthenticatedRequest } from "./auth";
+import { logError, logWarning, logInfo } from "./logger";
+import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, AuthenticatedRequest } from "./auth";
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
-import { sanitizeObject, sanitizeInput } from "./utils/sanitizer";
 import { getTicketCaptureService, getFFmpegPath } from "./ticketCapture";
 import { execFile } from 'child_process';
 import path from 'path';
@@ -45,50 +44,6 @@ const purchaseRateLimiter = rateLimit({
       retryAfter: 60
     });
   }
-});
-
-// Rate limiter for authentication attempts
-const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Max 5 auth attempts per 15 minutes
-  message: 'Too many authentication attempts. Please wait before trying again.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  // Use default key generator to avoid IPv6 issues
-  handler: async (req, res) => {
-    await logWarning(
-      'Rate limit exceeded for authentication',
-      req.path,
-      {
-        metadata: { 
-          email: req.body?.email,
-          ip: req.ip
-        }
-      }
-    );
-    res.status(429).json({
-      message: 'Too many authentication attempts. Please wait 15 minutes before trying again.',
-      retryAfter: 900
-    });
-  }
-});
-
-// General API rate limiter (more lenient)
-const apiRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 100, // Max 100 requests per minute
-  message: 'Too many requests. Please slow down.',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
-// Strict rate limiter for sensitive operations
-const strictRateLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Max 10 requests per hour
-  message: 'Rate limit exceeded for this operation.',
-  standardHeaders: true,
-  legacyHeaders: false
 });
 
 // Rate limiter for event creation  
@@ -272,15 +227,6 @@ const validationRateLimiter = rateLimit({
   skipFailedRequests: false
 });
 
-// Voting rate limiter
-const votingRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // Max 30 votes per minute
-  message: 'Too many voting attempts. Please slow down.',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
@@ -294,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(extractAuthUser);
 
   // New login endpoint with rate limiting
-  app.post("/api/auth/login", authRateLimiter, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/auth/login", async (req: AuthenticatedRequest, res) => {
     const { checkLoginRateLimit } = await import('./authLimiter');
     
     // Apply rate limiting check
@@ -911,8 +857,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if creator is an admin
-      const isAdminCreated = eventWithCreator.userId ? await storage.hasRole(eventWithCreator.userId, 'admin') : false;
+      // Check if creator is an admin (has @saymservices.com email)
+      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1216,7 +1162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Events routes
-  app.get("/api/events", async (req, res) => {
+  app.get("/api/events", async (req: AuthenticatedRequest, res) => {
     try {
       const events = await storage.getEvents();
       // Filter out private events from general listing
@@ -1328,8 +1274,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Anyone with the link who is logged in can view it
       }
       
-      // Check if creator is an admin
-      const isAdminCreated = eventWithCreator.userId ? await storage.hasRole(eventWithCreator.userId, 'admin') : false;
+      // Check if creator is an admin (has @saymservices.com email)
+      const isAdminCreated = eventWithCreator.creatorEmail?.endsWith("@saymservices.com") || false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1379,20 +1325,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userEmail = req.user?.email;
     
     try {
-      // Check if user is an admin
-      const isAdminCreated = userId ? await storage.hasRole(userId, 'admin') : false;
+      // Check if user is an admin (has @saymservices.com email)
+      const isAdminCreated = userEmail?.endsWith("@saymservices.com") || false;
       
-      // Sanitize user input to prevent XSS
-      let createData = sanitizeObject(req.body, {
-        name: 'text',
-        description: 'html',
-        venue: 'text',
-        venueStreet: 'text',
-        venueCity: 'text',
-        venueCountry: 'text',
-        imageUrl: 'url',
-        ticketBackgroundUrl: 'url'
-      });
+      // Handle image URL normalization if provided
+      let createData = { ...req.body };
       if (createData.imageUrl && createData.imageUrl.startsWith("https://storage.googleapis.com/")) {
         createData.imageUrl = objectStorageService.normalizeObjectEntityPath(createData.imageUrl);
       }
@@ -1440,11 +1377,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "POST /api/events",
           {
             userId,
-            metadata: { 
-              eventName: createData.name,
-              triggeredFields: moderationField,
-              action: "auto-set-private"
-            }
+            eventName: createData.name,
+            triggeredFields: moderationField,
+            action: "auto-set-private"
           }
         );
       }
@@ -1513,8 +1448,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Event not found" });
       }
       
-      // Check if user is admin
-      const isAdmin = req.user?.id ? await storage.hasRole(req.user.id, 'admin') : false;
+      // Check if user is admin (has @saymservices.com email)
+      const isAdmin = req.user?.email?.endsWith("@saymservices.com");
       
       // Allow editing if user owns the event OR is an admin
       if (event.userId !== userId && !isAdmin) {
@@ -1525,19 +1460,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tickets = await storage.getTicketsByEventId(req.params.id);
       const ticketsSold = tickets.length;
       
-      // Sanitize user input to prevent XSS
-      let updateData = sanitizeObject(req.body, {
-        name: 'text',
-        description: 'html',
-        venue: 'text',
-        venueStreet: 'text',
-        venueCity: 'text', 
-        venueCountry: 'text',
-        contactDetails: 'text',
-        imageUrl: 'url',
-        ticketBackgroundUrl: 'url',
-        stickerUrl: 'url'
-      });
+      // Handle image URL normalization if provided
+      let updateData = { ...req.body };
       
       // Content moderation: Check for offensive content in editable fields
       let moderationTriggered = false;
@@ -1572,11 +1496,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             userId,
             eventId: req.params.id,
-            metadata: {
-              eventName: event.name,
-              triggeredFields: moderationField,
-              action: "auto-set-private"
-            }
+            eventName: event.name,
+            triggeredFields: moderationField,
+            action: "auto-set-private"
           }
         );
       }
@@ -2876,33 +2798,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get current user roles
-  app.get("/api/user/roles", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const roles = await storage.getUserRoles(userId);
-      const roleNames = roles.map(r => r.name);
-      const isAdmin = roleNames.includes('admin');
-      
-      res.json({ 
-        roles: roleNames,
-        isAdmin
-      });
-    } catch (error) {
-      await logError(error, "GET /api/user/roles", { request: req });
-      res.status(500).json({ message: "Failed to get user roles" });
-    }
-  });
-
   // Get payment configuration status (admin only)
-  app.get("/api/admin/payment-status", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/admin/payment-status", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       const userEmail = req.user?.email;
+      
+      // Check admin access
+      if (!userEmail?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
 
       // Check Stripe status
       const stripeConfigured = !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PUBLISHABLE_KEY);
@@ -2931,9 +2836,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes (protected - admin role required)
-  app.get("/api/admin/events", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  // Admin routes (protected - only for @saymservices.com emails)
+  app.get("/api/admin/events", async (req: AuthenticatedRequest, res) => {
     try {
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
 
       const events = await storage.getAllEventsForAdmin();
       res.json(events);
@@ -2945,26 +2854,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/events/:eventId/toggle", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/events/:eventId/toggle", async (req: AuthenticatedRequest, res) => {
     try {
-      const adminId = req.user?.id!;
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const { eventId } = req.params;
       const { field, value } = req.body;
-      
-      // Log admin action
-      await logAdminAction(
-        `TOGGLE_EVENT_${field.toUpperCase()}`,
-        adminId,
-        `/api/admin/events/${eventId}/toggle`,
-        {
-          eventId,
-          field,
-          newValue: value,
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'],
-          method: req.method
-        }
-      );
 
       if (!field || !["isEnabled", "ticketPurchasesEnabled"].includes(field)) {
         return res.status(400).json({ message: "Invalid field" });
@@ -2992,8 +2890,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     nice: 69
   };
 
-  app.get("/api/admin/special-effects-odds", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
     try {
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
 
       res.json(specialEffectsOdds);
     } catch (error) {
@@ -3004,24 +2906,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/special-effects-odds", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  app.put("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
     try {
-      const adminId = req.user?.id!;
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
       const { valentines, halloween, christmas, nice } = req.body;
-      
-      // Log admin action
-      await logAdminAction(
-        'UPDATE_SPECIAL_EFFECTS_ODDS',
-        adminId,
-        '/api/admin/special-effects-odds',
-        {
-          oldOdds: specialEffectsOdds,
-          newOdds: { valentines, halloween, christmas, nice },
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'],
-          method: req.method
-        }
-      );
       
       // Validate odds are reasonable numbers
       if (valentines < 1 || valentines > 1000 ||
@@ -3047,21 +2939,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recurring Events Processing
-  app.post("/api/admin/process-recurring-events", requireAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/admin/process-recurring-events", async (req: AuthenticatedRequest, res) => {
     try {
-      const adminId = req.user?.id!;
-      
-      // Log admin action
-      await logAdminAction(
-        'PROCESS_RECURRING_EVENTS',
-        adminId,
-        '/api/admin/process-recurring-events',
-        {
-          ipAddress: req.ip,
-          userAgent: req.headers['user-agent'],
-          method: req.method
-        }
-      );
+      // Check admin access
+      if (!req.user?.email?.endsWith("@saymservices.com")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
 
       // Get events that need recurrence
       const eventsNeedingRecurrence = await storage.getEventsNeedingRecurrence();
@@ -3706,7 +3589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Featured Events Routes
-  app.get("/api/featured-events", async (req, res) => {
+  app.get("/api/featured-events", async (req: AuthenticatedRequest, res) => {
     try {
       // Clean up expired featured events first
       await storage.cleanupExpiredFeaturedEvents();
@@ -3751,7 +3634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add isAdminCreated field and current price to each event
       const featuredEventsWithAdmin = await Promise.all(featuredEvents.map(async (featuredEvent) => {
         const eventWithCreator = await storage.getEventWithCreator(featuredEvent.event.id);
-        const isAdminCreated = eventWithCreator?.userId ? await storage.hasRole(eventWithCreator.userId, 'admin') : false;
+        const isAdminCreated = eventWithCreator?.creatorEmail?.endsWith("@saymservices.com") || false;
         
         // Get current price with surge pricing
         const currentPrice = await storage.getCurrentPrice(featuredEvent.event.id);
@@ -3777,7 +3660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/featured-grid", async (req, res) => {
+  app.get("/api/featured-grid", async (req: AuthenticatedRequest, res) => {
     try {
       // Clean up expired featured events first
       await storage.cleanupExpiredFeaturedEvents();
@@ -4301,7 +4184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Event Rating endpoints
-  app.post("/api/tickets/:ticketId/rate", requireAuth, votingRateLimiter, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/tickets/:ticketId/rate", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -4791,7 +4674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Stripe checkout session
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2025-08-27.basil'
+        apiVersion: '2025-07-30.basil'
       });
       
       const session = await stripe.checkout.sessions.create({
@@ -4837,7 +4720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2025-08-27.basil'
+        apiVersion: '2025-07-30.basil'
       });
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
@@ -5290,337 +5173,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       await logError(error, "POST /api/coinbase/webhook", { request: req });
       res.status(500).json({ message: "Webhook processing failed" });
-    }
-  });
-  
-  // 2FA Endpoints
-  
-  // Enable 2FA for user
-  app.post("/api/2fa/enable", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { generateTOTPSecret, generateBackupCodes, generateTOTPUrl } = await import('./utils/twoFactor');
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Generate secret and backup codes
-      const secret = generateTOTPSecret();
-      const backupCodes = generateBackupCodes(10);
-      
-      // Enable 2FA
-      const success = await storage.enable2FA(userId, secret, backupCodes);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Failed to enable 2FA" });
-      }
-      
-      // Generate QR code URL for authenticator apps
-      const totpUrl = generateTOTPUrl(user.email, secret);
-      
-      res.json({
-        message: "2FA enabled successfully",
-        secret,
-        totpUrl,
-        backupCodes
-      });
-    } catch (error) {
-      await logError(error, "POST /api/2fa/enable", { request: req });
-      res.status(500).json({ message: "Failed to enable 2FA" });
-    }
-  });
-  
-  // Verify 2FA token
-  app.post("/api/2fa/verify", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { token } = req.body;
-      
-      if (!token || token.length !== 6) {
-        return res.status(400).json({ message: "Invalid token format" });
-      }
-      
-      const isValid = await storage.verify2FA(userId, token);
-      
-      if (!isValid) {
-        return res.status(401).json({ message: "Invalid 2FA token" });
-      }
-      
-      res.json({ message: "2FA token verified successfully", valid: true });
-    } catch (error) {
-      await logError(error, "POST /api/2fa/verify", { request: req });
-      res.status(500).json({ message: "Failed to verify 2FA" });
-    }
-  });
-  
-  // Disable 2FA
-  app.post("/api/2fa/disable", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { token, backupCode } = req.body;
-      
-      // Verify either token or backup code
-      if (token) {
-        const isValid = await storage.verify2FA(userId, token);
-        if (!isValid) {
-          return res.status(401).json({ message: "Invalid 2FA token" });
-        }
-      } else if (backupCode) {
-        const isValid = await storage.verifyBackupCode(userId, backupCode);
-        if (!isValid) {
-          return res.status(401).json({ message: "Invalid backup code" });
-        }
-      } else {
-        return res.status(400).json({ message: "Token or backup code required" });
-      }
-      
-      const success = await storage.disable2FA(userId);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Failed to disable 2FA" });
-      }
-      
-      res.json({ message: "2FA disabled successfully" });
-    } catch (error) {
-      await logError(error, "POST /api/2fa/disable", { request: req });
-      res.status(500).json({ message: "Failed to disable 2FA" });
-    }
-  });
-  
-  // Get 2FA status
-  app.get("/api/2fa/status", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const status = await storage.get2FAStatus(userId);
-      
-      res.json(status);
-    } catch (error) {
-      await logError(error, "GET /api/2fa/status", { request: req });
-      res.status(500).json({ message: "Failed to get 2FA status" });
-    }
-  });
-  
-  // GDPR Endpoints
-  
-  // Request data export
-  app.post("/api/gdpr/export", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { exportUserData } = await import('./gdpr');
-      const data = await exportUserData(userId);
-      
-      res.json({
-        message: "Data export completed",
-        data
-      });
-    } catch (error) {
-      await logError(error, "POST /api/gdpr/export", { request: req });
-      res.status(500).json({ message: "Failed to export data" });
-    }
-  });
-  
-  // Request account deletion
-  app.post("/api/gdpr/delete-request", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { reason } = req.body;
-      const { requestAccountDeletion, canDeleteAccount } = await import('./gdpr');
-      
-      // Check eligibility
-      const eligibility = await canDeleteAccount(userId);
-      if (!eligibility.canDelete) {
-        return res.status(400).json({ 
-          message: "Cannot delete account", 
-          reason: eligibility.reason 
-        });
-      }
-      
-      const verificationToken = await requestAccountDeletion(userId, reason);
-      
-      res.json({
-        message: "Account deletion requested. Please check your email for verification.",
-        verificationToken // In production, send via email
-      });
-    } catch (error) {
-      await logError(error, "POST /api/gdpr/delete-request", { request: req });
-      res.status(500).json({ message: "Failed to request account deletion" });
-    }
-  });
-  
-  // Confirm account deletion
-  app.post("/api/gdpr/delete-confirm", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { verificationToken } = req.body;
-      
-      if (!verificationToken) {
-        return res.status(400).json({ message: "Verification token required" });
-      }
-      
-      const { executeAccountDeletion } = await import('./gdpr');
-      await executeAccountDeletion(userId, verificationToken);
-      
-      res.json({ message: "Account successfully deleted" });
-    } catch (error) {
-      await logError(error, "POST /api/gdpr/delete-confirm", { request: req });
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete account" });
-    }
-  });
-  
-  // Check deletion eligibility
-  app.get("/api/gdpr/can-delete", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { canDeleteAccount } = await import('./gdpr');
-      const eligibility = await canDeleteAccount(userId);
-      
-      res.json(eligibility);
-    } catch (error) {
-      await logError(error, "GET /api/gdpr/can-delete", { request: req });
-      res.status(500).json({ message: "Failed to check deletion eligibility" });
-    }
-  });
-  
-  // API Key Management Endpoints (Admin only)
-  
-  // Initialize API keys tracking
-  app.post("/api/admin/keys/initialize", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Check if user is admin
-      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
-      if (!hasPermission) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      
-      const { initializeApiKeys } = await import('./keyRotation');
-      await initializeApiKeys();
-      
-      res.json({ message: "API keys initialized successfully" });
-    } catch (error) {
-      await logError(error, "POST /api/admin/keys/initialize", { request: req });
-      res.status(500).json({ message: "Failed to initialize API keys" });
-    }
-  });
-  
-  // Get API keys status
-  app.get("/api/admin/keys/status", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Check if user is admin
-      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
-      if (!hasPermission) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      
-      const { getApiKeysStatus } = await import('./keyRotation');
-      const status = await getApiKeysStatus();
-      
-      res.json(status);
-    } catch (error) {
-      await logError(error, "GET /api/admin/keys/status", { request: req });
-      res.status(500).json({ message: "Failed to get API keys status" });
-    }
-  });
-  
-  // Rotate API key
-  app.post("/api/admin/keys/rotate", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Check if user is admin
-      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
-      if (!hasPermission) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      
-      const { service, newKey, reason } = req.body;
-      
-      if (!service || !newKey) {
-        return res.status(400).json({ message: "Service and new key required" });
-      }
-      
-      const { rotateApiKey } = await import('./keyRotation');
-      const success = await rotateApiKey(service, newKey, userId, reason);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Failed to rotate API key" });
-      }
-      
-      res.json({ message: `API key for ${service} rotated successfully` });
-    } catch (error) {
-      await logError(error, "POST /api/admin/keys/rotate", { request: req });
-      res.status(500).json({ message: "Failed to rotate API key" });
-    }
-  });
-  
-  // Get rotation history
-  app.get("/api/admin/keys/history/:service", requireAuth, async (req: AuthenticatedRequest, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      // Check if user is admin
-      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
-      if (!hasPermission) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      
-      const { service } = req.params;
-      const { getRotationHistory } = await import('./keyRotation');
-      const history = await getRotationHistory(service);
-      
-      res.json(history);
-    } catch (error) {
-      await logError(error, "GET /api/admin/keys/history/:service", { request: req });
-      res.status(500).json({ message: "Failed to get rotation history" });
     }
   });
   

@@ -1,21 +1,14 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type UserRole, type InsertUserRole, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, userRoles } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
-  // 2FA methods
-  enable2FA(userId: string, secret: string, backupCodes: string[]): Promise<boolean>;
-  verify2FA(userId: string, token: string): Promise<boolean>;
-  disable2FA(userId: string): Promise<boolean>;
-  get2FAStatus(userId: string): Promise<{ enabled: boolean; verified: boolean }>;
-  verifyBackupCode(userId: string, code: string): Promise<boolean>;
   // Users
   getUser(id: string): Promise<User | undefined>;
   getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  checkUserPermission(userId: string, permission: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLoginTime(id: string): Promise<User | undefined>;
@@ -228,16 +221,6 @@ export interface IStorage {
   updateTicketPurchaseStatus(id: string, status: string, stripeSessionId?: string): Promise<TicketPurchase | undefined>;
   getTicketPurchase(id: string): Promise<TicketPurchase | undefined>;
   getTicketPurchaseBySessionId(sessionId: string): Promise<TicketPurchase | undefined>;
-  
-  // Role Management
-  createRole(role: InsertRole): Promise<Role>;
-  getRoleByName(name: string): Promise<Role | undefined>;
-  assignRoleToUser(userId: string, roleId: string, grantedBy?: string): Promise<UserRole>;
-  removeRoleFromUser(userId: string, roleId: string): Promise<boolean>;
-  getUserRoles(userId: string): Promise<Role[]>;
-  hasRole(userId: string, roleName: string): Promise<boolean>;
-  hasPermission(userId: string, permission: string): Promise<boolean>;
-  initializeRoles(): Promise<void>;
 }
 
 interface ValidationSession {
@@ -646,67 +629,22 @@ export class DatabaseStorage implements IStorage {
 
   async getTicket(id: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
-    if (!ticket) return undefined;
-    
-    // Decrypt PII fields
-    const { decryptPII } = await import('./utils/encryption');
-    return {
-      ...ticket,
-      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
-      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
-      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
-    };
+    return ticket || undefined;
   }
 
   async getTicketByQrData(qrData: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.qrData, qrData));
-    if (!ticket) return undefined;
-    
-    // Decrypt PII fields
-    const { decryptPII } = await import('./utils/encryption');
-    return {
-      ...ticket,
-      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
-      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
-      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
-    };
+    return ticket || undefined;
   }
 
   async getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.validationCode, validationCode));
-    if (!ticket) return undefined;
-    
-    // Decrypt PII fields
-    const { decryptPII } = await import('./utils/encryption');
-    return {
-      ...ticket,
-      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
-      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
-      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
-    };
+    return ticket || undefined;
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
-    const { encryptPII } = await import('./utils/encryption');
-    
-    // Encrypt PII fields before storing
-    const encryptedTicket = {
-      ...insertTicket,
-      recipientEmail: insertTicket.recipientEmail ? encryptPII(insertTicket.recipientEmail) : null,
-      purchaserEmail: insertTicket.purchaserEmail ? encryptPII(insertTicket.purchaserEmail) : null,
-      purchaserIp: insertTicket.purchaserIp ? encryptPII(insertTicket.purchaserIp) : null
-    };
-    
-    const [ticket] = await db.insert(tickets).values(encryptedTicket).returning();
-    
-    // Decrypt PII fields before returning
-    const { decryptPII } = await import('./utils/encryption');
-    return {
-      ...ticket,
-      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
-      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
-      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
-    };
+    const [ticket] = await db.insert(tickets).values(insertTicket).returning();
+    return ticket;
   }
 
   async resellTicket(ticketId: string, userId: string): Promise<boolean> {
@@ -4214,293 +4152,6 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting leaderboard:', error);
       return [];
-    }
-  }
-
-  // Role Management Methods
-  async createRole(role: InsertRole): Promise<Role> {
-    try {
-      const [newRole] = await db.insert(roles).values(role).returning();
-      return newRole;
-    } catch (error) {
-      console.error('Error creating role:', error);
-      throw error;
-    }
-  }
-
-  async getRoleByName(name: string): Promise<Role | undefined> {
-    try {
-      const [role] = await db.select()
-        .from(roles)
-        .where(eq(roles.name, name));
-      return role || undefined;
-    } catch (error) {
-      console.error('Error getting role by name:', error);
-      return undefined;
-    }
-  }
-
-  async assignRoleToUser(userId: string, roleId: string, grantedBy?: string): Promise<UserRole> {
-    try {
-      const [userRole] = await db.insert(userRoles)
-        .values({
-          userId,
-          roleId,
-          grantedBy
-        })
-        .onConflictDoNothing()
-        .returning();
-      return userRole;
-    } catch (error) {
-      console.error('Error assigning role to user:', error);
-      throw error;
-    }
-  }
-
-  async removeRoleFromUser(userId: string, roleId: string): Promise<boolean> {
-    try {
-      const result = await db.delete(userRoles)
-        .where(and(
-          eq(userRoles.userId, userId),
-          eq(userRoles.roleId, roleId)
-        ));
-      return true;
-    } catch (error) {
-      console.error('Error removing role from user:', error);
-      return false;
-    }
-  }
-
-  async getUserRoles(userId: string): Promise<Role[]> {
-    try {
-      const userRoleRecords = await db.select({
-        role: roles
-      })
-        .from(userRoles)
-        .innerJoin(roles, eq(userRoles.roleId, roles.id))
-        .where(and(
-          eq(userRoles.userId, userId),
-          or(
-            isNull(userRoles.expiresAt),
-            gt(userRoles.expiresAt, new Date())
-          )
-        ));
-      
-      return userRoleRecords.map(r => r.role);
-    } catch (error) {
-      console.error('Error getting user roles:', error);
-      return [];
-    }
-  }
-
-  async hasRole(userId: string, roleName: string): Promise<boolean> {
-    try {
-      const userRoleRecords = await db.select()
-        .from(userRoles)
-        .innerJoin(roles, eq(userRoles.roleId, roles.id))
-        .where(and(
-          eq(userRoles.userId, userId),
-          eq(roles.name, roleName),
-          or(
-            isNull(userRoles.expiresAt),
-            gt(userRoles.expiresAt, new Date())
-          )
-        ));
-      
-      return userRoleRecords.length > 0;
-    } catch (error) {
-      console.error('Error checking user role:', error);
-      return false;
-    }
-  }
-
-  async hasPermission(userId: string, permission: string): Promise<boolean> {
-    try {
-      const userRoles = await this.getUserRoles(userId);
-      
-      for (const role of userRoles) {
-        const permissions = role.permissions as string[] || [];
-        if (permissions.includes(permission) || permissions.includes('*')) {
-          return true;
-        }
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error checking user permission:', error);
-      return false;
-    }
-  }
-
-  // 2FA Implementation
-  async enable2FA(userId: string, secret: string, backupCodes: string[]): Promise<boolean> {
-    try {
-      const { encrypt } = await import('./utils/twoFactor');
-      const { hashBackupCode } = await import('./utils/twoFactor');
-      
-      // Encrypt secret and hash backup codes
-      const encryptedSecret = encrypt(secret);
-      const hashedCodes = backupCodes.map(code => hashBackupCode(code));
-      
-      await db.update(users)
-        .set({
-          twoFactorEnabled: true,
-          twoFactorSecret: encryptedSecret,
-          twoFactorBackupCodes: hashedCodes,
-          twoFactorVerified: false
-        })
-        .where(eq(users.id, userId));
-      
-      return true;
-    } catch (error) {
-      console.error('Error enabling 2FA:', error);
-      return false;
-    }
-  }
-
-  async verify2FA(userId: string, token: string): Promise<boolean> {
-    try {
-      const user = await this.getUser(userId);
-      if (!user || !user.twoFactorSecret) return false;
-      
-      const { decrypt, verifyTOTPToken } = await import('./utils/twoFactor');
-      const secret = decrypt(user.twoFactorSecret);
-      
-      const isValid = verifyTOTPToken(token, secret);
-      
-      if (isValid && !user.twoFactorVerified) {
-        // Mark as verified on first successful verification
-        await db.update(users)
-          .set({ twoFactorVerified: true })
-          .where(eq(users.id, userId));
-      }
-      
-      return isValid;
-    } catch (error) {
-      console.error('Error verifying 2FA:', error);
-      return false;
-    }
-  }
-
-  async disable2FA(userId: string): Promise<boolean> {
-    try {
-      await db.update(users)
-        .set({
-          twoFactorEnabled: false,
-          twoFactorSecret: null,
-          twoFactorBackupCodes: null,
-          twoFactorVerified: false
-        })
-        .where(eq(users.id, userId));
-      
-      return true;
-    } catch (error) {
-      console.error('Error disabling 2FA:', error);
-      return false;
-    }
-  }
-
-  async get2FAStatus(userId: string): Promise<{ enabled: boolean; verified: boolean }> {
-    try {
-      const user = await this.getUser(userId);
-      return {
-        enabled: user?.twoFactorEnabled || false,
-        verified: user?.twoFactorVerified || false
-      };
-    } catch (error) {
-      console.error('Error getting 2FA status:', error);
-      return { enabled: false, verified: false };
-    }
-  }
-
-  async verifyBackupCode(userId: string, code: string): Promise<boolean> {
-    try {
-      const user = await this.getUser(userId);
-      if (!user || !user.twoFactorBackupCodes) return false;
-      
-      const { hashBackupCode } = await import('./utils/twoFactor');
-      const hashedCode = hashBackupCode(code);
-      
-      // Check if code exists
-      const codes = user.twoFactorBackupCodes as string[];
-      const codeIndex = codes.indexOf(hashedCode);
-      
-      if (codeIndex === -1) return false;
-      
-      // Remove used code
-      const newCodes = codes.filter((_, index) => index !== codeIndex);
-      
-      await db.update(users)
-        .set({ twoFactorBackupCodes: newCodes })
-        .where(eq(users.id, userId));
-      
-      return true;
-    } catch (error) {
-      console.error('Error verifying backup code:', error);
-      return false;
-    }
-  }
-
-  async checkUserPermission(userId: string, permission: string): Promise<boolean> {
-    try {
-      const userRoles = await this.getUserRoles(userId);
-      
-      for (const role of userRoles) {
-        const permissions = role.permissions as string[] || [];
-        if (permissions.includes(permission) || permissions.includes('*')) {
-          return true;
-        }
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error checking user permission:', error);
-      return false;
-    }
-  }
-
-  async initializeRoles(): Promise<void> {
-    try {
-      // Check if admin role exists
-      const adminRole = await this.getRoleByName('admin');
-      
-      if (!adminRole) {
-        // Create admin role with all permissions
-        await this.createRole({
-          name: 'admin',
-          description: 'Full system administrator with all permissions',
-          permissions: ['*']
-        });
-        console.log('Created admin role');
-      }
-      
-      // Check if user role exists
-      const userRole = await this.getRoleByName('user');
-      
-      if (!userRole) {
-        // Create standard user role
-        await this.createRole({
-          name: 'user',
-          description: 'Standard user with basic permissions',
-          permissions: ['create_event', 'create_ticket', 'validate_ticket', 'rate_event']
-        });
-        console.log('Created user role');
-      }
-      
-      // Check if moderator role exists
-      const moderatorRole = await this.getRoleByName('moderator');
-      
-      if (!moderatorRole) {
-        // Create moderator role
-        await this.createRole({
-          name: 'moderator',
-          description: 'Content moderator with limited admin permissions',
-          permissions: ['moderate_events', 'moderate_users', 'view_reports']
-        });
-        console.log('Created moderator role');
-      }
-    } catch (error) {
-      console.error('Error initializing roles:', error);
     }
   }
 }
