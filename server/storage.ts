@@ -646,22 +646,67 @@ export class DatabaseStorage implements IStorage {
 
   async getTicket(id: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id));
-    return ticket || undefined;
+    if (!ticket) return undefined;
+    
+    // Decrypt PII fields
+    const { decryptPII } = await import('./utils/encryption');
+    return {
+      ...ticket,
+      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
+      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
+      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
+    };
   }
 
   async getTicketByQrData(qrData: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.qrData, qrData));
-    return ticket || undefined;
+    if (!ticket) return undefined;
+    
+    // Decrypt PII fields
+    const { decryptPII } = await import('./utils/encryption');
+    return {
+      ...ticket,
+      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
+      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
+      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
+    };
   }
 
   async getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.validationCode, validationCode));
-    return ticket || undefined;
+    if (!ticket) return undefined;
+    
+    // Decrypt PII fields
+    const { decryptPII } = await import('./utils/encryption');
+    return {
+      ...ticket,
+      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
+      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
+      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
+    };
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
-    const [ticket] = await db.insert(tickets).values(insertTicket).returning();
-    return ticket;
+    const { encryptPII } = await import('./utils/encryption');
+    
+    // Encrypt PII fields before storing
+    const encryptedTicket = {
+      ...insertTicket,
+      recipientEmail: insertTicket.recipientEmail ? encryptPII(insertTicket.recipientEmail) : null,
+      purchaserEmail: insertTicket.purchaserEmail ? encryptPII(insertTicket.purchaserEmail) : null,
+      purchaserIp: insertTicket.purchaserIp ? encryptPII(insertTicket.purchaserIp) : null
+    };
+    
+    const [ticket] = await db.insert(tickets).values(encryptedTicket).returning();
+    
+    // Decrypt PII fields before returning
+    const { decryptPII } = await import('./utils/encryption');
+    return {
+      ...ticket,
+      recipientEmail: ticket.recipientEmail ? decryptPII(ticket.recipientEmail) : null,
+      purchaserEmail: ticket.purchaserEmail ? decryptPII(ticket.purchaserEmail) : null,
+      purchaserIp: ticket.purchaserIp ? decryptPII(ticket.purchaserIp) : null
+    };
   }
 
   async resellTicket(ticketId: string, userId: string): Promise<boolean> {

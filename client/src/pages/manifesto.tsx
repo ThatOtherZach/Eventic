@@ -536,7 +536,7 @@ export default function Manifesto() {
         </div>
       </div>
 
-      <div className="card">
+      <div className="card mb-4">
         <div className="card-body text-center">
           <h2 className="h4 mb-3">Ready to Start Something?</h2>
           <p className="mb-4" style={sectionStyle}>
@@ -559,6 +559,123 @@ export default function Manifesto() {
               </a>
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* Legal Section */}
+      <div className="card">
+        <div className="card-body">
+          <CollapsibleSection id="privacy" title="🔒 Privacy Policy">
+            <div style={sectionStyle}>
+              <h6 className="mb-3">Data Collection & Use</h6>
+              <p className="mb-3">
+                We collect only what's necessary: your email for authentication, event details you create, and tickets you purchase. We use industry-standard encryption (AES-256-GCM) for all personally identifiable information (PII) at rest.
+              </p>
+              
+              <h6 className="mb-3">Data Retention</h6>
+              <p className="mb-3">
+                <strong>69-Day Rule:</strong> All event data and tickets are automatically deleted 69 days after the event ends (or starts if no end date). This is non-negotiable unless you convert your ticket to a Digital Collectable (NFT), which preserves the data permanently on the blockchain.
+              </p>
+              
+              <h6 className="mb-3">Your Rights (GDPR Compliant)</h6>
+              <ul className="mb-3">
+                <li><strong>Data Export:</strong> Request all your data anytime via the account settings</li>
+                <li><strong>Account Deletion:</strong> Delete your account and all associated data, provided you have no active events</li>
+                <li><strong>Data Portability:</strong> Export your data in standard JSON format</li>
+              </ul>
+              
+              <h6 className="mb-3">Digital Collectables Exception</h6>
+              <p className="mb-3">
+                When you mint a ticket as a Digital Collectable, the event metadata and ticket information become permanent blockchain records. This data cannot be deleted once minted - it's immortal, like the memories it represents.
+              </p>
+              
+              <h6 className="mb-3">Security Features</h6>
+              <ul className="mb-3">
+                <li>Two-Factor Authentication (2FA) available for all accounts</li>
+                <li>Session fingerprinting for enhanced security</li>
+                <li>Automated API key rotation</li>
+                <li>Comprehensive audit logging</li>
+              </ul>
+              
+              <h6 className="mb-3">Contact</h6>
+              <p>
+                For privacy concerns or data requests, contact the event creator directly through their event page, or use the GDPR tools in your account settings.
+              </p>
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection id="terms" title="📜 Terms of Service">
+            <div style={sectionStyle}>
+              <h6 className="mb-3">Platform Currency</h6>
+              <p className="mb-3">
+                <strong>Tickets are NOT money.</strong> They're action points for platform operations. You cannot exchange tickets for cash, cryptocurrency, or any real-world value. They exist solely to facilitate event creation and participation within this platform.
+              </p>
+              
+              <h6 className="mb-3">Pricing Volatility</h6>
+              <p className="mb-3">
+                The per-ticket price may change at any time based on:
+              </p>
+              <ul className="mb-3">
+                <li>Platform demand (surge pricing up to 25%)</li>
+                <li>Time until event (urgency pricing)</li>
+                <li>Your reputation score (discounts for good actors)</li>
+                <li>Bulk purchases (volume discounts)</li>
+              </ul>
+              <p className="mb-3">
+                All transactions are processed in real-time at the current price. Once completed, the price paid is final.
+              </p>
+              
+              <h6 className="mb-3">Event Creation Rules</h6>
+              <ul className="mb-3">
+                <li>Events must be scheduled at least 3 hours in advance</li>
+                <li>Creating an event costs tickets equal to its capacity</li>
+                <li>Offensive content will be auto-moderated to private</li>
+                <li>Events with no activity are deleted after 69 days</li>
+              </ul>
+              
+              <h6 className="mb-3">Ticket Resale</h6>
+              <p className="mb-3">
+                Tickets can be resold at original price only (no scalping). The platform takes a 2% fee on paid ticket resales. Free tickets return to the pool at no charge.
+              </p>
+              
+              <h6 className="mb-3">Account Deletion</h6>
+              <p className="mb-3">
+                You can delete your account at any time, provided:
+              </p>
+              <ul className="mb-3">
+                <li>You have no active (upcoming) events</li>
+                <li>You have no tickets to future events</li>
+                <li>You have no pending resale transactions</li>
+              </ul>
+              
+              <h6 className="mb-3">Digital Collectables (NFTs)</h6>
+              <p className="mb-3">
+                Converting a validated ticket to a Digital Collectable is permanent and irreversible. The NFT preserves the event and ticket data forever, exempt from the 69-day deletion policy.
+              </p>
+              
+              <h6 className="mb-3">Liability</h6>
+              <p className="mb-3">
+                This platform is provided "as is" without warranties. We're not responsible for:
+              </p>
+              <ul className="mb-3">
+                <li>Events that don't happen</li>
+                <li>Tickets you can't use</li>
+                <li>Data loss (except for minted NFTs)</li>
+                <li>Platform downtime</li>
+                <li>Your terrible event planning decisions</li>
+              </ul>
+              
+              <h6 className="mb-3">Changes to Terms</h6>
+              <p>
+                We may update these terms anytime. Continued use means acceptance. If you don't like the changes, export your data and delete your account - we made it easy for you.
+              </p>
+              
+              <h6 className="mb-3">Governing Anarchy</h6>
+              <p>
+                Disputes will be resolved through interpretive dance battles judged by the community. Just kidding - standard arbitration applies, but wouldn't that be more fun?
+              </p>
+            </div>
+          </CollapsibleSection>
         </div>
       </div>
     </div>
