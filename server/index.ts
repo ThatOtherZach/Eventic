@@ -49,6 +49,22 @@ app.use((req, res, next) => {
   // Initialize currency system accounts
   await storage.initializeSystemAccounts();
   
+  // Initialize roles and assign admin to zach@saymservices.com
+  await storage.initializeRoles();
+  
+  // Check if zach@saymservices.com exists and assign admin role
+  const zachUser = await storage.getUserByEmail('zach@saymservices.com');
+  if (zachUser) {
+    const adminRole = await storage.getRoleByName('admin');
+    if (adminRole) {
+      const hasAdmin = await storage.hasRole(zachUser.id, 'admin');
+      if (!hasAdmin) {
+        await storage.assignRoleToUser(zachUser.id, adminRole.id);
+        console.log('Assigned admin role to zach@saymservices.com');
+      }
+    }
+  }
+  
   const server = await registerRoutes(app);
 
   app.use(async (err: any, req: Request, res: Response, _next: NextFunction) => {
