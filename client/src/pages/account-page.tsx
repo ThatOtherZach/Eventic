@@ -441,7 +441,10 @@ export default function AccountPage() {
           });
         }
       } else {
-        // Handle Stripe payment (existing code)
+        // Handle Stripe payment
+        // Add 2 bonus tickets for Stripe payments
+        finalQuantity += 2;
+        
         const response = await apiRequest(
           "POST",
           "/api/currency/create-purchase",
@@ -450,6 +453,7 @@ export default function AccountPage() {
             hasDiscount: multiplyAndSave,
             reputationDiscount: reputationDiscount,
             volumeDiscount: volumeDiscount,
+            stripeBonus: 2,
           },
         );
         const data = await response.json();
@@ -1383,9 +1387,18 @@ export default function AccountPage() {
                         {/* Total ticket count */}
                         <div className="mb-2" style={{ fontSize: "1.1rem" }}>
                           <span className="fw-semibold text-success">
-                            +{ticketQuantity + calculateBonus(ticketQuantity)}{" "}
+                            +{(() => {
+                              const baseBonus = calculateBonus(ticketQuantity);
+                              const paymentBonus = paymentMethod === "Coinbase" ? 10 : 2;
+                              return ticketQuantity + baseBonus + paymentBonus;
+                            })()}{" "}
                             Tickets
                           </span>
+                          {paymentMethod && (
+                            <span className="text-muted small ms-2">
+                              (includes {paymentMethod === "Coinbase" ? "10" : "2"} {paymentMethod} bonus)
+                            </span>
+                          )}
                         </div>
 
                         {/* Total discount if any discounts apply */}

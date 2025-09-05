@@ -4569,7 +4569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const { quantity, hasDiscount, reputationDiscount = 0, volumeDiscount = 0 } = req.body;
+      const { quantity, hasDiscount, reputationDiscount = 0, volumeDiscount = 0, stripeBonus = 0 } = req.body;
       
       if (!quantity || quantity < 12) {
         return res.status(400).json({ message: "Minimum purchase is 12 credits" });
@@ -4645,8 +4645,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'Event Tickets',
-              description: `${quantity} tickets for creating and boosting events${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}${volumeDiscount > 0 && !hasDiscount ? ` (${volumeDiscount}% volume discount applied)` : ''}${totalDiscountPercentage > 30 ? ' (30% max discount cap applied)' : ''}`,
+              name: stripeBonus > 0 ? `Event Tickets (+${stripeBonus} bonus)` : 'Event Tickets',
+              description: `${quantity} tickets for creating and boosting events${stripeBonus > 0 ? ` (includes ${stripeBonus} Stripe bonus)` : ''}${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}${volumeDiscount > 0 && !hasDiscount ? ` (${volumeDiscount}% volume discount applied)` : ''}${totalDiscountPercentage > 30 ? ' (30% max discount cap applied)' : ''}`,
             },
             unit_amount: Math.round(effectiveUnitPrice * 100), // Convert to cents
           },
@@ -4659,7 +4659,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: {
           purchaseId: purchase.id,
           userId: userId,
-          quantity: quantity.toString()
+          quantity: quantity.toString(),
+          stripeBonus: stripeBonus.toString()
         }
       });
       
@@ -4709,23 +4710,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const purchaseId = session.metadata?.purchaseId;
         const userId = session.metadata?.userId;
         const quantity = parseInt(session.metadata?.quantity || '0');
+        const stripeBonus = parseInt(session.metadata?.stripeBonus || '0');
         
         if (purchaseId && userId && quantity > 0) {
           // Update purchase status
           await storage.updateTicketPurchaseStatus(purchaseId, "completed", session.id);
           
-          // Credit user account
+          // Credit user account with total tickets (including bonus)
+          const totalTickets = quantity + stripeBonus;
+          const description = stripeBonus > 0 
+            ? `Purchased ${quantity} tickets (+${stripeBonus} Stripe bonus)`
+            : `Purchased ${quantity} tickets`;
+          
           await storage.creditUserAccount(
             userId,
-            quantity,
-            `Purchased ${quantity} tickets`,
+            totalTickets,
+            description,
             { 
               stripeSessionId: session.id,
               purchaseId 
             }
           );
           
-          console.log(`Successfully processed purchase ${purchaseId} for user ${userId}: ${quantity} tickets`);
+          console.log(`Successfully processed purchase ${purchaseId} for user ${userId}: ${totalTickets} tickets (includes ${stripeBonus} bonus)`);
         }
       }
       
