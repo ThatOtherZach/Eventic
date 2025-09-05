@@ -207,9 +207,12 @@ export default function EventForm() {
     }
   }, [form.watch("treasureHunt"), form, isEditMode]);
 
+  // Track if form has been initialized to prevent re-resetting
+  const [formInitialized, setFormInitialized] = useState(false);
+
   // Load event data into form when in edit mode
   useEffect(() => {
-    if (event && isEditMode) {
+    if (event && isEditMode && !formInitialized) {
       // Check ownership
       if (user && event.userId !== user.id) {
         toast({
@@ -292,8 +295,11 @@ export default function EventForm() {
       setImageUrl(event.imageUrl || "");
       setStickerEnabled(!!event.stickerUrl);
       setTicketsSold(event.ticketsSold || 0);
+      
+      // Mark form as initialized to prevent re-resetting
+      setFormInitialized(true);
     }
-  }, [event, isEditMode, user, toast, setLocation, id, form]);
+  }, [event, isEditMode, user, toast, setLocation, id, formInitialized]);
 
   // Update venue field when address components change
   useEffect(() => {
