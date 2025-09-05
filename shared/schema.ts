@@ -68,6 +68,28 @@ export const authEvents = pgTable("auth_events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Roles table for role-based access control
+export const roles = pgTable("roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  permissions: jsonb("permissions"), // Array of permission strings
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// User roles junction table
+export const userRoles = pgTable("user_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  roleId: varchar("role_id").references(() => roles.id, { onDelete: "cascade" }).notNull(),
+  grantedBy: varchar("granted_by").references(() => users.id),
+  grantedAt: timestamp("granted_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"), // Optional expiration for temporary roles
+}, (table) => ({
+  userRoleUnique: unique().on(table.userId, table.roleId),
+}));
+
 // Sessions table for managing user sessions
 export const sessions = pgTable("sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -933,6 +955,17 @@ export const insertScheduledJobSchema = createInsertSchema(scheduledJobs).omit({
   attempts: true,
 });
 
+export const insertRoleSchema = createInsertSchema(roles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
+  id: true,
+  grantedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -997,3 +1030,7 @@ export type InsertTicketPurchase = z.infer<typeof insertTicketPurchaseSchema>;
 export type TicketPurchase = typeof ticketPurchases.$inferSelect;
 export type InsertScheduledJob = z.infer<typeof insertScheduledJobSchema>;
 export type ScheduledJob = typeof scheduledJobs.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Role = typeof roles.$inferSelect;
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type UserRole = typeof userRoles.$inferSelect;
