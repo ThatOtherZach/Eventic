@@ -58,26 +58,35 @@ export class CoinbaseService {
     
     try {
       // Dynamic import to handle CommonJS module
-      const coinbase = await import('coinbase-commerce-node');
-      const Client = coinbase.default || coinbase.Client || coinbase;
+      const coinbaseModule = await import('coinbase-commerce-node');
+      const coinbase = coinbaseModule.default || coinbaseModule;
       
-      if (Client && Client.init) {
-        Client.init(apiKey);
-        this.client = Client;
-        this.charge = Client.resources?.Charge || coinbase.resources?.Charge;
-        this.webhook = Client.Webhook || coinbase.Webhook;
-        
-        this.settings = {
-          apiKey,
-          webhookSecret,
-          enabled: true
-        };
-        
-        this.initialized = true;
-        console.log('[COINBASE] Coinbase Commerce initialized successfully');
-      } else {
-        throw new Error('Unable to initialize Coinbase Client');
+      // Initialize the client
+      const Client = coinbase.Client;
+      if (!Client) {
+        throw new Error('Coinbase Client not found in module');
       }
+      
+      Client.init(apiKey);
+      this.client = Client;
+      
+      // Get resources
+      const resources = coinbase.resources;
+      if (!resources || !resources.Charge) {
+        throw new Error('Coinbase Charge resource not found');
+      }
+      
+      this.charge = resources.Charge;
+      this.webhook = coinbase.Webhook;
+      
+      this.settings = {
+        apiKey,
+        webhookSecret,
+        enabled: true
+      };
+      
+      this.initialized = true;
+      console.log('[COINBASE] Coinbase Commerce initialized successfully');
     } catch (error) {
       console.error('[COINBASE] Failed to initialize:', error);
       this.settings = null;
