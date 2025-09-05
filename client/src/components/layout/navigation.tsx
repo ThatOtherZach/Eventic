@@ -1,30 +1,42 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Check, User, LogOut, LogIn, Bell, Settings, Scroll } from "lucide-react";
+import { Calendar, Check, User, LogOut, LogIn, Bell, Settings, Scroll, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Notification } from "@shared/schema";
 
 export function Navigation() {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
-  const navbarCollapseRef = useRef<HTMLDivElement>(null);
-  const navbarTogglerRef = useRef<HTMLButtonElement>(null);
-  
-  // Function to close the navbar
-  const closeNavbar = () => {
-    if (navbarCollapseRef.current?.classList.contains('show')) {
-      navbarCollapseRef.current.classList.remove('show');
-      if (navbarTogglerRef.current) {
-        navbarTogglerRef.current.setAttribute('aria-expanded', 'false');
-      }
-    }
-  };
+  const [isOpen, setIsOpen] = useState(false);
   
   // Close navbar when location changes
   useEffect(() => {
-    closeNavbar();
+    setIsOpen(false);
   }, [location]);
+  
+  // Add custom styles for mobile menu
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 991.98px) {
+        .navbar-collapse.show {
+          display: block !important;
+          padding-top: 1rem;
+        }
+        .navbar-nav {
+          padding-bottom: 1rem;
+        }
+        .navbar-nav .nav-link {
+          padding: 0.5rem 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const navItems = [
     { path: "/events", label: "Events", icon: Calendar, ariaLabel: "View all events" },
@@ -33,7 +45,7 @@ export function Navigation() {
   ];
 
   const handleSignOut = async () => {
-    closeNavbar();
+    setIsOpen(false);
     await signOut();
   };
 
@@ -46,19 +58,18 @@ export function Navigation() {
         </Link>
         
         <button 
-          ref={navbarTogglerRef}
-          className="navbar-toggler" 
+          className="navbar-toggler border-0 p-2" 
           type="button" 
-          data-bs-toggle="collapse" 
-          data-bs-target="#navbarNav"
+          onClick={() => setIsOpen(!isOpen)}
           aria-controls="navbarNav" 
-          aria-expanded="false" 
+          aria-expanded={isOpen} 
           aria-label="Toggle navigation"
+          style={{ outline: 'none', boxShadow: 'none' }}
         >
-          <span className="navbar-toggler-icon"></span>
+          {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
         
-        <div ref={navbarCollapseRef} className="collapse navbar-collapse" id="navbarNav">
+        <div className={`collapse navbar-collapse ${isOpen ? 'show' : ''}`} id="navbarNav">
           <ul className="navbar-nav ms-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
