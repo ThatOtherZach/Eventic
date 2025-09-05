@@ -5,10 +5,17 @@ import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne,
 import { randomUUID } from "crypto";
 
 export interface IStorage {
+  // 2FA methods
+  enable2FA(userId: string, secret: string, backupCodes: string[]): Promise<boolean>;
+  verify2FA(userId: string, token: string): Promise<boolean>;
+  disable2FA(userId: string): Promise<boolean>;
+  get2FAStatus(userId: string): Promise<{ enabled: boolean; verified: boolean }>;
+  verifyBackupCode(userId: string, code: string): Promise<boolean>;
   // Users
   getUser(id: string): Promise<User | undefined>;
   getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  checkUserPermission(userId: string, permission: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUserLoginTime(id: string): Promise<User | undefined>;
@@ -4263,6 +4270,133 @@ export class DatabaseStorage implements IStorage {
   }
 
   async hasPermission(userId: string, permission: string): Promise<boolean> {
+    try {
+      const userRoles = await this.getUserRoles(userId);
+      
+      for (const role of userRoles) {
+        const permissions = role.permissions as string[] || [];
+        if (permissions.includes(permission) || permissions.includes('*')) {
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking user permission:', error);
+      return false;
+    }
+  }
+
+  // 2FA Implementation
+  async enable2FA(userId: string, secret: string, backupCodes: string[]): Promise<boolean> {
+    try {
+      const { encrypt } = await import('./utils/twoFactor');
+      const { hashBackupCode } = await import('./utils/twoFactor');
+      
+      // Encrypt secret and hash backup codes
+      const encryptedSecret = encrypt(secret);
+      const hashedCodes = backupCodes.map(code => hashBackupCode(code));
+      
+      await db.update(users)
+        .set({
+          twoFactorEnabled: true,
+          twoFactorSecret: encryptedSecret,
+          twoFactorBackupCodes: hashedCodes,
+          twoFactorVerified: false
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error enabling 2FA:', error);
+      return false;
+    }
+  }
+
+  async verify2FA(userId: string, token: string): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user || !user.twoFactorSecret) return false;
+      
+      const { decrypt, verifyTOTPToken } = await import('./utils/twoFactor');
+      const secret = decrypt(user.twoFactorSecret);
+      
+      const isValid = verifyTOTPToken(token, secret);
+      
+      if (isValid && !user.twoFactorVerified) {
+        // Mark as verified on first successful verification
+        await db.update(users)
+          .set({ twoFactorVerified: true })
+          .where(eq(users.id, userId));
+      }
+      
+      return isValid;
+    } catch (error) {
+      console.error('Error verifying 2FA:', error);
+      return false;
+    }
+  }
+
+  async disable2FA(userId: string): Promise<boolean> {
+    try {
+      await db.update(users)
+        .set({
+          twoFactorEnabled: false,
+          twoFactorSecret: null,
+          twoFactorBackupCodes: null,
+          twoFactorVerified: false
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error disabling 2FA:', error);
+      return false;
+    }
+  }
+
+  async get2FAStatus(userId: string): Promise<{ enabled: boolean; verified: boolean }> {
+    try {
+      const user = await this.getUser(userId);
+      return {
+        enabled: user?.twoFactorEnabled || false,
+        verified: user?.twoFactorVerified || false
+      };
+    } catch (error) {
+      console.error('Error getting 2FA status:', error);
+      return { enabled: false, verified: false };
+    }
+  }
+
+  async verifyBackupCode(userId: string, code: string): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user || !user.twoFactorBackupCodes) return false;
+      
+      const { hashBackupCode } = await import('./utils/twoFactor');
+      const hashedCode = hashBackupCode(code);
+      
+      // Check if code exists
+      const codes = user.twoFactorBackupCodes as string[];
+      const codeIndex = codes.indexOf(hashedCode);
+      
+      if (codeIndex === -1) return false;
+      
+      // Remove used code
+      const newCodes = codes.filter((_, index) => index !== codeIndex);
+      
+      await db.update(users)
+        .set({ twoFactorBackupCodes: newCodes })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error verifying backup code:', error);
+      return false;
+    }
+  }
+
+  async checkUserPermission(userId: string, permission: string): Promise<boolean> {
     try {
       const userRoles = await this.getUserRoles(userId);
       

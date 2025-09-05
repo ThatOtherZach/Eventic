@@ -23,6 +23,14 @@ The project is configured for seamless development using Vite dev server (with H
 ### QR Code System
 The system includes client-side QR code generation for tickets and server-side validation through QR data lookup, complemented by a web-based QR scanner interface.
 
+### Security Features
+- **Two-Factor Authentication (2FA)**: TOTP-based 2FA support for admin and user accounts with backup codes and QR code generation for authenticator apps.
+- **API Key Rotation System**: Automated tracking and rotation of API keys with configurable intervals and audit logging.
+- **GDPR Compliance**: Full data export capability and account deletion with eligibility checks and verification tokens.
+- **PII Encryption**: AES-256-GCM encryption for personally identifiable information at rest.
+- **Session Fingerprinting**: Additional security layer using device fingerprinting for session validation.
+- **Comprehensive Logging**: Detailed audit trails for security events and admin actions.
+
 ### Key Features & Design Decisions
 - **Location-Based Routing**: Dynamic URL routing for filtering events by city/country (/NewYork, /UnitedStates), with automatic space conversion and visual effects (Golden Ticket, Monthly Colors). Includes RSS feed functionality for location-based event subscriptions.
 - **Unified Event Form**: A single `event-form.tsx` for creation and editing, intelligently detecting mode and validating ownership.

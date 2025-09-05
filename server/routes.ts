@@ -912,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if creator is an admin
-      const isAdminCreated = eventWithCreator.creatorId ? await storage.hasRole(eventWithCreator.creatorId, 'admin') : false;
+      const isAdminCreated = eventWithCreator.userId ? await storage.hasRole(eventWithCreator.userId, 'admin') : false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1329,7 +1329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if creator is an admin
-      const isAdminCreated = eventWithCreator.creatorId ? await storage.hasRole(eventWithCreator.creatorId, 'admin') : false;
+      const isAdminCreated = eventWithCreator.userId ? await storage.hasRole(eventWithCreator.userId, 'admin') : false;
       
       // Remove creatorEmail from response for privacy
       const { creatorEmail, ...event } = eventWithCreator;
@@ -1440,9 +1440,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "POST /api/events",
           {
             userId,
-            eventName: createData.name,
-            triggeredFields: moderationField,
-            action: "auto-set-private"
+            metadata: { 
+              eventName: createData.name,
+              triggeredFields: moderationField,
+              action: "auto-set-private"
+            }
           }
         );
       }
@@ -1570,9 +1572,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             userId,
             eventId: req.params.id,
-            eventName: event.name,
-            triggeredFields: moderationField,
-            action: "auto-set-private"
+            metadata: {
+              eventName: event.name,
+              triggeredFields: moderationField,
+              action: "auto-set-private"
+            }
           }
         );
       }
@@ -3747,7 +3751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add isAdminCreated field and current price to each event
       const featuredEventsWithAdmin = await Promise.all(featuredEvents.map(async (featuredEvent) => {
         const eventWithCreator = await storage.getEventWithCreator(featuredEvent.event.id);
-        const isAdminCreated = eventWithCreator?.creatorId ? await storage.hasRole(eventWithCreator.creatorId, 'admin') : false;
+        const isAdminCreated = eventWithCreator?.userId ? await storage.hasRole(eventWithCreator.userId, 'admin') : false;
         
         // Get current price with surge pricing
         const currentPrice = await storage.getCurrentPrice(featuredEvent.event.id);
@@ -4787,7 +4791,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Stripe checkout session
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2025-07-30.basil'
+        apiVersion: '2025-08-27.basil'
       });
       
       const session = await stripe.checkout.sessions.create({
@@ -4833,7 +4837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2025-07-30.basil'
+        apiVersion: '2025-08-27.basil'
       });
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
@@ -5286,6 +5290,337 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       await logError(error, "POST /api/coinbase/webhook", { request: req });
       res.status(500).json({ message: "Webhook processing failed" });
+    }
+  });
+  
+  // 2FA Endpoints
+  
+  // Enable 2FA for user
+  app.post("/api/2fa/enable", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { generateTOTPSecret, generateBackupCodes, generateTOTPUrl } = await import('./utils/twoFactor');
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Generate secret and backup codes
+      const secret = generateTOTPSecret();
+      const backupCodes = generateBackupCodes(10);
+      
+      // Enable 2FA
+      const success = await storage.enable2FA(userId, secret, backupCodes);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to enable 2FA" });
+      }
+      
+      // Generate QR code URL for authenticator apps
+      const totpUrl = generateTOTPUrl(user.email, secret);
+      
+      res.json({
+        message: "2FA enabled successfully",
+        secret,
+        totpUrl,
+        backupCodes
+      });
+    } catch (error) {
+      await logError(error, "POST /api/2fa/enable", { request: req });
+      res.status(500).json({ message: "Failed to enable 2FA" });
+    }
+  });
+  
+  // Verify 2FA token
+  app.post("/api/2fa/verify", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { token } = req.body;
+      
+      if (!token || token.length !== 6) {
+        return res.status(400).json({ message: "Invalid token format" });
+      }
+      
+      const isValid = await storage.verify2FA(userId, token);
+      
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid 2FA token" });
+      }
+      
+      res.json({ message: "2FA token verified successfully", valid: true });
+    } catch (error) {
+      await logError(error, "POST /api/2fa/verify", { request: req });
+      res.status(500).json({ message: "Failed to verify 2FA" });
+    }
+  });
+  
+  // Disable 2FA
+  app.post("/api/2fa/disable", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { token, backupCode } = req.body;
+      
+      // Verify either token or backup code
+      if (token) {
+        const isValid = await storage.verify2FA(userId, token);
+        if (!isValid) {
+          return res.status(401).json({ message: "Invalid 2FA token" });
+        }
+      } else if (backupCode) {
+        const isValid = await storage.verifyBackupCode(userId, backupCode);
+        if (!isValid) {
+          return res.status(401).json({ message: "Invalid backup code" });
+        }
+      } else {
+        return res.status(400).json({ message: "Token or backup code required" });
+      }
+      
+      const success = await storage.disable2FA(userId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to disable 2FA" });
+      }
+      
+      res.json({ message: "2FA disabled successfully" });
+    } catch (error) {
+      await logError(error, "POST /api/2fa/disable", { request: req });
+      res.status(500).json({ message: "Failed to disable 2FA" });
+    }
+  });
+  
+  // Get 2FA status
+  app.get("/api/2fa/status", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const status = await storage.get2FAStatus(userId);
+      
+      res.json(status);
+    } catch (error) {
+      await logError(error, "GET /api/2fa/status", { request: req });
+      res.status(500).json({ message: "Failed to get 2FA status" });
+    }
+  });
+  
+  // GDPR Endpoints
+  
+  // Request data export
+  app.post("/api/gdpr/export", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { exportUserData } = await import('./gdpr');
+      const data = await exportUserData(userId);
+      
+      res.json({
+        message: "Data export completed",
+        data
+      });
+    } catch (error) {
+      await logError(error, "POST /api/gdpr/export", { request: req });
+      res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+  
+  // Request account deletion
+  app.post("/api/gdpr/delete-request", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { reason } = req.body;
+      const { requestAccountDeletion, canDeleteAccount } = await import('./gdpr');
+      
+      // Check eligibility
+      const eligibility = await canDeleteAccount(userId);
+      if (!eligibility.canDelete) {
+        return res.status(400).json({ 
+          message: "Cannot delete account", 
+          reason: eligibility.reason 
+        });
+      }
+      
+      const verificationToken = await requestAccountDeletion(userId, reason);
+      
+      res.json({
+        message: "Account deletion requested. Please check your email for verification.",
+        verificationToken // In production, send via email
+      });
+    } catch (error) {
+      await logError(error, "POST /api/gdpr/delete-request", { request: req });
+      res.status(500).json({ message: "Failed to request account deletion" });
+    }
+  });
+  
+  // Confirm account deletion
+  app.post("/api/gdpr/delete-confirm", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { verificationToken } = req.body;
+      
+      if (!verificationToken) {
+        return res.status(400).json({ message: "Verification token required" });
+      }
+      
+      const { executeAccountDeletion } = await import('./gdpr');
+      await executeAccountDeletion(userId, verificationToken);
+      
+      res.json({ message: "Account successfully deleted" });
+    } catch (error) {
+      await logError(error, "POST /api/gdpr/delete-confirm", { request: req });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete account" });
+    }
+  });
+  
+  // Check deletion eligibility
+  app.get("/api/gdpr/can-delete", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { canDeleteAccount } = await import('./gdpr');
+      const eligibility = await canDeleteAccount(userId);
+      
+      res.json(eligibility);
+    } catch (error) {
+      await logError(error, "GET /api/gdpr/can-delete", { request: req });
+      res.status(500).json({ message: "Failed to check deletion eligibility" });
+    }
+  });
+  
+  // API Key Management Endpoints (Admin only)
+  
+  // Initialize API keys tracking
+  app.post("/api/admin/keys/initialize", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user is admin
+      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { initializeApiKeys } = await import('./keyRotation');
+      await initializeApiKeys();
+      
+      res.json({ message: "API keys initialized successfully" });
+    } catch (error) {
+      await logError(error, "POST /api/admin/keys/initialize", { request: req });
+      res.status(500).json({ message: "Failed to initialize API keys" });
+    }
+  });
+  
+  // Get API keys status
+  app.get("/api/admin/keys/status", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user is admin
+      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { getApiKeysStatus } = await import('./keyRotation');
+      const status = await getApiKeysStatus();
+      
+      res.json(status);
+    } catch (error) {
+      await logError(error, "GET /api/admin/keys/status", { request: req });
+      res.status(500).json({ message: "Failed to get API keys status" });
+    }
+  });
+  
+  // Rotate API key
+  app.post("/api/admin/keys/rotate", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user is admin
+      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { service, newKey, reason } = req.body;
+      
+      if (!service || !newKey) {
+        return res.status(400).json({ message: "Service and new key required" });
+      }
+      
+      const { rotateApiKey } = await import('./keyRotation');
+      const success = await rotateApiKey(service, newKey, userId, reason);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to rotate API key" });
+      }
+      
+      res.json({ message: `API key for ${service} rotated successfully` });
+    } catch (error) {
+      await logError(error, "POST /api/admin/keys/rotate", { request: req });
+      res.status(500).json({ message: "Failed to rotate API key" });
+    }
+  });
+  
+  // Get rotation history
+  app.get("/api/admin/keys/history/:service", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user is admin
+      const hasPermission = await storage.checkUserPermission(userId, 'manage_api_keys');
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { service } = req.params;
+      const { getRotationHistory } = await import('./keyRotation');
+      const history = await getRotationHistory(service);
+      
+      res.json(history);
+    } catch (error) {
+      await logError(error, "GET /api/admin/keys/history/:service", { request: req });
+      res.status(500).json({ message: "Failed to get rotation history" });
     }
   });
   
