@@ -1,18 +1,29 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, MapPin, Users, DollarSign, Download, Archive } from "lucide-react";
-import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
-import { Badge } from "@/components/ui/badge";
-import type { ArchivedEvent } from "@shared/schema";
+import { Download, Archive, Database, Clock } from "lucide-react";
+import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
+import type { ArchivedEvent, Event, Ticket } from "@shared/schema";
 
 export function PastEvents() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  const { data: pastEvents = [], isLoading } = useQuery<ArchivedEvent[]>({
+  // Fetch archived events (deleted events)
+  const { data: pastEvents = [], isLoading: loadingArchive } = useQuery<ArchivedEvent[]>({
     queryKey: ["/api/user/past-events"],
+    enabled: isOpen,
+  });
+
+  // Fetch current events
+  const { data: currentEvents = [], isLoading: loadingEvents } = useQuery<Event[]>({
+    queryKey: ["/api/user/events"],
+    enabled: isOpen,
+  });
+
+  // Fetch current tickets
+  const { data: currentTickets = [], isLoading: loadingTickets } = useQuery<Ticket[]>({
+    queryKey: ["/api/user/tickets"],
     enabled: isOpen,
   });
 
@@ -28,14 +39,61 @@ export function PastEvents() {
     window.URL.revokeObjectURL(url);
   };
 
-  const downloadAllEvents = () => {
-    if (pastEvents.length === 0) return;
-    
-    const headers = "Event Name,Venue,Date,Time,End Date,End Time,Ticket Price,Tickets Sold,Total Revenue\n";
-    const csvContent = headers + pastEvents.map(event => event.csvData).join("\n");
-    downloadCSV(csvContent, "past-events.csv");
+  const downloadAllCurrentData = async () => {
+    setIsDownloading(true);
+    try {
+      // Prepare events CSV
+      const eventHeaders = "Event Name,Venue,Date,Time,End Date,End Time,Ticket Price,Max Tickets,Status,Created At\n";
+      const eventRows = currentEvents.map(event => [
+        event.name,
+        event.venue || '',
+        event.date || '',
+        event.time || '',
+        event.endDate || '',
+        event.endTime || '',
+        event.ticketPrice || '0',
+        event.maxTickets || '',
+        event.isPrivate ? 'Private' : 'Public',
+        event.createdAt ? new Date(event.createdAt).toLocaleDateString() : ''
+      ].join(',')).join('\n');
+
+      // Prepare tickets CSV
+      const ticketHeaders = "\n\n--- TICKETS ---\nTicket Number,Event Name,Status,Purchase Date,Validated At\n";
+      const ticketRows = currentTickets.map(ticket => {
+        const event = currentEvents.find(e => e.id === ticket.eventId);
+        return [
+          ticket.ticketNumber,
+          event?.name || 'Unknown Event',
+          ticket.status || 'purchased',
+          ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '',
+          ticket.validatedAt ? new Date(ticket.validatedAt).toLocaleDateString() : ''
+        ].join(',');
+      }).join('\n');
+
+      const fullCsv = eventHeaders + eventRows + ticketHeaders + ticketRows;
+      const timestamp = new Date().toISOString().split('T')[0];
+      downloadCSV(fullCsv, `eventic-current-data-${timestamp}.csv`);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
+  const downloadArchivedData = () => {
+    if (pastEvents.length === 0) {
+      alert("No archived events to download");
+      return;
+    }
+    
+    const headers = "Event Name,Venue,Date,Time,End Date,End Time,Ticket Price,Tickets Sold,Total Revenue,Archived Date\n";
+    const rows = pastEvents.map(event => {
+      const archivedDate = event.archivedAt ? new Date(event.archivedAt).toLocaleDateString() : 'Unknown';
+      return event.csvData + ',' + archivedDate;
+    }).join('\n');
+    
+    const fullCsv = headers + rows;
+    const timestamp = new Date().toISOString().split('T')[0];
+    downloadCSV(fullCsv, `eventic-archived-events-${timestamp}.csv`);
+  };
 
   return (
     <>
@@ -48,82 +106,67 @@ export function PastEvents() {
         Archive
       </Button>
       
-      <Modal open={isOpen} onOpenChange={setIsOpen} className="modal-lg">
+      <Modal open={isOpen} onOpenChange={setIsOpen} className="modal-md">
         <ModalHeader onClose={() => setIsOpen(false)}>
-          Past Events Archive
+          Data Archive & Export
         </ModalHeader>
         <ModalBody>
-        <div className="alert alert-info mb-4" role="alert">
-          <strong>Note:</strong> Events that ended over 69 days ago have been archived. You can download the data as CSV files.
-        </div>
-        
-        <div className="space-y-6">
-          {/* Past Events Section */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Your Past Events</h3>
-              {pastEvents.length > 0 && (
-                <Button size="sm" variant="outline" onClick={downloadAllEvents} data-testid="button-download-all-events">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download All
-                </Button>
-              )}
-            </div>
-            
-            <ScrollArea className="h-[250px] rounded-md border p-4">
-              {isLoading ? (
-                <div className="text-center text-muted-foreground">Loading...</div>
-              ) : pastEvents.length === 0 ? (
-                <div className="text-center text-muted-foreground">No archived events yet</div>
-              ) : (
-                <div className="space-y-3">
-                  {pastEvents.map((event) => (
-                    <Card key={event.id} className="p-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="font-medium" data-testid={`text-event-name-${event.id}`}>{event.eventName}</p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {event.eventDate}
-                            </span>
-                            {event.totalTicketsSold && event.totalTicketsSold > 0 && (
-                              <>
-                                <span className="flex items-center gap-1">
-                                  <Users className="h-3 w-3" />
-                                  {event.totalTicketsSold} tickets
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  ${event.totalRevenue}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            Archived {event.archivedAt ? new Date(event.archivedAt).toLocaleDateString() : 'Unknown'}
-                          </Badge>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => downloadCSV(
-                            "Event Name,Venue,Date,Time,End Date,End Time,Ticket Price,Tickets Sold,Total Revenue\n" + event.csvData,
-                            `${event.eventName.replace(/\s+/g, '-')}-data.csv`
-                          )}
-                          data-testid={`button-download-event-${event.id}`}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
+          <div className="space-y-4">
+            {/* Current Data Download */}
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-start space-x-3">
+                <Database className="h-5 w-5 text-primary mt-1" />
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-1">Download Current Data</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Export all your active events and tickets as a CSV file
+                  </p>
+                  <Button 
+                    onClick={downloadAllCurrentData}
+                    disabled={isDownloading || loadingEvents || loadingTickets}
+                    className="w-full"
+                    data-testid="button-download-current"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {isDownloading ? "Preparing download..." : "Download All Current Data"}
+                  </Button>
                 </div>
-              )}
-            </ScrollArea>
-          </div>
+              </div>
+            </div>
 
-        </div>
+            {/* Archived Data Download */}
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-start space-x-3">
+                <Clock className="h-5 w-5 text-muted-foreground mt-1" />
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-1">Download Archived Events</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Export events that ended over 69 days ago (kept for 1 year before permanent deletion)
+                  </p>
+                  <Button 
+                    onClick={downloadArchivedData}
+                    disabled={loadingArchive}
+                    variant="secondary"
+                    className="w-full"
+                    data-testid="button-download-archive"
+                  >
+                    <Archive className="mr-2 h-4 w-4" />
+                    {loadingArchive ? "Loading..." : `Download Archived Events (${pastEvents.length})`}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Info Note */}
+            <div className="text-xs text-muted-foreground p-3 bg-muted rounded-lg">
+              <p className="mb-1">
+                <strong>Note:</strong> Events are automatically archived 69 days after they end.
+              </p>
+              <p>
+                Archived data is retained for 1 year before permanent deletion for your records.
+              </p>
+            </div>
+          </div>
         </ModalBody>
       </Modal>
     </>
