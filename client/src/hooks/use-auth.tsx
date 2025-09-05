@@ -217,10 +217,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Listen for auth state changes (but don't sync user on every change)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
-      setUser(session?.user ?? null);
+      if (session?.user) {
+        // When we have a session, fetch the extended user data including permissions
+        try {
+          const syncResponse = await fetch('/api/auth/sync-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              email: session.user.email,
+              name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+            }),
+          });
+          
+          if (syncResponse.ok) {
+            const userData = await syncResponse.json();
+            // Fetch permissions
+            const permissions = await fetchPermissions(session.access_token);
+            // Update user object with extended data
+            if (mounted) {
+              const extendedUser = { 
+                ...session.user, 
+                displayName: userData.displayName, 
+                memberStatus: userData.memberStatus,
+                ...permissions
+              };
+              setUser(extendedUser);
+            }
+          } else {
+            // If sync fails, still set basic user
+            setUser(session.user);
+          }
+        } catch (error) {
+          console.error('Failed to sync user on auth state change:', error);
+          // Still set basic user even if sync fails
+          setUser(session.user);
+        }
+      } else {
+        setUser(null);
+      }
       
       // Only redirect on initial sign-in from auth page, not on session refresh
       // This prevents redirecting when switching tabs or on page reload
