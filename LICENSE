@@ -3,6 +3,7 @@
 
  Copyright (C) 2025 Zachary Jordan, Saym Services Inc. (saymservices.com)
  Evantic - Event Ticket Management System
+ Project URL: evantic.quest
  
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.
@@ -28,7 +29,7 @@ https://www.gnu.org/licenses/agpl-3.0.en.html
 ADDITIONAL TERMS AND CONDITIONS:
 
 1. Attribution: Any use of this software must prominently display:
-   "Based on Evantic by Saym Services Inc. - AGPLv3 Licensed"
+   "Based on Evantic (evantic.quest) by Saym Services Inc. - AGPLv3 Licensed"
 
 2. Network Use: If you run a modified version of this software on a server 
    and let users interact with it there, your server must also allow them 
@@ -42,6 +43,7 @@ ADDITIONAL TERMS AND CONDITIONS:
 EVANTIC - Event Ticket Management System
 Developed by: Zachary Jordan
 Company: Saym Services Inc. (saymservices.com)
+Project Website: evantic.quest
 Year: 2025
 
 This system includes the following key features:
