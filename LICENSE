@@ -1,0 +1,54 @@
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
+
+ Copyright (C) 2025 Event Ticket Management System Contributors
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+The full text of the AGPLv3 license can be found at:
+https://www.gnu.org/licenses/agpl-3.0.en.html
+
+---
+
+ADDITIONAL TERMS AND CONDITIONS:
+
+1. Attribution: Any use of this software must prominently display:
+   "Based on Event Ticket Management System - AGPLv3 Licensed"
+
+2. Network Use: If you run a modified version of this software on a server 
+   and let users interact with it there, your server must also allow them 
+   to download the source code corresponding to the modified version.
+
+3. Contributions: By contributing to this project, you agree to license 
+   your contributions under the same AGPLv3 license.
+
+---
+
+This Event Ticket Management System includes the following key features:
+- Event creation and management with QR code ticketing
+- NFT minting for validated tickets
+- Cryptocurrency payments via Coinbase Commerce
+- Stripe payment integration
+- P2P ticket validation
+- Event reputation system
+- Ticket resale mechanism
+- 69-day data retention with archiving
+- Location-based event filtering
+- RSS feed functionality
+- Windows 98-inspired UI elements
+
+For the complete AGPLv3 license terms, please visit:
+https://www.gnu.org/licenses/agpl-3.0.en.html
