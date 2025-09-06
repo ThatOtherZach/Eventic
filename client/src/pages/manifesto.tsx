@@ -88,7 +88,7 @@ export default function Manifesto() {
         <p className="lead text-muted">Buy the ticket. Take the ride.</p>
       </div>
 
-      <!-- 
+      {/* 
          ███████╗██╗   ██╗███╗   ██╗████████╗██╗ ██████╗
          ██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
          ███████╗██║   ██║██╔██╗ ██║   ██║   ██║██║   ██║
@@ -103,7 +103,7 @@ export default function Manifesto() {
          Database Action Points™ govern your every move.
          Positive actions = smoother play. Negative actions = inefficiency tax.
          Welcome to the real mission.
-      -->
+      */}
 
 
       <div className="card mb-4">
