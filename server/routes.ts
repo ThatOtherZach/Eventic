@@ -1488,7 +1488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await storage.createSecretCode({
             code: createData.huntCode.toUpperCase(),
-            ticketAmount: 5, // Default ticket reward for Hunt codes
+            ticketAmount: 2, // Default ticket reward for Hunt codes
             maxUses: null, // Unlimited uses
             createdBy: userId,
             codeType: 'hunt',
