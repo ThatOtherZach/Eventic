@@ -1610,8 +1610,8 @@ export default function TicketViewPage(): React.ReactElement {
           )}
 
 
-          {/* NFT Minting Section - Only show after event starts */}
-          {ticket.isValidated && event.allowMinting && hasEventStarted(event) && (
+          {/* NFT Minting Section - Show for validated tickets with minting enabled */}
+          {ticket.isValidated && event.allowMinting && (
             <div className="card mt-3">
               <div className="card-body">
                 <h5 className="card-title mb-3">
