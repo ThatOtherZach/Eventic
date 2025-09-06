@@ -1,9 +1,8 @@
 import { db } from "./db";
-import { scheduledJobs, InsertScheduledJob, events, users, notifications } from "@shared/schema";
-import { and, eq, lte, or, sql } from "drizzle-orm";
+import { scheduledJobs, InsertScheduledJob, events } from "@shared/schema";
+import { and, eq, lte, or } from "drizzle-orm";
 import { storage } from "./storage";
 import { migrateExistingTickets } from "./migrateExistingTickets";
-import { randomUUID } from "crypto";
 
 let jobInterval: NodeJS.Timeout | null = null;
 
@@ -138,90 +137,7 @@ async function processJob(job: typeof scheduledJobs.$inferSelect): Promise<void>
     
     // Process based on job type
     if (job.jobType === 'archive_event') {
-      // Check if this is a recurring event that needs to be recreated
-      const event = await storage.getEvent(job.targetId);
-      
-      if (event && event.recurringType && event.userId) {
-        // Check if we should create the next occurrence
-        const shouldContinue = event.recurringEndDate ? 
-          new Date(event.recurringEndDate) >= new Date() : true;
-        
-        if (shouldContinue) {
-          // Get user's ticket balance
-          const user = await db
-            .select()
-            .from(users)
-            .where(eq(users.id, event.userId))
-            .limit(1)
-            .then(rows => rows[0]);
-          
-          if (user) {
-            const ticketsNeeded = event.maxTickets || 0;
-            const userTickets = user.ticketsAvailable || 0;
-            
-            if (userTickets >= ticketsNeeded) {
-              // User has enough tickets - create the next occurrence
-              const nextEvent = await storage.createRecurringEvent(event);
-              
-              if (nextEvent) {
-                // Deduct tickets from user
-                await db
-                  .update(users)
-                  .set({ 
-                    ticketsAvailable: sql`${users.ticketsAvailable} - ${ticketsNeeded}` 
-                  })
-                  .where(eq(users.id, event.userId));
-                
-                // Send success notification
-                await db.insert(notifications).values({
-                  id: randomUUID(),
-                  userId: event.userId,
-                  type: 'recurring_event_created',
-                  title: 'Recurring Event Created',
-                  message: `Your recurring event "${event.name}" has been recreated for the next occurrence. ${ticketsNeeded} tickets were deducted from your account.`,
-                  metadata: JSON.stringify({
-                    eventId: nextEvent.id,
-                    eventName: event.name,
-                    ticketsDeducted: ticketsNeeded,
-                    nextDate: nextEvent.date
-                  }),
-                  isRead: false,
-                  createdAt: new Date(),
-                  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-                });
-                
-                console.log(`[JOBS] Created recurring event ${nextEvent.id} from ${event.id}, deducted ${ticketsNeeded} tickets from user ${event.userId}`);
-                
-                // Schedule deletion for the new event
-                const deletionDate = calculateDeletionDate(nextEvent.date, nextEvent.endDate);
-                await scheduleEventDeletion(nextEvent.id, deletionDate);
-              }
-            } else {
-              // User doesn't have enough tickets - send notification
-              await db.insert(notifications).values({
-                id: randomUUID(),
-                userId: event.userId,
-                type: 'recurring_event_failed',
-                title: 'Recurring Event Cancelled',
-                message: `Your recurring event "${event.name}" could not be recreated due to insufficient tickets. You have ${userTickets} tickets but need ${ticketsNeeded}. The recurring series has ended.`,
-                metadata: JSON.stringify({
-                  eventId: event.id,
-                  eventName: event.name,
-                  ticketsAvailable: userTickets,
-                  ticketsNeeded: ticketsNeeded
-                }),
-                isRead: false,
-                createdAt: new Date(),
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-              });
-              
-              console.log(`[JOBS] Failed to create recurring event from ${event.id} - user ${event.userId} has insufficient tickets (${userTickets}/${ticketsNeeded})`);
-            }
-          }
-        }
-      }
-      
-      // Now archive the event
+      // Archive the event
       const success = await storage.archiveEvent(job.targetId);
       
       if (success) {

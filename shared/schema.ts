@@ -160,12 +160,7 @@ export const events = pgTable("events", {
   // Hunt feature fields (geocaching-style validation)
   treasureHunt: boolean("treasure_hunt").default(false), // Enable hunt feature (requires geofence)
   huntCode: varchar("hunt_code", { length: 50 }), // Unique ColorNoun code for hunt URL (e.g., "BlueTiger")
-  // Recurring event fields
-  recurringType: text("recurring_type"), // "weekly", "monthly", "annual", or null for non-recurring
-  recurringEndDate: text("recurring_end_date"), // When to stop creating recurring events
   rollingTimezone: boolean("rolling_timezone").default(false), // Event remains valid as start time hits each timezone
-  parentEventId: varchar("parent_event_id"), // Reference to the original event if this is a recurring instance
-  lastRecurrenceCreated: timestamp("last_recurrence_created"), // Track when we last created a recurrence
   // Timezone field
   timezone: text("timezone").default("America/New_York"), // Timezone for the event (IANA timezone format)
   // Hashtags extracted from description
@@ -690,11 +685,6 @@ export const insertEventSchema = createInsertSchema(events).omit({
   surgePricing: z.boolean().optional().default(false),
   p2pValidation: z.boolean().optional().default(false),
   enableVoting: z.boolean().optional().default(false),
-  recurringType: z.enum(["weekly", "monthly", "annual"]).optional().nullable(),
-  recurringEndDate: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Recurring end date must be in YYYY-MM-DD format")
-    .optional()
-    .nullable(),
 }).superRefine((data, ctx) => {
   // Validate that end date/time is after start date/time
   if (data.endDate && data.endTime) {
@@ -754,32 +744,6 @@ export const insertEventSchema = createInsertSchema(events).omit({
       message: "P2P Validation must be enabled to use voting feature",
       path: ["enableVoting"],
     });
-  }
-
-  // Validate recurring event settings
-  if (data.recurringType && data.recurringEndDate) {
-    const start = new Date(data.date);
-    const recurringEnd = new Date(data.recurringEndDate);
-    
-    // Recurring end date must be after event start date
-    if (recurringEnd <= start) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Recurring end date must be after event start date",
-        path: ["recurringEndDate"],
-      });
-    }
-    
-    // Limit recurring events to 2 years
-    const twoYearsFromStart = new Date(start);
-    twoYearsFromStart.setFullYear(twoYearsFromStart.getFullYear() + 2);
-    if (recurringEnd > twoYearsFromStart) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Recurring events cannot extend beyond 2 years from start date",
-        path: ["recurringEndDate"],
-      });
-    }
   }
 });
 

@@ -1600,8 +1600,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         oneTicketPerUser: z.boolean().optional(),
         surgePricing: z.boolean().optional(),
         timezone: z.string().optional(),
-        recurringType: z.enum(["weekly", "monthly", "annual"]).nullable().optional(),
-        recurringEndDate: z.string().nullable().optional(),
       });
       const validatedData = baseEventSchema.parse(updateData);
       
@@ -1625,30 +1623,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Check if recurrence settings have changed
-      const recurrenceChanged = validatedData.recurringType !== undefined || validatedData.recurringEndDate !== undefined;
-      
       const updatedEvent = await storage.updateEvent(req.params.id, {
         ...validatedData,
         ...(hashtags !== undefined && { hashtags })
       });
-      
-      // If recurrence settings changed, update the archival schedule
-      if (recurrenceChanged && updatedEvent) {
-        const { updateEventDeletionSchedule, cancelEventDeletion, scheduleEventDeletion, calculateDeletionDate } = await import('./jobScheduler');
-        
-        if (updatedEvent.recurringType) {
-          // Event is now recurring or recurrence type changed
-          // The archival will be handled when the event creates its next occurrence
-          // For now, update the deletion schedule to account for potential recurrence
-          const deletionDate = calculateDeletionDate(updatedEvent.date, updatedEvent.endDate);
-          await updateEventDeletionSchedule(updatedEvent.id, deletionDate);
-        } else {
-          // Event is no longer recurring - schedule normal deletion
-          const deletionDate = calculateDeletionDate(updatedEvent.date, updatedEvent.endDate);
-          await updateEventDeletionSchedule(updatedEvent.id, deletionDate);
-        }
-      }
       
       // Send notifications to all ticket holders
       if (updatedEvent) {
@@ -2796,7 +2774,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         eventMetrics: {
           featuredEvents: featuredEvents.length,
-          recurringEvents: allEvents.filter(e => e.recurringType).length,
           privateEvents: allEvents.filter(e => e.isPrivate).length,
           p2pValidationEvents: allEvents.filter(e => e.p2pValidation).length
         },
@@ -2967,75 +2944,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Recurring Events Processing
-  app.post("/api/admin/process-recurring-events", async (req: AuthenticatedRequest, res) => {
-    try {
-      // Check admin access
-      const userId = req.user?.id;
-      if (!userId || !(await storage.hasPermission(userId, 'manage_events'))) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      // Get events that need recurrence
-      const eventsNeedingRecurrence = await storage.getEventsNeedingRecurrence();
-      
-      const results = [];
-      for (const event of eventsNeedingRecurrence) {
-        try {
-          const newEvent = await storage.createRecurringEvent(event);
-          if (newEvent) {
-            results.push({
-              originalEventId: event.id,
-              originalEventName: event.name,
-              newEventId: newEvent.id,
-              newEventDate: newEvent.date,
-              success: true,
-              error: null
-            });
-            
-            await logInfo(
-              `Recurring event created`,
-              "POST /api/admin/process-recurring-events",
-              {
-                eventId: newEvent.id,
-                metadata: {
-                  originalEventId: event.id,
-                  recurringType: event.recurringType,
-                  newEventDate: newEvent.date
-                }
-              }
-            );
-          }
-        } catch (error) {
-          results.push({
-            originalEventId: event.id,
-            originalEventName: event.name,
-            newEventId: null,
-            newEventDate: null,
-            success: false,
-            error: error instanceof Error ? error.message : "Unknown error"
-          });
-          
-          await logError(error, "POST /api/admin/process-recurring-events", {
-            eventId: event.id,
-            metadata: {
-              eventName: event.name
-            }
-          });
-        }
-      }
-
-      res.json({
-        message: `Processed ${results.length} recurring events. ${results.filter(r => r.success).length} created successfully.`,
-        results
-      });
-    } catch (error) {
-      await logError(error, "POST /api/admin/process-recurring-events", {
-        request: req
-      });
-      res.status(500).json({ message: "Failed to process recurring events" });
-    }
-  });
 
   // Delegated Validators routes
   app.get("/api/events/:eventId/validators", async (req: AuthenticatedRequest, res) => {
@@ -3429,8 +3337,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventSurgePricing: event.surgePricing || false,
         eventP2pValidation: event.p2pValidation || false,
         eventEnableVoting: event.enableVoting || false,
-        eventRecurringType: event.recurringType || null,
-        eventRecurringEndDate: event.recurringEndDate || null,
         eventCreatedAt: event.createdAt || new Date(),
         eventStickerUrl: permanentStickerUrl || null,
         eventSpecialEffectsEnabled: (event as any).specialEffectsEnabled || false,
@@ -3446,8 +3352,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventTicketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
         eventLatitude: event.latitude || null,
         eventLongitude: event.longitude || null,
-        eventParentEventId: event.parentEventId || null,
-        eventLastRecurrenceCreated: event.lastRecurrenceCreated || null,
         eventTimezone: event.timezone || "America/New_York",
         eventRollingTimezone: event.rollingTimezone || false,
         eventHashtags: event.hashtags || [],

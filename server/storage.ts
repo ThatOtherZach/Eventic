@@ -31,7 +31,6 @@ export interface IStorage {
   deleteEvent(id: string): Promise<boolean>;
   archiveEvent(eventId: string): Promise<boolean>;
   getEventByHuntCode(huntCode: string): Promise<Event | undefined>;
-  getCurrentRecurringInstance(parentEventId: string): Promise<Event | undefined>;
   
   // Tickets
   getTickets(): Promise<Ticket[]>;
@@ -41,7 +40,6 @@ export interface IStorage {
   getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]>;
   getTicket(id: string): Promise<Ticket | undefined>;
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
-  updateTicketEvent(ticketId: string, newEventId: string): Promise<void>;
   getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
@@ -136,10 +134,6 @@ export interface IStorage {
   removeUserRole(userId: string, roleId: string): Promise<void>;
   initializeRolesAndPermissions(): Promise<void>;
   migrateExistingAdmins(): Promise<void>;
-  
-  // Recurring Events
-  getEventsNeedingRecurrence(): Promise<Event[]>;
-  createRecurringEvent(originalEvent: Event): Promise<Event | null>;
   
   // Notifications
   getNotifications(userId: string): Promise<Notification[]>;
@@ -503,29 +497,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(events.huntCode, huntCode));
     return event || undefined;
   }
-  
-  async getCurrentRecurringInstance(parentEventId: string): Promise<Event | undefined> {
-    // Find the most recent child event of this parent
-    const [currentInstance] = await db
-      .select()
-      .from(events)
-      .where(eq(events.parentEventId, parentEventId))
-      .orderBy(desc(events.date))
-      .limit(1);
-    
-    if (currentInstance) {
-      // Check if this instance is current (not in the past)
-      const now = new Date();
-      const eventDate = new Date(`${currentInstance.date}T${currentInstance.time}:00`);
-      const twentyFourHoursAfter = new Date(eventDate.getTime() + 24 * 60 * 60 * 1000);
-      
-      if (now <= twentyFourHoursAfter) {
-        return currentInstance;
-      }
-    }
-    
-    return undefined;
-  }
 
   async getEventsByUserId(userId: string): Promise<Event[]> {
     return db
@@ -681,13 +652,6 @@ export class DatabaseStorage implements IStorage {
   async getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.validationCode, validationCode));
     return ticket || undefined;
-  }
-  
-  async updateTicketEvent(ticketId: string, newEventId: string): Promise<void> {
-    await db
-      .update(tickets)
-      .set({ eventId: newEventId })
-      .where(eq(tickets.id, ticketId));
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
@@ -2036,26 +2000,6 @@ export class DatabaseStorage implements IStorage {
         continue;
       }
       
-      // For recurring events, ensure next occurrence is created before archiving
-      if (event.recurringType && event.recurringEndDate) {
-        // Check if recurring end date has not been reached
-        const recurringEndDate = new Date(event.recurringEndDate);
-        if (recurringEndDate > now) {
-          // Create the next occurrence before archiving this one
-          try {
-            const newEvent = await this.createRecurringEvent(event);
-            if (newEvent) {
-              console.log(`[ARCHIVE] Created next occurrence for recurring event: ${event.name} - Next date: ${newEvent.date}`);
-            } else {
-              console.log(`[ARCHIVE] No more occurrences needed for recurring event: ${event.name} (end date reached)`);
-            }
-          } catch (error) {
-            console.error(`[ARCHIVE] Failed to create next occurrence for ${event.name}:`, error);
-            // Don't archive if we couldn't create the next occurrence
-            continue;
-          }
-        }
-      }
       
       // Events with NFT-minted tickets can be archived
       // The Registry table already preserves the ticket metadata permanently
@@ -2617,126 +2561,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Recurring Events
-  async getEventsNeedingRecurrence(): Promise<Event[]> {
-    // Get events that:
-    // 1. Have a recurring type set
-    // 2. Have passed (event date is at least 7 days ago)
-    // 3. Haven't reached their recurring end date
-    // 4. Haven't had a recurrence created recently
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-    
-    const eventsNeedingRecurrence = await db
-      .select()
-      .from(events)
-      .where(
-        and(
-          isNotNull(events.recurringType),
-          lt(events.date, sevenDaysAgoStr),
-          sql`${events.parentEventId} IS NULL`, // Only process original events, not recurring instances
-          sql`(${events.recurringEndDate} IS NULL OR ${events.recurringEndDate} >= CURRENT_DATE)`,
-          sql`(${events.lastRecurrenceCreated} IS NULL OR ${events.lastRecurrenceCreated} < CURRENT_TIMESTAMP - INTERVAL '6 days')`
-        )
-      );
-    
-    return eventsNeedingRecurrence;
-  }
-  
-  async createRecurringEvent(originalEvent: Event): Promise<Event | null> {
-    if (!originalEvent.recurringType) return null;
-    
-    // Calculate the next event date based on recurrence type
-    const originalDate = new Date(originalEvent.date);
-    let nextDate = new Date(originalDate);
-    
-    // Find the latest recurrence if any to base the next date on
-    const latestRecurrence = await db
-      .select()
-      .from(events)
-      .where(eq(events.parentEventId, originalEvent.id))
-      .orderBy(desc(events.date))
-      .limit(1);
-    
-    if (latestRecurrence.length > 0) {
-      nextDate = new Date(latestRecurrence[0].date);
-    }
-    
-    // Calculate next date based on recurring type
-    switch (originalEvent.recurringType) {
-      case 'weekly':
-        nextDate.setDate(nextDate.getDate() + 7);
-        break;
-      case 'monthly':
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        break;
-      case 'annual':
-        nextDate.setFullYear(nextDate.getFullYear() + 1);
-        break;
-      default:
-        return null;
-    }
-    
-    // Check if we've passed the recurring end date
-    if (originalEvent.recurringEndDate) {
-      const endDate = new Date(originalEvent.recurringEndDate);
-      if (nextDate > endDate) {
-        return null;
-      }
-    }
-    
-    // Create the new event
-    const newEvent: InsertEvent = {
-      name: originalEvent.name,
-      description: originalEvent.description || null,
-      contactDetails: originalEvent.contactDetails || null,
-      venue: originalEvent.venue,
-      country: originalEvent.country || undefined,
-      date: nextDate.toISOString().split('T')[0],
-      time: originalEvent.time,
-      endDate: originalEvent.endDate ? (() => {
-        const originalEndDate = new Date(originalEvent.endDate);
-        const daysDiff = (new Date(originalEvent.endDate).getTime() - new Date(originalEvent.date).getTime()) / (1000 * 60 * 60 * 24);
-        const newEndDate = new Date(nextDate);
-        newEndDate.setDate(newEndDate.getDate() + daysDiff);
-        return newEndDate.toISOString().split('T')[0];
-      })() : undefined,
-      endTime: originalEvent.endTime || undefined,
-      ticketPrice: originalEvent.ticketPrice,
-      maxTickets: originalEvent.maxTickets || undefined,
-      userId: originalEvent.userId || undefined,
-      imageUrl: originalEvent.imageUrl || undefined,
-      ticketBackgroundUrl: originalEvent.ticketBackgroundUrl || undefined,
-      earlyValidation: (originalEvent.earlyValidation as "Allow at Anytime" | "At Start Time" | "One Hour Before" | "Two Hours Before") || "Allow at Anytime",
-      reentryType: (originalEvent.reentryType as "No Reentry (Single Use)" | "Pass (Multiple Use)" | "No Limit") || "No Reentry (Single Use)",
-      maxUses: originalEvent.maxUses || 1,
-      goldenTicketEnabled: originalEvent.goldenTicketEnabled || false,
-      goldenTicketCount: originalEvent.goldenTicketCount || undefined,
-      specialEffectsEnabled: originalEvent.specialEffectsEnabled || false,
-      allowMinting: originalEvent.allowMinting || false,
-      isPrivate: originalEvent.isPrivate || false,
-      isEnabled: originalEvent.isEnabled !== false,
-      ticketPurchasesEnabled: originalEvent.ticketPurchasesEnabled !== false,
-      oneTicketPerUser: originalEvent.oneTicketPerUser || false,
-      surgePricing: originalEvent.surgePricing || false,
-      p2pValidation: originalEvent.p2pValidation || false,
-      enableVoting: originalEvent.enableVoting || false,
-      recurringType: originalEvent.recurringType as "weekly" | "monthly" | "annual" | undefined,
-      recurringEndDate: originalEvent.recurringEndDate || undefined,
-      parentEventId: originalEvent.id,
-    };
-    
-    const [createdEvent] = await db.insert(events).values(newEvent).returning();
-    
-    // Update the original event's lastRecurrenceCreated timestamp
-    await db
-      .update(events)
-      .set({ lastRecurrenceCreated: new Date() })
-      .where(eq(events.id, originalEvent.id));
-    
-    return createdEvent;
-  }
 
   // Notifications
   async getNotifications(userId: string): Promise<Notification[]> {
