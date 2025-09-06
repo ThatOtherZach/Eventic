@@ -742,6 +742,25 @@ export default function EventForm() {
                       </div>
                     )}
                     
+                    {/* Help notification for event creation */}
+                    {!isEditMode && (
+                      <div className="col-12">
+                        <div className="alert alert-light border" style={{ backgroundColor: "#f8f9fa" }}>
+                          <div className="d-flex align-items-start">
+                            <span className="me-2">💡</span>
+                            <div className="flex-grow-1">
+                              <div className="small">
+                                <strong>Need help with event settings?</strong>
+                              </div>
+                              <div className="small text-muted mt-1">
+                                Read the <a href="/manifesto" target="_blank" rel="noopener noreferrer" className="text-decoration-none">manifesto</a> for detailed information about features like Golden Tickets, Special Effects, P2P Validation, and more event options.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="col-12">
                       <FormField
                         control={form.control}
