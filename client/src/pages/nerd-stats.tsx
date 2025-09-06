@@ -1553,7 +1553,7 @@ export default function NerdStats() {
         <img 
           src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZm0yY2Jld2dhcDhsaXhxY3J6bm1hM2tsbnJ3bXdvZGR6azBqbm5kOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Cz6TlrRVVyv9S/giphy.gif"
           alt="Footer Animation"
-          style={{ height: "40px" }}
+          style={{ height: "100px" }}
         />
       </div>
     </div>
