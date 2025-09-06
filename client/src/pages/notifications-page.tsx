@@ -179,9 +179,24 @@ export default function NotificationsPage() {
                       <div className="flex-grow-1" style={{ minWidth: 0 }}>
                         <div className="d-flex align-items-center mb-1">
                           <h6 className="mb-0 me-2">{notification.title}</h6>
-                          <span className={`badge bg-secondary`}>
-                            {notification.type}
-                          </span>
+                          {notification.title === "NERRRRRD!" ? (
+                            <span 
+                              className="badge"
+                              style={{
+                                background: "linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)",
+                                backgroundSize: "200% 100%",
+                                animation: "rainbow 2s linear infinite",
+                                color: "white",
+                                fontWeight: "bold"
+                              }}
+                            >
+                              Easter Egg
+                            </span>
+                          ) : (
+                            <span className={`badge bg-secondary`}>
+                              {notification.type}
+                            </span>
+                          )}
                           {!notification.isRead && (
                             <span className="badge bg-primary ms-1">New</span>
                           )}

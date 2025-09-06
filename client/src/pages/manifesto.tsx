@@ -87,9 +87,9 @@ export default function Manifesto() {
         </h1>
         <p className="lead text-muted">Buy the ticket. Take the ride.</p>
       </div>
-      {/*██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
+      {/*════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗█║╚══██╔══╝██║██║╚══██╔══╝██║█
          Eventic Core by Saym Services Inc. A Global Live Action Missions Peer Reputation            and Rewards Operations Module or GLAM PR²OM for short. Complete Missions to get             validation which can unlock secret codes.
-         ╚════██║██║   ██║██║╚██╗██║   ██║   ██║██║   ██║*/}
+         ╚════5365637265745f436f64655f785855524d313535304e5878*/}
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="h4 mb-3">But... Why?</h2>

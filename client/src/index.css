@@ -104,6 +104,12 @@ h4 { font-size: 1.125rem; }
   100% { color: #ff0000; }
 }
 
+/* Rainbow background animation for Easter Egg badge */
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 .form-control.rainbow-text {
   animation: rainbow-text 0.20s linear infinite !important;
 }
