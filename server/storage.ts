@@ -14,6 +14,12 @@ export interface IStorage {
   updateUserLoginTime(id: string): Promise<User | undefined>;
   updateUserDisplayName(id: string, displayName: string): Promise<User | undefined>;
 
+  // Account Deletion Management
+  scheduleAccountDeletion(userId: string): Promise<User | undefined>;
+  cancelAccountDeletion(userId: string): Promise<User | undefined>;
+  isUserScheduledForDeletion(userId: string): Promise<boolean>;
+  getUserDeletionStatus(userId: string): Promise<{ isScheduled: boolean; scheduledAt?: Date; daysRemaining?: number }>;
+
   getUserEventCountries(userId: string): Promise<string[]>;
   
   // Auth Tokens
@@ -354,6 +360,91 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  // Account Deletion Management
+  async scheduleAccountDeletion(userId: string): Promise<User | undefined> {
+    const deletionDate = new Date();
+    const [user] = await db
+      .update(users)
+      .set({ deletionScheduledAt: deletionDate })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    if (user) {
+      // Schedule the actual deletion job for 90 days from now
+      const deletionJobDate = new Date(deletionDate.getTime() + (90 * 24 * 60 * 60 * 1000));
+      await this.scheduleUserDeletionJob(userId, deletionJobDate);
+    }
+    
+    return user || undefined;
+  }
+
+  async cancelAccountDeletion(userId: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ deletionScheduledAt: null })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    if (user) {
+      // Remove the scheduled deletion job
+      await this.cancelUserDeletionJob(userId);
+    }
+    
+    return user || undefined;
+  }
+
+  async isUserScheduledForDeletion(userId: string): Promise<boolean> {
+    const user = await db
+      .select({ deletionScheduledAt: users.deletionScheduledAt })
+      .from(users)
+      .where(eq(users.id, userId))
+      .then(rows => rows[0]);
+    
+    return user?.deletionScheduledAt !== null && user?.deletionScheduledAt !== undefined;
+  }
+
+  async getUserDeletionStatus(userId: string): Promise<{ isScheduled: boolean; scheduledAt?: Date; daysRemaining?: number }> {
+    const user = await db
+      .select({ deletionScheduledAt: users.deletionScheduledAt })
+      .from(users)
+      .where(eq(users.id, userId))
+      .then(rows => rows[0]);
+    
+    if (!user?.deletionScheduledAt) {
+      return { isScheduled: false };
+    }
+    
+    const scheduledAt = user.deletionScheduledAt;
+    const deletionDate = new Date(scheduledAt.getTime() + (90 * 24 * 60 * 60 * 1000));
+    const now = new Date();
+    const daysRemaining = Math.ceil((deletionDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+    
+    return {
+      isScheduled: true,
+      scheduledAt,
+      daysRemaining: Math.max(0, daysRemaining)
+    };
+  }
+
+  private async scheduleUserDeletionJob(userId: string, deletionDate: Date): Promise<void> {
+    await db.insert(scheduledJobs).values({
+      jobType: 'delete_user',
+      targetId: userId,
+      scheduledFor: deletionDate,
+      status: 'pending'
+    });
+  }
+
+  private async cancelUserDeletionJob(userId: string): Promise<void> {
+    await db
+      .delete(scheduledJobs)
+      .where(and(
+        eq(scheduledJobs.jobType, 'delete_user'),
+        eq(scheduledJobs.targetId, userId),
+        eq(scheduledJobs.status, 'pending')
+      ));
   }
 
 
