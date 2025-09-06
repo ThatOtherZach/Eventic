@@ -2729,33 +2729,6 @@ export class DatabaseStorage implements IStorage {
     
     const [createdEvent] = await db.insert(events).values(newEvent).returning();
     
-    // Transfer existing valid tickets from parent event to the new recurring instance
-    // This ensures tickets are linked to the correct event with proper dates
-    const parentTickets = await db
-      .select()
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.eventId, originalEvent.id),
-          eq(tickets.isValidated, false)
-        )
-      );
-    
-    // Update unvalidated tickets to point to the new event
-    if (parentTickets.length > 0) {
-      await db
-        .update(tickets)
-        .set({ eventId: createdEvent.id })
-        .where(
-          and(
-            eq(tickets.eventId, originalEvent.id),
-            eq(tickets.isValidated, false)
-          )
-        );
-      
-      console.log(`[RECURRING] Transferred ${parentTickets.length} tickets from parent event ${originalEvent.id} to new instance ${createdEvent.id}`);
-    }
-    
     // Update the original event's lastRecurrenceCreated timestamp
     await db
       .update(events)
