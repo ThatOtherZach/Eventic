@@ -92,6 +92,21 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   const startDateTime = `${event.date}T${event.time}:00`;
   const startDate = new Date(startDateTime);
   
+  // Check if this is a parent event that shouldn't be validated anymore
+  // Parent events with recurring type and past dates should not allow validation
+  if (event.recurringType && event.parentEventId === null) {
+    // This is a parent event - check if it's in the past
+    const eventEndDate = event.endDate ? new Date(`${event.endDate}T${event.endTime || event.time}:00`) : startDate;
+    const twentyFourHoursAfterEnd = new Date(eventEndDate.getTime() + 24 * 60 * 60 * 1000);
+    
+    if (now > twentyFourHoursAfterEnd) {
+      return {
+        valid: false,
+        message: `This is an old recurring event instance. Please use the current week's event.`
+      };
+    }
+  }
+  
   // Check if this is a rolling timezone event
   if (event.rollingTimezone) {
     // For rolling timezone events, check if the current time in ANY timezone
@@ -2382,6 +2397,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Otherwise try to validate as a regular ticket QR code
       const ticket = await storage.getTicketByQrData(qrData);
+      
+      // Double-check that we're using the correct event for validation
+      // If the ticket's event is a parent recurring event, try to find the current instance
+      if (ticket && ticket.eventId) {
+        const ticketEvent = await storage.getEvent(ticket.eventId);
+        if (ticketEvent && ticketEvent.recurringType && ticketEvent.parentEventId === null) {
+          // This ticket is linked to a parent event - find the most recent child
+          const currentInstance = await storage.getCurrentRecurringInstance(ticketEvent.id);
+          if (currentInstance && currentInstance.id !== ticket.eventId) {
+            // Update the ticket to point to the current instance
+            await storage.updateTicketEvent(ticket.id, currentInstance.id);
+            console.log(`[VALIDATION] Updated ticket ${ticket.id} from parent event ${ticket.eventId} to current instance ${currentInstance.id}`);
+          }
+        }
+      }
       if (!ticket) {
         return res.status(404).json({ 
           message: "Invalid ticket", 

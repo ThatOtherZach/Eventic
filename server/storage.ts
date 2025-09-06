@@ -31,6 +31,7 @@ export interface IStorage {
   deleteEvent(id: string): Promise<boolean>;
   archiveEvent(eventId: string): Promise<boolean>;
   getEventByHuntCode(huntCode: string): Promise<Event | undefined>;
+  getCurrentRecurringInstance(parentEventId: string): Promise<Event | undefined>;
   
   // Tickets
   getTickets(): Promise<Ticket[]>;
@@ -40,6 +41,7 @@ export interface IStorage {
   getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]>;
   getTicket(id: string): Promise<Ticket | undefined>;
   getTicketByQrData(qrData: string): Promise<Ticket | undefined>;
+  updateTicketEvent(ticketId: string, newEventId: string): Promise<void>;
   getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined>;
   createTicket(ticket: InsertTicket): Promise<Ticket>;
   validateTicket(id: string, validationCode?: string): Promise<Ticket | undefined>;
@@ -501,6 +503,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(events.huntCode, huntCode));
     return event || undefined;
   }
+  
+  async getCurrentRecurringInstance(parentEventId: string): Promise<Event | undefined> {
+    // Find the most recent child event of this parent
+    const [currentInstance] = await db
+      .select()
+      .from(events)
+      .where(eq(events.parentEventId, parentEventId))
+      .orderBy(desc(events.date))
+      .limit(1);
+    
+    if (currentInstance) {
+      // Check if this instance is current (not in the past)
+      const now = new Date();
+      const eventDate = new Date(`${currentInstance.date}T${currentInstance.time}:00`);
+      const twentyFourHoursAfter = new Date(eventDate.getTime() + 24 * 60 * 60 * 1000);
+      
+      if (now <= twentyFourHoursAfter) {
+        return currentInstance;
+      }
+    }
+    
+    return undefined;
+  }
 
   async getEventsByUserId(userId: string): Promise<Event[]> {
     return db
@@ -656,6 +681,13 @@ export class DatabaseStorage implements IStorage {
   async getTicketByValidationCode(validationCode: string): Promise<Ticket | undefined> {
     const [ticket] = await db.select().from(tickets).where(eq(tickets.validationCode, validationCode));
     return ticket || undefined;
+  }
+  
+  async updateTicketEvent(ticketId: string, newEventId: string): Promise<void> {
+    await db
+      .update(tickets)
+      .set({ eventId: newEventId })
+      .where(eq(tickets.id, ticketId));
   }
 
   async createTicket(insertTicket: InsertTicket): Promise<Ticket> {
@@ -2696,6 +2728,33 @@ export class DatabaseStorage implements IStorage {
     };
     
     const [createdEvent] = await db.insert(events).values(newEvent).returning();
+    
+    // Transfer existing valid tickets from parent event to the new recurring instance
+    // This ensures tickets are linked to the correct event with proper dates
+    const parentTickets = await db
+      .select()
+      .from(tickets)
+      .where(
+        and(
+          eq(tickets.eventId, originalEvent.id),
+          eq(tickets.isValidated, false)
+        )
+      );
+    
+    // Update unvalidated tickets to point to the new event
+    if (parentTickets.length > 0) {
+      await db
+        .update(tickets)
+        .set({ eventId: createdEvent.id })
+        .where(
+          and(
+            eq(tickets.eventId, originalEvent.id),
+            eq(tickets.isValidated, false)
+          )
+        );
+      
+      console.log(`[RECURRING] Transferred ${parentTickets.length} tickets from parent event ${originalEvent.id} to new instance ${createdEvent.id}`);
+    }
     
     // Update the original event's lastRecurrenceCreated timestamp
     await db
