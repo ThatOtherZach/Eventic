@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
@@ -459,6 +459,12 @@ export class DatabaseStorage implements IStorage {
         return true; // Already deleted
       }
       
+      // Delete notifications
+      await db.delete(notifications).where(eq(notifications.userId, userId));
+      
+      // Delete notification preferences  
+      await db.delete(notificationPreferences).where(eq(notificationPreferences.userId, userId));
+      
       // Delete user sessions
       await db.delete(sessions).where(eq(sessions.userId, userId));
       
@@ -468,35 +474,84 @@ export class DatabaseStorage implements IStorage {
       // Delete auth tokens
       await db.delete(authTokens).where(eq(authTokens.userId, userId));
       
+      // Delete login attempts (by email)
+      const userEmail = user.email;
+      if (userEmail) {
+        await db.delete(loginAttempts).where(eq(loginAttempts.email, userEmail));
+      }
+      
+      // Delete auth monitoring
+      await db.delete(authMonitoring).where(eq(authMonitoring.userId, userId));
+      
+      // Delete auth queue entries (by email)
+      if (userEmail) {
+        await db.delete(authQueue).where(eq(authQueue.email, userEmail));
+      }
+      
+      // Delete auth events
+      await db.delete(authEvents).where(eq(authEvents.userId, userId));
+      
       // Delete user tickets
       await db.delete(tickets).where(eq(tickets.userId, userId));
       
-      // Delete currency accounts
-      await db.delete(currencyAccounts).where(eq(currencyAccounts.userId, userId));
+      // Delete delegated validators (where user added them)
+      await db.delete(delegatedValidators).where(eq(delegatedValidators.addedBy, userId));
       
-      // Delete ledger entries
-      await db.delete(ledgerEntries).where(or(
-        eq(ledgerEntries.fromAccountId, userId),
-        eq(ledgerEntries.toAccountId, userId)
+      // Delete resell queue entries
+      await db.delete(resellQueue).where(eq(resellQueue.originalOwnerId, userId));
+      
+      // Delete resell transactions
+      await db.delete(resellTransactions).where(or(
+        eq(resellTransactions.originalOwnerId, userId),
+        eq(resellTransactions.newOwnerId, userId)
       ));
       
-      // Delete event votes
-      await db.delete(eventVotes).where(eq(eventVotes.userId, userId));
+      // Delete validation actions
+      await db.delete(validationActions).where(eq(validationActions.validatorId, userId));
+      
+      // Delete code redemptions
+      await db.delete(codeRedemptions).where(eq(codeRedemptions.userId, userId));
+      
+      // Delete ticket purchases
+      await db.delete(ticketPurchases).where(eq(ticketPurchases.userId, userId));
+      
+      // Delete daily claims
+      await db.delete(dailyClaims).where(eq(dailyClaims.userId, userId));
+      
+      // Delete account balances
+      await db.delete(accountBalances).where(eq(accountBalances.accountId, userId));
+      
+      // Delete currency ledger entries
+      await db.delete(currencyLedger).where(eq(currencyLedger.accountId, userId));
+      
+      // Delete event ratings (by event owner)
+      await db.delete(eventRatings).where(eq(eventRatings.eventOwnerId, userId));
+      
+      // Delete user reputation cache
+      await db.delete(userReputationCache).where(eq(userReputationCache.userId, userId));
       
       // Delete archived events
       await db.delete(archivedEvents).where(eq(archivedEvents.userId, userId));
       
-      // Transfer ownership of events to a system account or delete them
-      // For now, we'll set userId to null (orphan them for later cleanup)
-      await db.update(events).set({ userId: null }).where(eq(events.userId, userId));
+      // Delete archived tickets
+      await db.delete(archivedTickets).where(eq(archivedTickets.userId, userId));
+      
+      // Delete all events created by the user
+      await db.delete(events).where(eq(events.userId, userId));
+      
+      // Delete scheduled jobs for this user
+      await db.delete(scheduledJobs).where(eq(scheduledJobs.targetId, userId));
       
       // Delete system logs related to this user
       await db.delete(systemLogs).where(eq(systemLogs.userId, userId));
       
+      // NOTE: We explicitly DO NOT delete registry records (NFT registry)
+      // as per user requirement - these should be preserved
+      
       // Finally, delete the user
       await db.delete(users).where(eq(users.id, userId));
       
-      console.log(`[DELETE_USER] Successfully deleted user account ${userId}`);
+      console.log(`[DELETE_USER] Successfully deleted user account ${userId} and all associated data (except NFT registry)`);
       return true;
     } catch (error) {
       console.error(`[DELETE_USER] Error deleting user account ${userId}:`, error);
