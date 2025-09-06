@@ -75,7 +75,11 @@ function App() {
                 </div>
               </main>
               <footer className="text-center py-3 mt-auto">
-                <small className="text-muted">Evantic Core by Saym Services</small>
+                <img 
+                  src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZm0yY2Jld2dhcDhsaXhxY3J6bm1hM2tsbnJ3bXdvZGR6azBqbm5kOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Cz6TlrRVVyv9S/giphy.gif"
+                  alt="Footer Animation"
+                  style={{ height: "40px" }}
+                />
               </footer>
             </div>
             <Toaster />
