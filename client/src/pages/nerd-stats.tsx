@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -45,10 +45,8 @@ import tealBg from "@assets/win98-teal_1756850231196.png";
 import hashtagIcon from "@assets/modem-4_1756868854727.png";
 import userWorldIcon from "@assets/user_world-1_1756976313764.png";
 import eraseIcon from "@assets/erase_file-1_1756976362158.png";
-import { countries as allCountries } from "@/lib/countries";
 
 export default function NerdStats() {
-  const [selectedCountry, setSelectedCountry] = useState<string>("Global");
 
   // Fetch various stats
   const { data: stats } = useQuery({
@@ -70,15 +68,11 @@ export default function NerdStats() {
   });
 
   const { data: analyticsData } = useQuery({
-    queryKey: ["/api/analytics/dashboard", selectedCountry],
+    queryKey: ["/api/analytics/dashboard"],
     queryFn: async () => {
-      const params =
-        selectedCountry && selectedCountry !== "Global"
-          ? `?country=${encodeURIComponent(selectedCountry)}`
-          : "";
       const response = await apiRequest(
         "GET",
-        `/api/analytics/dashboard${params}`,
+        `/api/analytics/dashboard`,
       );
       return response.json();
     },
@@ -120,22 +114,9 @@ export default function NerdStats() {
     },
   });
 
-  // Get countries that have events
-  const countriesWithEvents = useMemo(() => {
-    if (!events) return new Set<string>();
-    const countrySet = new Set<string>();
-    events.forEach((event: any) => {
-      if (event.country) countrySet.add(event.country);
-    });
-    return countrySet;
-  }, [events]);
 
-  // Filter events by selected country
-  const filteredEvents = useMemo(() => {
-    if (!events) return [];
-    if (selectedCountry === "Global") return events;
-    return events.filter((event: any) => event.country === selectedCountry);
-  }, [events, selectedCountry]);
+  // Use all events (global view)
+  const filteredEvents = events || [];
 
   // Calculate advanced stats
   const calculateStats = () => {
@@ -275,7 +256,7 @@ export default function NerdStats() {
       {/* Core Metrics */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="mb-3">
             <h5 className="fw-semibold mb-0">
               <img
                 src={coreMetricsIcon}
@@ -283,41 +264,8 @@ export default function NerdStats() {
                 className="me-2"
                 style={{ width: 20, height: 20, verticalAlign: "text-bottom" }}
               />
-              Numbers & Stuff
+              Numbers & Stuff (Global)
             </h5>
-            <select
-              className="form-select"
-              style={{
-                width: "200px",
-                fontSize: "14px",
-                padding: "4px 8px",
-                height: "auto",
-              }}
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-            >
-              <option value="Global">🌍 Global</option>
-              {allCountries
-                .filter((country) => countriesWithEvents.has(country))
-                .map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              <optgroup label="All Countries">
-                {allCountries
-                  .filter((country) => !countriesWithEvents.has(country))
-                  .map((country) => (
-                    <option
-                      key={country}
-                      value={country}
-                      style={{ color: "#999" }}
-                    >
-                      {country}
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
           </div>
           <div className="row g-3">
             <div className="col-md-3">
@@ -1363,8 +1311,7 @@ export default function NerdStats() {
               className="me-2"
               style={{ width: 24, height: 24, verticalAlign: "text-bottom" }}
             />
-            Top 100 Leaderboard
-            {selectedCountry !== "Global" && ` (${selectedCountry})`}
+            Top 100 Leaderboard (Global)
           </h4>
           <div className="mb-3 text-left text-muted small">
             <img
