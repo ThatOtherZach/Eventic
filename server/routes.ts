@@ -4427,6 +4427,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's validated tickets count
+  app.get("/api/users/:userId/validated-count", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userId } = req.params;
+      const requestingUserId = req.user?.id;
+      
+      // User can only get their own validation count
+      if (userId !== requestingUserId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const validatedCount = await storage.getUserValidatedTicketsCount(userId);
+      res.json({ validatedCount });
+    } catch (error) {
+      await logError(error, "GET /api/users/:userId/validated-count", {
+        request: req,
+        metadata: { userId: req.params.userId }
+      });
+      res.status(500).json({ message: "Failed to get validated tickets count" });
+    }
+  });
+
+  // Get user's secret codes count
+  app.get("/api/users/:userId/secret-codes-count", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userId } = req.params;
+      const requestingUserId = req.user?.id;
+      
+      // User can only get their own secret codes count
+      if (userId !== requestingUserId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const secretCodesCount = await storage.getUserSecretCodesCount(userId);
+      res.json({ secretCodesCount });
+    } catch (error) {
+      await logError(error, "GET /api/users/:userId/secret-codes-count", {
+        request: req,
+        metadata: { userId: req.params.userId }
+      });
+      res.status(500).json({ message: "Failed to get secret codes count" });
+    }
+  });
+
   app.get("/api/users/:userId/validated-count", async (req, res) => {
     try {
       const { userId } = req.params;

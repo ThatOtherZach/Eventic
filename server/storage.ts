@@ -2011,6 +2011,16 @@ export class DatabaseStorage implements IStorage {
     return result?.count || 0;
   }
 
+  async getUserSecretCodesCount(userId: string): Promise<number> {
+    // Count secret codes redeemed by this user
+    const [result] = await db
+      .select({ count: count() })
+      .from(codeRedemptions)
+      .where(eq(codeRedemptions.userId, userId));
+
+    return result?.count || 0;
+  }
+
   async getSystemLogs(params: {
     limit?: number;
     offset?: number;
