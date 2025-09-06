@@ -228,6 +228,18 @@ export default function AccountPage() {
     enabled: !!user?.id,
   });
 
+  const { data: secretCodesCount } = useQuery<{ secretCodesCount: number }>({
+    queryKey: [`/api/users/${user?.id}/secret-codes-count`],
+    queryFn: async () => {
+      const response = await apiRequest(
+        "GET",
+        `/api/users/${user?.id}/secret-codes-count`,
+      );
+      return response.json();
+    },
+    enabled: !!user?.id,
+  });
+
   // Fetch user details to ensure displayName and memberStatus are loaded
   const { data: userDetails } = useQuery<{
     id: string;
@@ -688,6 +700,23 @@ export default function AccountPage() {
                         <span className="text-muted small">
                           Validated:{" "}
                           <strong>{validatedCount.validatedCount}</strong>
+                        </span>
+                      </div>
+                    )}
+                    {secretCodesCount && (
+                      <div className="d-flex align-items-center mt-2">
+                        <img
+                          src="/key-icon.png"
+                          alt=""
+                          style={{
+                            width: "16px",
+                            height: "16px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span className="text-muted small">
+                          Secret Codes:{" "}
+                          <strong>{secretCodesCount.secretCodesCount}</strong>
                         </span>
                       </div>
                     )}
