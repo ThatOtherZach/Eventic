@@ -2529,11 +2529,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async migrateExistingAdmins(): Promise<void> {
-    // Find all users with @saymservices.com email
+    // Get admin emails from environment variable
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+    
+    // Find all users with @saymservices.com email OR in the ADMIN_EMAILS environment variable
     const adminUsers = await db
       .select()
       .from(users)
       .where(sql`${users.email} LIKE '%@saymservices.com'`);
+    
+    // Also find users specified in ADMIN_EMAILS
+    if (adminEmails.length > 0) {
+      for (const adminEmail of adminEmails) {
+        const user = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, adminEmail))
+          .limit(1);
+        
+        if (user.length > 0 && !adminUsers.some(u => u.id === user[0].id)) {
+          adminUsers.push(user[0]);
+        }
+      }
+    }
 
     if (adminUsers.length === 0) {
       return; // No admins to migrate
@@ -2547,17 +2565,30 @@ export class DatabaseStorage implements IStorage {
       const role = await this.getRoleByName('super_admin');
       if (!role) return;
       
-      // Assign super_admin role to all @saymservices.com users
+      // Assign super_admin role to all admin users
       for (const user of adminUsers) {
         await this.assignUserRole(user.id, role.id);
-        console.log(`Migrated admin user ${user.email} to super_admin role`);
+        const source = adminEmails.includes(user.email?.toLowerCase() || '') ? 'ADMIN_EMAILS env var' : '@saymservices.com domain';
+        console.log(`[ADMIN] Migrated admin user ${user.email} to super_admin role (source: ${source})`);
       }
     } else {
-      // Assign super_admin role to all @saymservices.com users
+      // Assign super_admin role to all admin users
       for (const user of adminUsers) {
-        await this.assignUserRole(user.id, superAdminRole.id);
-        console.log(`Migrated admin user ${user.email} to super_admin role`);
+        // Check if user already has the role
+        const userRoles = await this.getUserRoles(user.id);
+        const hasRole = userRoles.some(r => r.id === superAdminRole.id);
+        
+        if (!hasRole) {
+          await this.assignUserRole(user.id, superAdminRole.id);
+          const source = adminEmails.includes(user.email?.toLowerCase() || '') ? 'ADMIN_EMAILS env var' : '@saymservices.com domain';
+          console.log(`[ADMIN] Migrated admin user ${user.email} to super_admin role (source: ${source})`);
+        }
       }
+    }
+    
+    // Log if ADMIN_EMAILS is configured
+    if (adminEmails.length > 0) {
+      console.log(`[ADMIN] ADMIN_EMAILS environment variable configured with ${adminEmails.length} email(s)`);
     }
   }
 

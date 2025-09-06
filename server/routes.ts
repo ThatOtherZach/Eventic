@@ -378,6 +378,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already exists
       const existingUser = await storage.getUserById(userId);
       if (existingUser) {
+        // Check if this user should be an admin based on environment variable
+        const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+        if (email && adminEmails.includes(email.toLowerCase())) {
+          // Check if they already have the super_admin role
+          const userRoles = await storage.getUserRoles(userId);
+          const hasSuperAdmin = userRoles.some(role => role.name === 'super_admin');
+          
+          if (!hasSuperAdmin) {
+            // Assign super_admin role
+            const superAdminRole = await storage.getRoleByName('super_admin');
+            if (superAdminRole) {
+              try {
+                await storage.assignRole(userId, superAdminRole.id);
+                console.log(`[AUTH] Assigned super_admin role to existing user ${email} based on ADMIN_EMAILS environment variable`);
+              } catch (error) {
+                console.log(`[AUTH] Role assignment failed for ${email}:`, error);
+              }
+            }
+          }
+        }
+        
         // If user exists but doesn't have a display name, generate one
         if (!existingUser.displayName) {
           // Get all existing display names to ensure uniqueness
@@ -411,6 +432,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: email || `user_${userId}@placeholder.com`,
         displayName,
       });
+      
+      // Check if this user should be an admin based on environment variable
+      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+      if (email && adminEmails.includes(email.toLowerCase())) {
+        // Assign super_admin role
+        const superAdminRole = await storage.getRoleByName('super_admin');
+        if (superAdminRole) {
+          try {
+            await storage.assignRole(userId, superAdminRole.id);
+            console.log(`[AUTH] Assigned super_admin role to ${email} based on ADMIN_EMAILS environment variable`);
+          } catch (error) {
+            // Role might already be assigned, that's okay
+            console.log(`[AUTH] Role assignment skipped for ${email} (may already exist)`);
+          }
+        }
+      }
       
       res.json(newUser);
     } catch (error) {
