@@ -4095,11 +4095,9 @@ export class DatabaseStorage implements IStorage {
         throw new Error('Cannot claim tickets yet');
       }
       
-      // Determine amount based on time of day
+      // Fixed amount: 2 tickets per claim
       const now = new Date();
-      const hour = now.getHours();
-      // First 12 hours (0-11) = 2 tickets, last 12 hours (12-23) = 4 tickets
-      const amount = hour < 12 ? 2 : 4;
+      const amount = 2;
       
       // Calculate next claim time (12 hours from now)
       const nextClaimAt = new Date(now.getTime() + 12 * 60 * 60 * 1000);
@@ -4116,7 +4114,7 @@ export class DatabaseStorage implements IStorage {
         userId,
         amount,
         `Daily reward claim: ${amount} Tickets`,
-        { claimTime: now.toISOString(), hour }
+        { claimTime: now.toISOString() }
       );
       
       return { amount, nextClaimAt };
