@@ -28,6 +28,7 @@ import { RegistryPage } from "@/pages/registry-page";
 import { RegistryTicketPage } from "@/pages/registry-ticket-page";
 import { HuntRedirect } from "@/components/hunt-redirect";
 import NotFound from "@/pages/not-found";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 function Router() {
   return (
@@ -65,6 +66,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
+            <ScrollToTop />
             <div className="min-vh-100 bg-light d-flex flex-column">
               <Navigation />
               <main id="main-content" className="container-fluid px-3 px-md-4 py-4 flex-grow-1" role="main">
