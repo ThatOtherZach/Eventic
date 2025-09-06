@@ -87,25 +87,9 @@ export default function Manifesto() {
         </h1>
         <p className="lead text-muted">Buy the ticket. Take the ride.</p>
       </div>
-
-      {/* 
-         ███████╗██╗   ██╗███╗   ██╗████████╗██╗ ██████╗
-         ██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
-         ███████╗██║   ██║██╔██╗ ██║   ██║   ██║██║   ██║
-         ╚════██║██║   ██║██║╚██╗██║   ██║   ██║██║   ██║
-         ███████║╚██████╔╝██║ ╚████║   ██║   ██║╚██████╔╝
-         ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝ ╚═════╝  
-
-         Eventic™ Core Systems
-         ---------------------
-         A cooperative Social MMORPG disguised as an event platform.
-         Raids occur at real venues. Loot = human connection (expires in 69 days).
-         Database Action Points™ govern your every move.
-         Positive actions = smoother play. Negative actions = inefficiency tax.
-         Welcome to the real mission.
-      */}
-
-
+      {/*██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
+         Eventic Core by Saym Services Inc. A Global Live Action Missions Peer Reputation            and Rewards Operations Module or GLAM PR²OM for short. Users complete Missions to           get validation from others which can unlock secret codes.
+         ╚════██║██║   ██║██║╚██╗██║   ██║   ██║██║   ██║*/}
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="h4 mb-3">But... Why?</h2>
@@ -187,7 +171,10 @@ export default function Manifesto() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection id="credits" title="💸 The Credits Game (Yes, It's a Game)">
+          <CollapsibleSection
+            id="credits"
+            title="💸 The Credits Game (Yes, It's a Game)"
+          >
             <p className="mb-3" style={paragraphStyle}>
               OK, so here's where it gets weird (in a good way). We built an
               entire economy around... wait for it... being nice. I know,
@@ -213,7 +200,10 @@ export default function Manifesto() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection id="surge" title="📈 Surge Pricing (But Make It Gentle)">
+          <CollapsibleSection
+            id="surge"
+            title="📈 Surge Pricing (But Make It Gentle)"
+          >
             <p className="mb-3" style={paragraphStyle}>
               Remember Uber's 10x surge pricing during that snowstorm? Yeah, we
               don't do that. Our surge is more like a polite nudge. Popular
@@ -227,7 +217,10 @@ export default function Manifesto() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection id="money" title="💰 Real Money? Not Our Problem (Yet)">
+          <CollapsibleSection
+            id="money"
+            title="💰 Real Money? Not Our Problem (Yet)"
+          >
             <p className="mb-3" style={paragraphStyle}>
               Cash happens at the door. Venmo in the DMs. Crypto in the
               metaverse. Whatever. We don't touch it. We're just the matchmaker
@@ -241,7 +234,10 @@ export default function Manifesto() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection id="absurdist" title="🎭 The Absurdist Social Experiment">
+          <CollapsibleSection
+            id="absurdist"
+            title="🎭 The Absurdist Social Experiment"
+          >
             <p className="mb-3" style={paragraphStyle}>
               Here's the beautiful, chaotic part: With P2P validation, you can
               create events for literally anything. "Standing in this parking

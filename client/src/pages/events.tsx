@@ -95,6 +95,10 @@ export default function Events() {
 
   return (
     <div className="animate-fade-in">
+      {/*██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
+         Eventic Core by Saym Services Inc. A Global Live Action Missions Peer Reputation            and Rewards Operations Module or GLAM PR²OM for short. Users complete Missions to           get validation from others which can unlock secret codes.
+         ╚════██║██║   ██║██║╚██╗██║   ██║   ██║██║   ██║*/}
+      
       {/* Header Section */}
       <div className="row align-items-center mb-4">
         <div className="col-12 col-md-8 mobile-mb">
