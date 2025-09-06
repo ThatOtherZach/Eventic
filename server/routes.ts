@@ -390,7 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const superAdminRole = await storage.getRoleByName('super_admin');
             if (superAdminRole) {
               try {
-                await storage.assignRole(userId, superAdminRole.id);
+                await storage.assignUserRole(userId, superAdminRole.id);
                 console.log(`[AUTH] Assigned super_admin role to existing user ${email} based on ADMIN_EMAILS environment variable`);
               } catch (error) {
                 console.log(`[AUTH] Role assignment failed for ${email}:`, error);
@@ -440,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const superAdminRole = await storage.getRoleByName('super_admin');
         if (superAdminRole) {
           try {
-            await storage.assignRole(userId, superAdminRole.id);
+            await storage.assignUserRole(userId, superAdminRole.id);
             console.log(`[AUTH] Assigned super_admin role to ${email} based on ADMIN_EMAILS environment variable`);
           } catch (error) {
             // Role might already be assigned, that's okay
