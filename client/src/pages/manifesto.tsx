@@ -86,10 +86,10 @@ export default function Manifesto() {
           The Manifesto
         </h1>
         <p className="lead text-muted">Buy the ticket. Take the ride.</p>
+        {/*██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
+           Eventic Core by Saym Services Inc. A Global Live Action Missions Peer Reputation            and Rewards Operations Module or GLAM PROM for short. Users complete Missions to           get validation from others which can unlock secret codes.
+           ╚════██║██║   ██║██║╚██╗██║   ██║   ██║██║   ██║*/}
       </div>
-      {/*██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
-         Eventic Core by Saym Services Inc. A Global Live Action Missions Peer Reputation            and Rewards Operations Module or GLAM PR²OM for short. Users complete Missions to           get validation from others which can unlock secret codes.
-         ╚════██║██║   ██║██║╚██╗██║   ██║   ██║██║   ██║*/}
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="h4 mb-3">But... Why?</h2>
