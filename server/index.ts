@@ -56,6 +56,22 @@ app.use((req, res, next) => {
   // Migrate existing admin users to super_admin role
   await storage.migrateExistingAdmins();
   
+  // Initialize special codes
+  try {
+    const nerdCode = await storage.validateSecretCode("NERRRRRD!");
+    if (!nerdCode) {
+      await storage.createSecretCode({
+        code: "NERRRRRD!",
+        ticketAmount: 3,
+        maxUses: null, // Unlimited uses (one per user)
+        codeType: "special"
+      });
+      console.log("[INIT] Created NERRRRRD! special code");
+    }
+  } catch (error) {
+    console.error("[INIT] Failed to create NERRRRRD! special code:", error);
+  }
+  
   // Migrate HTML descriptions to plain text
   try {
     await migrateDescriptionsToPlainText();

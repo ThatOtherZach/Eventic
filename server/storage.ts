@@ -4069,6 +4069,20 @@ export class DatabaseStorage implements IStorage {
         );
       });
       
+      // Send notification for NERRRRRD! code
+      if (code.toUpperCase() === "NERRRRRD!") {
+        try {
+          await this.createNotification({
+            userId,
+            type: "success",
+            title: "NERRRRRD!",
+            description: "NERRRRRD!"
+          });
+        } catch (error) {
+          console.error('Failed to send NERRRRRD! notification:', error);
+        }
+      }
+      
       return { success: true, ticketAmount: secretCode.ticketAmount };
     } catch (error) {
       console.error('Error redeeming secret code:', error);
