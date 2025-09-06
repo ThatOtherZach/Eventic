@@ -2752,25 +2752,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return eventDate.toDateString() === now.toDateString();
       });
       
-      // Calculate event distribution for next 10 days
-      const tenDaysFromNow = new Date();
-      tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
+      // Calculate event distribution for next 5 days
+      const fiveDaysFromNow = new Date();
+      fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
       
-      // Filter events within next 10 days
-      const next10DaysEvents = upcomingEvents.filter(e => {
+      // Filter events within next 5 days
+      const next5DaysEvents = upcomingEvents.filter(e => {
         const eventDate = new Date(e.date);
-        return eventDate >= now && eventDate <= tenDaysFromNow;
+        return eventDate >= now && eventDate <= fiveDaysFromNow;
       });
       
-      // Create an array for each of the next 10 days
+      // Create an array for each of the next 5 days
       const eventDistribution = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         const checkDate = new Date();
         checkDate.setDate(checkDate.getDate() + i);
         const dateStr = checkDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         
         // Count events on this date
-        const eventsOnDate = next10DaysEvents.filter(e => {
+        const eventsOnDate = next5DaysEvents.filter(e => {
           const eventDate = new Date(e.date);
           return eventDate.toDateString() === checkDate.toDateString();
         });

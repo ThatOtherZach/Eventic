@@ -1209,7 +1209,7 @@ export default function NerdStats() {
                     verticalAlign: "text-bottom",
                   }}
                 />
-                Next 7 Days
+                Next 5 Days
               </h5>
               <div className="card shadow-sm">
                 <div className="card-body">
