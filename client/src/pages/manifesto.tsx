@@ -88,6 +88,24 @@ export default function Manifesto() {
         <p className="lead text-muted">Buy the ticket. Take the ride.</p>
       </div>
 
+      <!-- 
+         ███████╗██╗   ██╗███╗   ██╗████████╗██╗ ██████╗
+         ██╔════╝██║   ██║████╗  ██║╚══██╔══╝██║██╔═══██╗
+         ███████╗██║   ██║██╔██╗ ██║   ██║   ██║██║   ██║
+         ╚════██║██║   ██║██║╚██╗██║   ██║   ██║██║   ██║
+         ███████║╚██████╔╝██║ ╚████║   ██║   ██║╚██████╔╝
+         ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝ ╚═════╝  
+
+         Eventic™ Core Systems
+         ---------------------
+         A cooperative Social MMORPG disguised as an event platform.
+         Raids occur at real venues. Loot = human connection (expires in 69 days).
+         Database Action Points™ govern your every move.
+         Positive actions = smoother play. Negative actions = inefficiency tax.
+         Welcome to the real mission.
+      -->
+
+
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="h4 mb-3">But... Why?</h2>
