@@ -459,6 +459,70 @@ export class DatabaseStorage implements IStorage {
         return true; // Already deleted
       }
       
+      // Generate anonymized ID: username_deleted_MMDDYYYY
+      const deletionDate = new Date();
+      const month = (deletionDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = deletionDate.getDate().toString().padStart(2, '0');
+      const year = deletionDate.getFullYear();
+      const anonymizedId = `${user.displayName || 'unknown'}_deleted_${month}${day}${year}`;
+      
+      console.log(`[DELETE_USER] Anonymizing records with ID: ${anonymizedId}`);
+      
+      // === ANONYMIZE FINANCIAL/ECONOMIC RECORDS ===
+      
+      // Anonymize ticket purchases
+      await db.update(ticketPurchases)
+        .set({ userId: anonymizedId })
+        .where(eq(ticketPurchases.userId, userId));
+      
+      // Anonymize currency ledger entries
+      await db.update(currencyLedger)
+        .set({ accountId: anonymizedId })
+        .where(eq(currencyLedger.accountId, userId));
+      
+      // Anonymize account balances
+      await db.update(accountBalances)
+        .set({ accountId: anonymizedId })
+        .where(eq(accountBalances.accountId, userId));
+      
+      // Anonymize resell transactions (both as buyer and seller)
+      await db.update(resellTransactions)
+        .set({ originalOwnerId: anonymizedId })
+        .where(eq(resellTransactions.originalOwnerId, userId));
+      
+      await db.update(resellTransactions)
+        .set({ newOwnerId: anonymizedId })
+        .where(eq(resellTransactions.newOwnerId, userId));
+      
+      // Anonymize code redemptions
+      await db.update(codeRedemptions)
+        .set({ userId: anonymizedId })
+        .where(eq(codeRedemptions.userId, userId));
+      
+      // === ANONYMIZE AUDIT/HISTORICAL RECORDS ===
+      
+      // Anonymize validation actions
+      await db.update(validationActions)
+        .set({ validatorId: anonymizedId })
+        .where(eq(validationActions.validatorId, userId));
+      
+      // Anonymize event ratings
+      await db.update(eventRatings)
+        .set({ eventOwnerId: anonymizedId })
+        .where(eq(eventRatings.eventOwnerId, userId));
+      
+      // Anonymize archived events
+      await db.update(archivedEvents)
+        .set({ userId: anonymizedId })
+        .where(eq(archivedEvents.userId, userId));
+      
+      // Anonymize archived tickets
+      await db.update(archivedTickets)
+        .set({ userId: anonymizedId })
+        .where(eq(archivedTickets.userId, userId));
+      
+      // === DELETE PERSONAL/AUTH DATA ===
+      
       // Delete notifications
       await db.delete(notifications).where(eq(notifications.userId, userId));
       
@@ -491,52 +555,24 @@ export class DatabaseStorage implements IStorage {
       // Delete auth events
       await db.delete(authEvents).where(eq(authEvents.userId, userId));
       
-      // Delete user tickets
-      await db.delete(tickets).where(eq(tickets.userId, userId));
-      
       // Delete delegated validators (where user added them)
       await db.delete(delegatedValidators).where(eq(delegatedValidators.addedBy, userId));
       
       // Delete resell queue entries
       await db.delete(resellQueue).where(eq(resellQueue.originalOwnerId, userId));
       
-      // Delete resell transactions
-      await db.delete(resellTransactions).where(or(
-        eq(resellTransactions.originalOwnerId, userId),
-        eq(resellTransactions.newOwnerId, userId)
-      ));
-      
-      // Delete validation actions
-      await db.delete(validationActions).where(eq(validationActions.validatorId, userId));
-      
-      // Delete code redemptions
-      await db.delete(codeRedemptions).where(eq(codeRedemptions.userId, userId));
-      
-      // Delete ticket purchases
-      await db.delete(ticketPurchases).where(eq(ticketPurchases.userId, userId));
-      
       // Delete daily claims
       await db.delete(dailyClaims).where(eq(dailyClaims.userId, userId));
-      
-      // Delete account balances
-      await db.delete(accountBalances).where(eq(accountBalances.accountId, userId));
-      
-      // Delete currency ledger entries
-      await db.delete(currencyLedger).where(eq(currencyLedger.accountId, userId));
-      
-      // Delete event ratings (by event owner)
-      await db.delete(eventRatings).where(eq(eventRatings.eventOwnerId, userId));
       
       // Delete user reputation cache
       await db.delete(userReputationCache).where(eq(userReputationCache.userId, userId));
       
-      // Delete archived events
-      await db.delete(archivedEvents).where(eq(archivedEvents.userId, userId));
+      // === DELETE ACTIVE CONTENT ===
       
-      // Delete archived tickets
-      await db.delete(archivedTickets).where(eq(archivedTickets.userId, userId));
+      // Delete user tickets (will be archived naturally)
+      await db.delete(tickets).where(eq(tickets.userId, userId));
       
-      // Delete all events created by the user
+      // Delete all events created by the user (will be archived naturally)
       await db.delete(events).where(eq(events.userId, userId));
       
       // Delete scheduled jobs for this user
@@ -545,13 +581,15 @@ export class DatabaseStorage implements IStorage {
       // Delete system logs related to this user
       await db.delete(systemLogs).where(eq(systemLogs.userId, userId));
       
-      // NOTE: We explicitly DO NOT delete registry records (NFT registry)
-      // as per user requirement - these should be preserved
+      // NOTE: We explicitly DO NOT touch:
+      // - registryRecords (NFT registry) - preserved permanently
+      // - registryTransactions - preserved permanently
       
-      // Finally, delete the user
+      // Finally, delete the user account
       await db.delete(users).where(eq(users.id, userId));
       
-      console.log(`[DELETE_USER] Successfully deleted user account ${userId} and all associated data (except NFT registry)`);
+      console.log(`[DELETE_USER] Successfully anonymized financial/audit records and deleted user ${userId}`);
+      console.log(`[DELETE_USER] Preserved records now use anonymized ID: ${anonymizedId}`);
       return true;
     } catch (error) {
       console.error(`[DELETE_USER] Error deleting user account ${userId}:`, error);
