@@ -732,10 +732,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEventByHuntCode(huntCode: string): Promise<Event | undefined> {
+    // First find the secret code with this hunt code
+    const [secretCode] = await db
+      .select()
+      .from(secretCodes)
+      .where(and(
+        eq(secretCodes.code, huntCode),
+        eq(secretCodes.codeType, "hunt")
+      ));
+    
+    if (!secretCode || !secretCode.eventId) {
+      return undefined;
+    }
+    
+    // Then get the associated event
     const [event] = await db
       .select()
       .from(events)
-      .where(eq(events.huntCode, huntCode));
+      .where(eq(events.id, secretCode.eventId));
+    
     return event || undefined;
   }
 
@@ -4247,7 +4262,7 @@ export class DatabaseStorage implements IStorage {
           if (!ticket) {
             const user = await this.getUser(userId);
             const ticketNumber = `HUNT-${event.id.slice(0, 8)}-${Date.now()}`;
-            const qrData = `HUNT-${secretCode.huntCode}-${ticketNumber}`;
+            const qrData = `HUNT-${secretCode.code}-${ticketNumber}`;
             
             ticket = await this.createTicket({
               eventId: event.id,
