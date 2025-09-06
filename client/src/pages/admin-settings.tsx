@@ -65,17 +65,14 @@ export default function AdminSettings() {
   // Update special effects odds
   const updateOddsMutation = useMutation({
     mutationFn: async (odds: typeof effectOdds) => {
-      return apiRequest("/api/admin/special-effects-odds", {
-        method: "PUT",
-        body: JSON.stringify(odds)
-      });
+      return apiRequest("PUT", "/api/admin/special-effects-odds", odds);
     },
     onSuccess: () => {
       toast({
         title: "Settings Updated",
         description: "Special effects odds have been updated successfully."
       });
-      queryClient.invalidateQueries(["/api/admin/special-effects-odds"]);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/special-effects-odds"] });
     },
     onError: () => {
       toast({
@@ -89,17 +86,14 @@ export default function AdminSettings() {
   // Toggle event enabled status
   const toggleEventMutation = useMutation({
     mutationFn: async ({ eventId, field, value }: { eventId: string; field: "isEnabled" | "ticketPurchasesEnabled"; value: boolean }) => {
-      return apiRequest(`/api/admin/events/${eventId}/toggle`, {
-        method: "PUT",
-        body: JSON.stringify({ field, value })
-      });
+      return apiRequest("PUT", `/api/admin/events/${eventId}/toggle`, { field, value });
     },
     onSuccess: () => {
       toast({
         title: "Event Updated",
         description: "Event settings have been updated successfully."
       });
-      queryClient.invalidateQueries(["/api/admin/events"]);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/events"] });
     },
     onError: () => {
       toast({
@@ -110,9 +104,9 @@ export default function AdminSettings() {
     }
   });
 
-  const filteredEvents = events.filter((event: any) =>
-    event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.venue.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredEvents = (events as any[]).filter((event: any) =>
+    event?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event?.venue?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -368,12 +362,12 @@ export default function AdminSettings() {
                     <div>
                       <p className="font-medium">Stripe Integration</p>
                       <p className="text-sm text-gray-500">
-                        {paymentData?.stripe?.configured ? "Connected" : "Not Configured"}
+                        {(paymentData as any)?.stripe?.configured ? "Connected" : "Not Configured"}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {paymentData?.stripe?.configured ? (
+                    {(paymentData as any)?.stripe?.configured ? (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     ) : (
                       <XCircle className="h-5 w-5 text-red-500" />
@@ -395,7 +389,7 @@ export default function AdminSettings() {
                 </div>
 
                 {/* Test Mode Indicator */}
-                {paymentData?.stripe?.testMode && (
+                {(paymentData as any)?.stripe?.testMode && (
                   <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-center gap-2">
                       <span className="text-yellow-600 text-sm font-medium">Test Mode</span>
@@ -443,7 +437,7 @@ export default function AdminSettings() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {paymentData?.coinbase?.enabled ? (
+                    {(paymentData as any)?.coinbase?.enabled ? (
                       <>
                         <CheckCircle className="h-5 w-5 text-green-500" />
                         <span className="text-sm text-green-600">Active</span>
