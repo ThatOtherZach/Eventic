@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   ChevronDown,
   Lock,
+  Trash2,
 } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -137,6 +138,64 @@ export default function AccountPage() {
       return response.json();
     },
     enabled: !!user,
+  });
+
+  // Account deletion status query
+  const { data: deletionStatus, refetch: refetchDeletionStatus } = useQuery<{
+    isScheduled: boolean;
+    scheduledAt?: string;
+    daysRemaining?: number;
+  }>({
+    queryKey: ["/api/user/deletion-status"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/user/deletion-status");
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
+  // Schedule account deletion mutation
+  const scheduleDeleteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/user/schedule-deletion");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account deletion scheduled",
+        description: "Your account will be deleted in 90 days. You can cancel this at any time.",
+      });
+      refetchDeletionStatus();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to schedule account deletion",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Cancel account deletion mutation
+  const cancelDeleteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/user/cancel-deletion");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account deletion cancelled",
+        description: "Your account deletion has been cancelled.",
+      });
+      refetchDeletionStatus();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel account deletion",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: reputation } = useQuery<{
@@ -519,7 +578,43 @@ export default function AccountPage() {
         <div className="col">
           <div className="d-flex justify-content-between align-items-center">
             <h1 className="h3 fw-bold mb-0">My Account</h1>
-            <PastEvents />
+            <div className="d-flex gap-2">
+              {/* Account Deletion Management */}
+              {deletionStatus?.isScheduled ? (
+                <div className="d-flex align-items-center gap-2">
+                  <span className="badge bg-warning text-dark">
+                    <AlertTriangle className="me-1" size={14} />
+                    Deletion in {deletionStatus.daysRemaining} days
+                  </span>
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={() => cancelDeleteMutation.mutate()}
+                    disabled={cancelDeleteMutation.isPending}
+                    data-testid="button-cancel-deletion"
+                  >
+                    {cancelDeleteMutation.isPending ? (
+                      <span className="spinner-border spinner-border-sm me-2" />
+                    ) : null}
+                    Cancel Deletion
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="btn btn-outline-danger btn-sm"
+                  onClick={() => {
+                    if (confirm("Are you sure you want to schedule your account for deletion? This action can be cancelled within 90 days.")) {
+                      scheduleDeleteMutation.mutate();
+                    }
+                  }}
+                  disabled={scheduleDeleteMutation.isPending}
+                  data-testid="button-delete-account"
+                >
+                  <Trash2 className="me-1" size={16} />
+                  {scheduleDeleteMutation.isPending ? "Scheduling..." : "Delete Account"}
+                </button>
+              )}
+              <PastEvents />
+            </div>
           </div>
         </div>
       </div>
