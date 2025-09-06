@@ -5218,6 +5218,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Account Deletion Management Endpoints
+
+  // Schedule account deletion
+  app.post("/api/user/schedule-deletion", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.scheduleAccountDeletion(userId);
+      if (!user) {
+        return res.status(500).json({ message: "Failed to schedule account deletion" });
+      }
+
+      const deletionStatus = await storage.getUserDeletionStatus(userId);
+      
+      res.json({
+        message: "Account deletion scheduled successfully",
+        scheduledAt: deletionStatus.scheduledAt,
+        daysRemaining: deletionStatus.daysRemaining
+      });
+    } catch (error) {
+      await logError(error, "POST /api/user/schedule-deletion", { request: req });
+      res.status(500).json({ message: "Failed to schedule account deletion" });
+    }
+  });
+
+  // Cancel account deletion
+  app.post("/api/user/cancel-deletion", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await storage.cancelAccountDeletion(userId);
+      if (!user) {
+        return res.status(500).json({ message: "Failed to cancel account deletion" });
+      }
+
+      res.json({
+        message: "Account deletion cancelled successfully"
+      });
+    } catch (error) {
+      await logError(error, "POST /api/user/cancel-deletion", { request: req });
+      res.status(500).json({ message: "Failed to cancel account deletion" });
+    }
+  });
+
+  // Get account deletion status
+  app.get("/api/user/deletion-status", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const deletionStatus = await storage.getUserDeletionStatus(userId);
+      
+      res.json(deletionStatus);
+    } catch (error) {
+      await logError(error, "GET /api/user/deletion-status", { request: req });
+      res.status(500).json({ message: "Failed to get deletion status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
