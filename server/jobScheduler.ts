@@ -171,6 +171,57 @@ async function processJob(job: typeof scheduledJobs.$inferSelect): Promise<void>
       } else {
         throw new Error(`Failed to archive event ${job.targetId} - check logs for details`);
       }
+    } else if (job.jobType === 'delete_user') {
+      // Check if user still exists and is still scheduled for deletion
+      const user = await storage.getUser(job.targetId);
+      if (!user) {
+        // User already deleted, mark job as completed
+        await db
+          .update(scheduledJobs)
+          .set({ 
+            status: 'completed',
+            completedAt: new Date(),
+            errorMessage: 'User already deleted'
+          })
+          .where(eq(scheduledJobs.id, job.id));
+        
+        console.log(`[JOBS] User ${job.targetId} already deleted, marking job as completed`);
+        return;
+      }
+      
+      const isScheduled = await storage.isUserScheduledForDeletion(job.targetId);
+      if (!isScheduled) {
+        // User cancelled deletion, mark job as completed
+        await db
+          .update(scheduledJobs)
+          .set({ 
+            status: 'completed',
+            completedAt: new Date(),
+            errorMessage: 'User cancelled deletion'
+          })
+          .where(eq(scheduledJobs.id, job.id));
+        
+        console.log(`[JOBS] User ${job.targetId} cancelled deletion, marking job as completed`);
+        return;
+      }
+      
+      // Delete the user account
+      const success = await storage.deleteUserAccount(job.targetId);
+      
+      if (success) {
+        // Mark job as completed
+        await db
+          .update(scheduledJobs)
+          .set({ 
+            status: 'completed',
+            completedAt: new Date()
+          })
+          .where(eq(scheduledJobs.id, job.id));
+        
+        console.log(`[JOBS] Successfully deleted user account ${job.targetId}`);
+      } else {
+        throw new Error(`Failed to delete user account ${job.targetId} - check logs for details`);
+      }
     }
   } catch (error) {
     // Mark job as failed

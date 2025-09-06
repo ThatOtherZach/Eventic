@@ -19,6 +19,7 @@ export interface IStorage {
   cancelAccountDeletion(userId: string): Promise<User | undefined>;
   isUserScheduledForDeletion(userId: string): Promise<boolean>;
   getUserDeletionStatus(userId: string): Promise<{ isScheduled: boolean; scheduledAt?: Date; daysRemaining?: number }>;
+  deleteUserAccount(userId: string): Promise<boolean>;
 
   getUserEventCountries(userId: string): Promise<string[]>;
   
@@ -445,6 +446,62 @@ export class DatabaseStorage implements IStorage {
         eq(scheduledJobs.targetId, userId),
         eq(scheduledJobs.status, 'pending')
       ));
+  }
+
+  async deleteUserAccount(userId: string): Promise<boolean> {
+    try {
+      console.log(`[DELETE_USER] Starting account deletion for user ${userId}`);
+      
+      // Get user details before deletion
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.log(`[DELETE_USER] User ${userId} not found`);
+        return true; // Already deleted
+      }
+      
+      // Delete user sessions
+      await db.delete(sessions).where(eq(sessions.userId, userId));
+      
+      // Delete user roles
+      await db.delete(userRoles).where(eq(userRoles.userId, userId));
+      
+      // Delete auth tokens
+      await db.delete(authTokens).where(eq(authTokens.userId, userId));
+      
+      // Delete user tickets
+      await db.delete(tickets).where(eq(tickets.userId, userId));
+      
+      // Delete currency accounts
+      await db.delete(currencyAccounts).where(eq(currencyAccounts.userId, userId));
+      
+      // Delete ledger entries
+      await db.delete(ledgerEntries).where(or(
+        eq(ledgerEntries.fromAccountId, userId),
+        eq(ledgerEntries.toAccountId, userId)
+      ));
+      
+      // Delete event votes
+      await db.delete(eventVotes).where(eq(eventVotes.userId, userId));
+      
+      // Delete archived events
+      await db.delete(archivedEvents).where(eq(archivedEvents.userId, userId));
+      
+      // Transfer ownership of events to a system account or delete them
+      // For now, we'll set userId to null (orphan them for later cleanup)
+      await db.update(events).set({ userId: null }).where(eq(events.userId, userId));
+      
+      // Delete system logs related to this user
+      await db.delete(systemLogs).where(eq(systemLogs.userId, userId));
+      
+      // Finally, delete the user
+      await db.delete(users).where(eq(users.id, userId));
+      
+      console.log(`[DELETE_USER] Successfully deleted user account ${userId}`);
+      return true;
+    } catch (error) {
+      console.error(`[DELETE_USER] Error deleting user account ${userId}:`, error);
+      return false;
+    }
   }
 
 
