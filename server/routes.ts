@@ -1443,9 +1443,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "POST /api/events",
           {
             userId,
-            eventName: createData.name,
-            triggeredFields: moderationField,
-            action: "auto-set-private"
+            metadata: {
+              eventName: createData.name,
+              triggeredFields: moderationField,
+              action: "auto-set-private"
+            }
           }
         );
       }
@@ -1560,9 +1562,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             userId,
             eventId: req.params.id,
-            eventName: event.name,
-            triggeredFields: moderationField,
-            action: "auto-set-private"
+            metadata: {
+              eventName: event.name,
+              triggeredFields: moderationField,
+              action: "auto-set-private"
+            }
           }
         );
       }
@@ -4646,7 +4650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Stripe checkout session
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2025-07-30.basil'
+        apiVersion: '2024-12-18.acacia'
       });
       
       const session = await stripe.checkout.sessions.create({
@@ -4692,7 +4696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2025-07-30.basil'
+        apiVersion: '2024-12-18.acacia'
       });
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
