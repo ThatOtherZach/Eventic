@@ -420,6 +420,11 @@ export const registryRecords = pgTable("registry_records", {
   ticketOriginalOwnerId: varchar("ticket_original_owner_id"), // Original owner for resell tracking
   ticketIsCharged: boolean("ticket_is_charged").default(false), // Whether ticket was charged for better effects
   
+  // Hunt metadata (if ticket was obtained via hunt)
+  huntCode: text("hunt_code"), // Hunt code used to claim the ticket (e.g., "REDBEAR")
+  huntClaimLatitude: decimal("hunt_claim_latitude", { precision: 10, scale: 7 }), // GPS latitude where claimed
+  huntClaimLongitude: decimal("hunt_claim_longitude", { precision: 11, scale: 7 }), // GPS longitude where claimed
+  
   // Complete event data preservation  
   eventName: text("event_name").notNull(),
   eventDescription: text("event_description").notNull(),
