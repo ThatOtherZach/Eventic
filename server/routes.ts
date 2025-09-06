@@ -1391,6 +1391,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userEmail = req.user?.email;
     
     try {
+      // Check if user is scheduled for deletion
+      if (userId) {
+        const isScheduledForDeletion = await storage.isUserScheduledForDeletion(userId);
+        if (isScheduledForDeletion) {
+          const deletionStatus = await storage.getUserDeletionStatus(userId);
+          return res.status(403).json({ 
+            message: `Cannot create events while account is scheduled for deletion. Your account will be deleted in ${deletionStatus.daysRemaining} days. Cancel deletion to create events.`
+          });
+        }
+      }
+      
       // Check if user has admin role
       const isAdminCreated = userId ? await isAdmin(userId) : false;
       
