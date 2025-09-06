@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   memberStatus: text("member_status").default("Legacy"), // Track account signup periods
   createdAt: timestamp("created_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
+  deletionScheduledAt: timestamp("deletion_scheduled_at"), // When account deletion was scheduled (90-day grace period)
 });
 
 // Roles table for defining user roles
