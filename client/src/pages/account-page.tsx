@@ -351,11 +351,14 @@ export default function AccountPage() {
       const data = await response.json();
 
       if (response.ok) {
-        toast({
-          title: "Success!",
-          description: data.message || `Successfully redeemed ${data.ticketAmount} tickets!`,
-          variant: "success",
-        });
+        // Don't show toast for URM1550N code
+        if (secretCode.trim() !== "URM1550N") {
+          toast({
+            title: "Success!",
+            description: data.message || `Successfully redeemed ${data.ticketAmount} tickets!`,
+            variant: "success",
+          });
+        }
         setSecretCode("");
         queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       } else {
