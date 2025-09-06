@@ -68,8 +68,19 @@ app.use((req, res, next) => {
       });
       console.log("[INIT] Created NERRRRRD! special code");
     }
+    
+    const missionCode = await storage.validateSecretCode("xXURM1550NXx");
+    if (!missionCode) {
+      await storage.createSecretCode({
+        code: "xXURM1550NXx",
+        ticketAmount: 3,
+        maxUses: null, // Unlimited uses (one per user)
+        codeType: "special"
+      });
+      console.log("[INIT] Created xXURM1550NXx special code");
+    }
   } catch (error) {
-    console.error("[INIT] Failed to create NERRRRRD! special code:", error);
+    console.error("[INIT] Failed to create special codes:", error);
   }
   
   // Migrate HTML descriptions to plain text
