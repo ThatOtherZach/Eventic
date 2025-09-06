@@ -137,6 +137,23 @@ async function processJob(job: typeof scheduledJobs.$inferSelect): Promise<void>
     
     // Process based on job type
     if (job.jobType === 'archive_event') {
+      // Check if event still exists before archiving
+      const event = await storage.getEvent(job.targetId);
+      if (!event) {
+        // Event already deleted, mark job as completed
+        await db
+          .update(scheduledJobs)
+          .set({ 
+            status: 'completed',
+            completedAt: new Date(),
+            errorMessage: 'Event already deleted'
+          })
+          .where(eq(scheduledJobs.id, job.id));
+        
+        console.log(`[JOBS] Event ${job.targetId} already deleted, marking job as completed`);
+        return;
+      }
+      
       // Archive the event
       const success = await storage.archiveEvent(job.targetId);
       
@@ -152,7 +169,7 @@ async function processJob(job: typeof scheduledJobs.$inferSelect): Promise<void>
         
         console.log(`[JOBS] Successfully archived event ${job.targetId}`);
       } else {
-        throw new Error('Failed to archive event');
+        throw new Error(`Failed to archive event ${job.targetId} - check logs for details`);
       }
     }
   } catch (error) {

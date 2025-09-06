@@ -263,7 +263,7 @@ export class DatabaseStorage implements IStorage {
   private startSessionCleanup() {
     this.cleanupInterval = setInterval(() => {
       this.cleanupExpiredValidationSessions();
-    }, 30000); // Run every 30 seconds
+    }, 60000); // Run every 60 seconds instead of 30 (reduced frequency)
   }
   
   private cleanupExpiredValidationSessions() {
@@ -1780,7 +1780,14 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get the event details
       const event = await this.getEvent(eventId);
-      if (!event || !event.userId) return false;
+      if (!event) {
+        console.log(`[ARCHIVE] Event ${eventId} not found - may have been already deleted`);
+        return true; // Return true since there's nothing to archive
+      }
+      if (!event.userId) {
+        console.log(`[ARCHIVE] Event ${eventId} has no userId - skipping`);
+        return true; // Return true to avoid retrying
+      }
 
       // Get all tickets for this event
       const eventTickets = await this.getTicketsByEventId(eventId);
@@ -1909,9 +1916,14 @@ export class DatabaseStorage implements IStorage {
       // Delete the event
       await db.delete(events).where(eq(events.id, eventId));
 
+      console.log(`[ARCHIVE] Successfully archived and deleted event ${eventId}`);
       return true;
     } catch (error) {
-      console.error('Error archiving event:', error);
+      console.error(`[ARCHIVE] Error archiving event ${eventId}:`, error);
+      // If the error is because the event doesn't exist, consider it successful
+      if (error instanceof Error && error.message.includes('does not exist')) {
+        return true;
+      }
       return false;
     }
   }

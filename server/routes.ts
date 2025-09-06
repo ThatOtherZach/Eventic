@@ -20,7 +20,7 @@ import fs from 'fs';
 // Rate limiter configuration for ticket purchases
 const purchaseRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 3, // Max 3 purchases per minute
+  max: 10, // Max 10 purchases per minute (increased from 3)
   message: 'Too many purchase attempts. Please wait a moment before trying again.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -34,7 +34,7 @@ const purchaseRateLimiter = rateLimit({
         userId: extractUserId(req as AuthenticatedRequest) || undefined,
         metadata: { 
           rateLimitWindow: 60000,
-          maxPurchases: 3,
+          maxPurchases: 10,
           ip: req.ip
         }
       }
@@ -49,7 +49,7 @@ const purchaseRateLimiter = rateLimit({
 // Rate limiter for event creation  
 const eventCreationRateLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 2, // Max 2 events per 5 minutes
+  max: 5, // Max 5 events per 5 minutes (increased from 2)
   message: 'Too many events created. Please wait before creating another event.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -63,7 +63,7 @@ const eventCreationRateLimiter = rateLimit({
         userId: extractUserId(req as AuthenticatedRequest) || undefined,
         metadata: {
           rateLimitWindow: 300000,
-          maxEvents: 2,
+          maxEvents: 5,
           ip: req.ip
         }
       }
@@ -78,7 +78,7 @@ const eventCreationRateLimiter = rateLimit({
 // General API rate limiter
 const generalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limit each IP to 1000 requests per windowMs (reasonable for normal browsing)
+  max: 2000, // Limit each IP to 2000 requests per windowMs (increased from 1000)
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -219,7 +219,7 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
 // Validation rate limiter
 const validationRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute  
-  max: 20, // Max 20 validation attempts per minute
+  max: 50, // Max 50 validation attempts per minute (increased from 20)
   message: 'Too many validation attempts. Please wait a moment before trying again.',
   standardHeaders: true,
   legacyHeaders: false,
