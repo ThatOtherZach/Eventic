@@ -4660,7 +4660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currency: 'usd',
             product_data: {
               name: stripeBonus > 0 ? `Event Tickets (+${stripeBonus} bonus)` : 'Event Tickets',
-              description: `${quantity} tickets for creating and boosting events${stripeBonus > 0 ? ` (includes ${stripeBonus} Stripe bonus)` : ''}${hasDiscount ? ' (10% bulk discount applied)' : ''}${reputationDiscount > 0 ? ` (${reputationDiscount}% reputation discount applied)` : ''}${volumeDiscount > 0 && !hasDiscount ? ` (${volumeDiscount}% volume discount applied)` : ''}${totalDiscountPercentage > 30 ? ' (30% max discount cap applied)' : ''}`,
+              description: `${quantity} tickets for creating and boosting events${stripeBonus > 0 ? ` plus ${stripeBonus} bonus` : ''}${reputationDiscount > 0 ? ` ${reputationDiscount}%rep discount` : ''}, Qty ${quantity} total`,
             },
             unit_amount: Math.round(effectiveUnitPrice * 100), // Convert to cents
           },
