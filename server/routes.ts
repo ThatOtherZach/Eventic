@@ -3321,6 +3321,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fetchImageAsBase64(ticket.nftMediaUrl)
       ]);
       
+      // Extract hunt metadata if this ticket was obtained via hunt
+      let huntCode: string | null = null;
+      let huntLatitude: string | null = null;
+      let huntLongitude: string | null = null;
+      
+      // Check if ticket was obtained via hunt by examining the qrData
+      if (ticket.qrData && ticket.qrData.startsWith('HUNT-')) {
+        // Extract hunt code from qrData pattern: HUNT-{code}-{ticketNumber}
+        const parts = ticket.qrData.split('-');
+        if (parts.length >= 2) {
+          huntCode = parts[1]; // The code is the second part
+          
+          // Try to get the hunt secret code to get GPS coordinates
+          const secretCode = await storage.validateSecretCode(huntCode);
+          if (secretCode && secretCode.codeType === 'hunt') {
+            huntLatitude = secretCode.huntLatitude;
+            huntLongitude = secretCode.huntLongitude;
+          }
+        }
+      }
+      
       // Create registry record with COMPLETE data preservation
       const registryRecord = await storage.createRegistryRecord({
         ticketId,
@@ -3366,6 +3387,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketResellStatus: ticket.resellStatus || "not_for_resale",
         ticketOriginalOwnerId: ticket.originalOwnerId || null,
         ticketIsCharged: ticket.isCharged || false,
+        
+        // Hunt metadata (if ticket was obtained via hunt)
+        huntCode: huntCode,
+        huntClaimLatitude: huntLatitude,
+        huntClaimLongitude: huntLongitude,
         
         // Complete event data preservation
         eventName: event.name,
