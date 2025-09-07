@@ -2561,7 +2561,7 @@ export default function EventForm() {
                                 <span className="badge bg-success me-2">
                                   🎯
                                 </span>
-                                Enable Custom Sticker
+                                Custom Sticker
                               </label>
                             </div>
                             {isEditMode && event?.stickerUrl && (
