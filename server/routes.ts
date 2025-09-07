@@ -16,6 +16,7 @@ import { getTicketCaptureService, getFFmpegPath } from "./ticketCapture";
 import { execFile } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { nftMintingService } from './services/nft-minting';
 
 // Rate limiter configuration for ticket purchases
 const purchaseRateLimiter = rateLimit({
@@ -3835,13 +3836,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const registryUrl = `${req.protocol}://${req.get('host')}/registry/${registryRecord.id}`;
       const metadataUrl = `${req.protocol}://${req.get('host')}/api/registry/${registryRecord.id}/metadata`;
       
+      // Attempt on-chain minting if configured
+      let onChainResult = null;
+      if (process.env.NFT_CONTRACT_ADDRESS && process.env.NFT_MINTER_PRIVATE_KEY) {
+        try {
+          const mintResult = await nftMintingService.mintNFT(
+            walletAddress,
+            registryRecord.id,
+            `${registryRecord.id}/metadata`
+          );
+          
+          if (mintResult.success) {
+            // Update registry record with on-chain data
+            await storage.updateRegistryRecord(registryRecord.id, {
+              nftMinted: true,
+              nftMintingStatus: "completed",
+              nftTransactionHash: mintResult.transactionHash,
+              nftTokenId: mintResult.tokenId,
+              nftContractAddress: process.env.NFT_CONTRACT_ADDRESS
+            });
+            
+            onChainResult = {
+              success: true,
+              transactionHash: mintResult.transactionHash,
+              tokenId: mintResult.tokenId,
+              openSeaUrl: nftMintingService.getOpenSeaUrl(mintResult.tokenId!),
+              baseScanUrl: nftMintingService.getBaseScanUrl(mintResult.transactionHash!)
+            };
+          } else {
+            // On-chain minting failed but registry record still created
+            await storage.updateRegistryRecord(registryRecord.id, {
+              nftMintingStatus: "failed",
+              nftMintError: mintResult.error
+            });
+            
+            onChainResult = {
+              success: false,
+              error: mintResult.error
+            };
+          }
+        } catch (error: any) {
+          console.error("On-chain minting error:", error);
+          // Don't fail the entire request if on-chain minting fails
+          onChainResult = {
+            success: false,
+            error: error.message || "On-chain minting failed"
+          };
+        }
+      }
+      
       res.json({
-        message: "NFT minting initiated. Your NFT will be minted to your wallet address soon.",
+        message: onChainResult?.success 
+          ? "NFT successfully minted on Base L2!" 
+          : "Registry record created. On-chain minting pending or not configured.",
         registryRecord,
         registryUrl,
         metadataUrl,
         walletAddress,
-        cost: MINT_COST
+        cost: MINT_COST,
+        onChain: onChainResult
       });
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/mint", {
