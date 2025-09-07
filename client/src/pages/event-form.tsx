@@ -146,6 +146,7 @@ export default function EventForm() {
       ticketPurchasesEnabled: true,
       timezone: "America/New_York",
       rollingTimezone: false,
+      paymentProcessing: "None",
     },
   });
 
@@ -505,6 +506,7 @@ export default function EventForm() {
       treasureHunt: data.treasureHunt || false,
       huntCode: data.treasureHunt ? generateHuntCode() : undefined,
       rollingTimezone: data.rollingTimezone || false,
+      paymentProcessing: data.paymentProcessing || "None",
     };
 
     // If in edit mode, perform update with proper validation
@@ -551,6 +553,7 @@ export default function EventForm() {
         rollingTimezone: data.rollingTimezone || false,
         // Preserve allowMinting if it was previously enabled (one-way editable)
         allowMinting: event?.allowMinting || data.allowMinting || false,
+        paymentProcessing: data.paymentProcessing || "None",
       };
 
       updateEventMutation.mutate(updateData);
@@ -2237,6 +2240,77 @@ export default function EventForm() {
                                 </div>
                               </div>
                             )}
+                        </div>
+                      </div>
+
+                      {/* Payment Processing Section */}
+                      <div className="col-12">
+                        <div
+                          className="border rounded p-3 mb-3"
+                          style={{
+                            backgroundColor: "rgb(249, 249, 249)",
+                            borderColor: "#e0e0e0",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              marginBottom: "12px",
+                            }}
+                          >
+                            <label className="form-label mb-0">
+                              <CreditCard size={20} className="me-2" />
+                              Payment Processing
+                            </label>
+                          </div>
+                          <div style={{ padding: "12px" }}>
+                            <FormField
+                              control={form.control}
+                              name="paymentProcessing"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Payment Method</FormLabel>
+                                  <FormControl>
+                                    <select
+                                      className="form-select"
+                                      {...field}
+                                      value={field.value || "None"}
+                                      onChange={(e) => field.onChange(e.target.value)}
+                                      data-testid="select-payment-processing"
+                                    >
+                                      <option value="None">None</option>
+                                      <option value="Ethereum">Ethereum - 100 Tickets</option>
+                                      <option value="Bitcoin">Bitcoin - 100 Tickets</option>
+                                      <option value="Dogecoin">Dogecoin - 50 Tickets</option>
+                                      <option value="Litecoin">Litecoin - 50 Tickets</option>
+                                    </select>
+                                  </FormControl>
+                                  <div className="form-text mt-2">
+                                    {field.value === "None" ? (
+                                      <>
+                                        No payment processing enabled. We don't handle any payment
+                                        processing for ticket payments at the event. You'll need to
+                                        manage payments independently.
+                                      </>
+                                    ) : (
+                                      <>
+                                        Enable {field.value} payment processing for your event. This
+                                        allows each ticket holder to have a crypto wallet address for
+                                        receiving {field.value} payments. Cost:{" "}
+                                        {field.value === "Ethereum" || field.value === "Bitcoin"
+                                          ? "100"
+                                          : "50"}{" "}
+                                        tickets (one-time fee to enable the feature, not per ticket).
+                                      </>
+                                    )}
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
 

@@ -166,6 +166,8 @@ export const events = pgTable("events", {
   timezone: text("timezone").default("America/New_York"), // Timezone for the event (IANA timezone format)
   // Hashtags extracted from description
   hashtags: text("hashtags").array().default(sql`ARRAY[]::text[]`), // Array of hashtags found in description
+  // Payment processing configuration
+  paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, Dogecoin, Litecoin
   createdAt: timestamp("created_at").defaultNow(),
 });
 
