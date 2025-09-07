@@ -15,7 +15,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-notifications";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { ArrowLeft, ArrowRight, CreditCard, Image, Lock, Globe } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CreditCard,
+  Image,
+  Lock,
+  Globe,
+} from "lucide-react";
 import ticketPreviewIcon from "@assets/image_1757235624831.png";
 import goldenTicketIcon from "@assets/utopia_smiley_1757235878527.png";
 import specialEffectsIcon from "@assets/display_properties-5_1757236054502.png";
@@ -296,7 +303,7 @@ export default function EventForm() {
       setImageUrl(event.imageUrl || "");
       setStickerEnabled(!!event.stickerUrl);
       setTicketsSold(event.ticketsSold || 0);
-      
+
       // Mark form as initialized to prevent re-resetting
       setFormInitialized(true);
     }
@@ -742,10 +749,10 @@ export default function EventForm() {
                                   </label>
                                 </div>
                                 <div className="form-text mt-2">
-                                  Suspend this event from public view
-                                  and stop new ticket sales. Existing
-                                  ticket holders can still access and
-                                  return tickets. Admin moderation tool.
+                                  Suspend this event from public view and stop
+                                  new ticket sales. Existing ticket holders can
+                                  still access and return tickets. Admin
+                                  moderation tool.
                                 </div>
                                 <FormMessage />
                               </FormItem>
@@ -754,11 +761,14 @@ export default function EventForm() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Help notification for event creation */}
                     {!isEditMode && (
                       <div className="col-12">
-                        <div className="alert alert-light border" style={{ backgroundColor: "#f8f9fa" }}>
+                        <div
+                          className="alert alert-light border"
+                          style={{ backgroundColor: "#f8f9fa" }}
+                        >
                           <div className="d-flex align-items-start">
                             <span className="me-2">💡</span>
                             <div className="flex-grow-1">
@@ -766,14 +776,25 @@ export default function EventForm() {
                                 <strong>Need help with event settings?</strong>
                               </div>
                               <div className="small text-muted mt-1">
-                                Read the <a href="/manifesto" target="_blank" rel="noopener noreferrer" className="text-decoration-none">manifesto</a> for detailed information about features like Golden Tickets, Special Effects, P2P Validation, and more event options.
+                                Read the{" "}
+                                <a
+                                  href="/manifesto"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-decoration-none"
+                                >
+                                  manifesto
+                                </a>{" "}
+                                for detailed information about features like
+                                Golden Tickets, Special Effects, P2P Validation,
+                                and more event options.
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="col-12">
                       <FormField
                         control={form.control}
@@ -824,7 +845,9 @@ export default function EventForm() {
                           PNG, GIF
                           {isEditMode && (
                             <span className="text-muted">
-                              {" "}- Featured image cannot be changed after event creation
+                              {" "}
+                              - Featured image cannot be changed after event
+                              creation
                             </span>
                           )}
                         </div>
@@ -843,11 +866,17 @@ export default function EventForm() {
                           </ObjectUploader>
                         ) : (
                           imageUrl && (
-                            <div className="border rounded p-2" style={{ backgroundColor: "#f0f0f0" }}>
+                            <div
+                              className="border rounded p-2"
+                              style={{ backgroundColor: "#f0f0f0" }}
+                            >
                               <img
                                 src={imageUrl}
                                 alt="Event featured image"
-                                style={{ maxWidth: "200px", maxHeight: "150px" }}
+                                style={{
+                                  maxWidth: "200px",
+                                  maxHeight: "150px",
+                                }}
                                 className="d-block"
                               />
                             </div>
@@ -902,11 +931,12 @@ export default function EventForm() {
                                 rows={8}
                                 maxLength={5000}
                                 data-testid="input-description"
-                                style={{ resize: 'vertical' }}
+                                style={{ resize: "vertical" }}
                               />
                             </FormControl>
                             <FormDescription>
-                              Plain text with automatic URL detection. Use hashtags (#example) to categorize your event.
+                              Plain text with automatic URL detection. Use
+                              hashtags (#example) to categorize your event.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -937,7 +967,9 @@ export default function EventForm() {
                                   className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                   placeholder="Street Address, GPS Coordinates, Online, etc."
                                   value={address}
-                                  onChange={(e) => !isEditMode && setAddress(e.target.value)}
+                                  onChange={(e) =>
+                                    !isEditMode && setAddress(e.target.value)
+                                  }
                                   data-testid="input-address"
                                   readOnly={isEditMode}
                                   style={
@@ -953,7 +985,9 @@ export default function EventForm() {
                                   className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                   placeholder="City"
                                   value={city}
-                                  onChange={(e) => !isEditMode && setCity(e.target.value)}
+                                  onChange={(e) =>
+                                    !isEditMode && setCity(e.target.value)
+                                  }
                                   data-testid="input-city"
                                   readOnly={isEditMode}
                                   style={
@@ -967,7 +1001,9 @@ export default function EventForm() {
                                 <select
                                   className={`form-control ${isEditMode ? "bg-light text-muted" : ""}`}
                                   value={country}
-                                  onChange={(e) => !isEditMode && setCountry(e.target.value)}
+                                  onChange={(e) =>
+                                    !isEditMode && setCountry(e.target.value)
+                                  }
                                   data-testid="input-country"
                                   disabled={isEditMode}
                                   style={
@@ -1264,10 +1300,16 @@ export default function EventForm() {
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Lock size={14} className="ms-2 text-muted" />
+                                      <Lock
+                                        size={14}
+                                        className="ms-2 text-muted"
+                                      />
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>Timezone is locked for Global Sync events</p>
+                                      <p>
+                                        Timezone is locked for Global Sync
+                                        events
+                                      </p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -1383,7 +1425,9 @@ export default function EventForm() {
                                   className={`form-check-input ${isEditMode ? "bg-light" : ""}`}
                                   data-testid="checkbox-rolling-timezone"
                                   checked={field.value || false}
-                                  onChange={(e) => field.onChange(e.target.checked)}
+                                  onChange={(e) =>
+                                    field.onChange(e.target.checked)
+                                  }
                                   disabled={isEditMode}
                                   style={
                                     isEditMode
@@ -1393,12 +1437,12 @@ export default function EventForm() {
                                 />
                               </FormControl>
                               <label className="form-check-label ms-2">
-                                <img 
-                                  src="/global-sync-icon.png" 
-                                  alt="" 
-                                  width="18" 
-                                  height="18" 
-                                  className="me-1" 
+                                <img
+                                  src="/global-sync-icon.png"
+                                  alt=""
+                                  width="18"
+                                  height="18"
+                                  className="me-1"
                                   style={{ verticalAlign: "text-bottom" }}
                                 />
                                 Global Sync
@@ -1406,10 +1450,16 @@ export default function EventForm() {
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <Lock size={14} className="ms-2 text-muted" />
+                                        <Lock
+                                          size={14}
+                                          className="ms-2 text-muted"
+                                        />
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p>Global Sync cannot be changed after event creation</p>
+                                        <p>
+                                          Global Sync cannot be changed after
+                                          event creation
+                                        </p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -1417,7 +1467,8 @@ export default function EventForm() {
                               </label>
                             </div>
                             <div className="form-text">
-                              Synchronizes across all timezones - starts at the same local time worldwide.
+                              Synchronizes across all timezones - starts at the
+                              same local time worldwide.
                               {isEditMode && (
                                 <span className="text-muted"> (Locked)</span>
                               )}
@@ -1427,7 +1478,6 @@ export default function EventForm() {
                         )}
                       />
                     </div>
-
 
                     {/* Tickets & Pricing Section - Windows 98 Style - Only show when creating new event */}
                     {isEditMode ? (
@@ -1892,7 +1942,10 @@ export default function EventForm() {
                                           readOnly={isEditMode}
                                           style={
                                             isEditMode
-                                              ? { cursor: "not-allowed", opacity: 0.7 }
+                                              ? {
+                                                  cursor: "not-allowed",
+                                                  opacity: 0.7,
+                                                }
                                               : {}
                                           }
                                         />
@@ -1900,7 +1953,8 @@ export default function EventForm() {
                                       <div className="form-text">
                                         How many times the ticket can be used
                                         (minimum 2, maximum 24)
-                                        {isEditMode && " - Cannot be changed after event creation"}
+                                        {isEditMode &&
+                                          " - Cannot be changed after event creation"}
                                       </div>
                                       <FormMessage />
                                     </FormItem>
@@ -2092,7 +2146,8 @@ export default function EventForm() {
                                     vote/validate someones ticket
                                     {isEditMode
                                       ? " (This setting is read-only after event creation)"
-                                      : ""}.
+                                      : ""}
+                                    .
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -2280,14 +2335,24 @@ export default function EventForm() {
                                       className="form-select"
                                       {...field}
                                       value={field.value || "None"}
-                                      onChange={(e) => field.onChange(e.target.value)}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.value)
+                                      }
                                       data-testid="select-payment-processing"
                                     >
-                                      <option value="None">None - No payment processing</option>
-                                      <option value="Ethereum">₿ Ethereum</option>
+                                      <option value="None">
+                                        None - No payment processing
+                                      </option>
+                                      <option value="Ethereum">
+                                        ₿ Ethereum
+                                      </option>
                                       <option value="Bitcoin">₿ Bitcoin</option>
-                                      <option value="Dogecoin">Ð Dogecoin</option>
-                                      <option value="Litecoin">Ł Litecoin</option>
+                                      <option value="Dogecoin">
+                                        Ð Dogecoin
+                                      </option>
+                                      <option value="Litecoin">
+                                        Ł Litecoin
+                                      </option>
                                     </select>
                                   </FormControl>
                                   {field.value !== "None" && (
@@ -2295,32 +2360,45 @@ export default function EventForm() {
                                       <div className="mt-3 p-3 bg-light border rounded">
                                         <div className="d-flex align-items-center justify-content-between">
                                           <div>
-                                            <strong>{field.value} Payment Integration</strong>
+                                            <strong>
+                                              {field.value} Payment Integration
+                                            </strong>
                                             <div className="text-muted small mt-1">
-                                              Ticket holders can pay with their {field.value} wallet
+                                              Ticket holders can pay with their{" "}
+                                              {field.value} wallet. A one-time setup fee, not per
+                                              ticket.
                                             </div>
                                           </div>
                                           <div className="text-end">
-                                            <span className={`badge ${
-                                              field.value === "Ethereum" || field.value === "Bitcoin"
-                                                ? "bg-warning text-dark"
-                                                : "bg-info text-dark"
-                                            } fs-6`}>
-                                              {field.value === "Ethereum" || field.value === "Bitcoin"
+                                            <span
+                                              className={`badge ${
+                                                field.value === "Ethereum" ||
+                                                field.value === "Bitcoin"
+                                                  ? "bg-warning text-dark"
+                                                  : "bg-info text-dark"
+                                              } fs-6`}
+                                            >
+                                              {field.value === "Ethereum" ||
+                                              field.value === "Bitcoin"
                                                 ? "100"
-                                                : "50"} tickets
+                                                : "50"}{" "}
+                                              tickets
                                             </span>
-                                            <div className="text-muted small mt-1">One-time cost</div>
+                                            <div className="text-muted small mt-1">
+                                              One-time cost
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       <FormField
                                         control={form.control}
                                         name="walletAddress"
                                         render={({ field: walletField }) => (
                                           <FormItem className="mt-3">
-                                            <FormLabel>Your {field.value} Wallet Address</FormLabel>
+                                            <FormLabel>
+                                              Your {field.value} Wallet Address
+                                            </FormLabel>
                                             <FormControl>
                                               <input
                                                 type="text"
@@ -2332,7 +2410,8 @@ export default function EventForm() {
                                               />
                                             </FormControl>
                                             <div className="form-text">
-                                              This is where ticket payments will be sent
+                                              This is where ticket payments will
+                                              be sent
                                             </div>
                                             <FormMessage />
                                           </FormItem>
@@ -2343,15 +2422,17 @@ export default function EventForm() {
                                   <div className="form-text mt-2">
                                     {field.value === "None" ? (
                                       <>
-                                        We don't handle payment processing for ticket sales at events.
-                                        You'll need to manage payments independently.
+                                        We don't handle payment processing for
+                                        ticket sales at events. You'll need to
+                                        manage payments independently.
                                       </>
                                     ) : (
                                       <>
-                                        Enable {field.value} payments for your event. Ticket holders can
-                                        pay for their tickets with {field.value}. We prepare the transaction
-                                        with a one-click "Pay with {field.value}" button. This is a
-                                        one-time setup fee, not charged per ticket.
+                                        Enable {field.value} payments for your
+                                        event. Ticket holders can pay for their
+                                        tickets with {field.value}. We prepare
+                                        the transaction with a one-click "Pay
+                                        with {field.value}" button.
                                       </>
                                     )}
                                   </div>
@@ -2552,7 +2633,8 @@ export default function EventForm() {
                                     validated
                                     {isEditMode
                                       ? " (This setting is read-only after event creation)"
-                                      : ""}.
+                                      : ""}
+                                    .
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -2683,7 +2765,8 @@ export default function EventForm() {
                                     tickets will get an effect
                                     {isEditMode
                                       ? " (This setting is read-only after event creation)"
-                                      : ""}.
+                                      : ""}
+                                    .
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -2743,7 +2826,8 @@ export default function EventForm() {
                                 on lucky tickets
                                 {isEditMode
                                   ? " (This setting is read-only after event creation)"
-                                  : ""}.
+                                  : ""}
+                                .
                               </div>
                             )}
 
@@ -2887,7 +2971,8 @@ export default function EventForm() {
                                       ? ". This can be enabled after event creation, but once enabled it cannot be disabled"
                                       : isEditMode && event?.allowMinting
                                         ? ". Once saved with minting enabled, it cannot be disabled"
-                                        : ""}.
+                                        : ""}
+                                    .
                                   </div>
                                   <FormMessage />
                                 </FormItem>
