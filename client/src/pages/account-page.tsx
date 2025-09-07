@@ -1587,8 +1587,8 @@ export default function AccountPage() {
                             const discountAmount = baseTotal - finalPrice;
 
                             return (
-                              <div className="mb-2">
-                                <span className="text-dark d-flex align-items-center gap-1">
+                              <div className="mb-2 text-center">
+                                <span className="text-dark d-inline-flex align-items-center gap-1">
                                   -${discountAmount.toFixed(2)} Discount Applied
                                   <img
                                     src={smileyIcon}
@@ -1633,12 +1633,7 @@ export default function AccountPage() {
                               onClick={() => setPaymentMethod("Stripe")}
                               data-testid="button-payment-stripe"
                             >
-                              <img
-                                src="/stripe-icon.png"
-                                alt=""
-                                style={{ width: "20px", height: "20px" }}
-                              />
-                              Stripe
+                              💳 Stripe
                             </button>
                           </div>
                           <div className="col-6">
@@ -1651,12 +1646,7 @@ export default function AccountPage() {
                               onClick={() => setPaymentMethod("Coinbase")}
                               data-testid="button-payment-coinbase"
                             >
-                              <img
-                                src="/coinbase-icon.png"
-                                alt=""
-                                style={{ width: "20px", height: "20px" }}
-                              />
-                              Coinbase
+                              🪙 Crypto
                             </button>
                           </div>
                         </div>
