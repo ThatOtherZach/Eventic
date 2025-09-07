@@ -28,6 +28,7 @@ import goldenTicketIcon from "@assets/utopia_smiley_1757235878527.png";
 import specialEffectsIcon from "@assets/display_properties-5_1757236054502.png";
 import customStickerIcon from "@assets/wm-4_1757236109199.png";
 import mintingIcon from "@assets/briefcase-4_1757236135278.png";
+import featuredImageIcon from "@assets/wia_img_color-0_1757238840076.png";
 import { Textarea } from "@/components/ui/textarea";
 import { countCharacters, extractHashtags } from "@/lib/text-formatter";
 import { countries } from "@/lib/countries";
@@ -832,7 +833,16 @@ export default function EventForm() {
                     <div className="col-12">
                       <div className="mb-4">
                         <label className="form-label">
-                          <Image size={18} className="me-2" />
+                          <img
+                            src={featuredImageIcon}
+                            alt=""
+                            style={{
+                              width: "26px",
+                              height: "26px",
+                              marginRight: "8px",
+                              verticalAlign: "middle",
+                            }}
+                          />
                           Featured Image
                           {isEditMode && (
                             <span className="text-muted small ms-2">
