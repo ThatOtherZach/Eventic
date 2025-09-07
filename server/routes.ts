@@ -1475,10 +1475,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Calculate payment processing fee if enabled
+      let paymentProcessingFee = 0;
+      if (createData.ticketPrice > 0 && createData.paymentProcessing && createData.paymentProcessing !== "None") {
+        if (createData.paymentProcessing === "Ethereum" || createData.paymentProcessing === "Bitcoin") {
+          paymentProcessingFee = 100;
+        } else if (createData.paymentProcessing === "Dogecoin" || createData.paymentProcessing === "Litecoin") {
+          paymentProcessingFee = 50;
+        }
+      }
+      
+      // Calculate total tickets required (capacity + payment fee)
+      const totalTicketsRequired = (createData.maxTickets || 0) + paymentProcessingFee;
+      
+      // Check if user has enough tickets
+      if (userId && totalTicketsRequired > 0) {
+        const userBalance = await storage.getUserBalance(userId);
+        const balance = parseInt(userBalance?.balance || "0");
+        if (balance < totalTicketsRequired) {
+          return res.status(400).json({ 
+            message: `Insufficient tickets. You need ${totalTicketsRequired} tickets (${createData.maxTickets} for capacity + ${paymentProcessingFee} for payment processing), but only have ${balance}.`
+          });
+        }
+        
+        // Deduct tickets from user balance
+        await storage.updateUserBalance(userId, -totalTicketsRequired);
+      }
+      
       // Body is already validated by middleware
       const event = await storage.createEvent({
         ...createData,
         hashtags,
+        paymentProcessingFee, // Store the fee amount
         isAdminCreated, // Set the isAdminCreated flag based on user's email
         userId, // Now we can use the actual userId since user exists in DB
       });
@@ -1596,6 +1624,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delete updateData.rollingTimezone;
       }
       
+      // Handle payment processing updates
+      let paymentFeeAdjustment = 0;
+      if (event.walletAddress) {
+        // If wallet address is already set, prevent changes to payment configuration
+        delete updateData.paymentProcessing;
+        delete updateData.walletAddress;
+      } else if (updateData.paymentProcessing && updateData.walletAddress) {
+        // If setting up payment processing for the first time
+        const oldFee = event.paymentProcessingFee || 0;
+        let newFee = 0;
+        
+        if (updateData.ticketPrice > 0 && updateData.paymentProcessing !== "None") {
+          if (updateData.paymentProcessing === "Ethereum" || updateData.paymentProcessing === "Bitcoin") {
+            newFee = 100;
+          } else if (updateData.paymentProcessing === "Dogecoin" || updateData.paymentProcessing === "Litecoin") {
+            newFee = 50;
+          }
+        }
+        
+        paymentFeeAdjustment = newFee - oldFee;
+        updateData.paymentProcessingFee = newFee;
+      }
+      
       // Validate maxTickets if provided
       if (updateData.maxTickets !== undefined && updateData.maxTickets !== null) {
         const newMaxTickets = parseInt(updateData.maxTickets);
@@ -1608,6 +1659,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ 
             message: "Maximum tickets cannot exceed 5,000" 
           });
+        }
+        
+        // Calculate if user needs to pay additional tickets for maxTickets increase
+        const oldMaxTickets = event.maxTickets || 0;
+        const ticketDifference = newMaxTickets - oldMaxTickets;
+        const totalTicketsRequired = ticketDifference + paymentFeeAdjustment;
+        
+        if (userId && totalTicketsRequired > 0) {
+          const userBalance = await storage.getUserBalance(userId);
+          const balance = parseInt(userBalance?.balance || "0");
+          if (balance < totalTicketsRequired) {
+            return res.status(400).json({ 
+              message: `Insufficient tickets. You need ${totalTicketsRequired} additional tickets${paymentFeeAdjustment > 0 ? ` (${ticketDifference} for capacity increase + ${paymentFeeAdjustment} for payment processing)` : ''}, but only have ${balance}.`
+            });
+          }
+          
+          // Deduct tickets from user balance
+          await storage.updateUserBalance(userId, -totalTicketsRequired);
+        }
+      } else if (paymentFeeAdjustment > 0) {
+        // If only adding payment processing without changing maxTickets
+        if (userId) {
+          const userBalance = await storage.getUserBalance(userId);
+          const balance = parseInt(userBalance?.balance || "0");
+          if (balance < paymentFeeAdjustment) {
+            return res.status(400).json({ 
+              message: `Insufficient tickets. You need ${paymentFeeAdjustment} tickets for payment processing setup, but only have ${balance}.`
+            });
+          }
+          
+          // Deduct payment fee from user balance
+          await storage.updateUserBalance(userId, -paymentFeeAdjustment);
         }
       }
       
