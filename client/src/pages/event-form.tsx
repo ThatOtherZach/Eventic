@@ -2065,13 +2065,21 @@ export default function EventForm() {
                                       <span className="badge bg-warning text-dark me-2">
                                         🗳️
                                       </span>
-                                      Enable Voting
+                                      Voting
+                                      {isEditMode && (
+                                        <span className="text-muted ms-2">
+                                          (read-only)
+                                        </span>
+                                      )}
                                     </label>
                                   </div>
                                   <div className="form-text">
                                     Tickets can collect votes! The most voted
                                     ticket becomes golden. Use the validator to
-                                    vote/validate someones ticket.
+                                    vote/validate someones ticket
+                                    {isEditMode
+                                      ? " (This setting is read-only after event creation)"
+                                      : ""}.
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -2376,6 +2384,7 @@ export default function EventForm() {
                                         field.onChange(e.target.checked)
                                       }
                                       data-testid="checkbox-golden-ticket"
+                                      disabled={isEditMode}
                                     />
                                     <label
                                       className="form-check-label"
@@ -2384,12 +2393,20 @@ export default function EventForm() {
                                       <span className="badge bg-warning text-dark me-2">
                                         🎫
                                       </span>
-                                      Enable Golden Tickets
+                                      Golden Tickets
+                                      {isEditMode && (
+                                        <span className="text-muted ms-2">
+                                          (read-only)
+                                        </span>
+                                      )}
                                     </label>
                                   </div>
                                   <div className="form-text">
                                     Random ticket(s) will be golden when
-                                    validated.
+                                    validated
+                                    {isEditMode
+                                      ? " (This setting is read-only after event creation)"
+                                      : ""}.
                                   </div>
                                   <FormMessage />
                                 </FormItem>
@@ -2489,6 +2506,7 @@ export default function EventForm() {
                                         field.onChange(e.target.checked)
                                       }
                                       data-testid="checkbox-special-effects"
+                                      disabled={isEditMode}
                                     />
                                     <label
                                       className="form-check-label"
@@ -2497,14 +2515,22 @@ export default function EventForm() {
                                       <span className="badge bg-primary me-2">
                                         ✨
                                       </span>
-                                      Enable Special Effects
+                                      Special Effects
+                                      {isEditMode && (
+                                        <span className="text-muted ms-2">
+                                          (read-only)
+                                        </span>
+                                      )}
                                     </label>
                                   </div>
                                   <div className="form-text">
                                     Validated tickets may display special visual
                                     effects on holidays and themed events. These
                                     effects are randomly assigned, not all
-                                    tickets will get an effect.
+                                    tickets will get an effect
+                                    {isEditMode
+                                      ? " (This setting is read-only after event creation)"
+                                      : ""}.
                                   </div>
                                   <FormMessage />
                                 </FormItem>
