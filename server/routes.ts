@@ -1480,7 +1480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (createData.ticketPrice > 0 && createData.paymentProcessing && createData.paymentProcessing !== "None") {
         if (createData.paymentProcessing === "Ethereum" || createData.paymentProcessing === "Bitcoin") {
           paymentProcessingFee = 100;
-        } else if (createData.paymentProcessing === "Dogecoin" || createData.paymentProcessing === "Litecoin") {
+        } else if (createData.paymentProcessing === "USDC") {
           paymentProcessingFee = 50;
         }
       }
@@ -1638,7 +1638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (updateData.ticketPrice > 0 && updateData.paymentProcessing !== "None") {
           if (updateData.paymentProcessing === "Ethereum" || updateData.paymentProcessing === "Bitcoin") {
             newFee = 100;
-          } else if (updateData.paymentProcessing === "Dogecoin" || updateData.paymentProcessing === "Litecoin") {
+          } else if (updateData.paymentProcessing === "USDC") {
             newFee = 50;
           }
         }

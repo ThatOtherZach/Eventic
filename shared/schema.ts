@@ -167,10 +167,26 @@ export const events = pgTable("events", {
   // Hashtags extracted from description
   hashtags: text("hashtags").array().default(sql`ARRAY[]::text[]`), // Array of hashtags found in description
   // Payment processing configuration
-  paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, Dogecoin, Litecoin
+  paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, USDC
   walletAddress: text("wallet_address"), // Event owner's wallet address for receiving crypto payments
   paymentProcessingFee: integer("payment_processing_fee").default(0), // Tickets spent on payment configuration (non-refundable)
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const cryptoPaymentIntents = pgTable("crypto_payment_intents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").references(() => tickets.id).notNull().unique(),
+  eventId: varchar("event_id").references(() => events.id).notNull(),
+  reference: varchar("reference", { length: 50 }).notNull().unique(), // Format: Ta4f2c891K1736424325T
+  receiverAddress: text("receiver_address").notNull(), // Event creator's wallet address
+  blockchain: text("blockchain").notNull(), // Bitcoin, Ethereum, USDC
+  amountCrypto: decimal("amount_crypto", { precision: 20, scale: 8 }).notNull(), // Amount in cryptocurrency
+  amountUsd: decimal("amount_usd", { precision: 10, scale: 2 }).notNull(), // USD value at time of creation
+  status: text("status").default("pending"), // pending, monitoring, confirmed, expired
+  monitoringExpiresAt: timestamp("monitoring_expires_at"), // When monitoring window expires
+  transactionHash: text("transaction_hash"), // Blockchain transaction hash when confirmed
+  createdAt: timestamp("created_at").defaultNow(),
+  confirmedAt: timestamp("confirmed_at"), // When payment was confirmed on blockchain
 });
 
 export const tickets = pgTable("tickets", {
@@ -807,6 +823,11 @@ export const insertTicketSchema = createInsertSchema(tickets).omit({
   status: z.enum(["pending", "sent", "failed"]).optional().default("pending"),
 });
 
+export const insertCryptoPaymentIntentSchema = createInsertSchema(cryptoPaymentIntents).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertDelegatedValidatorSchema = createInsertSchema(delegatedValidators).omit({
   id: true,
   createdAt: true,
@@ -987,6 +1008,8 @@ export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
 export type InsertTicket = z.infer<typeof insertTicketSchema>;
 export type Ticket = typeof tickets.$inferSelect;
+export type InsertCryptoPaymentIntent = z.infer<typeof insertCryptoPaymentIntentSchema>;
+export type CryptoPaymentIntent = typeof cryptoPaymentIntents.$inferSelect;
 export type InsertDelegatedValidator = z.infer<typeof insertDelegatedValidatorSchema>;
 export type DelegatedValidator = typeof delegatedValidators.$inferSelect;
 export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;

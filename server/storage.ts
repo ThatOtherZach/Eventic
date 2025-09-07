@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
@@ -66,6 +66,14 @@ export interface IStorage {
   
   // Transaction support for race condition prevention
   createTicketWithTransaction(ticket: InsertTicket): Promise<Ticket>;
+  
+  // Crypto Payment Intents
+  createPaymentIntent(intent: InsertCryptoPaymentIntent): Promise<CryptoPaymentIntent>;
+  getPaymentIntentByTicketId(ticketId: string): Promise<CryptoPaymentIntent | undefined>;
+  getPaymentIntentByReference(reference: string): Promise<CryptoPaymentIntent | undefined>;
+  updatePaymentIntentStatus(id: string, status: string, transactionHash?: string): Promise<CryptoPaymentIntent | undefined>;
+  getPaymentIntentsByEventId(eventId: string): Promise<CryptoPaymentIntent[]>;
+  getExpiredMonitoringIntents(): Promise<CryptoPaymentIntent[]>;
   
   // Validation Sessions
   createValidationSession(ticketId: string): Promise<{ token: string; expiresAt: Date }>;
@@ -3697,6 +3705,62 @@ export class DatabaseStorage implements IStorage {
       
       return newTicket;
     });
+  }
+
+  // Crypto Payment Intents
+  async createPaymentIntent(intent: InsertCryptoPaymentIntent): Promise<CryptoPaymentIntent> {
+    const [paymentIntent] = await db.insert(cryptoPaymentIntents).values(intent).returning();
+    return paymentIntent;
+  }
+
+  async getPaymentIntentByTicketId(ticketId: string): Promise<CryptoPaymentIntent | undefined> {
+    const [intent] = await db
+      .select()
+      .from(cryptoPaymentIntents)
+      .where(eq(cryptoPaymentIntents.ticketId, ticketId));
+    return intent;
+  }
+
+  async getPaymentIntentByReference(reference: string): Promise<CryptoPaymentIntent | undefined> {
+    const [intent] = await db
+      .select()
+      .from(cryptoPaymentIntents)
+      .where(eq(cryptoPaymentIntents.reference, reference));
+    return intent;
+  }
+
+  async updatePaymentIntentStatus(id: string, status: string, transactionHash?: string): Promise<CryptoPaymentIntent | undefined> {
+    const updateData: any = { status };
+    if (transactionHash) {
+      updateData.transactionHash = transactionHash;
+      updateData.confirmedAt = new Date();
+    }
+    
+    const [updated] = await db
+      .update(cryptoPaymentIntents)
+      .set(updateData)
+      .where(eq(cryptoPaymentIntents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getPaymentIntentsByEventId(eventId: string): Promise<CryptoPaymentIntent[]> {
+    return db
+      .select()
+      .from(cryptoPaymentIntents)
+      .where(eq(cryptoPaymentIntents.eventId, eventId))
+      .orderBy(desc(cryptoPaymentIntents.createdAt));
+  }
+
+  async getExpiredMonitoringIntents(): Promise<CryptoPaymentIntent[]> {
+    const now = new Date();
+    return db
+      .select()
+      .from(cryptoPaymentIntents)
+      .where(and(
+        eq(cryptoPaymentIntents.status, 'monitoring'),
+        lt(cryptoPaymentIntents.monitoringExpiresAt, now)
+      ));
   }
 
   // Currency Ledger Operations

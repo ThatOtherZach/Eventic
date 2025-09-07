@@ -1676,7 +1676,7 @@ export default function EventForm() {
                                     const paymentMethod = form.watch("paymentProcessing") || "None";
                                     const ticketPrice = parseFloat(form.watch("ticketPrice") || "0");
                                     const paymentFee = ticketPrice > 0 && paymentMethod !== "None" 
-                                      ? (paymentMethod === "Ethereum" || paymentMethod === "Bitcoin" ? 100 : 50)
+                                      ? (paymentMethod === "Ethereum" || paymentMethod === "Bitcoin" ? 100 : paymentMethod === "USDC" ? 50 : 0)
                                       : 0;
                                     const totalRequired = (field.value || 0) + paymentFee;
                                     
@@ -1732,7 +1732,7 @@ export default function EventForm() {
                                             <>
                                               <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
                                                 <div>ATTENDEES: {field.value || 0} TICKETS</div>
-                                                <div>{paymentMethod.toUpperCase()} PROCESSING: {paymentFee} TICKETS</div>
+                                                <div>{paymentMethod === "USDC" ? "USDC" : paymentMethod.toUpperCase()} PROCESSING: {paymentFee} TICKETS</div>
                                                 <div style={{ fontSize: '10px', opacity: '0.8' }}>(ONE-TIME, NON-REFUNDABLE)</div>
                                               </div>
                                               <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
@@ -1884,11 +1884,8 @@ export default function EventForm() {
                                         Ξ Ethereum
                                       </option>
                                       <option value="Bitcoin">₿ Bitcoin</option>
-                                      <option value="Dogecoin">
-                                        Ð Dogecoin
-                                      </option>
-                                      <option value="Litecoin">
-                                        Ł Litecoin
+                                      <option value="USDC">
+                                        $ USDC (Stablecoin)
                                       </option>
                                     </select>
                                   </FormControl>
