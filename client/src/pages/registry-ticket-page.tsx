@@ -1,53 +1,43 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { TicketCard } from "@/components/tickets/ticket-card";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import type { RegistryRecord } from "@shared/schema";
 
 export function RegistryTicketPage() {
   const { id } = useParams();
   
-  const { data: record, isLoading } = useQuery<RegistryRecord>({
+  const { data: record, isLoading, error } = useQuery<RegistryRecord>({
     queryKey: [`/api/registry/${id}`],
   });
 
   if (isLoading) {
     return (
       <div className="container py-5">
-        <div className="d-flex align-items-center mb-4">
-          <Link href="/registry" className="btn btn-link p-0 text-decoration-none">
-            <ArrowLeft size={20} className="me-2" />
-            Back to Registry
-          </Link>
-        </div>
-        <div className="card">
-          <div className="card-body">
-            <div className="placeholder-glow">
-              <div className="placeholder col-12 mb-2"></div>
-              <div className="placeholder col-8"></div>
-            </div>
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
         </div>
       </div>
     );
   }
 
-  if (!record) {
+  if (error || !record) {
     return (
       <div className="container py-5">
-        <div className="d-flex align-items-center mb-4">
-          <Link href="/registry" className="btn btn-link p-0 text-decoration-none">
-            <ArrowLeft size={20} className="me-2" />
-            Back to Registry
+        <div className="alert alert-danger">
+          <h5>Registry record not found</h5>
+          <p>
+            The NFT you're looking for doesn't exist or has been removed.
+          </p>
+          <Link href="/registry">
+            <a className="btn btn-primary mt-3">
+              <ArrowLeft size={18} className="me-2" />
+              Back to Registry
+            </a>
           </Link>
-        </div>
-        <div className="card">
-          <div className="card-body text-center py-5">
-            <Sparkles className="text-muted mb-3 mx-auto" size={48} />
-            <h6 className="text-muted">NFT not found</h6>
-            <p className="text-muted small">This NFT may have been removed from the registry</p>
-          </div>
         </div>
       </div>
     );
@@ -79,13 +69,13 @@ export function RegistryTicketPage() {
     voteCount: record.ticketVoteCount || 0,
     isCharged: record.ticketIsCharged || false,
     validationCode: record.ticketValidationCode || null,
-    nftMediaUrl: record.ticketGifData || record.ticketNftMediaUrl || null, // Use base64 GIF data if available
+    nftMediaUrl: record.ticketGifData || record.ticketNftMediaUrl || null,
     purchaserEmail: record.ticketPurchaserEmail || null,
     purchaserIp: record.ticketPurchaserIp || null,
     purchasePrice: record.ticketPurchasePrice || null,
     resellStatus: record.ticketResellStatus || 'not_for_resale',
     originalOwnerId: record.ticketOriginalOwnerId || null,
-    scheduledDeletion: null, // NFT records are never deleted
+    scheduledDeletion: null,
   };
 
   // Reconstruct event object from preserved data - use base64 images when available
@@ -99,7 +89,6 @@ export function RegistryTicketPage() {
     time: record.eventTime,
     endDate: record.eventEndDate || null,
     endTime: record.eventEndTime || null,
-    // Use base64 data if available, fallback to URLs
     imageUrl: record.eventImageData || record.eventImageUrl || null,
     ticketBackgroundUrl: record.ticketBackgroundData || record.eventTicketBackgroundUrl || record.eventImageData || record.eventImageUrl || null,
     maxTickets: record.eventMaxTickets || null,
@@ -118,7 +107,7 @@ export function RegistryTicketPage() {
     recurringType: record.eventRecurringType || null,
     recurringEndDate: record.eventRecurringEndDate || null,
     createdAt: record.eventCreatedAt,
-    stickerUrl: record.eventStickerData || record.eventStickerUrl || null, // Use base64 sticker data if available
+    stickerUrl: record.eventStickerData || record.eventStickerUrl || null,
     specialEffectsEnabled: record.eventSpecialEffectsEnabled || false,
     geofence: record.eventGeofence ? JSON.parse(record.eventGeofence) : null,
     isAdminCreated: record.eventIsAdminCreated || false,
@@ -145,7 +134,7 @@ export function RegistryTicketPage() {
     totalLikes: 0,
     totalDislikes: 0,
     earnedVotes: 0,
-    scheduledDeletion: null, // NFT records are never deleted
+    scheduledDeletion: null,
     paymentCurrencies: null,
     paymentProcessingFee: null,
     paymentProcessing: 'none',
@@ -154,87 +143,259 @@ export function RegistryTicketPage() {
 
   return (
     <div className="container py-5">
-      {/* Navigation Header */}
-      <div className="d-flex align-items-center mb-4">
-        <Link href="/registry" className="btn btn-link p-0 text-decoration-none">
-          <ArrowLeft size={20} className="me-2" />
-          Back to Registry
+      {/* Back Button */}
+      <div className="mb-4">
+        <Link href="/registry">
+          <a className="btn btn-outline-secondary">
+            <ArrowLeft size={18} className="me-2" />
+            Back to Registry
+          </a>
         </Link>
       </div>
 
-      {/* NFT Registry Header */}
+      {/* Page Title - EXACTLY like ticket-view.tsx */}
       <div className="row mb-4">
-        <div className="col-12">
-          <div className="alert alert-info">
-            <div className="d-flex align-items-center">
-              <Sparkles size={20} className="me-2" />
-              <div>
-                <h6 className="mb-1">NFT Registry Record</h6>
-                <p className="mb-0 small">
-                  This ticket has been preserved as an NFT and will remain in the registry permanently.
-                  Minted on {new Date(record.mintedAt || new Date()).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
+        <div className="col text-center">
+          <h1 className="h3 fw-bold">
+            <span className="text-decoration-none text-dark">
+              {preservedEvent.name} Ticket
+            </span>
+          </h1>
+          {preservedEvent.contactDetails && (
+            <p className="text-muted fst-italic">{preservedEvent.contactDetails}</p>
+          )}
+        </div>
+      </div>
+
+      {/* NFT Permanent Record Notice - Replaces deletion countdown */}
+      <div className="row justify-content-center mb-4">
+        <div className="col-12 col-md-8 col-lg-6">
+          <div className="d-flex align-items-center text-success">
+            <Sparkles size={18} className="me-2" />
+            <span>
+              Permanent NFT Registry Record
+              {record.nftMinted && record.walletAddress && (
+                <span className="ms-1">• Minted to {record.walletAddress.slice(0, 6)}...{record.walletAddress.slice(-4)}</span>
+              )}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Ticket Display - Same structure as ticket-view.tsx */}
+      {/* Ticket and Details Section - EXACTLY like ticket-view.tsx */}
       <div className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6">
           {/* Ticket Display */}
-          <div className="mb-4">
-            <TicketCard 
-              ticket={preservedTicket} 
-              event={preservedEvent} 
+          <div className="mb-4" id="ticket-card-for-nft">
+            <TicketCard
+              ticket={preservedTicket}
+              event={preservedEvent}
               showQR={false}
               showBadges={true}
             />
           </div>
 
-          {/* Ticket Status Badge */}
-          {preservedTicket.isValidated && (
+          {/* Ticket Status Badge for Resale */}
+          {(preservedTicket as any).resellStatus === "for_resale" && (
             <div className="d-flex justify-content-center gap-2 mb-3">
-              <span className="badge" style={{ backgroundColor: '#198754', color: '#fff', fontSize: '0.9em', padding: '6px 12px' }}>
-                VALIDATED
+              <span
+                className="badge"
+                style={{
+                  backgroundColor: "#FFC107",
+                  color: "#000",
+                  fontSize: "0.9em",
+                  padding: "6px 12px",
+                }}
+              >
+                RETURNED
               </span>
             </div>
           )}
 
-          {/* NFT Details Card */}
+          {/* Ticket Details */}
+          <div className="card mb-4">
+            <div className="card-body">
+              <h6 className="card-title mb-3">Details</h6>
+
+              <div className="d-flex justify-content-between">
+                <div>
+                  <span className="text-muted">Purchase Date:</span>
+                  <p className="mb-0 fw-bold">
+                    {preservedTicket.createdAt
+                      ? new Date(preservedTicket.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "Unknown"}
+                  </p>
+                </div>
+                <div className="text-end">
+                  <span className="text-muted">Ticket Number:</span>
+                  <p className="mb-0 fw-bold">#{preservedTicket.ticketNumber}</p>
+                </div>
+              </div>
+
+              {preservedTicket.seatNumber && (
+                <div className="mt-3">
+                  <span className="text-muted">Seat Number:</span>
+                  <p className="mb-0 fw-bold">{preservedTicket.seatNumber}</p>
+                </div>
+              )}
+
+              {preservedTicket.ticketType && (
+                <div className="mt-3">
+                  <span className="text-muted">Ticket Type:</span>
+                  <p className="mb-0 fw-bold">{preservedTicket.ticketType}</p>
+                </div>
+              )}
+
+              {preservedTicket.isValidated && preservedTicket.validatedAt && (
+                <div className="mt-3">
+                  <span className="text-muted">Validated At:</span>
+                  <p className="mb-0 fw-bold">
+                    {new Date(preservedTicket.validatedAt).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Event Info - EXACTLY like ticket-view.tsx */}
+          <div className="card mb-4">
+            <div className="card-body">
+              <h6 className="card-title mb-3">Event Information</h6>
+
+              {/* Venue */}
+              <div className="d-flex align-items-start mb-3">
+                <MapPin size={18} className="text-muted me-2 mt-1" />
+                <div>
+                  <small className="text-muted">Venue</small>
+                  <p className="mb-0">{preservedEvent.venue}</p>
+                </div>
+              </div>
+
+              {/* Date & Time */}
+              <div className="d-flex align-items-start">
+                <Clock size={18} className="text-muted me-2 mt-1" />
+                <div>
+                  <small className="text-muted">Date & Time</small>
+                  <p className="mb-0">
+                    {new Date(preservedEvent.date).toLocaleDateString("en-US", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}{" "}
+                    at {preservedEvent.time}
+                  </p>
+                  {preservedEvent.endDate && preservedEvent.endTime && (
+                    <p className="mb-0 text-muted small">
+                      Ends: {new Date(preservedEvent.endDate).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}{" "}
+                      at {preservedEvent.endTime}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {preservedEvent.description && (
+                <div className="mt-3">
+                  <small className="text-muted">Description</small>
+                  <p className="mb-0">{preservedEvent.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Hunt Information - if ticket was obtained via hunt */}
+          {record.huntCode && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <h6 className="card-title mb-3">🏴‍☠️ Treasure Hunt Claim</h6>
+                <div className="row">
+                  <div className="col-6">
+                    <small className="text-muted">Hunt Code</small>
+                    <p className="mb-0 fw-bold">{record.huntCode}</p>
+                  </div>
+                  {record.huntClaimLatitude && record.huntClaimLongitude && (
+                    <div className="col-6">
+                      <small className="text-muted">Claim Location</small>
+                      <p className="mb-0 fw-bold">
+                        {parseFloat(record.huntClaimLatitude).toFixed(4)}, {parseFloat(record.huntClaimLongitude).toFixed(4)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NFT Information */}
           <div className="card">
             <div className="card-body">
-              <h6 className="card-title mb-3">NFT Details</h6>
+              <h6 className="card-title mb-3">NFT Registry Information</h6>
               <div className="row g-3">
                 <div className="col-6">
-                  <div className="text-muted small">Token ID</div>
+                  <div className="text-muted small">Registry ID</div>
                   <div className="font-monospace small">{record.id}</div>
                 </div>
                 <div className="col-6">
+                  <div className="text-muted small">Minted On</div>
+                  <div className="small">
+                    {new Date(record.mintedAt || new Date()).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </div>
+                </div>
+                {record.walletAddress && (
+                  <div className="col-12">
+                    <div className="text-muted small">Wallet Address</div>
+                    <div className="font-monospace small">{record.walletAddress}</div>
+                  </div>
+                )}
+                {record.nftTransactionHash && (
+                  <div className="col-12">
+                    <div className="text-muted small">Transaction Hash</div>
+                    <div className="font-monospace small">{record.nftTransactionHash}</div>
+                  </div>
+                )}
+                {record.nftTokenId && (
+                  <div className="col-6">
+                    <div className="text-muted small">Token ID</div>
+                    <div className="small">#{record.nftTokenId}</div>
+                  </div>
+                )}
+                {record.nftContractAddress && (
+                  <div className="col-6">
+                    <div className="text-muted small">Contract</div>
+                    <div className="font-monospace small">
+                      {record.nftContractAddress.slice(0, 6)}...{record.nftContractAddress.slice(-4)}
+                    </div>
+                  </div>
+                )}
+                <div className="col-12">
                   <div className="text-muted small">Owner</div>
                   <div className="small">{record.ownerDisplayName || record.ownerUsername || 'Anonymous'}</div>
                 </div>
-                <div className="col-6">
-                  <div className="text-muted small">Event</div>
-                  <div className="small">{record.eventName}</div>
+                <div className="col-12">
+                  <div className="text-muted small">Creator</div>
+                  <div className="small">{record.creatorDisplayName || record.creatorUsername || 'Unknown'}</div>
                 </div>
-                <div className="col-6">
-                  <div className="text-muted small">Event Date</div>
-                  <div className="small">{record.eventDate}</div>
-                </div>
-                {record.ticketNumber && (
-                  <div className="col-6">
-                    <div className="text-muted small">Ticket Number</div>
-                    <div className="small">#{record.ticketNumber}</div>
-                  </div>
-                )}
-                {record.ticketSeatNumber && (
-                  <div className="col-6">
-                    <div className="text-muted small">Seat</div>
-                    <div className="small">{record.ticketSeatNumber}</div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
