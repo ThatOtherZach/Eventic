@@ -104,7 +104,7 @@ export function RegistryTicketPage() {
     ticketBackgroundUrl: record.ticketBackgroundData || record.eventTicketBackgroundUrl || record.eventImageData || record.eventImageUrl || null,
     maxTickets: record.eventMaxTickets || null,
     ticketsSold: record.eventTicketsSold || 0,
-    ticketPrice: record.eventTicketPrice || null,
+    ticketPrice: record.eventTicketPrice ? String(record.eventTicketPrice) : '0',
     eventTypes: record.eventEventTypes || [],
     reentryType: record.eventReentryType || 'No Reentry (Single Use)',
     goldenTicketEnabled: record.eventGoldenTicketEnabled || false,
@@ -148,6 +148,8 @@ export function RegistryTicketPage() {
     scheduledDeletion: null, // NFT records are never deleted
     paymentCurrencies: null,
     paymentProcessingFee: null,
+    paymentProcessing: false,
+    walletAddress: null,
   };
 
   return (
@@ -170,7 +172,7 @@ export function RegistryTicketPage() {
                 <h6 className="mb-1">NFT Registry Record</h6>
                 <p className="mb-0 small">
                   This ticket has been preserved as an NFT and will remain in the registry permanently.
-                  Minted on {new Date(record.createdAt).toLocaleDateString()}
+                  Minted on {new Date(record.mintedAt || new Date()).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -186,7 +188,7 @@ export function RegistryTicketPage() {
             <TicketCard 
               ticket={preservedTicket} 
               event={preservedEvent} 
-              showQR={false}
+              showQR={true}  // Show QR code for complete ticket display
               showBadges={true}
             />
           </div>
@@ -211,7 +213,7 @@ export function RegistryTicketPage() {
                 </div>
                 <div className="col-6">
                   <div className="text-muted small">Owner</div>
-                  <div className="small">{record.ownerEmail || 'Anonymous'}</div>
+                  <div className="small">{record.ownerDisplayName || record.ownerUsername || 'Anonymous'}</div>
                 </div>
                 <div className="col-6">
                   <div className="text-muted small">Event</div>
