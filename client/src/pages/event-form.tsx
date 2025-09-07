@@ -2702,6 +2702,7 @@ export default function EventForm() {
                                       onChange={(e) =>
                                         field.onChange(e.target.checked)
                                       }
+                                      disabled={isEditMode && field.value} // Disable if already enabled in edit mode
                                       data-testid="checkbox-allow-minting"
                                     />
                                     <label
@@ -2712,6 +2713,11 @@ export default function EventForm() {
                                         🎨
                                       </span>
                                       Allow Minting
+                                      {isEditMode && field.value && (
+                                        <span className="text-muted ms-2">
+                                          (cannot be disabled)
+                                        </span>
+                                      )}
                                     </label>
                                   </div>
                                   <div className="form-text">
@@ -2720,7 +2726,12 @@ export default function EventForm() {
                                     seen in the ticket preview will be publicly
                                     accessible if enabled. Digital collectible
                                     will be issued on the Coinbase L2 network
-                                    (Base, Ethereum).
+                                    (Base, Ethereum)
+                                    {isEditMode && !field.value
+                                      ? ". This can be enabled after event creation, but once enabled it cannot be disabled"
+                                      : isEditMode && field.value
+                                        ? ". This feature has been enabled and cannot be disabled"
+                                        : ""}.
                                   </div>
                                   <FormMessage />
                                 </FormItem>
