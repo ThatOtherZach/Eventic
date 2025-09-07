@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
@@ -240,6 +240,16 @@ export interface IStorage {
   updateTicketPurchaseStatus(id: string, status: string, stripeSessionId?: string): Promise<TicketPurchase | undefined>;
   getTicketPurchase(id: string): Promise<TicketPurchase | undefined>;
   getTicketPurchaseBySessionId(sessionId: string): Promise<TicketPurchase | undefined>;
+  
+  // Platform Headers Management
+  getPlatformHeaders(): Promise<PlatformHeader[]>;
+  getActivePlatformHeaders(): Promise<PlatformHeader[]>;
+  getRandomPlatformHeader(): Promise<PlatformHeader | undefined>;
+  getPlatformHeader(id: string): Promise<PlatformHeader | undefined>;
+  createPlatformHeader(header: InsertPlatformHeader): Promise<PlatformHeader>;
+  updatePlatformHeader(id: string, header: Partial<InsertPlatformHeader>): Promise<PlatformHeader | undefined>;
+  deletePlatformHeader(id: string): Promise<boolean>;
+  togglePlatformHeaderActive(id: string): Promise<PlatformHeader | undefined>;
 }
 
 interface ValidationSession {
@@ -4567,6 +4577,117 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting leaderboard:', error);
       return [];
+    }
+  }
+  
+  // Platform Headers Management
+  async getPlatformHeaders(): Promise<PlatformHeader[]> {
+    try {
+      const headers = await db.select()
+        .from(platformHeaders)
+        .orderBy(asc(platformHeaders.displayOrder), asc(platformHeaders.createdAt));
+      return headers;
+    } catch (error) {
+      console.error('Error getting platform headers:', error);
+      return [];
+    }
+  }
+  
+  async getActivePlatformHeaders(): Promise<PlatformHeader[]> {
+    try {
+      const headers = await db.select()
+        .from(platformHeaders)
+        .where(eq(platformHeaders.active, true))
+        .orderBy(asc(platformHeaders.displayOrder), asc(platformHeaders.createdAt));
+      return headers;
+    } catch (error) {
+      console.error('Error getting active platform headers:', error);
+      return [];
+    }
+  }
+  
+  async getRandomPlatformHeader(): Promise<PlatformHeader | undefined> {
+    try {
+      const activeHeaders = await this.getActivePlatformHeaders();
+      if (activeHeaders.length === 0) return undefined;
+      
+      const randomIndex = Math.floor(Math.random() * activeHeaders.length);
+      return activeHeaders[randomIndex];
+    } catch (error) {
+      console.error('Error getting random platform header:', error);
+      return undefined;
+    }
+  }
+  
+  async getPlatformHeader(id: string): Promise<PlatformHeader | undefined> {
+    try {
+      const [header] = await db.select()
+        .from(platformHeaders)
+        .where(eq(platformHeaders.id, id));
+      return header || undefined;
+    } catch (error) {
+      console.error('Error getting platform header:', error);
+      return undefined;
+    }
+  }
+  
+  async createPlatformHeader(header: InsertPlatformHeader): Promise<PlatformHeader> {
+    try {
+      const [newHeader] = await db.insert(platformHeaders)
+        .values(header)
+        .returning();
+      return newHeader;
+    } catch (error) {
+      console.error('Error creating platform header:', error);
+      throw error;
+    }
+  }
+  
+  async updatePlatformHeader(id: string, header: Partial<InsertPlatformHeader>): Promise<PlatformHeader | undefined> {
+    try {
+      const updateData: any = { ...header };
+      updateData.updatedAt = new Date();
+      
+      const [updated] = await db.update(platformHeaders)
+        .set(updateData)
+        .where(eq(platformHeaders.id, id))
+        .returning();
+      
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating platform header:', error);
+      return undefined;
+    }
+  }
+  
+  async deletePlatformHeader(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(platformHeaders)
+        .where(eq(platformHeaders.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting platform header:', error);
+      return false;
+    }
+  }
+  
+  async togglePlatformHeaderActive(id: string): Promise<PlatformHeader | undefined> {
+    try {
+      const header = await this.getPlatformHeader(id);
+      if (!header) return undefined;
+      
+      const [updated] = await db.update(platformHeaders)
+        .set({ 
+          active: !header.active,
+          updatedAt: new Date()
+        })
+        .where(eq(platformHeaders.id, id))
+        .returning();
+      
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error toggling platform header active state:', error);
+      return undefined;
     }
   }
 }
