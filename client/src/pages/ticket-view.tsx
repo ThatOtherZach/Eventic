@@ -19,7 +19,7 @@ import {
 import QRCode from "qrcode";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
 import batteryIcon from "@assets/image_1756977732648.png";
-import clockIcon from "@assets/image_1757231183487.png";
+import expiredIcon from "@assets/image_1757231398193.png";
 import gearIcon from "@assets/image_1757231239743.png";
 import type { Ticket, Event } from "@shared/schema";
 
@@ -1122,7 +1122,7 @@ export default function TicketViewPage(): React.ReactElement {
                         ) : !timeValidation.valid ? (
                           <>
                             <img
-                              src={clockIcon}
+                              src={expiredIcon}
                               alt=""
                               width="18"
                               height="18"
@@ -1494,7 +1494,7 @@ export default function TicketViewPage(): React.ReactElement {
                       ) ? (
                       <>
                         <img
-                          src={clockIcon}
+                          src={expiredIcon}
                           alt=""
                           width="18"
                           height="18"
