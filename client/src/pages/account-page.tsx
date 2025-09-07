@@ -691,7 +691,7 @@ export default function AccountPage() {
                     {validatedCount && (
                       <div className="d-flex align-items-center mt-2">
                         <img
-                          src={checkIcon}
+                          src={accountKeysIcon}
                           alt=""
                           style={{
                             width: "16px",
@@ -708,7 +708,7 @@ export default function AccountPage() {
                     {secretCodesCount && (
                       <div className="d-flex align-items-center mt-2">
                         <img
-                          src={accountKeysIcon}
+                          src="/key-icon.png"
                           alt=""
                           style={{
                             width: "16px",
