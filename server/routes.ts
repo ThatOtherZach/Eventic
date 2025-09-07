@@ -3929,97 +3929,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let gridEvents = [];
       
-      // Determine how many events to show based on availability
-      if (totalAvailableEvents < 6) {
-        // Less than 6 events available - show up to 3 in a single row
-        const eventsToShow = Math.min(totalAvailableEvents, 3);
-        
-        // Add boosted events first (up to 3)
-        if (featuredEvents.length > 0) {
-          gridEvents.push(...featuredEvents.slice(0, Math.min(3, featuredEvents.length)));
-        }
-        
-        // Fill remaining slots with regular events if needed
-        const slotsRemaining = eventsToShow - gridEvents.length;
-        if (slotsRemaining > 0 && availableRegularEvents.length > 0) {
-          const randomEvents = availableRegularEvents
-            .sort(() => Math.random() - 0.5)
-            .slice(0, slotsRemaining)
-            .map(event => ({
-              id: `random-${event.id}`,
-              event,
-              isPaid: false,
-              isBumped: false,
-              duration: '',
-              startTime: new Date(),
-              endTime: new Date(),
-              position: 0
-            }));
-          gridEvents.push(...randomEvents);
-        }
+      // Determine how many events to show (min 4, max 8)
+      let targetEventCount;
+      if (totalAvailableEvents < 4) {
+        // Less than 4 events - show all available
+        targetEventCount = totalAvailableEvents;
+      } else if (totalAvailableEvents <= 8) {
+        // Between 4 and 8 events - show all
+        targetEventCount = totalAvailableEvents;
       } else {
-        // 6 or more events available - show 6 events (2 rows)
-        
-        // If we have 6+ featured events, just use the first 6 featured events
-        if (featuredEvents.length >= 6) {
-          gridEvents = featuredEvents.slice(0, 6);
-        } else {
-          // First row (3 slots) - prioritize boosted events
-          const firstRowBoosted = featuredEvents.slice(0, 3);
-          gridEvents.push(...firstRowBoosted);
-          
-          // Calculate remaining slots
-          const firstRowFilled = gridEvents.length;
-          const firstRowRemaining = 3 - firstRowFilled;
-          
-          // Fill first row with regular events if not enough boosted
-          if (firstRowRemaining > 0) {
-            const fillerEvents = availableRegularEvents
-              .sort(() => Math.random() - 0.5)
-              .slice(0, firstRowRemaining)
-              .map(event => ({
-                id: `random-${event.id}`,
-                event,
-                isPaid: false,
-                isBumped: false,
-                duration: '',
-                startTime: new Date(),
-                endTime: new Date(),
-                position: 0
-              }));
-            gridEvents.push(...fillerEvents);
-          }
-          
-          // Second row (3 slots) - use remaining boosted events or regular events
-          const remainingBoosted = featuredEvents.slice(3);
-          const secondRowBoosted = remainingBoosted.slice(0, 3);
-          gridEvents.push(...secondRowBoosted);
-          
-          // Fill second row with regular events
-          const totalSlotsNeeded = 6;
-          const slotsToFill = totalSlotsNeeded - gridEvents.length;
-          
-          if (slotsToFill > 0) {
-            // Get regular events not already used
-            const usedEventIds = new Set(gridEvents.map(ge => ge.event.id));
-            const unusedRegularEvents = availableRegularEvents.filter(e => !usedEventIds.has(e.id));
-            
-            const fillerEvents = unusedRegularEvents
-              .sort(() => Math.random() - 0.5)
-              .slice(0, slotsToFill)
-              .map(event => ({
-                id: `random-${event.id}`,
-                event,
-                isPaid: false,
-                isBumped: false,
-                duration: '',
-                startTime: new Date(),
-                endTime: new Date(),
-                position: 0
-              }));
-            gridEvents.push(...fillerEvents);
-          }
-        }
+        // More than 8 events - show 8
+        targetEventCount = 8;
+      }
+      
+      // Add boosted events first (up to 8)
+      if (featuredEvents.length > 0) {
+        gridEvents.push(...featuredEvents.slice(0, Math.min(targetEventCount, featuredEvents.length)));
+      }
+      
+      // Fill remaining slots with regular events if needed
+      const slotsRemaining = targetEventCount - gridEvents.length;
+      if (slotsRemaining > 0 && availableRegularEvents.length > 0) {
+        const randomEvents = availableRegularEvents
+          .sort(() => Math.random() - 0.5)
+          .slice(0, slotsRemaining)
+          .map(event => ({
+            id: `random-${event.id}`,
+            event,
+            isPaid: false,
+            isBumped: false,
+            duration: '',
+            startTime: new Date(),
+            endTime: new Date(),
+            position: 0
+          }));
+        gridEvents.push(...randomEvents);
+      }
+      
+      // If we still have more than 8 events somehow, limit to 8
+      if (gridEvents.length > 8) {
+        gridEvents = gridEvents.slice(0, 8);
       }
       
       // Add current price with surge pricing to each event

@@ -46,7 +46,7 @@ export function FeaturedGrid() {
       <div className="mb-5">
         <h3 className="h4 fw-semibold text-dark mb-4">Discover Events</h3>
         <div className="row g-3">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(8)].map((_, i) => (
             <div key={i} className="col-md-6">
               <div className="card border-0 shadow-sm">
                 <div 
@@ -83,7 +83,7 @@ export function FeaturedGrid() {
       </div>
       
       <div className="row g-3">
-        {featuredEvents.slice(0, 6).map((featuredEvent) => {
+        {featuredEvents.slice(0, 8).map((featuredEvent) => {
           const event = featuredEvent.event;
           
           // Create a mock ticket object for display purposes
