@@ -15,6 +15,8 @@ import {
   Users,
   HelpCircle,
   CheckCircle,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import QRCode from "qrcode";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
@@ -1585,7 +1587,7 @@ export default function TicketViewPage(): React.ReactElement {
                           hasRated ? "Change rating (free)" : "Earns 1 credit"
                         }
                       >
-                        +1
+                        <ThumbsUp size={18} />
                       </button>
                     </div>
 
@@ -1602,7 +1604,7 @@ export default function TicketViewPage(): React.ReactElement {
                           hasRated ? "Change rating (free)" : "Costs 1 credit"
                         }
                       >
-                        -1
+                        <ThumbsDown size={18} />
                       </button>
                     </div>
                   </div>
