@@ -2271,7 +2271,7 @@ export default function EventForm() {
                               name="paymentProcessing"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Payment Method</FormLabel>
+                                  <FormLabel>Crypto Payment Method</FormLabel>
                                   <FormControl>
                                     <select
                                       className="form-select"
@@ -2280,29 +2280,48 @@ export default function EventForm() {
                                       onChange={(e) => field.onChange(e.target.value)}
                                       data-testid="select-payment-processing"
                                     >
-                                      <option value="None">None</option>
-                                      <option value="Ethereum">Ethereum - 100 Tickets</option>
-                                      <option value="Bitcoin">Bitcoin - 100 Tickets</option>
-                                      <option value="Dogecoin">Dogecoin - 50 Tickets</option>
-                                      <option value="Litecoin">Litecoin - 50 Tickets</option>
+                                      <option value="None">None - No payment processing</option>
+                                      <option value="Ethereum">₿ Ethereum</option>
+                                      <option value="Bitcoin">₿ Bitcoin</option>
+                                      <option value="Dogecoin">Ð Dogecoin</option>
+                                      <option value="Litecoin">Ł Litecoin</option>
                                     </select>
                                   </FormControl>
+                                  {field.value !== "None" && (
+                                    <div className="mt-3 p-3 bg-light border rounded">
+                                      <div className="d-flex align-items-center justify-content-between">
+                                        <div>
+                                          <strong>{field.value} Wallet Integration</strong>
+                                          <div className="text-muted small mt-1">
+                                            Each ticket holder gets a {field.value} wallet address
+                                          </div>
+                                        </div>
+                                        <div className="text-end">
+                                          <span className={`badge ${
+                                            field.value === "Ethereum" || field.value === "Bitcoin"
+                                              ? "bg-warning text-dark"
+                                              : "bg-info text-dark"
+                                          } fs-6`}>
+                                            {field.value === "Ethereum" || field.value === "Bitcoin"
+                                              ? "100"
+                                              : "50"} tickets
+                                          </span>
+                                          <div className="text-muted small mt-1">One-time cost</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                   <div className="form-text mt-2">
                                     {field.value === "None" ? (
                                       <>
-                                        No payment processing enabled. We don't handle any payment
-                                        processing for ticket payments at the event. You'll need to
-                                        manage payments independently.
+                                        We don't handle payment processing for ticket sales at events.
+                                        You'll need to manage payments independently.
                                       </>
                                     ) : (
                                       <>
-                                        Enable {field.value} payment processing for your event. This
-                                        allows each ticket holder to have a crypto wallet address for
-                                        receiving {field.value} payments. Cost:{" "}
-                                        {field.value === "Ethereum" || field.value === "Bitcoin"
-                                          ? "100"
-                                          : "50"}{" "}
-                                        tickets (one-time fee to enable the feature, not per ticket).
+                                        Enable crypto payments for your event. Attendees can receive
+                                        payments directly to their {field.value} wallet. This is a
+                                        one-time setup fee, not charged per ticket.
                                       </>
                                     )}
                                   </div>
