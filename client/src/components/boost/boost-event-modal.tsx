@@ -126,10 +126,13 @@ export function BoostEventModal({ eventId, open, onOpenChange }: BoostEventModal
             </h5>
             <button 
               type="button" 
-              className="btn-close" 
+              className="btn btn-light btn-sm rounded-circle" 
               aria-label="Close"
               onClick={() => onOpenChange(false)}
-            />
+              style={{ width: '32px', height: '32px', padding: '0' }}
+            >
+              <X size={18} />
+            </button>
           </div>
           
           <div className="modal-body">
