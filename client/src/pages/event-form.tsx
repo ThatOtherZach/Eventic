@@ -2344,7 +2344,7 @@ export default function EventForm() {
                                         None - No payment processing
                                       </option>
                                       <option value="Ethereum">
-                                        ₿ Ethereum
+                                        Ξ Ethereum
                                       </option>
                                       <option value="Bitcoin">₿ Bitcoin</option>
                                       <option value="Dogecoin">
@@ -2365,8 +2365,7 @@ export default function EventForm() {
                                             </strong>
                                             <div className="text-muted small mt-1">
                                               Ticket holders can pay with their{" "}
-                                              {field.value} wallet. A one-time setup fee, not per
-                                              ticket.
+                                              {field.value} wallet.
                                             </div>
                                           </div>
                                           <div className="text-end">
@@ -2385,7 +2384,7 @@ export default function EventForm() {
                                               tickets
                                             </span>
                                             <div className="text-muted small mt-1">
-                                              One-time cost
+                                              Config. Fee
                                             </div>
                                           </div>
                                         </div>
