@@ -69,6 +69,8 @@ import deletionWarningIcon from "@assets/image_1756936869495.png";
 import expandIcon from "@assets/image_1756959756931.png";
 import huntIcon from "@assets/image_1756971767387.png";
 import p2pValidationIcon from "@assets/address_book_users_1757234713487.png";
+import multipleTicketsIcon from "@assets/certificate_multiple-1_1757234773120.png";
+import singleTicketIcon from "@assets/certificate_seal_1757234773120.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -1664,7 +1666,16 @@ export default function EventDetailPage() {
             <div className="card mb-4">
               <div className="card-body">
                 <h5 className="card-title mb-3">
-                  <Ticket size={20} className="me-2" />
+                  <img
+                    src={multipleTicketsIcon}
+                    alt=""
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      marginRight: "8px",
+                      verticalAlign: "middle",
+                    }}
+                  />
                   Your Tickets ({userTickets.length})
                 </h5>
                 <div className="list-group">

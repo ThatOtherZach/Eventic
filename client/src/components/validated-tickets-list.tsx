@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Check, Calendar, Ticket } from "lucide-react";
 import { format } from "date-fns";
 import poweredByImage from "@assets/image_1756973626753.png";
+import singleTicketIcon from "@assets/certificate_seal_1757234773120.png";
 
 interface ValidatedTicket {
   ticketId: string;
@@ -70,7 +71,16 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
     return (
       <div>
         <h5 className="card-title mb-3">
-          <Ticket size={20} className="me-2" />
+          <img
+            src={singleTicketIcon}
+            alt=""
+            style={{
+              width: "20px",
+              height: "20px",
+              marginRight: "8px",
+              verticalAlign: "middle",
+            }}
+          />
           Validated Tickets
         </h5>
         <div className="d-flex justify-content-center p-4">
@@ -86,7 +96,16 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
     return (
       <div>
         <h5 className="card-title mb-3">
-          <Ticket size={20} className="me-2" />
+          <img
+            src={singleTicketIcon}
+            alt=""
+            style={{
+              width: "20px",
+              height: "20px",
+              marginRight: "8px",
+              verticalAlign: "middle",
+            }}
+          />
           Validated Tickets
         </h5>
         <div className="alert alert-danger">
