@@ -2271,7 +2271,7 @@ export default function EventForm() {
                               name="paymentProcessing"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>Crypto Payment Method</FormLabel>
+                                  <FormLabel>Payment Method</FormLabel>
                                   <FormControl>
                                     <select
                                       className="form-select"
