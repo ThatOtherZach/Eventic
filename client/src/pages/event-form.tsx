@@ -1717,8 +1717,8 @@ export default function EventForm() {
                                             backgroundColor: '#000000',
                                             border: '2px solid #0a0a0a',
                                             borderRadius: '4px',
-                                            fontFamily: "'Courier New', 'Monaco', 'Consolas', monospace",
-                                            fontSize: '14px',
+                                            fontFamily: 'monospace',
+                                            fontSize: '12px',
                                             color: '#00ff00',
                                             textTransform: 'uppercase',
                                             letterSpacing: '0.5px'
@@ -1732,7 +1732,7 @@ export default function EventForm() {
                                               <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
                                                 <div>EVENT CAPACITY: {field.value || 0} TICKETS</div>
                                                 <div>{paymentMethod.toUpperCase()} PROCESSING FEE: {paymentFee} TICKETS</div>
-                                                <div style={{ fontSize: '12px', opacity: '0.8' }}>(ONE-TIME, NON-REFUNDABLE)</div>
+                                                <div style={{ fontSize: '10px', opacity: '0.8' }}>(ONE-TIME, NON-REFUNDABLE)</div>
                                               </div>
                                               <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
                                                 <strong>TOTAL REQUIRED: {totalRequired} TICKETS</strong>
