@@ -191,8 +191,9 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
     for (let i = 0; i < 4; i++) {
       const sticker = document.createElement('img');
       sticker.className = 'spooky-ghost'; // Reuse the floating animation
-      // Use the URL directly if it starts with http/https
-      sticker.src = stickerUrl.startsWith('http') ? stickerUrl : 
+      // Handle base64 data URLs, regular URLs, and object storage paths
+      sticker.src = stickerUrl.startsWith('data:') ? stickerUrl :
+                   stickerUrl.startsWith('http') ? stickerUrl : 
                    (stickerUrl.startsWith('/objects/') ? stickerUrl : '/objects/' + stickerUrl.split('/').pop());
       sticker.style.position = 'absolute';
       sticker.style.left = Math.random() * 80 + 10 + '%';
@@ -363,8 +364,9 @@ export function SpecialEffects({ event, ticket, containerRef }: SpecialEffectsPr
       for (let i = 0; i < 4; i++) {
         const sticker = document.createElement('img');
         sticker.className = 'spooky-ghost'; // Reuse the floating animation
-        // Use the URL directly if it starts with http/https, otherwise treat as object storage path
-        sticker.src = event.stickerUrl.startsWith('http') ? event.stickerUrl : 
+        // Handle base64 data URLs, regular URLs, and object storage paths
+        sticker.src = event.stickerUrl.startsWith('data:') ? event.stickerUrl :
+                     event.stickerUrl.startsWith('http') ? event.stickerUrl : 
                      (event.stickerUrl.startsWith('/objects/') ? event.stickerUrl : '/objects/' + event.stickerUrl.split('/').pop());
         sticker.style.position = 'absolute';
         sticker.style.left = Math.random() * 80 + 10 + '%';
