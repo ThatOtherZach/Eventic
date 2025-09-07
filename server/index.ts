@@ -5,6 +5,7 @@ import { logError, scheduleLogCleanup } from "./logger";
 import { initializeJobScheduler } from "./jobScheduler";
 import { storage } from "./storage";
 import { migrateDescriptionsToPlainText } from "./migrate-descriptions";
+import { seedPlatformHeaders } from "./seedPlatformHeaders";
 
 const app = express();
 app.use(express.json());
@@ -89,6 +90,14 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error("[MIGRATION] Failed to convert descriptions:", error);
     // Don't stop server startup if migration fails
+  }
+  
+  // Seed platform headers if needed
+  try {
+    await seedPlatformHeaders();
+  } catch (error) {
+    console.error("[SEED] Failed to seed platform headers:", error);
+    // Don't stop server startup if seeding fails
   }
   
   const server = await registerRoutes(app);
