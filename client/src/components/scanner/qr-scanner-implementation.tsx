@@ -82,7 +82,7 @@ export function QrScannerImplementation() {
         console.log('Raw error message:', errorMessage);
         
         // Check if error message contains JSON (format: "400: {json}")
-        const match = errorMessage.match(/^\d{3}:\s*(.+)$/s);
+        const match = errorMessage.match(/^\d{3}:\s*([\s\S]+)$/);
         if (match) {
           try {
             const errorData = JSON.parse(match[1]);
@@ -199,17 +199,21 @@ export function QrScannerImplementation() {
         // The error should already be parsed as JSON from mutationFn
         let errorMessage = error.message || error.error || "Failed to validate ticket";
         
-        // The error might still be coming through as "400: {json}" format
+        // The error might still be coming through as "XXX: {json}" format (e.g., "404: {json}" or "400: {json}")
         // Let's check and parse it if needed
-        if (typeof errorMessage === 'string' && errorMessage.startsWith('400: ')) {
-          try {
-            const jsonPart = errorMessage.substring(5); // Remove "400: " prefix
-            const parsed = JSON.parse(jsonPart);
-            errorMessage = parsed.message || errorMessage;
-            // Also update the error object with parsed data
-            Object.assign(error, parsed);
-          } catch (e) {
-            console.log('Could not parse error message:', e);
+        if (typeof errorMessage === 'string') {
+          const match = errorMessage.match(/^(\d{3}):\s*([\s\S]+)$/);
+          if (match) {
+            try {
+              const statusCode = match[1];
+              const jsonPart = match[2];
+              const parsed = JSON.parse(jsonPart);
+              errorMessage = parsed.message || errorMessage;
+              // Also update the error object with parsed data
+              Object.assign(error, parsed);
+            } catch (e) {
+              console.log('Could not parse error message:', e);
+            }
           }
         }
         
