@@ -2996,6 +2996,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Platform Headers Management Routes
+  // Public endpoint to get a random active header for the home page
+  app.get("/api/platform-headers/random", async (req, res) => {
+    try {
+      const header = await storage.getRandomPlatformHeader();
+      if (!header) {
+        // Return default if no headers are found
+        return res.json({
+          title: "Event Management",
+          subtitle: "Browse events and purchase tickets"
+        });
+      }
+      res.json(header);
+    } catch (error) {
+      await logError(error, "GET /api/platform-headers/random", {
+        request: req
+      });
+      // Return default on error
+      res.json({
+        title: "Event Management",
+        subtitle: "Browse events and purchase tickets"
+      });
+    }
+  });
+
+  // Admin: Get all platform headers
+  app.get("/api/admin/platform-headers", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const headers = await storage.getPlatformHeaders();
+      res.json(headers);
+    } catch (error) {
+      await logError(error, "GET /api/admin/platform-headers", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch platform headers" });
+    }
+  });
+
+  // Admin: Create a new platform header
+  app.post("/api/admin/platform-headers", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, subtitle, active, displayOrder } = req.body;
+      
+      if (!title || !subtitle) {
+        return res.status(400).json({ message: "Title and subtitle are required" });
+      }
+
+      const header = await storage.createPlatformHeader({
+        title,
+        subtitle,
+        active: active !== undefined ? active : true,
+        displayOrder: displayOrder || null
+      });
+
+      res.status(201).json(header);
+    } catch (error) {
+      await logError(error, "POST /api/admin/platform-headers", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to create platform header" });
+    }
+  });
+
+  // Admin: Update a platform header
+  app.put("/api/admin/platform-headers/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { title, subtitle, active, displayOrder } = req.body;
+      
+      const header = await storage.updatePlatformHeader(req.params.id, {
+        title,
+        subtitle,
+        active,
+        displayOrder
+      });
+
+      if (!header) {
+        return res.status(404).json({ message: "Platform header not found" });
+      }
+
+      res.json(header);
+    } catch (error) {
+      await logError(error, "PUT /api/admin/platform-headers/:id", {
+        request: req,
+        metadata: { headerId: req.params.id }
+      });
+      res.status(500).json({ message: "Failed to update platform header" });
+    }
+  });
+
+  // Admin: Delete a platform header
+  app.delete("/api/admin/platform-headers/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const success = await storage.deletePlatformHeader(req.params.id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Platform header not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      await logError(error, "DELETE /api/admin/platform-headers/:id", {
+        request: req,
+        metadata: { headerId: req.params.id }
+      });
+      res.status(500).json({ message: "Failed to delete platform header" });
+    }
+  });
+
+  // Admin: Toggle platform header active state
+  app.patch("/api/admin/platform-headers/:id/toggle", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const header = await storage.togglePlatformHeaderActive(req.params.id);
+      
+      if (!header) {
+        return res.status(404).json({ message: "Platform header not found" });
+      }
+
+      res.json(header);
+    } catch (error) {
+      await logError(error, "PATCH /api/admin/platform-headers/:id/toggle", {
+        request: req,
+        metadata: { headerId: req.params.id }
+      });
+      res.status(500).json({ message: "Failed to toggle platform header" });
+    }
+  });
+
 
   // Delegated Validators routes
   app.get("/api/events/:eventId/validators", async (req: AuthenticatedRequest, res) => {
