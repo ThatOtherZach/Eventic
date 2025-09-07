@@ -188,7 +188,7 @@ export function RegistryTicketPage() {
             <TicketCard 
               ticket={preservedTicket} 
               event={preservedEvent} 
-              showQR={true}  // Show QR code for complete ticket display
+              showQR={false}
               showBadges={true}
             />
           </div>
