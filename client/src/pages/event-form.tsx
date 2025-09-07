@@ -1726,13 +1726,13 @@ export default function EventForm() {
                                           }}
                                         >
                                           <div style={{ marginBottom: '8px' }}>
-                                            YOUR BALANCE: {creditBalance} CREDITS
+                                            BALANCE: {creditBalance} TICKETS
                                           </div>
                                           {paymentFee > 0 && (
                                             <>
                                               <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
-                                                <div>EVENT CAPACITY: {field.value || 0} TICKETS</div>
-                                                <div>{paymentMethod.toUpperCase()} PROCESSING FEE: {paymentFee} TICKETS</div>
+                                                <div>ATTENDEES: {field.value || 0} TICKETS</div>
+                                                <div>{paymentMethod.toUpperCase()} PROCESSING: {paymentFee} TICKETS</div>
                                                 <div style={{ fontSize: '10px', opacity: '0.8' }}>(ONE-TIME, NON-REFUNDABLE)</div>
                                               </div>
                                               <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
