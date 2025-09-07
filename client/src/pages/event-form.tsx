@@ -1672,42 +1672,65 @@ export default function EventForm() {
                                 <FormField
                                   control={form.control}
                                   name="maxTickets"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Tickets</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          {...field}
-                                          type="number"
-                                          min="1"
-                                          max="4999"
-                                          placeholder="Enter number of tickets"
-                                          className="form-control"
-                                          data-testid="input-max-tickets"
-                                          value={field.value || ""}
-                                          onChange={(e) => {
-                                            const value =
-                                              parseInt(e.target.value) || 0;
-                                            field.onChange(value);
+                                  render={({ field }) => {
+                                    const paymentMethod = form.watch("paymentProcessing") || "None";
+                                    const ticketPrice = parseFloat(form.watch("ticketPrice") || "0");
+                                    const paymentFee = ticketPrice > 0 && paymentMethod !== "None" 
+                                      ? (paymentMethod === "Ethereum" || paymentMethod === "Bitcoin" ? 100 : 50)
+                                      : 0;
+                                    const totalRequired = (field.value || 0) + paymentFee;
+                                    
+                                    return (
+                                      <FormItem>
+                                        <FormLabel>Tickets</FormLabel>
+                                        <FormControl>
+                                          <Input
+                                            {...field}
+                                            type="number"
+                                            min="1"
+                                            max="4999"
+                                            placeholder="Enter number of tickets"
+                                            className="form-control"
+                                            data-testid="input-max-tickets"
+                                            value={field.value || ""}
+                                            onChange={(e) => {
+                                              const value =
+                                                parseInt(e.target.value) || 0;
+                                              field.onChange(value);
 
-                                            // Check if value exceeds user's credit balance
-                                            if (value > creditBalance) {
-                                              form.setError("maxTickets", {
-                                                type: "manual",
-                                                message: "Not Enough Credits",
-                                              });
-                                            } else {
-                                              form.clearErrors("maxTickets");
-                                            }
-                                          }}
-                                        />
-                                      </FormControl>
-                                      <div className="form-text">
-                                        Your balance: {creditBalance} credits
-                                      </div>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
+                                              // Check if total (including payment fee) exceeds user's credit balance
+                                              const totalWithFee = value + paymentFee;
+                                              if (totalWithFee > creditBalance) {
+                                                form.setError("maxTickets", {
+                                                  type: "manual",
+                                                  message: `Not Enough Credits (need ${totalWithFee} total)`,
+                                                });
+                                              } else {
+                                                form.clearErrors("maxTickets");
+                                              }
+                                            }}
+                                          />
+                                        </FormControl>
+                                        <div className="form-text">
+                                          Your balance: {creditBalance} credits
+                                          {paymentFee > 0 && (
+                                            <>
+                                              <br />
+                                              <span className="text-warning">
+                                                <strong>Total required: {totalRequired} tickets</strong>
+                                                <br />
+                                                <small className="text-muted">
+                                                  Event capacity: {field.value || 0} tickets<br />
+                                                  {paymentMethod} processing fee: {paymentFee} tickets (one-time, non-refundable)
+                                                </small>
+                                              </span>
+                                            </>
+                                          )}
+                                        </div>
+                                        <FormMessage />
+                                      </FormItem>
+                                    );
+                                  }}
                                 />
                               </div>
                             </div>
