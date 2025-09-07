@@ -1812,6 +1812,45 @@ export default function EventDetailPage() {
               />
             </div>
           </div>
+
+          {/* Crypto Payment Intents Section - Only for event owners with crypto payment enabled */}
+          {isOwner && event.paymentProcessing && event.paymentProcessing !== "None" && event.walletAddress && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-3">💳 Crypto Payment Tracker</h5>
+                <p className="text-muted small mb-3">
+                  View and track cryptocurrency payment attempts for your event
+                </p>
+                
+                {/* Terminal-style balance display */}
+                <div style={{
+                  backgroundColor: "#000000",
+                  color: "#00ff00",
+                  fontFamily: "monospace",
+                  padding: "12px",
+                  borderRadius: "4px",
+                  marginBottom: "20px",
+                  border: "1px solid #00ff00"
+                }}>
+                  <div>WALLET: {event.walletAddress.substring(0, 10)}...{event.walletAddress.slice(-8)}</div>
+                  <div>CHAIN: {event.paymentProcessing}</div>
+                  <div>PRICE: ${event.ticketPrice} USD</div>
+                </div>
+
+                <button 
+                  className="btn btn-outline-success w-100"
+                  onClick={() => {
+                    toast({
+                      title: "Payment tracking coming soon",
+                      description: "Real-time payment monitoring will be available shortly",
+                    });
+                  }}
+                >
+                  View Payment Intents
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="col-lg-4">
