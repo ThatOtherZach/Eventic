@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import type { RegistryRecord } from "@shared/schema";
 
 export function RegistryTicketPage() {
   const { id } = useParams();
   
-  const { data: record, isLoading } = useQuery({
+  const { data: record, isLoading } = useQuery<RegistryRecord>({
     queryKey: [`/api/registry/${id}`],
   });
 
@@ -55,65 +56,98 @@ export function RegistryTicketPage() {
   // Reconstruct ticket object from preserved data
   const preservedTicket = {
     id: record.ticketId || record.id,
-    eventId: record.eventId,
+    eventId: record.eventId || '',
     userId: record.ownerId,
     ticketNumber: record.ticketNumber,
-    qrData: record.ticketQrCode,
+    qrData: record.ticketQrCode || '',
     status: record.ticketStatus,
     isValidated: record.ticketValidatedAt ? true : false,
     validatedAt: record.ticketValidatedAt,
-    validatedBy: record.ticketValidatedBy,
+    validatedBy: record.ticketValidatedBy || null,
     createdAt: record.ticketCreatedAt,
     recipientName: record.ticketRecipientName,
     recipientEmail: record.ticketRecipientEmail,
-    seatNumber: record.ticketSeatNumber,
-    ticketType: record.ticketType,
-    transferable: record.ticketTransferable,
-    useCount: record.ticketUsageCount,
-    maxUses: record.ticketMaxUses,
-    isGolden: record.ticketIsGolden,
-    isGoldenTicket: record.ticketIsGolden,
-    isDoubleGolden: record.ticketIsDoubleGolden,
-    specialEffect: record.ticketSpecialEffect,
-    voteCount: record.ticketVoteCount,
-    isCharged: record.ticketIsCharged,
-    validationCode: record.ticketValidationCode,
-    nftMediaUrl: record.ticketNftMediaUrl,
+    seatNumber: record.ticketSeatNumber || null,
+    ticketType: record.ticketType || null,
+    transferable: record.ticketTransferable || false,
+    useCount: record.ticketUsageCount || 0,
+    maxUses: record.ticketMaxUses || 1,
+    isGolden: record.ticketIsGolden || false,
+    isGoldenTicket: record.ticketIsGolden || false,
+    isDoubleGolden: record.ticketIsDoubleGolden || false,
+    specialEffect: record.ticketSpecialEffect || null,
+    voteCount: record.ticketVoteCount || 0,
+    isCharged: record.ticketIsCharged || false,
+    validationCode: record.ticketValidationCode || null,
+    nftMediaUrl: record.ticketGifData || record.ticketNftMediaUrl || null, // Use base64 GIF data if available
+    purchaserEmail: record.ticketPurchaserEmail || null,
+    purchaserIp: record.ticketPurchaserIp || null,
+    purchasePrice: record.ticketPurchasePrice || null,
+    resellStatus: record.ticketResellStatus || 'not_for_resale',
+    originalOwnerId: record.ticketOriginalOwnerId || null,
+    scheduledDeletion: null, // NFT records are never deleted
   };
 
-  // Reconstruct event object from preserved data
+  // Reconstruct event object from preserved data - use base64 images when available
   const preservedEvent = {
-    id: record.eventId,
+    id: record.eventId || record.id,
     userId: record.creatorId,
     name: record.eventName,
-    description: record.eventDescription,
+    description: record.eventDescription || '',
     venue: record.eventVenue,
     date: record.eventDate,
     time: record.eventTime,
-    endDate: record.eventEndDate,
-    endTime: record.eventEndTime,
-    imageUrl: record.eventImageUrl,
-    ticketBackgroundUrl: record.eventImageUrl, // Use event image as ticket background
-    maxTickets: record.eventMaxTickets,
-    ticketsSold: record.eventTicketsSold,
-    ticketPrice: record.eventTicketPrice,
-    eventTypes: record.eventEventTypes,
-    reentryType: record.eventReentryType,
-    goldenTicketEnabled: record.eventGoldenTicketEnabled,
-    goldenTicketCount: record.eventGoldenTicketCount,
-    allowMinting: record.eventAllowMinting,
-    isPrivate: record.eventIsPrivate,
-    oneTicketPerUser: record.eventOneTicketPerUser,
-    surgePricing: record.eventSurgePricing,
-    p2pValidation: record.eventP2pValidation,
-    enableVoting: record.eventEnableVoting,
-    recurringType: record.eventRecurringType,
-    recurringEndDate: record.eventRecurringEndDate,
+    endDate: record.eventEndDate || null,
+    endTime: record.eventEndTime || null,
+    // Use base64 data if available, fallback to URLs
+    imageUrl: record.eventImageData || record.eventImageUrl || null,
+    ticketBackgroundUrl: record.ticketBackgroundData || record.eventTicketBackgroundUrl || record.eventImageData || record.eventImageUrl || null,
+    maxTickets: record.eventMaxTickets || null,
+    ticketsSold: record.eventTicketsSold || 0,
+    ticketPrice: record.eventTicketPrice || null,
+    eventTypes: record.eventEventTypes || [],
+    reentryType: record.eventReentryType || 'No Reentry (Single Use)',
+    goldenTicketEnabled: record.eventGoldenTicketEnabled || false,
+    goldenTicketCount: record.eventGoldenTicketCount || null,
+    allowMinting: record.eventAllowMinting || false,
+    isPrivate: record.eventIsPrivate || false,
+    oneTicketPerUser: record.eventOneTicketPerUser || false,
+    surgePricing: record.eventSurgePricing || false,
+    p2pValidation: record.eventP2pValidation || false,
+    enableVoting: record.eventEnableVoting || false,
+    recurringType: record.eventRecurringType || null,
+    recurringEndDate: record.eventRecurringEndDate || null,
     createdAt: record.eventCreatedAt,
-    stickerUrl: record.eventStickerUrl,
-    specialEffectsEnabled: record.eventSpecialEffectsEnabled,
+    stickerUrl: record.eventStickerData || record.eventStickerUrl || null, // Use base64 sticker data if available
+    specialEffectsEnabled: record.eventSpecialEffectsEnabled || false,
     geofence: record.eventGeofence ? JSON.parse(record.eventGeofence) : null,
-    isAdminCreated: record.eventIsAdminCreated,
+    isAdminCreated: record.eventIsAdminCreated || false,
+    contactDetails: record.eventContactDetails || null,
+    country: record.eventCountry || null,
+    earlyValidation: record.eventEarlyValidation || 'Allow at Anytime',
+    maxUses: record.eventMaxUses || 1,
+    stickerOdds: record.eventStickerOdds || 25,
+    isEnabled: record.eventIsEnabled !== false,
+    ticketPurchasesEnabled: record.eventTicketPurchasesEnabled !== false,
+    latitude: record.eventLatitude || null,
+    longitude: record.eventLongitude || null,
+    parentEventId: record.eventParentEventId || null,
+    lastRecurrenceCreated: record.eventLastRecurrenceCreated || null,
+    timezone: record.eventTimezone || 'America/New_York',
+    rollingTimezone: record.eventRollingTimezone || false,
+    hashtags: record.eventHashtags || [],
+    treasureHunt: record.eventTreasureHunt || false,
+    huntCode: record.eventHuntCode || null,
+    goldenTickets: [],
+    accountBalance: null,
+    likedByUser: false,
+    dislikedByUser: false,
+    totalLikes: 0,
+    totalDislikes: 0,
+    earnedVotes: 0,
+    scheduledDeletion: null, // NFT records are never deleted
+    paymentCurrencies: null,
+    paymentProcessingFee: null,
   };
 
   return (
