@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,8 @@ export default function AdminSettings() {
   const [editingHeader, setEditingHeader] = useState<any>(null);
   const [newHeaderTitle, setNewHeaderTitle] = useState("");
   const [newHeaderSubtitle, setNewHeaderSubtitle] = useState("");
+  const [bannedWords, setBannedWords] = useState<string>("");
+  const [bannedWordsLoading, setBannedWordsLoading] = useState(false);
 
   // Check if user has admin access
   if (!isAdmin()) {
@@ -70,6 +72,19 @@ export default function AdminSettings() {
     queryKey: ["/api/admin/platform-headers"],
     enabled: isAdmin()
   });
+
+  // Get banned words for content moderation
+  const { data: bannedWordsData } = useQuery({
+    queryKey: ["/api/admin/banned-words"],
+    enabled: isAdmin()
+  });
+
+  // Set banned words when data loads
+  useEffect(() => {
+    if (bannedWordsData) {
+      setBannedWords(bannedWordsData.words || "");
+    }
+  }, [bannedWordsData]);
 
   // Update special effects odds
   const updateOddsMutation = useMutation({
@@ -194,6 +209,29 @@ export default function AdminSettings() {
         description: "Failed to toggle platform header status.",
         variant: "destructive"
       });
+    }
+  });
+
+  // Update banned words mutation
+  const updateBannedWordsMutation = useMutation({
+    mutationFn: async (words: string) => {
+      return apiRequest("PUT", "/api/admin/banned-words", { words });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Banned Words Updated",
+        description: "The list of banned words has been updated successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/banned-words"] });
+      setBannedWordsLoading(false);
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update banned words.",
+        variant: "destructive"
+      });
+      setBannedWordsLoading(false);
     }
   });
 
@@ -771,6 +809,67 @@ export default function AdminSettings() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Banned Words Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Moderation</CardTitle>
+              <CardDescription>
+                Manage banned words that automatically set events to private when detected in titles or venue information. Words are case-insensitive.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="banned-words">Banned Words (comma-separated)</Label>
+                <textarea
+                  id="banned-words"
+                  className="w-full min-h-[100px] p-3 border rounded-md resize-y"
+                  placeholder="Enter banned words separated by commas..."
+                  value={bannedWords}
+                  onChange={(e) => setBannedWords(e.target.value)}
+                  data-testid="textarea-banned-words"
+                />
+                <p className="text-xs text-gray-500">
+                  Events containing these words in their title or venue will be automatically set to private.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setBannedWordsLoading(true);
+                    updateBannedWordsMutation.mutate(bannedWords);
+                  }}
+                  disabled={bannedWordsLoading || updateBannedWordsMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-save-banned-words"
+                >
+                  {updateBannedWordsMutation.isPending ? "Saving..." : "Save Banned Words"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setBannedWords(bannedWordsData?.words || "");
+                  }}
+                  disabled={bannedWordsLoading || updateBannedWordsMutation.isPending}
+                  data-testid="button-reset-banned-words"
+                >
+                  Reset
+                </Button>
+              </div>
+
+              {/* Info Box */}
+              <div className="p-4 bg-yellow-50 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-yellow-800">How it works</p>
+                <ul className="text-xs text-yellow-700 space-y-1 ml-4">
+                  <li>• Words are checked against event titles and venue information</li>
+                  <li>• Matching is case-insensitive</li>
+                  <li>• Events with banned words are set to private automatically</li>
+                  <li>• Changes apply to new events only (existing events are not affected)</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
