@@ -1379,11 +1379,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to check for offensive content in text
-  function containsOffensiveContent(text: string): boolean {
-    const offensiveWords = ['nigger', 'faggot', 'fuck', 'nazi'];
+  // Helper function to check for offensive content in text (now async to use database)
+  async function containsOffensiveContent(text: string): Promise<boolean> {
+    const bannedWords = await storage.getBannedWords();
     const lowerText = text.toLowerCase();
-    return offensiveWords.some(word => lowerText.includes(word));
+    return bannedWords.some(word => lowerText.includes(word));
   }
 
   app.post("/api/events", eventCreationRateLimiter, validateBody(insertEventSchema), async (req: AuthenticatedRequest, res) => {
@@ -1427,21 +1427,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let moderationField = '';
       
       // Check event name
-      if (createData.name && containsOffensiveContent(createData.name)) {
+      if (createData.name && await containsOffensiveContent(createData.name)) {
         createData.isPrivate = true;
         moderationTriggered = true;
         moderationField = 'name';
       }
       
       // Check venue address
-      if (createData.venueAddress && containsOffensiveContent(createData.venueAddress)) {
+      if (createData.venueAddress && await containsOffensiveContent(createData.venueAddress)) {
         createData.isPrivate = true;
         moderationTriggered = true;
         moderationField = moderationField ? `${moderationField}, address` : 'address';
       }
       
       // Check venue city
-      if (createData.venueCity && containsOffensiveContent(createData.venueCity)) {
+      if (createData.venueCity && await containsOffensiveContent(createData.venueCity)) {
         createData.isPrivate = true;
         moderationTriggered = true;
         moderationField = moderationField ? `${moderationField}, city` : 'city';
@@ -1545,21 +1545,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let moderationField = '';
       
       // Check if updating name (shouldn't happen in edit mode, but just in case)
-      if (updateData.name && containsOffensiveContent(updateData.name)) {
+      if (updateData.name && await containsOffensiveContent(updateData.name)) {
         updateData.isPrivate = true;
         moderationTriggered = true;
         moderationField = 'name';
       }
       
       // Check venue address (this is locked in edit mode, but check anyway)
-      if (updateData.venueAddress && containsOffensiveContent(updateData.venueAddress)) {
+      if (updateData.venueAddress && await containsOffensiveContent(updateData.venueAddress)) {
         updateData.isPrivate = true;
         moderationTriggered = true;
         moderationField = moderationField ? `${moderationField}, address` : 'address';
       }
       
       // Check venue city (this is locked in edit mode, but check anyway)
-      if (updateData.venueCity && containsOffensiveContent(updateData.venueCity)) {
+      if (updateData.venueCity && await containsOffensiveContent(updateData.venueCity)) {
         updateData.isPrivate = true;
         moderationTriggered = true;
         moderationField = moderationField ? `${moderationField}, city` : 'city';
@@ -3145,6 +3145,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { headerId: req.params.id }
       });
       res.status(500).json({ message: "Failed to toggle platform header" });
+    }
+  });
+
+  // Admin: Get banned words
+  app.get("/api/admin/banned-words", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const bannedWords = await storage.getBannedWords();
+      res.json({ words: bannedWords.join(', ') });
+    } catch (error) {
+      await logError(error, "GET /api/admin/banned-words", { request: req });
+      res.status(500).json({ message: "Failed to get banned words" });
+    }
+  });
+
+  // Admin: Update banned words
+  app.put("/api/admin/banned-words", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { words } = req.body;
+      if (typeof words !== 'string') {
+        return res.status(400).json({ message: "Words must be a string" });
+      }
+
+      // Update the banned words setting
+      await storage.setSystemSetting('banned_words', words, userId);
+      
+      // Get the updated list
+      const bannedWords = await storage.getBannedWords();
+      res.json({ words: bannedWords.join(', ') });
+    } catch (error) {
+      await logError(error, "PUT /api/admin/banned-words", { 
+        request: req,
+        metadata: { wordsLength: req.body.words?.length }
+      });
+      res.status(500).json({ message: "Failed to update banned words" });
     }
   });
 
