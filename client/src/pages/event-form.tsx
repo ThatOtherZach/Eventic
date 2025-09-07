@@ -2303,28 +2303,7 @@ export default function EventForm() {
 
                       {/* Payment Processing Section */}
                       <div className="col-12">
-                        <div
-                          className="border rounded p-3 mb-3"
-                          style={{
-                            backgroundColor: "rgb(249, 249, 249)",
-                            borderColor: "#e0e0e0",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              marginBottom: "12px",
-                            }}
-                          >
-                            <label className="form-label mb-0">
-                              <CreditCard size={20} className="me-2" />
-                              Payment Processing
-                            </label>
-                          </div>
-                          <div style={{ padding: "12px" }}>
-                            <FormField
+                        <FormField
                               control={form.control}
                               name="paymentProcessing"
                               render={({ field }) => (
@@ -2439,8 +2418,6 @@ export default function EventForm() {
                                 </FormItem>
                               )}
                             />
-                          </div>
-                        </div>
                       </div>
 
                       {/* Ticket Preview Section */}
