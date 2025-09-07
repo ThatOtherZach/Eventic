@@ -169,6 +169,7 @@ export const events = pgTable("events", {
   // Payment processing configuration
   paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, Dogecoin, Litecoin
   walletAddress: text("wallet_address"), // Event owner's wallet address for receiving crypto payments
+  paymentProcessingFee: integer("payment_processing_fee").default(0), // Tickets spent on payment configuration (non-refundable)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
