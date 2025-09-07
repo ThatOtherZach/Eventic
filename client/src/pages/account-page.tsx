@@ -165,7 +165,8 @@ export default function AccountPage() {
     onSuccess: () => {
       toast({
         title: "Account deletion scheduled",
-        description: "Your account will be deleted in 90 days. You can cancel this at any time.",
+        description:
+          "Your account will be deleted in 90 days. You can cancel this at any time.",
       });
       refetchDeletionStatus();
     },
@@ -289,7 +290,7 @@ export default function AccountPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Daily Tickets Claimed!",
+        title: "Tickets Claimed!",
         description: data.message,
         variant: "success",
       });
@@ -366,7 +367,10 @@ export default function AccountPage() {
   };
 
   // Helper function to get GPS location
-  const getCurrentLocation = (): Promise<{ latitude: number; longitude: number }> => {
+  const getCurrentLocation = (): Promise<{
+    latitude: number;
+    longitude: number;
+  }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error("Geolocation is not supported by this browser"));
@@ -387,7 +391,7 @@ export default function AccountPage() {
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 60000, // Use cached location up to 1 minute old
-        }
+        },
       );
     });
   };
@@ -420,7 +424,11 @@ export default function AccountPage() {
         }
       }
 
-      const response = await apiRequest("POST", "/api/currency/redeem-code", requestBody);
+      const response = await apiRequest(
+        "POST",
+        "/api/currency/redeem-code",
+        requestBody,
+      );
       const data = await response.json();
 
       if (response.ok) {
@@ -428,7 +436,9 @@ export default function AccountPage() {
         if (secretCode.trim() !== "URM1550N") {
           toast({
             title: "Success!",
-            description: data.message || `Successfully redeemed ${data.ticketAmount} tickets!`,
+            description:
+              data.message ||
+              `Successfully redeemed ${data.ticketAmount} tickets!`,
             variant: "success",
           });
         }
@@ -481,7 +491,7 @@ export default function AccountPage() {
       const basePrice = ticketQuantity * unitPrice;
       const totalDiscount = Math.min(
         reputationDiscount + volumeDiscount + (multiplyAndSave ? 10 : 0),
-        30
+        30,
       );
       const finalPrice = roundToNice(basePrice * (1 - totalDiscount / 100));
 
@@ -489,7 +499,7 @@ export default function AccountPage() {
         // Handle Coinbase payment
         // Add 10 bonus tickets for Coinbase payments
         finalQuantity += 10;
-        
+
         // Create a simplified package for Coinbase
         const coinbasePackage = {
           tickets: ticketQuantity,
@@ -498,29 +508,31 @@ export default function AccountPage() {
           multiplied: multiplyAndSave,
           discount: totalDiscount,
         };
-        
+
         const response = await apiRequest(
           "POST",
           "/api/coinbase/create-charge-custom",
-          coinbasePackage
+          coinbasePackage,
         );
         const data = await response.json();
-        
+
         if (response.ok && data.hostedUrl) {
           // Redirect to Coinbase checkout
           window.location.href = data.hostedUrl;
         } else {
           toast({
             title: "Error",
-            description: data.message || "Coinbase payments are not available at this time",
+            description:
+              data.message ||
+              "Coinbase payments are not available at this time",
             variant: "destructive",
           });
         }
       } else {
         // Handle Stripe payment
-        // Add 2 bonus tickets for Stripe payments
+        // Add 4 bonus tickets for Stripe payments
         finalQuantity += 2;
-        
+
         const response = await apiRequest(
           "POST",
           "/api/currency/create-purchase",
@@ -529,7 +541,7 @@ export default function AccountPage() {
             hasDiscount: multiplyAndSave,
             reputationDiscount: reputationDiscount,
             volumeDiscount: volumeDiscount,
-            stripeBonus: 2,
+            stripeBonus: 4,
           },
         );
         const data = await response.json();
@@ -616,7 +628,11 @@ export default function AccountPage() {
                 <button
                   className="btn btn-outline-danger btn-sm"
                   onClick={() => {
-                    if (confirm("Are you sure you want to schedule your account for deletion? This action can be cancelled within 90 days.")) {
+                    if (
+                      confirm(
+                        "Are you sure you want to schedule your account for deletion? This action can be cancelled within 90 days.",
+                      )
+                    ) {
                       scheduleDeleteMutation.mutate();
                     }
                   }}
@@ -624,7 +640,9 @@ export default function AccountPage() {
                   data-testid="button-delete-account"
                 >
                   <Trash2 className="me-1" size={16} />
-                  {scheduleDeleteMutation.isPending ? "Scheduling..." : "Delete Account"}
+                  {scheduleDeleteMutation.isPending
+                    ? "Scheduling..."
+                    : "Delete Account"}
                 </button>
               )}
               <PastEvents />
@@ -737,7 +755,7 @@ export default function AccountPage() {
             <div className="card-body py-3">
               <h5 className="card-title mb-3 d-flex align-items-center gap-2">
                 <Wallet size={20} />
-                Credits Wallet
+                Tickets Balance
               </h5>
 
               {/* Balance Display */}
@@ -749,7 +767,7 @@ export default function AccountPage() {
                   <h2 className="mb-0 text-danger">
                     {balance ? Math.floor(parseFloat(balance.balance)) : 0}
                   </h2>
-                  <span className="text-muted">Credits</span>
+                  <span className="text-muted">Tickets</span>
                   {!claimStatus?.canClaim && claimStatus?.nextClaimAt && (
                     <span className="badge bg-success ms-2">
                       <CheckCircle size={12} className="me-1" />
@@ -759,9 +777,9 @@ export default function AccountPage() {
                 </div>
                 <div className="mt-2">
                   <small className="text-muted" style={{ fontSize: "0.85rem" }}>
-                    Credits are used to create and boost events, and to charge
-                    your ticket for better special-effect odds. You can collect
-                    free credits every 12 hours.
+                    Tickets are used to create and boost events, and for
+                    charging to get better odds of a special-effect (when
+                    enabled). You can collect free tickets every 12 hours.
                   </small>
                 </div>
                 {/* Daily Claim Button - Show only when not claimed */}
@@ -774,7 +792,7 @@ export default function AccountPage() {
                     >
                       {claimDailyMutation.isPending
                         ? "Okay one sec..."
-                        : "Claim Credits"}
+                        : "Claim Tickets"}
                     </button>
                   </div>
                 )}
@@ -900,7 +918,7 @@ export default function AccountPage() {
                           >
                             Heads up! Hosting events and getting good ratings
                             improves your discount level. You can save up to 20%
-                            on credits.
+                            on tickets.
                           </small>
                         </div>
                       </div>
@@ -1516,16 +1534,20 @@ export default function AccountPage() {
                         {/* Total ticket count */}
                         <div className="mb-2" style={{ fontSize: "1.1rem" }}>
                           <span className="fw-semibold text-success">
-                            +{(() => {
+                            +
+                            {(() => {
                               const baseBonus = calculateBonus(ticketQuantity);
-                              const paymentBonus = paymentMethod === "Coinbase" ? 10 : 2;
+                              const paymentBonus =
+                                paymentMethod === "Coinbase" ? 10 : 2;
                               return ticketQuantity + baseBonus + paymentBonus;
                             })()}{" "}
                             Tickets
                           </span>
                           {paymentMethod && (
                             <span className="text-muted small ms-2">
-                              (includes {paymentMethod === "Coinbase" ? "10" : "2"} {paymentMethod} bonus)
+                              (includes{" "}
+                              {paymentMethod === "Coinbase" ? "10" : "2"}{" "}
+                              {paymentMethod} bonus)
                             </span>
                           )}
                         </div>
@@ -1586,16 +1608,19 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-
                     {/* Payment Method Selection */}
                     <div className="border-top mt-4 pt-4">
                       <div className="mb-3">
-                        <label className="form-label small text-muted">Payment Method</label>
+                        <label className="form-label small text-muted">
+                          Payment Method
+                        </label>
                         <div className="row g-2">
                           <div className="col-6">
                             <button
                               className={`btn w-100 py-2 d-flex align-items-center justify-content-center gap-2 ${
-                                paymentMethod === "Stripe" ? "btn-primary" : "btn-outline-secondary"
+                                paymentMethod === "Stripe"
+                                  ? "btn-primary"
+                                  : "btn-outline-secondary"
                               }`}
                               onClick={() => setPaymentMethod("Stripe")}
                               data-testid="button-payment-stripe"
@@ -1611,7 +1636,9 @@ export default function AccountPage() {
                           <div className="col-6">
                             <button
                               className={`btn w-100 py-2 d-flex align-items-center justify-content-center gap-2 ${
-                                paymentMethod === "Coinbase" ? "btn-primary" : "btn-outline-secondary"
+                                paymentMethod === "Coinbase"
+                                  ? "btn-primary"
+                                  : "btn-outline-secondary"
                               }`}
                               onClick={() => setPaymentMethod("Coinbase")}
                               data-testid="button-payment-coinbase"
@@ -1633,9 +1660,11 @@ export default function AccountPage() {
                         data-testid="button-checkout"
                         style={{ fontSize: "1.1rem" }}
                       >
-                        {isPurchasing ? "Processing..." : `Checkout with ${paymentMethod}`}
+                        {isPurchasing
+                          ? "Processing..."
+                          : `Checkout with ${paymentMethod}`}
                       </button>
-                      
+
                       {/* Stats for nerds link with pricing info */}
                       <div className="d-flex justify-content-end mt-3">
                         <Link
@@ -1644,7 +1673,8 @@ export default function AccountPage() {
                           style={{ fontSize: "0.75rem" }}
                           data-testid="link-stats-nerds"
                         >
-                          Stats for nerds: {demandData && (
+                          Stats for nerds:{" "}
+                          {demandData && (
                             <>
                               ${demandData.currentUnitPrice.toFixed(3)}/credit
                               {demandData.demandMultiplier !== 1 && (
