@@ -16,6 +16,7 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { ArrowLeft, ArrowRight, CreditCard, Image, Lock, Globe } from "lucide-react";
+import ticketPreviewIcon from "@assets/image_1757235624831.png";
 import { Textarea } from "@/components/ui/textarea";
 import { countCharacters, extractHashtags } from "@/lib/text-formatter";
 import { countries } from "@/lib/countries";
@@ -2237,7 +2238,16 @@ export default function EventForm() {
                       <div className="col-12">
                         <div className="mb-4">
                           <label className="form-label">
-                            <CreditCard size={18} className="me-2" />
+                            <img
+                              src={ticketPreviewIcon}
+                              alt=""
+                              style={{
+                                width: "18px",
+                                height: "18px",
+                                marginRight: "8px",
+                                verticalAlign: "middle",
+                              }}
+                            />
                             Ticket Preview
                           </label>
                           <p className="text-muted small mb-3">
