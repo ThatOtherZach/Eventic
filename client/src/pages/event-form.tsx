@@ -147,6 +147,7 @@ export default function EventForm() {
       timezone: "America/New_York",
       rollingTimezone: false,
       paymentProcessing: "None",
+      walletAddress: "",
     },
   });
 
@@ -507,6 +508,7 @@ export default function EventForm() {
       huntCode: data.treasureHunt ? generateHuntCode() : undefined,
       rollingTimezone: data.rollingTimezone || false,
       paymentProcessing: data.paymentProcessing || "None",
+      walletAddress: data.walletAddress || undefined,
     };
 
     // If in edit mode, perform update with proper validation
@@ -554,6 +556,7 @@ export default function EventForm() {
         // Preserve allowMinting if it was previously enabled (one-way editable)
         allowMinting: event?.allowMinting || data.allowMinting || false,
         paymentProcessing: data.paymentProcessing || "None",
+        walletAddress: data.walletAddress || undefined,
       };
 
       updateEventMutation.mutate(updateData);
@@ -2288,28 +2291,54 @@ export default function EventForm() {
                                     </select>
                                   </FormControl>
                                   {field.value !== "None" && (
-                                    <div className="mt-3 p-3 bg-light border rounded">
-                                      <div className="d-flex align-items-center justify-content-between">
-                                        <div>
-                                          <strong>{field.value} Wallet Integration</strong>
-                                          <div className="text-muted small mt-1">
-                                            Each ticket holder gets a {field.value} wallet address
+                                    <>
+                                      <div className="mt-3 p-3 bg-light border rounded">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                          <div>
+                                            <strong>{field.value} Payment Integration</strong>
+                                            <div className="text-muted small mt-1">
+                                              Ticket holders can pay with their {field.value} wallet
+                                            </div>
+                                          </div>
+                                          <div className="text-end">
+                                            <span className={`badge ${
+                                              field.value === "Ethereum" || field.value === "Bitcoin"
+                                                ? "bg-warning text-dark"
+                                                : "bg-info text-dark"
+                                            } fs-6`}>
+                                              {field.value === "Ethereum" || field.value === "Bitcoin"
+                                                ? "100"
+                                                : "50"} tickets
+                                            </span>
+                                            <div className="text-muted small mt-1">One-time cost</div>
                                           </div>
                                         </div>
-                                        <div className="text-end">
-                                          <span className={`badge ${
-                                            field.value === "Ethereum" || field.value === "Bitcoin"
-                                              ? "bg-warning text-dark"
-                                              : "bg-info text-dark"
-                                          } fs-6`}>
-                                            {field.value === "Ethereum" || field.value === "Bitcoin"
-                                              ? "100"
-                                              : "50"} tickets
-                                          </span>
-                                          <div className="text-muted small mt-1">One-time cost</div>
-                                        </div>
                                       </div>
-                                    </div>
+                                      
+                                      <FormField
+                                        control={form.control}
+                                        name="walletAddress"
+                                        render={({ field: walletField }) => (
+                                          <FormItem className="mt-3">
+                                            <FormLabel>Your {field.value} Wallet Address</FormLabel>
+                                            <FormControl>
+                                              <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder={`Enter your ${field.value} wallet address`}
+                                                {...walletField}
+                                                value={walletField.value || ""}
+                                                data-testid="input-wallet-address"
+                                              />
+                                            </FormControl>
+                                            <div className="form-text">
+                                              This is where ticket payments will be sent
+                                            </div>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </>
                                   )}
                                   <div className="form-text mt-2">
                                     {field.value === "None" ? (
@@ -2319,8 +2348,9 @@ export default function EventForm() {
                                       </>
                                     ) : (
                                       <>
-                                        Enable crypto payments for your event. Attendees can receive
-                                        payments directly to their {field.value} wallet. This is a
+                                        Enable {field.value} payments for your event. Ticket holders can
+                                        pay for their tickets with {field.value}. We prepare the transaction
+                                        with a one-click "Pay with {field.value}" button. This is a
                                         one-time setup fee, not charged per ticket.
                                       </>
                                     )}

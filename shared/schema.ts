@@ -168,6 +168,7 @@ export const events = pgTable("events", {
   hashtags: text("hashtags").array().default(sql`ARRAY[]::text[]`), // Array of hashtags found in description
   // Payment processing configuration
   paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, Dogecoin, Litecoin
+  walletAddress: text("wallet_address"), // Event owner's wallet address for receiving crypto payments
   createdAt: timestamp("created_at").defaultNow(),
 });
 
