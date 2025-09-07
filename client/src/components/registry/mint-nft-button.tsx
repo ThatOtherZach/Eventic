@@ -26,6 +26,7 @@ interface MintStatus {
 
 export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
   const [showMintModal, setShowMintModal] = useState(false);
+  const [walletAddress, setWalletAddress] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [additionalMetadata, setAdditionalMetadata] = useState("");
@@ -74,6 +75,11 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
 
   const mintMutation = useMutation({
     mutationFn: async () => {
+      // Validate wallet address format
+      if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        throw new Error("Please enter a valid Ethereum wallet address");
+      }
+      
       // Simple mint - just save to registry without any media generation
       const metadata: any = {
         imageUrl: event.imageUrl || '',  // Use event image as placeholder
@@ -89,18 +95,20 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
       }
 
       const response = await apiRequest("POST", `/api/tickets/${ticket.id}/mint`, {
+        walletAddress: walletAddress,
         title: title || undefined,
         description: description || undefined,
         metadata: JSON.stringify(metadata)
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
-        title: "Success!",
-        description: "Your ticket has been minted as an NFT",
+        title: "NFT Minting Initiated!",
+        description: `Your NFT will be minted to ${walletAddress}. Metadata URL: ${data.metadataUrl}`,
       });
       setShowMintModal(false);
+      setWalletAddress("");
       queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticket.id}/mint-status`] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/registry"] });
     },
@@ -172,8 +180,24 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           </ModalHeader>
           <ModalBody>
             <div className="alert alert-info mb-3" role="alert">
-              <strong>Note:</strong> Once minted, your ticket becomes a permanent NFT record. 
-              A 2.69% royalty fee applies to future sales (75% goes to the event creator).
+              <strong>Cost:</strong> 12 tickets will be charged to mint this NFT.<br/>
+              <strong>Note:</strong> Your NFT will be minted on Coinbase's Base L2 blockchain. The NFT metadata will point to your permanent registry record.
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Wallet Address <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="0x..."
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+                data-testid="input-wallet-address"
+                required
+              />
+              <small className="text-muted">
+                Enter your Ethereum wallet address (e.g., from Coinbase Wallet, MetaMask, etc.)
+              </small>
             </div>
 
             <div className="mb-3">
@@ -236,7 +260,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
               ) : (
                 <>
                   <Sparkles className="me-2" size={16} />
-                  Mint Ticket
+                  Mint NFT (12 Tickets)
                 </>
               )}
             </Button>
