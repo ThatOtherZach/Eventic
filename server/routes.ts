@@ -1499,8 +1499,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Deduct tickets from user balance
-        await storage.updateUserBalance(userId, -totalTicketsRequired);
+        // Deduct tickets from user balance (eventId will be set after creation)
+        await storage.debitUserAccount(userId, totalTicketsRequired, "Event Creation", {});
       }
       
       // Body is already validated by middleware
@@ -1677,7 +1677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Deduct tickets from user balance
-          await storage.updateUserBalance(userId, -totalTicketsRequired);
+          await storage.debitUserAccount(userId, totalTicketsRequired, "Event Update", { eventId: req.params.id });
         }
       } else if (paymentFeeAdjustment > 0) {
         // If only adding payment processing without changing maxTickets
@@ -1691,7 +1691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Deduct payment fee from user balance
-          await storage.updateUserBalance(userId, -paymentFeeAdjustment);
+          await storage.debitUserAccount(userId, paymentFeeAdjustment, "Payment Processing Fee", { eventId: req.params.id });
         }
       }
       
@@ -3592,7 +3592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check user's ticket balance for minting cost (12 tickets)
       const MINT_COST = 12;
-      const userBalance = await storage.getAccountBalance(userId);
+      const userBalance = await storage.getUserBalance(userId);
       if (!userBalance || parseFloat(userBalance.balance) < MINT_COST) {
         return res.status(400).json({ 
           message: `Insufficient tickets. You need ${MINT_COST} tickets to mint an NFT. Current balance: ${userBalance?.balance || 0}` 
@@ -3600,12 +3600,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Debit tickets for minting
-      await storage.debitAccount(
+      await storage.debitUserAccount(
         userId,
         MINT_COST,
         "NFT Minting",
-        ticketId,
-        "nft_mint"
+        { ticketId, type: "nft_mint" }
       );
 
       // Get event details
@@ -3634,13 +3633,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user details for preservation
       const creator = await storage.getUser(event.userId || userId);
       const owner = await storage.getUser(userId);
-      
-      // Copy images to permanent registry folder to survive 69-day deletion
-      const objectStorageService = new ObjectStorageService();
-      const permanentEventImageUrl = await objectStorageService.copyImageToRegistry(event.imageUrl);
-      const permanentStickerUrl = await objectStorageService.copyImageToRegistry(event.stickerUrl);
-      const permanentNftMediaUrl = await objectStorageService.copyImageToRegistry(ticket.nftMediaUrl);
-      const permanentUserImageUrl = imageUrl ? await objectStorageService.copyImageToRegistry(imageUrl) : null;
       
       // Fetch actual image data as base64 for permanent storage
       const fetchImageAsBase64 = async (url: string | null): Promise<string | null> => {
@@ -3718,7 +3710,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             useCount: ticket.useCount
           }
         }),
-        imageUrl: permanentUserImageUrl || null,
+        imageUrl: imageUrl || null, // Keep original URL for OpenSea metadata
+        
+        // Base64 image data for permanent preservation
+        eventImageData: eventImageData || null,
+        eventStickerData: eventStickerData || null,
+        ticketBackgroundData: ticketBackgroundData || null,
+        ticketGifData: ticketGifData || null,
         
         // Complete ticket data preservation
         ticketNumber: ticket.ticketNumber,
@@ -3734,7 +3732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketUsageCount: ticket.useCount || 0,
         ticketMaxUses: 1, // maxUses not tracked on tickets, only events
         ticketIsGolden: ticket.isGoldenTicket || false,
-        ticketNftMediaUrl: permanentNftMediaUrl || null,
+        ticketNftMediaUrl: ticket.nftMediaUrl || null, // Keep original URL
         ticketQrCode: ticket.qrData,
         ticketValidationCode: ticket.validationCode || null,
         ticketVoteCount: ticket.voteCount || 0,
@@ -3760,7 +3758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventTime: event.time,
         eventEndDate: event.endDate || null,
         eventEndTime: event.endTime || null,
-        eventImageUrl: permanentEventImageUrl || null,
+        eventImageUrl: event.imageUrl || null, // Keep original URL for reference
         eventMaxTickets: event.maxTickets || null,
         eventTicketsSold: 0, // ticketsSold calculated separately
         eventTicketPrice: event.ticketPrice || null,
@@ -3775,13 +3773,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eventP2pValidation: event.p2pValidation || false,
         eventEnableVoting: event.enableVoting || false,
         eventCreatedAt: event.createdAt || new Date(),
-        eventStickerUrl: permanentStickerUrl || null,
+        eventStickerUrl: event.stickerUrl || null, // Keep original URL for reference
+        eventTicketBackgroundUrl: event.ticketBackgroundUrl || event.imageUrl || null, // Keep original URL
         eventSpecialEffectsEnabled: (event as any).specialEffectsEnabled || false,
         eventGeofence: (event as any).geofence ? JSON.stringify((event as any).geofence) : null,
         eventIsAdminCreated: (event as any).isAdminCreated || false,
         eventContactDetails: event.contactDetails || null,
         eventCountry: event.country || null,
-        eventTicketBackgroundUrl: event.ticketBackgroundUrl || null,
         eventEarlyValidation: event.earlyValidation || "Allow at Anytime",
         eventMaxUses: event.maxUses || 1,
         eventStickerOdds: event.stickerOdds || 25,
@@ -3800,12 +3798,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         creatorDisplayName: creator?.displayName || null,
         ownerUsername: owner?.displayName || "unknown",
         ownerDisplayName: owner?.displayName || null,
-        
-        // Binary data for complete self-contained record
-        eventImageData: eventImageData || null,
-        eventStickerData: eventStickerData || null,
-        ticketBackgroundData: ticketBackgroundData || null,
-        ticketGifData: ticketGifData || null,
         
         // Sync tracking
         synced: false,
@@ -3847,14 +3839,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
           
           if (mintResult.success) {
-            // Update registry record with on-chain data
-            await storage.updateRegistryRecord(registryRecord.id, {
-              nftMinted: true,
-              nftMintingStatus: "completed",
-              nftTransactionHash: mintResult.transactionHash,
-              nftTokenId: mintResult.tokenId,
-              nftContractAddress: process.env.NFT_CONTRACT_ADDRESS
-            });
+            // TODO: Update registry record with on-chain data
+            // Currently no updateRegistryRecord method in storage
+            // await storage.updateRegistryRecord(registryRecord.id, {
+            //   nftMinted: true,
+            //   nftMintingStatus: "completed",
+            //   nftTransactionHash: mintResult.transactionHash,
+            //   nftTokenId: mintResult.tokenId,
+            //   nftContractAddress: process.env.NFT_CONTRACT_ADDRESS
+            // });
             
             onChainResult = {
               success: true,
@@ -3865,10 +3858,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           } else {
             // On-chain minting failed but registry record still created
-            await storage.updateRegistryRecord(registryRecord.id, {
-              nftMintingStatus: "failed",
-              nftMintError: mintResult.error
-            });
+            // TODO: Update registry record status
+            // await storage.updateRegistryRecord(registryRecord.id, {
+            //   nftMintingStatus: "failed",
+            //   nftMintError: mintResult.error
+            // });
             
             onChainResult = {
               success: false,
