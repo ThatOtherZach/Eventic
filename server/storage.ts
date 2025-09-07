@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
@@ -250,6 +250,11 @@ export interface IStorage {
   updatePlatformHeader(id: string, header: Partial<InsertPlatformHeader>): Promise<PlatformHeader | undefined>;
   deletePlatformHeader(id: string): Promise<boolean>;
   togglePlatformHeaderActive(id: string): Promise<PlatformHeader | undefined>;
+  
+  // System Settings Management
+  getSystemSetting(key: string): Promise<SystemSetting | undefined>;
+  setSystemSetting(key: string, value: string, userId?: string): Promise<SystemSetting>;
+  getBannedWords(): Promise<string[]>;
 }
 
 interface ValidationSession {
@@ -4688,6 +4693,74 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error toggling platform header active state:', error);
       return undefined;
+    }
+  }
+  
+  // System Settings Management
+  async getSystemSetting(key: string): Promise<SystemSetting | undefined> {
+    try {
+      const [setting] = await db.select()
+        .from(systemSettings)
+        .where(eq(systemSettings.key, key))
+        .limit(1);
+      return setting || undefined;
+    } catch (error) {
+      console.error('Error getting system setting:', error);
+      return undefined;
+    }
+  }
+  
+  async setSystemSetting(key: string, value: string, userId?: string): Promise<SystemSetting> {
+    try {
+      // Try to update existing setting first
+      const existing = await this.getSystemSetting(key);
+      
+      if (existing) {
+        const [updated] = await db.update(systemSettings)
+          .set({ 
+            value,
+            updatedAt: new Date(),
+            updatedBy: userId
+          })
+          .where(eq(systemSettings.key, key))
+          .returning();
+        return updated;
+      }
+      
+      // Create new setting if it doesn't exist
+      const [created] = await db.insert(systemSettings)
+        .values({
+          key,
+          value,
+          description: key === 'banned_words' ? 'Comma-separated list of banned words for content moderation' : undefined,
+          updatedBy: userId
+        })
+        .returning();
+      
+      return created;
+    } catch (error) {
+      console.error('Error setting system setting:', error);
+      throw error;
+    }
+  }
+  
+  async getBannedWords(): Promise<string[]> {
+    try {
+      const setting = await this.getSystemSetting('banned_words');
+      if (!setting || !setting.value) {
+        // Return default banned words if not configured
+        return ['nigger', 'faggot', 'fuck', 'nazi'];
+      }
+      
+      // Parse comma-separated values
+      return setting.value
+        .split(',')
+        .map(word => word.trim().toLowerCase())
+        .filter(word => word.length > 0);
+    } catch (error) {
+      console.error('Error getting banned words:', error);
+      // Return default list on error
+      return ['nigger', 'faggot', 'fuck', 'nazi'];
     }
   }
 }

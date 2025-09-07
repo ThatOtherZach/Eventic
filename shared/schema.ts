@@ -606,6 +606,16 @@ export const platformHeaders = pgTable("platform_headers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// System Settings table for global configuration
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(), // Setting key (e.g., 'banned_words')
+  value: text("value").notNull(), // Setting value (comma-separated for lists)
+  description: text("description"), // Description of the setting
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: varchar("updated_by"), // User ID who last updated
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -960,6 +970,11 @@ export const insertPlatformHeaderSchema = createInsertSchema(platformHeaders).om
   updatedAt: true,
 });
 
+export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -1026,6 +1041,8 @@ export type InsertScheduledJob = z.infer<typeof insertScheduledJobSchema>;
 export type ScheduledJob = typeof scheduledJobs.$inferSelect;
 export type InsertPlatformHeader = z.infer<typeof insertPlatformHeaderSchema>;
 export type PlatformHeader = typeof platformHeaders.$inferSelect;
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type SystemSetting = typeof systemSettings.$inferSelect;
 
 // Role and permission schemas
 export const insertRoleSchema = createInsertSchema(roles).omit({
