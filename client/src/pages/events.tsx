@@ -7,6 +7,7 @@ import { TicketPreviewModal } from "@/components/tickets/ticket-preview-modal";
 import { FeaturedCarousel } from "@/components/featured/featured-carousel";
 import { FeaturedGrid } from "@/components/featured/featured-grid";
 import { Plus, LogIn } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import type { Event } from "@shared/schema";
 
 export default function Events() {
@@ -15,6 +16,13 @@ export default function Events() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  
+  // Fetch random platform header
+  const { data: platformHeader } = useQuery({
+    queryKey: ["/api/platform-headers/random"],
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5 // Cache for 5 minutes
+  });
 
   // Set SEO meta tags for events listing page
   useEffect(() => {
@@ -102,8 +110,12 @@ export default function Events() {
       {/* Header Section */}
       <div className="row align-items-center mb-4">
         <div className="col-12 col-md-8 mobile-mb">
-          <h2 className="h3 fw-semibold text-dark mb-2">Event Management</h2>
-          <p className="text-muted mb-0">Browse events and purchase tickets</p>
+          <h2 className="h3 fw-semibold text-dark mb-2">
+            {platformHeader?.title || "Event Management"}
+          </h2>
+          <p className="text-muted mb-0">
+            {platformHeader?.subtitle || "Browse events and purchase tickets"}
+          </p>
         </div>
         <div className="col-12 col-md-4 text-md-end">
           {user ? (
