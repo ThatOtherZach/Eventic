@@ -19,6 +19,7 @@ import {
 import QRCode from "qrcode";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
 import batteryIcon from "@assets/image_1756977732648.png";
+import clockIcon from "@assets/image_1757231183487.png";
 import type { Ticket, Event } from "@shared/schema";
 
 interface ValidationSession {
@@ -1109,7 +1110,17 @@ export default function TicketViewPage(): React.ReactElement {
                           </>
                         ) : !timeValidation.valid ? (
                           <>
-                            <Clock size={18} className="me-2" />
+                            <img
+                              src={clockIcon}
+                              alt=""
+                              width="18"
+                              height="18"
+                              className="me-2"
+                              style={{
+                                display: "inline-block",
+                                verticalAlign: "text-bottom",
+                              }}
+                            />
                             {timeValidation.message?.includes("begins")
                               ? "Please Wait"
                               : "Expired"}
@@ -1461,7 +1472,17 @@ export default function TicketViewPage(): React.ReactElement {
                         ticket.isValidated
                       ) ? (
                       <>
-                        <Clock size={18} className="me-2" />
+                        <img
+                          src={clockIcon}
+                          alt=""
+                          width="18"
+                          height="18"
+                          className="me-2"
+                          style={{
+                            display: "inline-block",
+                            verticalAlign: "text-bottom",
+                          }}
+                        />
                         {timeValidation.message?.includes("begins")
                           ? "Please Wait"
                           : "Expired"}
