@@ -595,6 +595,17 @@ export const scheduledJobs = pgTable("scheduled_jobs", {
   completedAt: timestamp("completed_at"),
 });
 
+// Platform Headers table for dynamic homepage content
+export const platformHeaders = pgTable("platform_headers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  subtitle: text("subtitle").notNull(),
+  active: boolean("active").default(true).notNull(),
+  displayOrder: integer("display_order"), // Optional ordering if needed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -943,6 +954,12 @@ export const insertScheduledJobSchema = createInsertSchema(scheduledJobs).omit({
   attempts: true,
 });
 
+export const insertPlatformHeaderSchema = createInsertSchema(platformHeaders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
@@ -1007,6 +1024,8 @@ export type InsertTicketPurchase = z.infer<typeof insertTicketPurchaseSchema>;
 export type TicketPurchase = typeof ticketPurchases.$inferSelect;
 export type InsertScheduledJob = z.infer<typeof insertScheduledJobSchema>;
 export type ScheduledJob = typeof scheduledJobs.$inferSelect;
+export type InsertPlatformHeader = z.infer<typeof insertPlatformHeaderSchema>;
+export type PlatformHeader = typeof platformHeaders.$inferSelect;
 
 // Role and permission schemas
 export const insertRoleSchema = createInsertSchema(roles).omit({
