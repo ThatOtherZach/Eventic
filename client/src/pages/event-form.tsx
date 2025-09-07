@@ -20,6 +20,7 @@ import ticketPreviewIcon from "@assets/image_1757235624831.png";
 import goldenTicketIcon from "@assets/utopia_smiley_1757235878527.png";
 import specialEffectsIcon from "@assets/display_properties-5_1757236054502.png";
 import customStickerIcon from "@assets/wm-4_1757236109199.png";
+import mintingIcon from "@assets/briefcase-4_1757236135278.png";
 import { Textarea } from "@/components/ui/textarea";
 import { countCharacters, extractHashtags } from "@/lib/text-formatter";
 import { countries } from "@/lib/countries";
@@ -2734,10 +2735,17 @@ export default function EventForm() {
                                       className="form-check-label"
                                       htmlFor="allowMinting"
                                     >
-                                      <span className="badge bg-info text-dark me-2">
-                                        🎨
-                                      </span>
-                                      Allow Minting
+                                      <img
+                                        src={mintingIcon}
+                                        alt=""
+                                        style={{
+                                          width: "20px",
+                                          height: "20px",
+                                          marginRight: "8px",
+                                          verticalAlign: "middle",
+                                        }}
+                                      />
+                                      Allow Digital Collectable Minting
                                       {isEditMode && event?.allowMinting && (
                                         <span className="text-muted ms-2">
                                           (cannot be disabled once saved)
