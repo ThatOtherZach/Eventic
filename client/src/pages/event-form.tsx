@@ -1702,8 +1702,8 @@ export default function EventForm() {
                               </div>
                             </div>
 
-                            {/* Admin-only Disable Ticket Sales checkbox - Show here only when creating */}
-                            {isAdmin && !isEditMode && (
+                            {/* Admin-only Disable Ticket Sales checkbox - Show only when editing */}
+                            {isAdmin && isEditMode && (
                               <div className="row mt-3">
                                 <div className="col-12">
                                   <FormField
