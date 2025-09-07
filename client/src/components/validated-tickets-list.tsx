@@ -118,7 +118,16 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
   return (
     <div>
       <h5 className="card-title mb-3">
-        <Ticket size={20} className="me-2" />
+        <img
+          src={singleTicketIcon}
+          alt=""
+          style={{
+            width: "20px",
+            height: "20px",
+            marginRight: "8px",
+            verticalAlign: "middle",
+          }}
+        />
         Validated Tickets ({validatedTickets?.length || 0})
       </h5>
       {!validatedTickets || validatedTickets.length === 0 ? (
