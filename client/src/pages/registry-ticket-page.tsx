@@ -148,7 +148,7 @@ export function RegistryTicketPage() {
     scheduledDeletion: null, // NFT records are never deleted
     paymentCurrencies: null,
     paymentProcessingFee: null,
-    paymentProcessing: false,
+    paymentProcessing: 'none',
     walletAddress: null,
   };
 
