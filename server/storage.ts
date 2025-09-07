@@ -2107,6 +2107,26 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
+      // Return unvalidated capacity tickets to event owner (but NOT payment processing fees)
+      const validatedTickets = eventTickets.filter(ticket => ticket.isValidated);
+      const unvalidatedCount = eventTickets.length - validatedTickets.length;
+      
+      if (event.userId && event.maxTickets && unvalidatedCount > 0) {
+        // Calculate tickets to return: unvalidated capacity tickets only
+        // Do NOT return the payment processing fee
+        const ticketsToReturn = Math.min(unvalidatedCount, event.maxTickets || 0);
+        
+        if (ticketsToReturn > 0) {
+          try {
+            // Return tickets to event owner
+            await this.updateUserBalance(event.userId, ticketsToReturn);
+            console.log(`[ARCHIVE] Returned ${ticketsToReturn} unvalidated capacity tickets to event owner ${event.userId} (payment fee of ${event.paymentProcessingFee || 0} tickets not returned)`);
+          } catch (error) {
+            console.error(`[ARCHIVE] Failed to return tickets to event owner ${event.userId}:`, error);
+          }
+        }
+      }
+      
       // Process refunds for unvalidated tickets before archiving
       const unvalidatedTickets = eventTickets.filter(ticket => !ticket.isValidated);
       if (unvalidatedTickets.length > 0) {
