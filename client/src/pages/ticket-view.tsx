@@ -828,6 +828,69 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           )}
 
+          {/* Crypto Payment Section - Only show if event has crypto payment enabled */}
+          {event.ticketPrice && parseFloat(event.ticketPrice.toString()) > 0 && 
+           event.paymentProcessing && event.paymentProcessing !== "None" && 
+           event.walletAddress && !ticket.isValidated && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <h6 className="card-title mb-3 d-flex align-items-center">
+                  💳 Crypto Payment
+                </h6>
+                <p className="text-muted small mb-3">
+                  Pay for your ticket using {event.paymentProcessing}
+                </p>
+                <div className="d-grid gap-2">
+                  {event.paymentProcessing === "Bitcoin" && (
+                    <button 
+                      className="btn btn-warning"
+                      onClick={() => {
+                        // Will implement payment logic here
+                        toast({
+                          title: "Payment Feature Coming Soon",
+                          description: "Bitcoin payment will be available shortly",
+                        });
+                      }}
+                    >
+                      ₿ Pay with Bitcoin
+                    </button>
+                  )}
+                  {event.paymentProcessing === "Ethereum" && (
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => {
+                        // Will implement payment logic here
+                        toast({
+                          title: "Payment Feature Coming Soon",
+                          description: "Ethereum payment will be available shortly",
+                        });
+                      }}
+                    >
+                      Ξ Pay with Ethereum
+                    </button>
+                  )}
+                  {event.paymentProcessing === "USDC" && (
+                    <button 
+                      className="btn btn-success"
+                      onClick={() => {
+                        // Will implement payment logic here
+                        toast({
+                          title: "Payment Feature Coming Soon",
+                          description: "USDC payment will be available shortly",
+                        });
+                      }}
+                    >
+                      $ Pay with USDC
+                    </button>
+                  )}
+                </div>
+                <p className="text-muted small mt-2 mb-0">
+                  Amount: ${event.ticketPrice} USD
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Vote Count Display - Only for voting-enabled events */}
           {event.enableVoting && (
             <div className="card mb-4">
