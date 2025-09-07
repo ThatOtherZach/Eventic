@@ -546,6 +546,8 @@ export default function EventForm() {
         longitude: longitude ? String(longitude) : undefined,
         geofence: watchedValues.geofence || false,
         rollingTimezone: data.rollingTimezone || false,
+        // Preserve allowMinting if it was previously enabled (one-way editable)
+        allowMinting: event?.allowMinting || data.allowMinting || false,
       };
 
       updateEventMutation.mutate(updateData);
@@ -2710,7 +2712,6 @@ export default function EventForm() {
                                       onChange={(e) =>
                                         field.onChange(e.target.checked)
                                       }
-                                      disabled={isEditMode && field.value} // Disable if already enabled in edit mode
                                       data-testid="checkbox-allow-minting"
                                     />
                                     <label
@@ -2721,9 +2722,9 @@ export default function EventForm() {
                                         🎨
                                       </span>
                                       Allow Minting
-                                      {isEditMode && field.value && (
+                                      {isEditMode && event?.allowMinting && (
                                         <span className="text-muted ms-2">
-                                          (cannot be disabled)
+                                          (cannot be disabled once saved)
                                         </span>
                                       )}
                                     </label>
@@ -2735,10 +2736,10 @@ export default function EventForm() {
                                     accessible if enabled. Digital collectible
                                     will be issued on the Coinbase L2 network
                                     (Base, Ethereum)
-                                    {isEditMode && !field.value
+                                    {isEditMode && !event?.allowMinting
                                       ? ". This can be enabled after event creation, but once enabled it cannot be disabled"
-                                      : isEditMode && field.value
-                                        ? ". This feature has been enabled and cannot be disabled"
+                                      : isEditMode && event?.allowMinting
+                                        ? ". Once saved with minting enabled, it cannot be disabled"
                                         : ""}.
                                   </div>
                                   <FormMessage />
