@@ -20,6 +20,7 @@ import QRCode from "qrcode";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
 import batteryIcon from "@assets/image_1756977732648.png";
 import clockIcon from "@assets/image_1757231183487.png";
+import gearIcon from "@assets/image_1757231239743.png";
 import type { Ticket, Event } from "@shared/schema";
 
 interface ValidationSession {
@@ -947,7 +948,17 @@ export default function TicketViewPage(): React.ReactElement {
                 <div>
                   <div className="alert alert-info mb-3">
                     <h6 className="mb-2">
-                      <RefreshCw size={18} className="me-2" />
+                      <img
+                        src={gearIcon}
+                        alt=""
+                        width="18"
+                        height="18"
+                        className="me-2"
+                        style={{
+                          display: "inline-block",
+                          verticalAlign: "text-bottom",
+                        }}
+                      />
                       Re-entry Ticket
                     </h6>
                     <p className="mb-2 small">
@@ -1127,7 +1138,17 @@ export default function TicketViewPage(): React.ReactElement {
                           </>
                         ) : (
                           <>
-                            <RefreshCw size={18} className="me-2" />
+                            <img
+                              src={gearIcon}
+                              alt=""
+                              width="18"
+                              height="18"
+                              className="me-2"
+                              style={{
+                                display: "inline-block",
+                                verticalAlign: "text-bottom",
+                              }}
+                            />
                             Re-validate for Entry
                           </>
                         )}
