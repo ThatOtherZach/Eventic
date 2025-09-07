@@ -2158,6 +2158,28 @@ export default function EventDetailPage() {
                     />
                     Edit Event
                   </Link>
+                  
+                  {/* CSV Export Button for Crypto Payment Events */}
+                  {event.paymentProcessing && event.paymentProcessing !== "None" && event.walletAddress && (
+                    <button
+                      className="btn btn-outline-success w-100 mb-2"
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = `/api/events/${id}/payment-intents/export`;
+                        link.download = `payment-intents-${event.name.replace(/[^a-z0-9]/gi, '-')}.csv`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        toast({
+                          title: "Downloading payment data",
+                          description: "Your payment intents CSV is being prepared",
+                        });
+                      }}
+                    >
+                      💳 Export Payment Data (CSV)
+                    </button>
+                  )}
+                  
                   <div className="alert alert-info mt-3">
                     <small className="d-flex align-items-center">
                       <img

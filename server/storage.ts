@@ -2216,6 +2216,9 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
+      // Delete payment intents (following 69-day retention policy)
+      await db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
+      
       // Delete the tickets
       await db.delete(tickets).where(eq(tickets.eventId, eventId));
       

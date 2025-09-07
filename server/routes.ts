@@ -3404,6 +3404,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export payment intents as CSV for event owners
+  app.get("/api/events/:eventId/payment-intents/export", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Check if user owns the event or is admin
+      const event = await storage.getEvent(req.params.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      const userEmail = extractUserEmail(req);
+      const isUserAdmin = userEmail?.endsWith("@saymservices.com") || false;
+      
+      if (event.userId !== userId && !isUserAdmin) {
+        return res.status(403).json({ message: "Only event owners and admins can export payment data" });
+      }
+      
+      // Get payment intents for the event
+      const paymentIntents = await storage.getPaymentIntentsByEventId(req.params.eventId);
+      
+      // Create CSV content
+      const csvHeaders = "Reference,Blockchain,Wallet Address,Amount USD,Amount Crypto,Status,Transaction Hash,Created At,Confirmed At\n";
+      const csvRows = paymentIntents.map(intent => {
+        const createdAt = intent.createdAt ? new Date(intent.createdAt).toISOString() : '';
+        const confirmedAt = intent.confirmedAt ? new Date(intent.confirmedAt).toISOString() : '';
+        const txHash = intent.transactionHash || '';
+        
+        return `"${intent.reference}","${intent.blockchain}","${intent.receiverAddress}","${intent.amountUsd}","${intent.amountCrypto}","${intent.status}","${txHash}","${createdAt}","${confirmedAt}"`;
+      }).join('\n');
+      
+      const csvContent = csvHeaders + csvRows;
+      
+      // Set response headers for CSV download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="payment-intents-${event.name.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send(csvContent);
+      
+    } catch (error) {
+      await logError(error, "GET /api/events/:eventId/payment-intents/export", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
+      res.status(500).json({ message: "Failed to export payment intents" });
+    }
+  });
+
   // System logs endpoint (for administrators)
   app.get("/api/system-logs", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
