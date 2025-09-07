@@ -508,6 +508,16 @@ export const registryRecords = pgTable("registry_records", {
   synced: boolean("synced").default(false), // Whether synced to Supabase
   syncedAt: timestamp("synced_at"), // When last synced to Supabase
   
+  // NFT minting tracking
+  walletAddress: text("wallet_address"), // User's wallet address for NFT delivery
+  nftMinted: boolean("nft_minted").default(false), // Whether NFT has been minted on-chain
+  nftMintingStatus: text("nft_minting_status").default("not_minted"), // not_minted, pending, minted, failed
+  nftTransactionHash: text("nft_transaction_hash"), // Blockchain transaction hash
+  nftTokenId: text("nft_token_id"), // Token ID on the NFT contract
+  nftContractAddress: text("nft_contract_address"), // NFT contract address
+  nftMintedAt: timestamp("nft_minted_at"), // When NFT was minted on-chain
+  nftMintCost: integer("nft_mint_cost").default(12), // Cost in tickets to mint
+  
   validatedAt: timestamp("validated_at").notNull(), // Preserved for backward compat
 });
 
