@@ -68,6 +68,7 @@ import userWorldIcon from "@assets/user_world-1_1756936174601.png";
 import deletionWarningIcon from "@assets/image_1756936869495.png";
 import expandIcon from "@assets/image_1756959756931.png";
 import huntIcon from "@assets/image_1756971767387.png";
+import p2pValidationIcon from "@assets/address_book_users_1757234713487.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -1617,7 +1618,17 @@ export default function EventDetailPage() {
           {event.p2pValidation && (
             <div className="alert alert-info mb-4">
               <div className="d-flex align-items-start">
-                <Shield size={20} className="me-3 mt-1 flex-shrink-0" />
+                <img
+                  src={p2pValidationIcon}
+                  alt=""
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    marginRight: "12px",
+                    marginTop: "4px",
+                    flexShrink: 0,
+                  }}
+                />
                 <div>
                   <h6 className="alert-heading mb-2">
                     Peer-to-Peer Validation Event
