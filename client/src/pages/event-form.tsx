@@ -2301,9 +2301,58 @@ export default function EventForm() {
                         </div>
                       </div>
 
-                      {/* Payment Processing Section */}
+                      {/* Payment Processing Section - Windows 98 Style */}
                       <div className="col-12">
-                        <FormField
+                        <div
+                          style={{
+                            background: "#c0c0c0",
+                            border: "3px solid",
+                            borderColor: "#ffffff #000000 #000000 #ffffff",
+                            boxShadow: "1px 1px 0 #808080",
+                            marginBottom: "20px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              background:
+                                "linear-gradient(to right, #000080, #1084d0)",
+                              padding: "2px 4px",
+                              marginBottom: "1px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <div
+                              className="text-white fw-bold"
+                              style={{
+                                fontSize: "11px",
+                                fontFamily: "Tahoma, sans-serif",
+                              }}
+                            >
+                              Payment Processing
+                            </div>
+                            <div
+                              style={{
+                                width: "13px",
+                                height: "11px",
+                                background: "#c0c0c0",
+                                border: "1px solid",
+                                borderColor: "#ffffff #000000 #000000 #ffffff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "9px",
+                                fontWeight: "bold",
+                                lineHeight: "1",
+                                cursor: "pointer",
+                              }}
+                            >
+                              ×
+                            </div>
+                          </div>
+                          <div className="p-3" style={{ background: "#c0c0c0" }}>
+                            <FormField
                               control={form.control}
                               name="paymentProcessing"
                               render={({ field }) => (
@@ -2418,6 +2467,8 @@ export default function EventForm() {
                                 </FormItem>
                               )}
                             />
+                          </div>
+                        </div>
                       </div>
 
                       {/* Ticket Preview Section */}
