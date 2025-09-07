@@ -37,6 +37,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import smileyIcon from "@assets/image_1756856574950.png";
 import checkIcon from "@assets/check-0_1757231603464.png";
 import secretCodesIcon from "@assets/image_1757232159397.png";
+import walletIcon from "@assets/image_1757232668791.png";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -754,7 +755,14 @@ export default function AccountPage() {
           <div className="card shadow-sm">
             <div className="card-body py-3">
               <h5 className="card-title mb-3 d-flex align-items-center gap-2">
-                <Wallet size={20} />
+                <img
+                  src={walletIcon}
+                  alt=""
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                  }}
+                />
                 Tickets Balance
               </h5>
 
