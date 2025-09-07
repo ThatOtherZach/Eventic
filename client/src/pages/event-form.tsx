@@ -2551,7 +2551,7 @@ export default function EventForm() {
                                     setStickerEnabled(e.target.checked);
                                   }
                                 }}
-                                disabled={isEditMode && !!event?.stickerUrl}
+                                disabled={isEditMode}
                                 data-testid="checkbox-sticker-enabled"
                               />
                               <label
@@ -2562,6 +2562,11 @@ export default function EventForm() {
                                   🎯
                                 </span>
                                 Custom Sticker
+                                {isEditMode && (
+                                  <span className="text-muted ms-2">
+                                    (read-only)
+                                  </span>
+                                )}
                               </label>
                             </div>
                             {isEditMode && event?.stickerUrl && (
@@ -2576,6 +2581,9 @@ export default function EventForm() {
                               <div className="form-text">
                                 Enter a URL for a custom sticker that will float
                                 on lucky tickets
+                                {isEditMode
+                                  ? " (This setting is read-only after event creation)"
+                                  : ""}.
                               </div>
                             )}
 
