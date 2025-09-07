@@ -3559,7 +3559,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { ticketId } = req.params;
-      const { title, description, metadata } = req.body;
+      const { title, description, metadata, walletAddress } = req.body;
+
+      // Validate wallet address
+      if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        return res.status(400).json({ message: "Valid Ethereum wallet address is required" });
+      }
 
       // Get the ticket details
       const ticket = await storage.getTicket(ticketId);
@@ -3577,6 +3582,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!canMint) {
         return res.status(400).json({ message: "Ticket cannot be minted. Make sure it has been validated and the event allows NFT minting." });
       }
+
+      // Check if already minted
+      const existingRegistry = await storage.getRegistryRecordByTicket(ticketId);
+      if (existingRegistry) {
+        return res.status(400).json({ message: "This ticket has already been minted as an NFT" });
+      }
+
+      // Check user's ticket balance for minting cost (12 tickets)
+      const MINT_COST = 12;
+      const userBalance = await storage.getAccountBalance(userId);
+      if (!userBalance || parseFloat(userBalance.balance) < MINT_COST) {
+        return res.status(400).json({ 
+          message: `Insufficient tickets. You need ${MINT_COST} tickets to mint an NFT. Current balance: ${userBalance?.balance || 0}` 
+        });
+      }
+
+      // Debit tickets for minting
+      await storage.debitAccount(
+        userId,
+        MINT_COST,
+        "NFT Minting",
+        ticketId,
+        "nft_mint"
+      );
 
       // Get event details
       const event = await storage.getEvent(ticket.eventId);
@@ -3781,6 +3810,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         synced: false,
         syncedAt: null,
         
+        // NFT minting data
+        walletAddress: walletAddress,
+        nftMinted: false,
+        nftMintingStatus: "pending",
+        nftMintCost: MINT_COST,
+        
         validatedAt: ticket.validatedAt!,
       });
 
@@ -3796,9 +3831,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         platformFee: null,
       });
 
+      // Get the full URL for the registry record
+      const registryUrl = `${req.protocol}://${req.get('host')}/registry/${registryRecord.id}`;
+      const metadataUrl = `${req.protocol}://${req.get('host')}/api/registry/${registryRecord.id}/metadata`;
+      
       res.json({
-        message: "Ticket successfully minted as NFT",
-        registryRecord
+        message: "NFT minting initiated. Your NFT will be minted to your wallet address soon.",
+        registryRecord,
+        registryUrl,
+        metadataUrl,
+        walletAddress,
+        cost: MINT_COST
       });
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/mint", {
