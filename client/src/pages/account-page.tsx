@@ -36,7 +36,7 @@ import type {
 import { loadStripe } from "@stripe/stripe-js";
 import smileyIcon from "@assets/image_1756856574950.png";
 import checkIcon from "@assets/check-0_1757231603464.png";
-import secretCodesIcon from "@assets/computer_user_pencil-0_1757232092560.png";
+import secretCodesIcon from "@assets/image_1757232159397.png";
 
 export default function AccountPage() {
   const { user } = useAuth();
