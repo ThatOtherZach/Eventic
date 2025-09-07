@@ -14,7 +14,7 @@ import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle } from "lucide-react";
+import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight } from "lucide-react";
 
 // Special effects configuration with ticket type previews
 const SPECIAL_EFFECTS = [
@@ -37,6 +37,9 @@ export default function AdminSettings() {
     nice: 69
   });
   const [paymentStatus, setPaymentStatus] = useState<any>(null);
+  const [editingHeader, setEditingHeader] = useState<any>(null);
+  const [newHeaderTitle, setNewHeaderTitle] = useState("");
+  const [newHeaderSubtitle, setNewHeaderSubtitle] = useState("");
 
   // Check if user has admin access
   if (!isAdmin()) {
@@ -59,6 +62,12 @@ export default function AdminSettings() {
   // Get payment configuration status
   const { data: paymentData } = useQuery({
     queryKey: ["/api/admin/payment-status"],
+    enabled: isAdmin()
+  });
+
+  // Get platform headers for content management
+  const { data: platformHeaders = [], isLoading: headersLoading } = useQuery({
+    queryKey: ["/api/admin/platform-headers"],
     enabled: isAdmin()
   });
 
@@ -104,6 +113,90 @@ export default function AdminSettings() {
     }
   });
 
+  // Platform Headers Mutations
+  const createHeaderMutation = useMutation({
+    mutationFn: async (data: { title: string; subtitle: string }) => {
+      return apiRequest("POST", "/api/admin/platform-headers", { ...data, active: true });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Header Created",
+        description: "Platform header has been created successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/platform-headers"] });
+      setNewHeaderTitle("");
+      setNewHeaderSubtitle("");
+    },
+    onError: () => {
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create platform header.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateHeaderMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: string; title: string; subtitle: string }) => {
+      return apiRequest("PUT", `/api/admin/platform-headers/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Header Updated",
+        description: "Platform header has been updated successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/platform-headers"] });
+      setEditingHeader(null);
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update platform header.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteHeaderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/admin/platform-headers/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Header Deleted",
+        description: "Platform header has been deleted successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/platform-headers"] });
+    },
+    onError: () => {
+      toast({
+        title: "Deletion Failed",
+        description: "Failed to delete platform header.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const toggleHeaderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("PATCH", `/api/admin/platform-headers/${id}/toggle`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Status Updated",
+        description: "Platform header status has been updated."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/platform-headers"] });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to toggle platform header status.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const filteredEvents = (events as any[]).filter((event: any) =>
     event?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event?.venue?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -119,7 +212,7 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="effects" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="effects" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             Special Effects
@@ -131,6 +224,10 @@ export default function AdminSettings() {
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             Payment Settings
+          </TabsTrigger>
+          <TabsTrigger value="content" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Content
           </TabsTrigger>
         </TabsList>
 
@@ -486,6 +583,193 @@ export default function AdminSettings() {
                     <li>• COINBASE_API_KEY</li>
                     <li>• COINBASE_WEBHOOK_SECRET</li>
                   </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="content" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Platform Headers Management</CardTitle>
+              <CardDescription>
+                Manage the dynamic titles and subtitles that appear on the home page. The system randomly selects one to display each time the page loads.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Add New Header Form */}
+              <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                <h3 className="font-medium text-sm">Add New Header</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input
+                      placeholder="Enter title..."
+                      value={newHeaderTitle}
+                      onChange={(e) => setNewHeaderTitle(e.target.value)}
+                      data-testid="input-new-header-title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Subtitle</Label>
+                    <Input
+                      placeholder="Enter subtitle..."
+                      value={newHeaderSubtitle}
+                      onChange={(e) => setNewHeaderSubtitle(e.target.value)}
+                      data-testid="input-new-header-subtitle"
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (newHeaderTitle && newHeaderSubtitle) {
+                      createHeaderMutation.mutate({ title: newHeaderTitle, subtitle: newHeaderSubtitle });
+                    } else {
+                      toast({
+                        title: "Missing Information",
+                        description: "Please enter both title and subtitle.",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  disabled={createHeaderMutation.isPending}
+                  className="w-full"
+                  data-testid="button-add-header"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {createHeaderMutation.isPending ? "Adding..." : "Add Header"}
+                </Button>
+              </div>
+
+              {/* Headers List */}
+              <div className="space-y-2">
+                <h3 className="font-medium text-sm mb-3">Current Headers ({platformHeaders.length})</h3>
+                <ScrollArea className="h-[400px] pr-4">
+                  {headersLoading ? (
+                    <p className="text-gray-500 text-sm">Loading headers...</p>
+                  ) : platformHeaders.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No headers found. Add your first header above.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {(platformHeaders as any[]).map((header: any) => (
+                        <div key={header.id} className="p-3 border rounded-lg space-y-2 bg-white">
+                          {editingHeader?.id === header.id ? (
+                            // Edit Mode
+                            <div className="space-y-3">
+                              <Input
+                                value={editingHeader.title}
+                                onChange={(e) => setEditingHeader({ ...editingHeader, title: e.target.value })}
+                                placeholder="Title"
+                                data-testid={`input-edit-title-${header.id}`}
+                              />
+                              <Input
+                                value={editingHeader.subtitle}
+                                onChange={(e) => setEditingHeader({ ...editingHeader, subtitle: e.target.value })}
+                                placeholder="Subtitle"
+                                data-testid={`input-edit-subtitle-${header.id}`}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    updateHeaderMutation.mutate({
+                                      id: header.id,
+                                      title: editingHeader.title,
+                                      subtitle: editingHeader.subtitle
+                                    });
+                                  }}
+                                  disabled={updateHeaderMutation.isPending}
+                                  data-testid={`button-save-${header.id}`}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setEditingHeader(null)}
+                                  data-testid={`button-cancel-${header.id}`}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            // View Mode
+                            <>
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-sm">{header.title}</h4>
+                                  <p className="text-xs text-gray-600 mt-1">{header.subtitle}</p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => toggleHeaderMutation.mutate(header.id)}
+                                    disabled={toggleHeaderMutation.isPending}
+                                    data-testid={`button-toggle-${header.id}`}
+                                  >
+                                    {header.active ? (
+                                      <ToggleRight className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <ToggleLeft className="h-4 w-4 text-gray-400" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setEditingHeader(header)}
+                                    data-testid={`button-edit-${header.id}`}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      if (confirm("Are you sure you want to delete this header?")) {
+                                        deleteHeaderMutation.mutate(header.id);
+                                      }
+                                    }}
+                                    disabled={deleteHeaderMutation.isPending}
+                                    data-testid={`button-delete-${header.id}`}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={header.active ? "default" : "secondary"}>
+                                  {header.active ? "Active" : "Inactive"}
+                                </Badge>
+                                {header.displayOrder && (
+                                  <Badge variant="outline">Order: {header.displayOrder}</Badge>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+
+              {/* Statistics */}
+              <div className="p-4 bg-blue-50 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-blue-700">Statistics</p>
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <p className="text-blue-600">Total Headers:</p>
+                    <p className="font-medium text-blue-800">{platformHeaders.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-blue-600">Active Headers:</p>
+                    <p className="font-medium text-blue-800">
+                      {(platformHeaders as any[]).filter((h: any) => h.active).length}
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
