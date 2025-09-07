@@ -1750,8 +1750,9 @@ export default function EventForm() {
                       </div>
                     )}
 
-                    {/* Payment Processing Section - Windows 98 Style */}
-                    <div className="col-12">
+                    {/* Payment Processing Section - Windows 98 Style - Only show if ticket price > 0 */}
+                    {parseFloat(form.watch("ticketPrice") || "0") > 0 && (
+                      <div className="col-12">
                       <div
                         style={{
                           background: "#c0c0c0",
@@ -1947,6 +1948,7 @@ export default function EventForm() {
                         </div>
                       </div>
                     </div>
+                    )}
 
                     {/* Additional Event Options - Windows 98 Style */}
                     <div className="col-12">
