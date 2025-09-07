@@ -1804,117 +1804,145 @@ export default function EventForm() {
                           <FormField
                             control={form.control}
                             name="paymentProcessing"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Payment Method</FormLabel>
-                                <FormControl>
-                                  <select
-                                    className="form-select"
-                                    {...field}
-                                    value={field.value || "None"}
-                                    onChange={(e) =>
-                                      field.onChange(e.target.value)
-                                    }
-                                    data-testid="select-payment-processing"
-                                  >
-                                    <option value="None">
-                                      None - No payment processing
-                                    </option>
-                                    <option value="Ethereum">
-                                      Ξ Ethereum
-                                    </option>
-                                    <option value="Bitcoin">₿ Bitcoin</option>
-                                    <option value="Dogecoin">
-                                      Ð Dogecoin
-                                    </option>
-                                    <option value="Litecoin">
-                                      Ł Litecoin
-                                    </option>
-                                  </select>
-                                </FormControl>
-                                {field.value !== "None" && (
-                                  <>
-                                    <div className="mt-3 p-3 bg-light border rounded">
-                                      <div className="d-flex align-items-center justify-content-between">
-                                        <div>
-                                          <strong>
-                                            {field.value} Payment Integration
-                                          </strong>
-                                          <div className="text-muted small mt-1">
-                                            Ticket holders can pay with their{" "}
-                                            {field.value} wallet.
+                            render={({ field }) => {
+                              // Check if wallet address is already saved
+                              const isPaymentLocked = event?.walletAddress && event.walletAddress.length > 0;
+                              
+                              return (
+                                <FormItem>
+                                  <FormLabel>
+                                    Payment Method
+                                    {isPaymentLocked && (
+                                      <span className="text-muted ms-2">
+                                        (locked - wallet configured)
+                                      </span>
+                                    )}
+                                  </FormLabel>
+                                  <FormControl>
+                                    <select
+                                      className="form-select"
+                                      {...field}
+                                      value={field.value || "None"}
+                                      onChange={(e) =>
+                                        field.onChange(e.target.value)
+                                      }
+                                      disabled={isPaymentLocked}
+                                      data-testid="select-payment-processing"
+                                    >
+                                      <option value="None">
+                                        None - No payment processing
+                                      </option>
+                                      <option value="Ethereum">
+                                        Ξ Ethereum
+                                      </option>
+                                      <option value="Bitcoin">₿ Bitcoin</option>
+                                      <option value="Dogecoin">
+                                        Ð Dogecoin
+                                      </option>
+                                      <option value="Litecoin">
+                                        Ł Litecoin
+                                      </option>
+                                    </select>
+                                  </FormControl>
+                                  {field.value !== "None" && (
+                                    <>
+                                      <div className="mt-3 p-3 bg-light border rounded">
+                                        <div className="d-flex align-items-center justify-content-between">
+                                          <div>
+                                            <strong>
+                                              {field.value} Payment Integration
+                                            </strong>
+                                            <div className="text-muted small mt-1">
+                                              Ticket holders can pay with their{" "}
+                                              {field.value} wallet.
+                                            </div>
                                           </div>
-                                        </div>
-                                        <div className="text-end">
-                                          <span
-                                            className={`badge ${
-                                              field.value === "Ethereum" ||
+                                          <div className="text-end">
+                                            <span
+                                              className={`badge ${
+                                                field.value === "Ethereum" ||
+                                                field.value === "Bitcoin"
+                                                  ? "bg-warning text-dark"
+                                                  : "bg-info text-dark"
+                                              } fs-6`}
+                                            >
+                                              {field.value === "Ethereum" ||
                                               field.value === "Bitcoin"
-                                                ? "bg-warning text-dark"
-                                                : "bg-info text-dark"
-                                            } fs-6`}
-                                          >
-                                            {field.value === "Ethereum" ||
-                                            field.value === "Bitcoin"
-                                              ? "100"
-                                              : "50"}{" "}
-                                            tickets
-                                          </span>
-                                          <div className="text-muted small mt-1">
-                                            Config. Fee
+                                                ? "100"
+                                                : "50"}{" "}
+                                              tickets
+                                            </span>
+                                            <div className="text-muted small mt-1">
+                                              Config. Fee
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
-                                    </div>
 
-                                    <FormField
-                                      control={form.control}
-                                      name="walletAddress"
-                                      render={({ field: walletField }) => (
-                                        <FormItem className="mt-3">
-                                          <FormLabel>
-                                            Your {field.value} Wallet Address
-                                          </FormLabel>
-                                          <FormControl>
-                                            <input
-                                              type="text"
-                                              className="form-control"
-                                              placeholder={`Enter your ${field.value} wallet address`}
-                                              {...walletField}
-                                              value={walletField.value || ""}
-                                              data-testid="input-wallet-address"
-                                            />
-                                          </FormControl>
-                                          <div className="form-text">
-                                            This is where ticket payments will
-                                            be sent
-                                          </div>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </>
-                                )}
-                                <div className="form-text mt-2">
-                                  {field.value === "None" ? (
-                                    <>
-                                      We don't handle payment processing for
-                                      ticket sales at events. You'll need to
-                                      manage payments independently.
-                                    </>
-                                  ) : (
-                                    <>
-                                      Enable {field.value} payments for your
-                                      event. Ticket holders can pay for their
-                                      tickets with {field.value}. We prepare
-                                      the transaction with a one-click "Pay
-                                      with {field.value}" button.
+                                      <FormField
+                                        control={form.control}
+                                        name="walletAddress"
+                                        render={({ field: walletField }) => (
+                                          <FormItem className="mt-3">
+                                            <FormLabel>
+                                              Your {field.value} Wallet Address
+                                              {isPaymentLocked && (
+                                                <span className="text-muted ms-2">
+                                                  (read-only)
+                                                </span>
+                                              )}
+                                            </FormLabel>
+                                            <FormControl>
+                                              <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder={`Enter your ${field.value} wallet address`}
+                                                {...walletField}
+                                                value={walletField.value || ""}
+                                                readOnly={isPaymentLocked}
+                                                data-testid="input-wallet-address"
+                                              />
+                                            </FormControl>
+                                            <div className="form-text">
+                                              {isPaymentLocked ? (
+                                                <>
+                                                  <span className="text-warning">
+                                                    ⚠️ Wallet address is locked for security.
+                                                  </span>
+                                                  <br />
+                                                  Payments will be sent to this address.
+                                                </>
+                                              ) : (
+                                                "This is where ticket payments will be sent"
+                                              )}
+                                            </div>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
                                     </>
                                   )}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                                  <div className="form-text mt-2">
+                                    {field.value === "None" ? (
+                                      <>
+                                        We don't handle payment processing for
+                                        ticket sales at events. You'll need to
+                                        manage payments independently.
+                                      </>
+                                    ) : (
+                                      <>
+                                        Enable {field.value} payments for your
+                                        event. Ticket holders can pay for their
+                                        tickets with {field.value}. We prepare
+                                        the transaction with a one-click "Pay
+                                        with {field.value}" button.
+                                      </>
+                                    )}
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }}
                           />
                         </div>
                       </div>
