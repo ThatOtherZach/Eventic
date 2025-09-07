@@ -1711,19 +1711,32 @@ export default function EventForm() {
                                             }}
                                           />
                                         </FormControl>
-                                        <div className="form-text">
-                                          Your balance: {creditBalance} credits
+                                        <div 
+                                          className="mt-3 p-3"
+                                          style={{
+                                            backgroundColor: '#000000',
+                                            border: '2px solid #0a0a0a',
+                                            borderRadius: '4px',
+                                            fontFamily: "'Courier New', 'Monaco', 'Consolas', monospace",
+                                            fontSize: '14px',
+                                            color: '#00ff00',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px'
+                                          }}
+                                        >
+                                          <div style={{ marginBottom: '8px' }}>
+                                            YOUR BALANCE: {creditBalance} CREDITS
+                                          </div>
                                           {paymentFee > 0 && (
                                             <>
-                                              <br />
-                                              <span className="text-warning">
-                                                <strong>Total required: {totalRequired} tickets</strong>
-                                                <br />
-                                                <small className="text-muted">
-                                                  Event capacity: {field.value || 0} tickets<br />
-                                                  {paymentMethod} processing fee: {paymentFee} tickets (one-time, non-refundable)
-                                                </small>
-                                              </span>
+                                              <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
+                                                <div>EVENT CAPACITY: {field.value || 0} TICKETS</div>
+                                                <div>{paymentMethod.toUpperCase()} PROCESSING FEE: {paymentFee} TICKETS</div>
+                                                <div style={{ fontSize: '12px', opacity: '0.8' }}>(ONE-TIME, NON-REFUNDABLE)</div>
+                                              </div>
+                                              <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
+                                                <strong>TOTAL REQUIRED: {totalRequired} TICKETS</strong>
+                                              </div>
                                             </>
                                           )}
                                         </div>
