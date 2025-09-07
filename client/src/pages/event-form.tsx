@@ -2242,8 +2242,8 @@ export default function EventForm() {
                               src={ticketPreviewIcon}
                               alt=""
                               style={{
-                                width: "18px",
-                                height: "18px",
+                                width: "23px",
+                                height: "23px",
                                 marginRight: "8px",
                                 verticalAlign: "middle",
                               }}
