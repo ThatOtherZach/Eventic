@@ -35,6 +35,7 @@ import type {
 } from "@shared/schema";
 import { loadStripe } from "@stripe/stripe-js";
 import smileyIcon from "@assets/image_1756856574950.png";
+import checkIcon from "@assets/check-0_1757231603464.png";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -689,7 +690,7 @@ export default function AccountPage() {
                     {validatedCount && (
                       <div className="d-flex align-items-center mt-2">
                         <img
-                          src="/validation-icon.png"
+                          src={checkIcon}
                           alt=""
                           style={{
                             width: "16px",
