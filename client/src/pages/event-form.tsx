@@ -1712,7 +1712,7 @@ export default function EventForm() {
                                           />
                                         </FormControl>
                                         <div 
-                                          className="mt-3 p-3"
+                                          className="mt-3"
                                           style={{
                                             backgroundColor: '#000000',
                                             border: '2px solid #0a0a0a',
@@ -1721,7 +1721,8 @@ export default function EventForm() {
                                             fontSize: '12px',
                                             color: '#00ff00',
                                             textTransform: 'uppercase',
-                                            letterSpacing: '0.5px'
+                                            letterSpacing: '0.5px',
+                                            padding: '6px 16px'
                                           }}
                                         >
                                           <div style={{ marginBottom: '8px' }}>
