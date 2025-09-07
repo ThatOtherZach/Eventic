@@ -17,6 +17,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { ArrowLeft, ArrowRight, CreditCard, Image, Lock, Globe } from "lucide-react";
 import ticketPreviewIcon from "@assets/image_1757235624831.png";
+import goldenTicketIcon from "@assets/utopia_smiley_1757235878527.png";
 import { Textarea } from "@/components/ui/textarea";
 import { countCharacters, extractHashtags } from "@/lib/text-formatter";
 import { countries } from "@/lib/countries";
@@ -2400,9 +2401,16 @@ export default function EventForm() {
                                       className="form-check-label"
                                       htmlFor="goldenTicketEnabled"
                                     >
-                                      <span className="badge bg-warning text-dark me-2">
-                                        🎫
-                                      </span>
+                                      <img
+                                        src={goldenTicketIcon}
+                                        alt=""
+                                        style={{
+                                          width: "20px",
+                                          height: "20px",
+                                          marginRight: "8px",
+                                          verticalAlign: "middle",
+                                        }}
+                                      />
                                       Golden Tickets
                                       {isEditMode && (
                                         <span className="text-muted ms-2">
