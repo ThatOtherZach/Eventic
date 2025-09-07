@@ -3961,6 +3961,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NFT Metadata endpoint for OpenSea/marketplaces
+  app.get("/api/registry/:id/metadata", async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const registryRecord = await storage.getRegistryRecord(id);
+      
+      if (!registryRecord) {
+        return res.status(404).json({ message: "Registry record not found" });
+      }
+      
+      // Build OpenSea-compatible metadata
+      const metadata = {
+        name: registryRecord.title || `Ticket #${registryRecord.ticketNumber}`,
+        description: registryRecord.description || `Validated ticket from ${registryRecord.eventName}`,
+        image: registryRecord.ticketGifData || registryRecord.eventImageData || registryRecord.imageUrl || "",
+        external_url: `${req.protocol}://${req.get('host')}/registry/${id}`,
+        attributes: [
+          {
+            trait_type: "Event",
+            value: registryRecord.eventName
+          },
+          {
+            trait_type: "Venue",
+            value: registryRecord.eventVenue
+          },
+          {
+            trait_type: "Date",
+            value: registryRecord.eventDate
+          },
+          {
+            trait_type: "Ticket Number",
+            value: registryRecord.ticketNumber
+          },
+          {
+            trait_type: "Validated",
+            value: registryRecord.ticketValidatedAt ? "Yes" : "No"
+          },
+          {
+            trait_type: "Golden Ticket",
+            value: registryRecord.ticketIsGolden ? "Yes" : "No"
+          }
+        ]
+      };
+      
+      // Add special attributes if present
+      if (registryRecord.ticketIsDoubleGolden) {
+        metadata.attributes.push({
+          trait_type: "Double Golden",
+          value: "Yes"
+        });
+      }
+      
+      if (registryRecord.ticketSpecialEffect) {
+        metadata.attributes.push({
+          trait_type: "Special Effect",
+          value: registryRecord.ticketSpecialEffect
+        });
+      }
+      
+      if (registryRecord.huntCode) {
+        metadata.attributes.push({
+          trait_type: "Treasure Hunt",
+          value: registryRecord.huntCode
+        });
+      }
+      
+      if (registryRecord.ticketVoteCount && registryRecord.ticketVoteCount > 0) {
+        metadata.attributes.push({
+          trait_type: "Vote Count",
+          value: registryRecord.ticketVoteCount.toString()
+        });
+      }
+      
+      // Set proper headers for NFT metadata
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      
+      res.json(metadata);
+    } catch (error) {
+      await logError(error, "GET /api/registry/:id/metadata", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch NFT metadata" });
+    }
+  });
+
   // Featured Events Routes
   app.get("/api/featured-events", async (req: AuthenticatedRequest, res) => {
     try {
