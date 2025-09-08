@@ -795,16 +795,15 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               data-testid="button-submit-create"
             >
               {createEventMutation.isPending ? "Creating..." : (() => {
-                const maxTickets = form.watch('maxTickets') || 0;
-                const ticketPrice = parseFloat(form.watch('ticketPrice') || '0');
+                const maxTickets = parseInt(form.watch('maxTickets') as string) || 0;
                 const paymentProcessing = form.watch('paymentProcessing') || 'None';
                 
-                // Calculate base cost: free events cost capacity tickets, paid events cost 0
-                let baseCost = ticketPrice > 0 ? 0 : maxTickets;
+                // Base cost: always charge for event capacity  
+                let baseCost = maxTickets;
                 
                 // Calculate payment processing fee if enabled
                 let paymentFee = 0;
-                if (paymentProcessing !== 'None') {
+                if (paymentProcessing && paymentProcessing !== 'None') {
                   if (paymentProcessing === 'Ethereum' || paymentProcessing === 'Bitcoin') {
                     paymentFee = 100;
                   } else if (paymentProcessing === 'USDC') {
