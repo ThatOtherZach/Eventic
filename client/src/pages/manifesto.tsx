@@ -370,26 +370,11 @@ export default function Manifesto() {
             <h5 className="text-purple">
               ✨ Special Effects (Date-Based Magic)
             </h5>
-            <p style={sectionStyle}>Your validated tickets can:</p>
+            <p style={sectionStyle}>Some of the effects that can Your validated tickets can:</p>
             <ul style={sectionStyle}>
               <li>
                 <strong>Explode with confetti</strong> on New Year's or
                 birthdays
-              </li>
-              <li>
-                <strong>Float hearts</strong> on Valentine's Day
-              </li>
-              <li>
-                <strong>Summon ghosts</strong> 👻 on Halloween
-              </li>
-              <li>
-                <strong>Snow festively</strong> during Christmas
-              </li>
-              <li>
-                <strong>Launch fireworks</strong> on July 4th
-              </li>
-              <li>
-                <strong>Glow rainbow</strong> during Pride Month
               </li>
               <li>
                 <strong>Change colors</strong> based on the month
@@ -399,7 +384,7 @@ export default function Manifesto() {
               </li>
             </ul>
             <small className="text-muted">
-              Effects are permanent. No take-backs. Choose chaos wisely.
+              Effects are permanent. No take-backs. You're stuck with them.
             </small>
           </div>
 
@@ -411,26 +396,6 @@ export default function Manifesto() {
             </p>
             <small className="text-muted">
               Warning: Creates artificial scarcity. Use responsibly. Or don't.
-            </small>
-          </div>
-
-          <div className="mb-4">
-            <h5 className="text-success">🔄 Recurring Events</h5>
-            <p style={sectionStyle}>Your event can resurrect itself:</p>
-            <ul style={sectionStyle}>
-              <li>
-                <strong>Weekly:</strong> Every Tuesday fight club
-              </li>
-              <li>
-                <strong>Monthly:</strong> First Friday art walks
-              </li>
-              <li>
-                <strong>Yearly:</strong> Annual gathering of the chosen ones
-              </li>
-            </ul>
-            <small className="text-muted">
-              The Phoenix feature. Your event dies and rises again,
-              automatically.
             </small>
           </div>
 
