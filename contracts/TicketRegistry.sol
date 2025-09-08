@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
@@ -10,11 +11,12 @@ import "@openzeppelin/contracts/utils/Counters.sol";
  * @title TicketRegistry
  * @dev NFT contract for minting validated event tickets on Base L2
  * Designed to work with the ticket registry platform where:
- * - Users pay 12 tickets to mint
+ * - Users pay 12 tickets to mint (with royalties) or 15 tickets (without)
  * - NFT metadata points to permanent registry URLs
  * - Only the platform can mint (centralized minting)
+ * - Supports ERC-2981 royalty standard with per-token configuration
  */
-contract TicketRegistry is ERC721, ERC721URIStorage, Ownable {
+contract TicketRegistry is ERC721, ERC721URIStorage, ERC2981, Ownable {
     using Counters for Counters.Counter;
     
     Counters.Counter private _tokenIdCounter;
@@ -25,21 +27,32 @@ contract TicketRegistry is ERC721, ERC721URIStorage, Ownable {
     // Mapping from token ID to registry ID
     mapping(uint256 => string) public tokenToRegistry;
     
+    // Mapping to track which tokens have royalties enabled
+    mapping(uint256 => bool) public hasRoyalty;
+    
     // Base URL for metadata (e.g., "https://yourapp.replit.app/api/registry/")
     string public baseMetadataURI;
+    
+    // Royalty configuration
+    address public royaltyReceiver;
+    uint96 public constant ROYALTY_BPS = 269; // 2.69% = 269 basis points
     
     // Event emitted when a ticket is minted
     event TicketMinted(
         uint256 indexed tokenId,
         address indexed recipient,
         string registryId,
-        string metadataURI
+        string metadataURI,
+        bool withRoyalty
     );
     
     constructor(
-        string memory _baseMetadataURI
+        string memory _baseMetadataURI,
+        address _royaltyReceiver
     ) ERC721("Ticket Registry NFT", "TICKET") {
+        require(_royaltyReceiver != address(0), "Invalid royalty receiver");
         baseMetadataURI = _baseMetadataURI;
+        royaltyReceiver = _royaltyReceiver;
     }
     
     /**
@@ -47,11 +60,13 @@ contract TicketRegistry is ERC721, ERC721URIStorage, Ownable {
      * @param recipient The wallet address to receive the NFT
      * @param registryId The registry ID from the platform
      * @param metadataPath The path to append to baseMetadataURI (e.g., "abc123/metadata")
+     * @param withRoyalty Whether this NFT should have royalties enabled
      */
     function mintTicket(
         address recipient,
         string memory registryId,
-        string memory metadataPath
+        string memory metadataPath,
+        bool withRoyalty
     ) public onlyOwner returns (uint256) {
         require(registryToToken[registryId] == 0, "Ticket already minted");
         require(recipient != address(0), "Invalid recipient");
@@ -68,8 +83,14 @@ contract TicketRegistry is ERC721, ERC721URIStorage, Ownable {
         // Store mappings
         registryToToken[registryId] = tokenId;
         tokenToRegistry[tokenId] = registryId;
+        hasRoyalty[tokenId] = withRoyalty;
         
-        emit TicketMinted(tokenId, recipient, registryId, fullURI);
+        // Set royalty info if enabled for this token
+        if (withRoyalty) {
+            _setTokenRoyalty(tokenId, royaltyReceiver, ROYALTY_BPS);
+        }
+        
+        emit TicketMinted(tokenId, recipient, registryId, fullURI, withRoyalty);
         
         return tokenId;
     }
@@ -80,6 +101,23 @@ contract TicketRegistry is ERC721, ERC721URIStorage, Ownable {
      */
     function setBaseMetadataURI(string memory newBaseURI) public onlyOwner {
         baseMetadataURI = newBaseURI;
+    }
+    
+    /**
+     * @dev Update the royalty receiver address (owner only)
+     * @param newReceiver The new royalty receiver address
+     */
+    function setRoyaltyReceiver(address newReceiver) public onlyOwner {
+        require(newReceiver != address(0), "Invalid royalty receiver");
+        royaltyReceiver = newReceiver;
+        
+        // Update royalty info for all existing tokens with royalties
+        uint256 currentTokenId = _tokenIdCounter.current();
+        for (uint256 i = 0; i < currentTokenId; i++) {
+            if (_ownerOf(i) != address(0) && hasRoyalty[i]) {
+                _setTokenRoyalty(i, newReceiver, ROYALTY_BPS);
+            }
+        }
     }
     
     /**
@@ -119,7 +157,7 @@ contract TicketRegistry is ERC721, ERC721URIStorage, Ownable {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721URIStorage)
+        override(ERC721, ERC721URIStorage, ERC2981)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
