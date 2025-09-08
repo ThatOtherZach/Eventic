@@ -10,10 +10,10 @@ try {
 
 // Contract ABI (only the functions we need)
 const CONTRACT_ABI = [
-  "function mintTicket(address recipient, string registryId, string metadataPath) returns (uint256)",
+  "function mintTicket(address recipient, string registryId, string metadataPath, bool withRoyalty) returns (uint256)",
   "function isMinted(string registryId) view returns (bool)",
   "function getTokenId(string registryId) view returns (uint256)",
-  "event TicketMinted(uint256 indexed tokenId, address indexed recipient, string registryId, string metadataURI)"
+  "event TicketMinted(uint256 indexed tokenId, address indexed recipient, string registryId, string metadataURI, bool withRoyalty)"
 ];
 
 interface MintResult {
@@ -41,11 +41,16 @@ class NFTMintingService {
     // Check if environment variables are set
     const contractAddress = process.env.NFT_CONTRACT_ADDRESS;
     const privateKey = process.env.NFT_MINTER_PRIVATE_KEY;
+    const royaltyWallet = process.env.NFT_ROYALTY_WALLET;
     const rpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
 
     if (!contractAddress || !privateKey) {
       console.log("[NFT] Contract not configured. Set NFT_CONTRACT_ADDRESS and NFT_MINTER_PRIVATE_KEY to enable on-chain minting.");
       return;
+    }
+    
+    if (!royaltyWallet) {
+      console.log("[NFT] Warning: NFT_ROYALTY_WALLET not set. Royalty collection will not work properly.");
     }
 
     try {
@@ -70,7 +75,8 @@ class NFTMintingService {
   async mintNFT(
     walletAddress: string,
     registryId: string,
-    metadataPath: string
+    metadataPath: string,
+    withRoyalty: boolean = true
   ): Promise<MintResult> {
     if (!this.contract || !this.wallet) {
       return {
@@ -95,7 +101,8 @@ class NFTMintingService {
       const gasEstimate = await this.contract.estimateGas.mintTicket(
         walletAddress,
         registryId,
-        metadataPath
+        metadataPath,
+        withRoyalty
       );
 
       // Add 20% buffer to gas estimate
@@ -105,11 +112,12 @@ class NFTMintingService {
       const gasPrice = await this.provider.getGasPrice();
 
       // Execute mint transaction
-      console.log(`[NFT] Minting NFT for registry ${registryId} to ${walletAddress}`);
+      console.log(`[NFT] Minting NFT for registry ${registryId} to ${walletAddress} (royalty: ${withRoyalty})`);
       const tx = await this.contract.mintTicket(
         walletAddress,
         registryId,
         metadataPath,
+        withRoyalty,
         {
           gasLimit,
           gasPrice

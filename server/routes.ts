@@ -3560,7 +3560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { ticketId } = req.params;
-      const { title, description, metadata, walletAddress } = req.body;
+      const { title, description, metadata, walletAddress, withRoyalty = true } = req.body;
 
       // Validate wallet address
       if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
@@ -3590,12 +3590,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "This ticket has already been minted as an NFT" });
       }
 
-      // Check user's ticket balance for minting cost (12 tickets)
-      const MINT_COST = 12;
+      // Check user's ticket balance for minting cost (12 tickets with royalty, 15 without)
+      const MINT_COST = withRoyalty ? 12 : 15;
       const userBalance = await storage.getUserBalance(userId);
       if (!userBalance || parseFloat(userBalance.balance) < MINT_COST) {
         return res.status(400).json({ 
-          message: `Insufficient tickets. You need ${MINT_COST} tickets to mint an NFT. Current balance: ${userBalance?.balance || 0}` 
+          message: `Insufficient tickets. You need ${MINT_COST} tickets to mint an NFT ${withRoyalty ? '(with royalty)' : '(without royalty)'}. Current balance: ${userBalance?.balance || 0}` 
         });
       }
 
@@ -3835,7 +3835,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const mintResult = await nftMintingService.mintNFT(
             walletAddress,
             registryRecord.id,
-            `${registryRecord.id}/metadata`
+            `${registryRecord.id}/metadata`,
+            withRoyalty
           );
           
           if (mintResult.success) {
@@ -3888,6 +3889,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadataUrl,
         walletAddress,
         cost: MINT_COST,
+        withRoyalty,
         onChain: onChainResult
       });
     } catch (error) {
