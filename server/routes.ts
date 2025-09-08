@@ -1486,17 +1486,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Calculate total tickets required (capacity + payment fee)
-      const totalTicketsRequired = (createData.maxTickets || 0) + paymentProcessingFee;
+      // Calculate total tickets required
+      // For free events: charge for capacity + payment fee
+      // For paid events: only charge payment fee (attendees pay for tickets)
+      const ticketPrice = parseFloat(createData.ticketPrice || "0");
+      const capacityCost = ticketPrice > 0 ? 0 : (createData.maxTickets || 0);
+      const totalTicketsRequired = capacityCost + paymentProcessingFee;
       
       // Check if user has enough tickets
       if (userId && totalTicketsRequired > 0) {
         const userBalance = await storage.getUserBalance(userId);
         const balance = parseInt(userBalance?.balance || "0");
         if (balance < totalTicketsRequired) {
-          return res.status(400).json({ 
-            message: `Insufficient tickets. You need ${totalTicketsRequired} tickets (${createData.maxTickets} for capacity + ${paymentProcessingFee} for payment processing), but only have ${balance}.`
-          });
+          // Build appropriate error message based on event type
+          let message = "";
+          if (ticketPrice > 0) {
+            // Paid event - only payment processing fee
+            message = paymentProcessingFee > 0 
+              ? `Insufficient tickets. You need ${totalTicketsRequired} tickets for payment processing, but only have ${balance}.`
+              : `Insufficient tickets. You need ${totalTicketsRequired} tickets, but only have ${balance}.`;
+          } else {
+            // Free event - capacity + payment processing fee
+            if (paymentProcessingFee > 0) {
+              message = `Insufficient tickets. You need ${totalTicketsRequired} tickets (${capacityCost} for capacity + ${paymentProcessingFee} for payment processing), but only have ${balance}.`;
+            } else {
+              message = `Insufficient tickets. You need ${totalTicketsRequired} tickets for event capacity, but only have ${balance}.`;
+            }
+          }
+          return res.status(400).json({ message });
         }
         
         // Deduct tickets from user balance (eventId will be set after creation)

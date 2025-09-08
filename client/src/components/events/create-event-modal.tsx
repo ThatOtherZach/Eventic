@@ -792,7 +792,28 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               disabled={createEventMutation.isPending}
               data-testid="button-submit-create"
             >
-              {createEventMutation.isPending ? "Creating..." : "Create Event"}
+              {createEventMutation.isPending ? "Creating..." : (() => {
+                const maxTickets = form.watch('maxTickets') || 0;
+                const ticketPrice = parseFloat(form.watch('ticketPrice') || '0');
+                const paymentProcessing = form.watch('paymentProcessing');
+                
+                // Calculate payment processing fee
+                let paymentFee = 0;
+                if (ticketPrice > 0 && paymentProcessing && paymentProcessing !== 'None') {
+                  if (paymentProcessing === 'Ethereum' || paymentProcessing === 'Bitcoin') {
+                    paymentFee = 100;
+                  } else if (paymentProcessing === 'USDC') {
+                    paymentFee = 50;
+                  }
+                }
+                
+                // Calculate total tickets needed
+                // For free events: charge for capacity + payment fee
+                // For paid events: only charge payment fee (attendees pay for tickets)
+                const ticketsNeeded = ticketPrice > 0 ? paymentFee : maxTickets + paymentFee;
+                
+                return ticketsNeeded > 0 ? `Create for ${ticketsNeeded} Tickets` : "Create Event";
+              })()}
             </button>
           </ModalFooter>
         </form>
