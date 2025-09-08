@@ -73,25 +73,34 @@ export default function AdminSettings() {
   });
 
   // Get platform headers for content management
-  const { data: platformHeaders = [], isLoading: headersLoading } = useQuery({
+  const { data: platformHeaders = [], isLoading: headersLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/platform-headers"],
     enabled: isAdmin()
   });
 
   // Get banned words for content moderation
-  const { data: bannedWordsData } = useQuery({
+  const { data: bannedWordsData } = useQuery<{ words?: string }>({
     queryKey: ["/api/admin/banned-words"],
     enabled: isAdmin()
   });
 
   // Get NFT settings
-  const { data: nftSettings } = useQuery({
+  const { data: nftSettings } = useQuery<{
+    enabled: boolean;
+    configured: boolean;
+    status?: {
+      contractAddress: boolean;
+      minterKey: boolean;
+      royaltyWallet: boolean;
+      rpcUrl: string;
+    };
+  }>({
     queryKey: ["/api/admin/nft/settings"],
     enabled: isAdmin()
   });
 
   // Get SEO settings
-  const { data: seoSettingsData } = useQuery({
+  const { data: seoSettingsData } = useQuery<any>({
     queryKey: ["/api/admin/seo/settings"],
     enabled: isAdmin()
   });
@@ -264,7 +273,8 @@ export default function AdminSettings() {
     mutationFn: async ({ enabled }: { enabled: boolean }) => {
       return apiRequest("POST", "/api/admin/nft/settings", { enabled });
     },
-    onSuccess: (data) => {
+    onSuccess: async (response) => {
+      const data = await response.json();
       toast({
         title: "NFT Settings Updated",
         description: data.message || "NFT settings have been updated successfully."
@@ -962,22 +972,38 @@ export default function AdminSettings() {
             <CardContent className="space-y-6">
               {/* NFT Feature Toggle */}
               <div className="p-4 border rounded-lg space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
                   <div className="space-y-1">
-                    <p className="font-medium">Enable NFT Features</p>
+                    <Label htmlFor="nft-status">NFT Feature Status</Label>
                     <p className="text-sm text-gray-500">
-                      Allow users to mint validated tickets as NFTs
+                      Control whether users can mint validated tickets as NFTs
                     </p>
                   </div>
-                  <Switch
-                    id="nft-enabled"
-                    checked={nftSettings?.enabled || false}
-                    onCheckedChange={(enabled) => {
-                      updateNftSettingsMutation.mutate({ enabled });
+                  <Select
+                    value={nftSettings?.enabled ? "enabled" : "disabled"}
+                    onValueChange={(value) => {
+                      updateNftSettingsMutation.mutate({ enabled: value === "enabled" });
                     }}
                     disabled={updateNftSettingsMutation.isPending || !nftSettings?.configured}
-                    data-testid="switch-nft-enabled"
-                  />
+                  >
+                    <SelectTrigger id="nft-status" className="w-[200px]" data-testid="select-nft-status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="enabled">
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Enabled
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="disabled">
+                        <span className="flex items-center gap-2">
+                          <XCircle className="h-4 w-4 text-gray-500" />
+                          Disabled
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {!nftSettings?.configured && (
                   <div className="p-3 bg-yellow-50 rounded-md">
@@ -990,7 +1016,15 @@ export default function AdminSettings() {
 
               {/* Configuration Status */}
               <div className="space-y-4">
-                <h3 className="font-medium">Smart Contract Configuration</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">Environment Configuration Status</h3>
+                  <Badge variant={nftSettings?.configured ? "default" : "secondary"}>
+                    {nftSettings?.configured ? "Configured" : "Not Configured"}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-500">
+                  These values are read-only and must be configured through Replit's Secrets tab for security.
+                </p>
                 <div className="space-y-3">
                   {/* Contract Address */}
                   <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -1056,16 +1090,29 @@ export default function AdminSettings() {
 
               {/* Deployment Instructions */}
               <div className="p-4 bg-blue-50 rounded-lg space-y-3">
-                <p className="text-sm font-medium text-blue-800">Deployment Instructions</p>
-                <ol className="text-xs text-blue-700 space-y-2 ml-4">
-                  <li>1. Deploy the TicketRegistry contract to Base L2 blockchain</li>
-                  <li>2. Set NFT_CONTRACT_ADDRESS environment variable with the deployed contract address</li>
-                  <li>3. Set NFT_MINTER_PRIVATE_KEY with the private key of the minter wallet</li>
-                  <li>4. Set NFT_ROYALTY_WALLET with the wallet address to receive 2.69% royalties</li>
-                  <li>5. Optionally set BASE_RPC_URL for custom RPC endpoint (defaults to Base mainnet)</li>
-                  <li>6. Install ethers library: npm install ethers</li>
-                  <li>7. Enable NFT features using the toggle above</li>
-                </ol>
+                <p className="text-sm font-medium text-blue-800">Configuration Instructions</p>
+                <div className="text-xs text-blue-700 space-y-3">
+                  <div className="p-3 bg-white rounded border border-blue-200">
+                    <p className="font-medium mb-2">⚠️ Security Notice</p>
+                    <p>Environment variables must be set through Replit's Secrets tab for security. Never expose private keys or sensitive data through the admin interface.</p>
+                  </div>
+                  <p className="font-medium">Steps to configure NFT features:</p>
+                  <ol className="space-y-2 ml-4">
+                    <li>1. Deploy the TicketRegistry contract to Base L2 blockchain</li>
+                    <li>2. Open Replit's Secrets tab (Tools → Secrets)</li>
+                    <li>3. Add the following secrets:
+                      <ul className="ml-4 mt-1 space-y-1">
+                        <li>• <code className="bg-blue-100 px-1">NFT_CONTRACT_ADDRESS</code> - Deployed contract address</li>
+                        <li>• <code className="bg-blue-100 px-1">NFT_MINTER_PRIVATE_KEY</code> - Private key of minter wallet</li>
+                        <li>• <code className="bg-blue-100 px-1">NFT_ROYALTY_WALLET</code> - Wallet for 2.69% royalties</li>
+                        <li>• <code className="bg-blue-100 px-1">BASE_RPC_URL</code> - Optional custom RPC endpoint</li>
+                      </ul>
+                    </li>
+                    <li>4. Install ethers library: <code className="bg-blue-100 px-1">npm install ethers</code></li>
+                    <li>5. Restart the application</li>
+                    <li>6. Enable NFT features using the dropdown above</li>
+                  </ol>
+                </div>
               </div>
 
               {/* Contract Details */}
