@@ -518,6 +518,11 @@ export const registryRecords = pgTable("registry_records", {
   nftMintedAt: timestamp("nft_minted_at"), // When NFT was minted on-chain
   nftMintCost: integer("nft_mint_cost").default(12), // Cost in tickets to mint
   
+  // Compression tracking for long-term storage optimization
+  isCompressed: boolean("is_compressed").default(false), // Whether images have been compressed
+  lastAccessed: timestamp("last_accessed").defaultNow(), // Last time NFT was viewed
+  compressionDate: timestamp("compression_date"), // When compression was applied
+  
   validatedAt: timestamp("validated_at").notNull(), // Preserved for backward compat
 });
 
