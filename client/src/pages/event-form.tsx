@@ -3112,10 +3112,29 @@ export default function EventForm() {
                             updateEventMutation.isPending
                               ? "Please hold..."
                               : !isEditMode
-                                ? (form.watch("maxTickets") || 100) >
-                                  creditBalance
-                                  ? "Not Enough Credits"
-                                  : `Create for -${form.watch("maxTickets") || 100} Credits`
+                                ? (() => {
+                                    const maxTickets = parseInt(form.watch("maxTickets") as string) || 100;
+                                    const paymentProcessing = form.watch("paymentProcessing") || 'None';
+                                    
+                                    // Base cost: event capacity
+                                    let baseCost = maxTickets;
+                                    
+                                    // Calculate payment processing fee if enabled
+                                    let paymentFee = 0;
+                                    if (paymentProcessing && paymentProcessing !== 'None') {
+                                      if (paymentProcessing === 'Ethereum' || paymentProcessing === 'Bitcoin') {
+                                        paymentFee = 100;
+                                      } else if (paymentProcessing === 'USDC') {
+                                        paymentFee = 50;
+                                      }
+                                    }
+                                    
+                                    const ticketsNeeded = baseCost + paymentFee;
+                                    
+                                    return ticketsNeeded > creditBalance
+                                      ? "Not Enough Tickets" 
+                                      : `Create for ${ticketsNeeded} Tickets`;
+                                  })()
                                 : "Save"}
                           </button>
                           <button
