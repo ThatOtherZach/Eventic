@@ -187,7 +187,7 @@ export default function Manifesto() {
               Tickets for all users are like arcade
               tokens, they're used for interacting with the platform for actions like creating events. So an event with 50 attendees will cost you 50 tickets. Tickets are what people use to
               actually show up. Got it? Good. Everyone starts with 10 tickets as a signup bonus.
-              You spend them to create events, boost to the featured section of the home page as well as increase odds of getting specials effects applied. Attending an event is always free, unless the event organizer has applied a ticket price to pay at the door on online with one of our payment options.
+              You spend them to create events, boost to the featured section of the home page as well as increase odds of getting specials effects applied. RVSP'ing to an event is always free (so long as there's tickets available). If the event organizer has applied a ticket price, you'll pay at the door on with our payment options.
             </p>
             <p className="mb-3" style={paragraphStyle}>
               Here's the fun part: Rate an event with a thumbs up? Boom, you
