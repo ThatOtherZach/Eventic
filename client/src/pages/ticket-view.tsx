@@ -120,9 +120,6 @@ export default function TicketViewPage(): React.ReactElement {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
-
-  // Set page SEO
-  useSEO({ title: "Ticket View", description: "View your event ticket details and access QR code for entry." });
   const [currentToken, setCurrentToken] = useState<string>("");
   const [currentCode, setCurrentCode] = useState<string>("");
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
@@ -180,6 +177,17 @@ export default function TicketViewPage(): React.ReactElement {
       return response.json();
     },
     enabled: !!ticketData?.ticket.userId,
+  });
+
+  // Set dynamic SEO based on event data
+  useSEO({
+    title: ticketData?.event ? `${ticketData.event.name} Ticket` : "Ticket View",
+    description: ticketData?.event 
+      ? `Your ticket for ${ticketData.event.name} at ${ticketData.event.venue} on ${ticketData.event.date}. Access QR code for entry.`
+      : "View your event ticket details and access QR code for entry.",
+    keywords: ticketData?.event 
+      ? `${ticketData.event.name}, ticket, QR code, ${ticketData.event.venue}, event entry`
+      : "ticket, QR code, event entry"
   });
 
   // Check if NFT features are enabled

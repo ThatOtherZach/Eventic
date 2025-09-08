@@ -120,7 +120,7 @@ export const SEO_CONFIG = {
     keywords: "admin, settings, platform management, system configuration"
   },
   scanner: {
-    title: "QR Scanner",
+    title: "Validate",
     description: "Validate event tickets by scanning QR codes. Fast and secure ticket validation.",
     keywords: "QR scanner, ticket validation, scan tickets, event check-in"
   },
@@ -143,5 +143,10 @@ export const SEO_CONFIG = {
     title: "Sign Up",
     description: "Create your free Eventic account and start organizing amazing events.",
     keywords: "sign up, register, create account, join eventic"
+  },
+  manifesto: {
+    title: "Manifesto",
+    description: "Learn about Eventic's mission, vision, and how our platform revolutionizes event management.",
+    keywords: "manifesto, mission, vision, about us, event platform philosophy"
   }
 };

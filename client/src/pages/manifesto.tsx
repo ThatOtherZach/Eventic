@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import manifestoIcon from "@assets/image_1756696153574.png";
 import validationIcon from "@assets/users_green-4_1757356700434.png";
 import ticketLifeIcon from "@assets/certificate_server-1_1757356779647.png";
@@ -19,6 +20,9 @@ export default function Manifesto() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(),
   );
+  
+  // Set page SEO
+  useSEO(SEO_CONFIG.manifesto);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => {
