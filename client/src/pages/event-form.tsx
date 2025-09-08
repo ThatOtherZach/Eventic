@@ -74,6 +74,11 @@ export default function EventForm() {
     enabled: !!user,
   });
 
+  // Check if NFT features are enabled
+  const { data: nftEnabled } = useQuery<{ enabled: boolean }>({
+    queryKey: ["/api/nft/enabled"],
+  });
+
   const creditBalance = userBalance ? parseFloat(userBalance.balance) : 0;
   const maxTicketsAllowed = Math.min(creditBalance, 5000);
 
@@ -3023,62 +3028,64 @@ export default function EventForm() {
                             )}
 
                             {/* Allow Minting - moved to bottom */}
-                            <FormField
-                              control={form.control}
-                              name="allowMinting"
-                              render={({ field }) => (
-                                <FormItem className="mt-3">
-                                  <div className="form-check">
-                                    <input
-                                      type="checkbox"
-                                      className="form-check-input"
-                                      id="allowMinting"
-                                      checked={field.value}
-                                      onChange={(e) =>
-                                        field.onChange(e.target.checked)
-                                      }
-                                      data-testid="checkbox-allow-minting"
-                                    />
-                                    <label
-                                      className="form-check-label"
-                                      htmlFor="allowMinting"
-                                    >
-                                      <img
-                                        src={mintingIcon}
-                                        alt=""
-                                        style={{
-                                          width: "20px",
-                                          height: "20px",
-                                          marginRight: "8px",
-                                          verticalAlign: "middle",
-                                        }}
+                            {nftEnabled?.enabled && (
+                              <FormField
+                                control={form.control}
+                                name="allowMinting"
+                                render={({ field }) => (
+                                  <FormItem className="mt-3">
+                                    <div className="form-check">
+                                      <input
+                                        type="checkbox"
+                                        className="form-check-input"
+                                        id="allowMinting"
+                                        checked={field.value}
+                                        onChange={(e) =>
+                                          field.onChange(e.target.checked)
+                                        }
+                                        data-testid="checkbox-allow-minting"
                                       />
-                                      Allow Digital Collectable Minting
-                                      {isEditMode && event?.allowMinting && (
-                                        <span className="text-muted ms-2">
-                                          (cannot be disabled once saved)
-                                        </span>
-                                      )}
-                                    </label>
-                                  </div>
-                                  <div className="form-text">
-                                    Attendees will be allowed to mint a digital
-                                    collectible of the event ticket. The details
-                                    seen in the ticket preview will be publicly
-                                    accessible if enabled. Digital collectible
-                                    will be issued on the Coinbase L2 network
-                                    (Base, Ethereum)
-                                    {isEditMode && !event?.allowMinting
-                                      ? ". This can be enabled after event creation, but once enabled it cannot be disabled"
-                                      : isEditMode && event?.allowMinting
-                                        ? ". Once saved with minting enabled, it cannot be disabled"
-                                        : ""}
-                                    .
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                                      <label
+                                        className="form-check-label"
+                                        htmlFor="allowMinting"
+                                      >
+                                        <img
+                                          src={mintingIcon}
+                                          alt=""
+                                          style={{
+                                            width: "20px",
+                                            height: "20px",
+                                            marginRight: "8px",
+                                            verticalAlign: "middle",
+                                          }}
+                                        />
+                                        Allow Digital Collectable Minting
+                                        {isEditMode && event?.allowMinting && (
+                                          <span className="text-muted ms-2">
+                                            (cannot be disabled once saved)
+                                          </span>
+                                        )}
+                                      </label>
+                                    </div>
+                                    <div className="form-text">
+                                      Attendees will be allowed to mint a digital
+                                      collectible of the event ticket. The details
+                                      seen in the ticket preview will be publicly
+                                      accessible if enabled. Digital collectible
+                                      will be issued on the Coinbase L2 network
+                                      (Base, Ethereum)
+                                      {isEditMode && !event?.allowMinting
+                                        ? ". This can be enabled after event creation, but once enabled it cannot be disabled"
+                                        : isEditMode && event?.allowMinting
+                                          ? ". Once saved with minting enabled, it cannot be disabled"
+                                          : ""}
+                                      .
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            )}
                           </div>
                         </div>
                       </div>
