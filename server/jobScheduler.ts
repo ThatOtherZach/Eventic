@@ -1,8 +1,9 @@
 import { db } from "./db";
-import { scheduledJobs, InsertScheduledJob, events } from "@shared/schema";
-import { and, eq, lte, or } from "drizzle-orm";
+import { scheduledJobs, InsertScheduledJob, events, registryRecords } from "@shared/schema";
+import { and, eq, lte, or, lt, isNull } from "drizzle-orm";
 import { storage } from "./storage";
 import { migrateExistingTickets } from "./migrateExistingTickets";
+import { ImageCompressionService } from "./services/image-compression";
 
 let jobInterval: NodeJS.Timeout | null = null;
 
@@ -118,6 +119,9 @@ async function processScheduledJobs(): Promise<void> {
       }
       await processJob(job);
     }
+    
+    // Process NFT compression for inactive records (runs daily)
+    await compressInactiveNFTs();
   } catch (error) {
     console.error('[JOBS] Error processing scheduled jobs:', error);
   }
@@ -314,4 +318,72 @@ export function calculateDeletionDate(eventDate: string, eventEndDate: string | 
   const deletionDate = new Date(baseDate);
   deletionDate.setDate(deletionDate.getDate() + 69);
   return deletionDate;
+}
+
+// Compress NFT registry records that haven't been accessed in 3+ years
+async function compressInactiveNFTs(): Promise<void> {
+  try {
+    const now = new Date();
+    const threeYearsAgo = new Date();
+    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+    
+    // Find uncompressed NFTs that haven't been accessed in 3+ years
+    const nftsToCompress = await db
+      .select()
+      .from(registryRecords)
+      .where(
+        and(
+          eq(registryRecords.isCompressed, false),
+          lt(registryRecords.lastAccessed, threeYearsAgo)
+        )
+      )
+      .limit(10); // Process 10 at a time to avoid overwhelming the system
+    
+    if (nftsToCompress.length === 0) {
+      return; // Nothing to compress
+    }
+    
+    console.log(`[COMPRESSION] Found ${nftsToCompress.length} NFTs to compress`);
+    
+    for (const nft of nftsToCompress) {
+      try {
+        // Compress the images
+        const compressedData = await ImageCompressionService.compressRegistryRecord(nft);
+        
+        // Calculate size reduction
+        const originalSize = 
+          (nft.eventImageData?.length || 0) +
+          (nft.eventStickerData?.length || 0) +
+          (nft.ticketBackgroundData?.length || 0) +
+          (nft.ticketGifData?.length || 0);
+        
+        const compressedSize = 
+          (compressedData.eventImageData?.length || 0) +
+          (compressedData.eventStickerData?.length || 0) +
+          (compressedData.ticketBackgroundData?.length || 0) +
+          (compressedData.ticketGifData?.length || 0);
+        
+        const reductionPercent = Math.round((1 - compressedSize / originalSize) * 100);
+        
+        // Update the database with compressed data
+        await db
+          .update(registryRecords)
+          .set({
+            eventImageData: compressedData.eventImageData,
+            eventStickerData: compressedData.eventStickerData,
+            ticketBackgroundData: compressedData.ticketBackgroundData,
+            ticketGifData: compressedData.ticketGifData,
+            isCompressed: true,
+            compressionDate: now
+          })
+          .where(eq(registryRecords.id, nft.id));
+        
+        console.log(`[COMPRESSION] Compressed NFT ${nft.id} - reduced by ${reductionPercent}% (${originalSize} → ${compressedSize} bytes)`);
+      } catch (error) {
+        console.error(`[COMPRESSION] Failed to compress NFT ${nft.id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('[COMPRESSION] Error processing NFT compression:', error);
+  }
 }
