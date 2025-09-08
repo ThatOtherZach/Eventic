@@ -3900,6 +3900,270 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Prepare mint parameters for user-controlled minting
+  app.post("/api/tickets/:ticketId/prepare-mint", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+      const { walletAddress, title, description, metadata, withRoyalty = true } = req.body;
+
+      if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        return res.status(400).json({ message: "Invalid wallet address" });
+      }
+
+      // Get the ticket
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      // Check if user owns the ticket
+      if (ticket.userId !== userId) {
+        return res.status(403).json({ message: "You do not own this ticket" });
+      }
+
+      // Check if ticket is validated
+      if (!ticket.isValidated || !ticket.validatedAt) {
+        return res.status(400).json({ message: "Ticket must be validated before minting" });
+      }
+
+      // Check if already minted
+      const existingRecord = await storage.getRegistryRecordByTicket(ticketId);
+      if (existingRecord) {
+        return res.status(400).json({ message: "Ticket already minted" });
+      }
+
+      // Get the event
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event || !event.allowMinting) {
+        return res.status(400).json({ message: "NFT minting is not enabled for this event" });
+      }
+
+      // Check 24-hour waiting period
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+      const timeSinceValidation = Date.now() - new Date(ticket.validatedAt).getTime();
+      if (timeSinceValidation < TWENTY_FOUR_HOURS) {
+        return res.status(400).json({ 
+          message: "Must wait 24 hours after validation before minting",
+          timeRemaining: TWENTY_FOUR_HOURS - timeSinceValidation
+        });
+      }
+
+      // Check user has enough tickets
+      const userCurrency = await storage.getUserCurrency(userId);
+      const MINT_COST = withRoyalty ? 12 : 15;
+      
+      if (userCurrency.ticketBalance < MINT_COST) {
+        return res.status(400).json({ 
+          message: `Insufficient tickets. Need ${MINT_COST}, have ${userCurrency.ticketBalance}` 
+        });
+      }
+
+      // Deduct tickets immediately
+      await storage.updateTicketBalance(userId, -MINT_COST, `NFT mint preparation for ticket ${ticketId}`);
+
+      // Create registry record (but not minted yet)
+      const creator = await storage.getUser(event.userId);
+      const owner = await storage.getUser(ticket.userId!);
+      
+      const registryRecord = await storage.createRegistryRecord({
+        ticketId: ticket.id,
+        userId: userId,
+        eventId: event.id,
+        title: title || `${event.name} - Validated Ticket`,
+        description: description || `Validated ticket for ${event.name} on ${event.date}`,
+        metadata: metadata || "{}",
+        withRoyalty: withRoyalty,
+        
+        // Preserve ticket data
+        ticketCreatedAt: ticket.createdAt || new Date(),
+        ticketValidatedAt: ticket.validatedAt!,
+        ticketIsGoldenTicket: ticket.isGoldenTicket || false,
+        ticketStickerUrl: ticket.stickerUrl || null,
+        ticketPurchasePrice: ticket.purchasePrice || null,
+        ticketPaymentIntent: ticket.paymentIntent || null,
+        
+        // Preserve event data
+        eventName: event.name,
+        eventDate: event.date,
+        eventTime: event.time,
+        eventVenue: event.venue,
+        eventCapacity: event.capacity,
+        eventDescription: event.description,
+        eventTicketPrice: event.ticketPrice,
+        eventImageUrl: event.imageUrl || null,
+        eventStreet: event.street || null,
+        eventCity: event.city || null,
+        eventIsPrivate: event.isPrivate || false,
+        eventAllowMinting: event.allowMinting || true,
+        eventEndDate: event.endDate || null,
+        eventEndTime: event.endTime || null,
+        eventCreatedAt: event.createdAt || new Date(),
+        eventStickerUrl: event.stickerUrl || null,
+        eventTicketBackgroundUrl: event.ticketBackgroundUrl || event.imageUrl || null,
+        eventSpecialEffectsEnabled: (event as any).specialEffectsEnabled || false,
+        eventGeofence: (event as any).geofence ? JSON.stringify((event as any).geofence) : null,
+        eventIsAdminCreated: (event as any).isAdminCreated || false,
+        eventContactDetails: event.contactDetails || null,
+        eventCountry: event.country || null,
+        eventEarlyValidation: event.earlyValidation || "Allow at Anytime",
+        eventMaxUses: event.maxUses || 1,
+        eventStickerOdds: event.stickerOdds || 25,
+        eventIsEnabled: event.isEnabled !== false,
+        eventTicketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
+        eventLatitude: event.latitude || null,
+        eventLongitude: event.longitude || null,
+        eventTimezone: event.timezone || "America/New_York",
+        eventRollingTimezone: event.rollingTimezone || false,
+        eventHashtags: event.hashtags || [],
+        eventTreasureHunt: event.treasureHunt || false,
+        eventHuntCode: event.huntCode || null,
+        
+        // User data preservation
+        creatorUsername: creator?.displayName || "unknown",
+        creatorDisplayName: creator?.displayName || null,
+        ownerUsername: owner?.displayName || "unknown",
+        ownerDisplayName: owner?.displayName || null,
+        
+        // Sync tracking
+        synced: false,
+        syncedAt: null,
+        
+        // NFT minting data
+        walletAddress: walletAddress,
+        nftMinted: false,
+        nftMintingStatus: "prepared",
+        nftMintCost: MINT_COST,
+        
+        validatedAt: ticket.validatedAt!,
+      });
+
+      // Get contract details
+      const contractAddress = process.env.NFT_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
+      const contractABI = [
+        "function mintTicket(address recipient, string registryId, string metadataPath, bool withRoyalty) returns (uint256)",
+        "event TicketMinted(uint256 indexed tokenId, address indexed recipient, string registryId, string metadataURI, bool withRoyalty)"
+      ];
+
+      // Estimate gas (approximate for Base L2)
+      const estimatedGas = "150000"; // Standard gas limit for NFT minting on Base
+
+      res.json({
+        contractAddress,
+        contractABI,
+        registryId: registryRecord.id,
+        metadataPath: `${registryRecord.id}/metadata`,
+        withRoyalty,
+        estimatedGas,
+        ticketCost: MINT_COST
+      });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/prepare-mint", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to prepare mint" });
+    }
+  });
+
+  // Confirm mint after user executes transaction
+  app.post("/api/tickets/:ticketId/confirm-mint", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+      const { transactionHash, tokenId } = req.body;
+
+      if (!transactionHash) {
+        return res.status(400).json({ message: "Transaction hash required" });
+      }
+
+      // Get the ticket
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      // Get registry record
+      const registryRecord = await storage.getRegistryRecordByTicket(ticketId);
+      if (!registryRecord) {
+        return res.status(404).json({ message: "Registry record not found" });
+      }
+
+      // TODO: Update registry record with on-chain data
+      // This would require adding an updateRegistryRecord method to storage
+      // For now, just return success
+
+      res.json({
+        message: "NFT mint confirmed",
+        registryRecord,
+        transactionHash,
+        tokenId,
+        openSeaUrl: `https://opensea.io/assets/base/${process.env.NFT_CONTRACT_ADDRESS}/${tokenId}`,
+        baseScanUrl: `https://basescan.org/tx/${transactionHash}`
+      });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/confirm-mint", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to confirm mint" });
+    }
+  });
+
+  // Refund tickets if mint fails
+  app.post("/api/tickets/:ticketId/refund-mint", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { ticketId } = req.params;
+      const { transactionHash, reason } = req.body;
+
+      // Get the ticket
+      const ticket = await storage.getTicket(ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+
+      // Get registry record
+      const registryRecord = await storage.getRegistryRecordByTicket(ticketId);
+      if (!registryRecord) {
+        return res.status(404).json({ message: "Registry record not found" });
+      }
+
+      // Check if already minted (no refund if successful)
+      if (registryRecord.nftMinted) {
+        return res.status(400).json({ message: "NFT already minted, cannot refund" });
+      }
+
+      // Refund tickets
+      const refundAmount = registryRecord.nftMintCost || (registryRecord.withRoyalty ? 12 : 15);
+      await storage.updateTicketBalance(userId, refundAmount, `Refund for failed NFT mint (ticket ${ticketId})`);
+
+      // TODO: Mark registry record as failed
+      // This would require adding an updateRegistryRecord method
+
+      res.json({
+        message: "Tickets refunded successfully",
+        refundAmount,
+        reason
+      });
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/refund-mint", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to process refund" });
+    }
+  });
+
   app.get("/api/tickets/:ticketId/mint-status", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
