@@ -31,6 +31,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
   const [description, setDescription] = useState("");
   const [additionalMetadata, setAdditionalMetadata] = useState("");
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const [withRoyalty, setWithRoyalty] = useState(true);
   const { toast } = useToast();
   const { addNotification } = useNotifications();
 
@@ -98,7 +99,8 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
         walletAddress: walletAddress,
         title: title || undefined,
         description: description || undefined,
-        metadata: JSON.stringify(metadata)
+        metadata: JSON.stringify(metadata),
+        withRoyalty: withRoyalty
       });
       return response.json();
     },
@@ -180,7 +182,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
           </ModalHeader>
           <ModalBody>
             <div className="alert alert-info mb-3" role="alert">
-              <strong>Cost:</strong> 12 tickets will be charged to mint this NFT.<br/>
+              <strong>Cost:</strong> {withRoyalty ? '12' : '15'} tickets will be charged to mint this NFT.<br/>
               <strong>Note:</strong> Your NFT will be minted on Coinbase's Base L2 blockchain. The NFT metadata will point to your permanent registry record.
             </div>
 
@@ -197,6 +199,27 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
               />
               <small className="text-muted">
                 Enter your Ethereum wallet address (e.g., from Coinbase Wallet, MetaMask, etc.)
+              </small>
+            </div>
+
+            <div className="mb-3">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="royaltyCheckbox"
+                  checked={withRoyalty}
+                  onChange={(e) => setWithRoyalty(e.target.checked)}
+                  data-testid="checkbox-royalty"
+                />
+                <label className="form-check-label" htmlFor="royaltyCheckbox">
+                  Include 2.69% royalty fee on resales
+                </label>
+              </div>
+              <small className="text-muted">
+                {withRoyalty 
+                  ? "Standard minting (12 tickets): 2.69% of resale price goes to platform"
+                  : "No royalty minting (15 tickets): No fees on future resales"}
               </small>
             </div>
 
@@ -260,7 +283,7 @@ export function MintNFTButton({ ticket, event }: MintNFTButtonProps) {
               ) : (
                 <>
                   <Sparkles className="me-2" size={16} />
-                  Mint NFT (12 Tickets)
+                  Mint NFT ({withRoyalty ? '12' : '15'} Tickets)
                 </>
               )}
             </Button>
