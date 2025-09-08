@@ -32,6 +32,7 @@ The system includes client-side QR code generation for tickets and server-side v
 - **P2P Validation**: Optional setting allowing any ticket holder to validate others' tickets for the same event, enabled only at event creation.
 - **Event Reputation System**: Attendees can rate events (thumbs up/down); event owners' reputation is displayed with badges and formatted vote counts. Users earn 1 ticket reward when rating an event for the first time.
 - **Ticket Resale System**: Replaces refunds, allowing tickets to be resold at original price (2% fee for paid tickets). Resale queue ensures automatic matching with new purchases.
+- **NFT Royalty System**: Users can choose between standard minting (12 tickets) with 2.69% royalty on resales or no-royalty minting (15 tickets). Implements ERC-2981 royalty standard for marketplace compatibility.
 - **Error Logging**: Comprehensive server error logging to a `system_logs` table with 90-day retention, categorizing errors by severity.
 - **Toast Notifications**: Bootstrap-style success, error, and system fault toasts for immediate visual feedback.
 - **Enhanced Event Management**: Date/time validation for event starts/ends, supporting multi-day events.
