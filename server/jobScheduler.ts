@@ -253,12 +253,12 @@ export async function initializeJobScheduler(): Promise<void> {
   // Process jobs immediately on startup
   await processScheduledJobs();
   
-  // Then process every 5 minutes
+  // Then process every hour
   jobInterval = setInterval(async () => {
     await processScheduledJobs();
-  }, 5 * 60 * 1000); // 5 minutes
+  }, 60 * 60 * 1000); // 1 hour
   
-  console.log('[JOBS] Job scheduler initialized - processing every 5 minutes');
+  console.log('[JOBS] Job scheduler initialized - processing every hour');
 }
 
 async function scheduleJobsForExistingEvents(): Promise<void> {
@@ -326,6 +326,11 @@ async function compressInactiveNFTs(): Promise<void> {
     const now = new Date();
     const threeYearsAgo = new Date();
     threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+    
+    // Only run on the first day of each month
+    if (now.getDate() !== 1) {
+      return;
+    }
     
     // Find uncompressed NFTs that haven't been accessed in 3+ years
     const nftsToCompress = await db
