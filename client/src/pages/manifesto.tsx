@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "wouter";
 import {
   Sparkles,
-  Shield,
   TrendingUp,
   Repeat,
   Sticker,
@@ -14,6 +13,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import manifestoIcon from "@assets/image_1756696153574.png";
+import validationIcon from "@assets/users_green-4_1757356700434.png";
 
 export default function Manifesto() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -414,7 +414,7 @@ export default function Manifesto() {
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="h4 mb-3 d-flex align-items-center">
-            <Shield className="text-primary me-2" size={24} />
+            <img src={validationIcon} alt="" style={{ width: "24px", height: "24px", marginRight: "8px" }} />
             Validation: How the Magic Happens
           </h2>
 
