@@ -356,9 +356,9 @@ export default function Manifesto() {
           <div className="mb-4">
             <h5 className="text-warning">🎫 Golden Tickets (10% Chance)</h5>
             <p style={sectionStyle}>
-              Pure Wonka energy. When someone validates, they might strike
-              gold. Their ticket transforms into a shimmering golden
-              masterpiece. No chocolate factory required.
+              Pure Wonka energy. When someone validates, they might strike gold.
+              Their ticket transforms into a shimmering golden masterpiece. No
+              chocolate factory required.
             </p>
             <small className="text-muted">
               Stack it with rainbow effects for Super RGB status. It's
@@ -404,9 +404,9 @@ export default function Manifesto() {
           <div className="mb-4">
             <h5 className="text-pink">🎨 Custom Stickers</h5>
             <p style={sectionStyle}>
-              Upload any image. Set the probability. Watch it randomly appear on
-              validated tickets. Pizza slices, crying Jordan, your ex's face—we
-              don't judge your artistic choices.
+              Upload any image or gif URL. Set the probability. Watch it
+              randomly appear on validated tickets. Pizza slices, crying Jordan,
+              your ex's face—we don't judge your artistic choices.
             </p>
             <small className="text-muted">
               Layers on top of everything. Maximum chaos potential.
@@ -435,18 +435,18 @@ export default function Manifesto() {
           </h2>
 
           <p className="mb-3" style={sectionStyle}>
-            Forget QR codes. We use 6-digit PINs because simplicity beats
+            Forget QR codes. We use 4-digit PINs because simplicity beats
             complexity every time.
           </p>
 
           <h5>The Flow:</h5>
           <ol style={sectionStyle}>
             <li className="mb-2">
-              <strong>Attendee generates PIN</strong> — Good for 5 minutes.
+              <strong>Attendee generates PIN</strong> — Good for 3 minutes.
               Shows it to the door person.
             </li>
             <li className="mb-2">
-              <strong>Validator enters PIN</strong> — Type 6 digits. Hit enter.
+              <strong>Validator enters PIN</strong> — Type 4 digits. Hit enter.
               That's it.
             </li>
             <li className="mb-2">
@@ -462,11 +462,14 @@ export default function Manifesto() {
           <div className="alert alert-info mt-3">
             <strong>The Rules:</strong>
             <ul className="mb-0 mt-2" style={sectionStyle}>
-              <li>PINs expire in 5 minutes (security through ephemerality)</li>
-              <li>Unlimited PIN generation until validated</li>
+              <li>PINs expire in 3 minutes (security through ephemerality)</li>
+              <li>Generates PINs until validated</li>
               <li>Event creators always have validation power</li>
               <li>P2P mode = everyone can validate</li>
-              <li>Works on any device with a browser</li>
+              <li>
+                Works on any device with a browser and internet, GPS may be
+                required
+              </li>
             </ul>
           </div>
         </div>
@@ -499,8 +502,8 @@ export default function Manifesto() {
                 Rainbow? Stickered? The universe decides.
               </li>
               <li className="mb-2">
-                <strong>Immortality:</strong> Validated. Complete. Ready to fade
-                or be minted forever.
+                <strong>Immortality:</strong> Validated. Complete. Ready to be
+                minted as a digital collectable, or let it be deleted.
               </li>
             </ol>
           </div>
