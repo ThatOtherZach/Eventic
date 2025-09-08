@@ -290,11 +290,7 @@ export default function AccountPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Tickets Claimed!",
-        description: data.message,
-        variant: "success",
-      });
+      // Toast notification removed per user request
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       queryClient.invalidateQueries({
         queryKey: ["/api/currency/daily-claim-status"],
