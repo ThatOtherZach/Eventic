@@ -79,6 +79,12 @@ export default function AdminSettings() {
     enabled: isAdmin()
   });
 
+  // Get NFT settings
+  const { data: nftSettings } = useQuery({
+    queryKey: ["/api/admin/nft/settings"],
+    enabled: isAdmin()
+  });
+
   // Set banned words when data loads
   useEffect(() => {
     if (bannedWordsData) {
@@ -235,6 +241,28 @@ export default function AdminSettings() {
     }
   });
 
+  // Update NFT settings mutation
+  const updateNftSettingsMutation = useMutation({
+    mutationFn: async ({ enabled }: { enabled: boolean }) => {
+      return apiRequest("POST", "/api/admin/nft/settings", { enabled });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "NFT Settings Updated",
+        description: data.message || "NFT settings have been updated successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/nft/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/nft/enabled"] });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update NFT settings.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const filteredEvents = (events as any[]).filter((event: any) =>
     event?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event?.venue?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -250,7 +278,7 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="effects" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="effects" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             Special Effects
@@ -262,6 +290,10 @@ export default function AdminSettings() {
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             Payment Settings
+          </TabsTrigger>
+          <TabsTrigger value="nft" className="flex items-center gap-2">
+            <Ticket className="h-4 w-4" />
+            NFT Settings
           </TabsTrigger>
           <TabsTrigger value="content" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -869,6 +901,140 @@ export default function AdminSettings() {
                   <li>• Matching is case-insensitive</li>
                   <li>• Events with banned words are set to private automatically</li>
                   <li>• Changes apply to new events only (existing events are not affected)</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* NFT Settings Tab */}
+        <TabsContent value="nft" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>NFT Configuration</CardTitle>
+              <CardDescription>
+                Manage NFT minting features for validated tickets. Users can mint their validated tickets as collectible NFTs on the blockchain.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* NFT Feature Toggle */}
+              <div className="p-4 border rounded-lg space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium">Enable NFT Features</p>
+                    <p className="text-sm text-gray-500">
+                      Allow users to mint validated tickets as NFTs
+                    </p>
+                  </div>
+                  <Switch
+                    id="nft-enabled"
+                    checked={nftSettings?.enabled || false}
+                    onCheckedChange={(enabled) => {
+                      updateNftSettingsMutation.mutate({ enabled });
+                    }}
+                    disabled={updateNftSettingsMutation.isPending || !nftSettings?.configured}
+                    data-testid="switch-nft-enabled"
+                  />
+                </div>
+                {!nftSettings?.configured && (
+                  <div className="p-3 bg-yellow-50 rounded-md">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ NFT features cannot be enabled until the smart contract is deployed and configured.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Configuration Status */}
+              <div className="space-y-4">
+                <h3 className="font-medium">Smart Contract Configuration</h3>
+                <div className="space-y-3">
+                  {/* Contract Address */}
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Ticket className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <p className="font-medium">Contract Address</p>
+                        <p className="text-sm text-gray-500">NFT_CONTRACT_ADDRESS</p>
+                      </div>
+                    </div>
+                    {nftSettings?.status?.contractAddress ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+
+                  {/* Minter Key */}
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Settings className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <p className="font-medium">Minter Private Key</p>
+                        <p className="text-sm text-gray-500">NFT_MINTER_PRIVATE_KEY</p>
+                      </div>
+                    </div>
+                    {nftSettings?.status?.minterKey ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+
+                  {/* Royalty Wallet */}
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <p className="font-medium">Royalty Wallet</p>
+                        <p className="text-sm text-gray-500">NFT_ROYALTY_WALLET</p>
+                      </div>
+                    </div>
+                    {nftSettings?.status?.royaltyWallet ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+
+                  {/* RPC URL */}
+                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Settings className="h-5 w-5 text-gray-500" />
+                      <div>
+                        <p className="font-medium">Base RPC URL</p>
+                        <p className="text-sm text-gray-500">{nftSettings?.status?.rpcUrl || "https://mainnet.base.org"}</p>
+                      </div>
+                    </div>
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Deployment Instructions */}
+              <div className="p-4 bg-blue-50 rounded-lg space-y-3">
+                <p className="text-sm font-medium text-blue-800">Deployment Instructions</p>
+                <ol className="text-xs text-blue-700 space-y-2 ml-4">
+                  <li>1. Deploy the TicketRegistry contract to Base L2 blockchain</li>
+                  <li>2. Set NFT_CONTRACT_ADDRESS environment variable with the deployed contract address</li>
+                  <li>3. Set NFT_MINTER_PRIVATE_KEY with the private key of the minter wallet</li>
+                  <li>4. Set NFT_ROYALTY_WALLET with the wallet address to receive 2.69% royalties</li>
+                  <li>5. Optionally set BASE_RPC_URL for custom RPC endpoint (defaults to Base mainnet)</li>
+                  <li>6. Install ethers library: npm install ethers</li>
+                  <li>7. Enable NFT features using the toggle above</li>
+                </ol>
+              </div>
+
+              {/* Contract Details */}
+              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-gray-700">Contract Features</p>
+                <ul className="text-xs text-gray-600 space-y-1 ml-4">
+                  <li>• ERC-721 NFT standard for ticket collectibles</li>
+                  <li>• ERC-2981 royalty standard (2.69% on resales)</li>
+                  <li>• Per-token royalty configuration</li>
+                  <li>• Metadata served from platform API</li>
+                  <li>• One-time minting per validated ticket</li>
+                  <li>• Base L2 blockchain for low gas fees</li>
                 </ul>
               </div>
             </CardContent>
