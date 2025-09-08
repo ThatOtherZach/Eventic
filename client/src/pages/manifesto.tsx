@@ -370,7 +370,9 @@ export default function Manifesto() {
             <h5 className="text-purple">
               ✨ Special Effects (Date-Based Magic)
             </h5>
-            <p style={sectionStyle}>Some of the effects that can Your validated tickets can:</p>
+            <p style={sectionStyle}>
+              Some of the effects that can be applied to validated tickets are:
+            </p>
             <ul style={sectionStyle}>
               <li>
                 <strong>Explode with confetti</strong> on New Year's or
