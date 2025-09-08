@@ -178,6 +178,11 @@ export default function TicketViewPage(): React.ReactElement {
     enabled: !!ticketData?.ticket.userId,
   });
 
+  // Check if NFT features are enabled
+  const { data: nftEnabled } = useQuery<{ enabled: boolean }>({
+    queryKey: ["/api/nft/enabled"],
+  });
+
   useEffect(() => {
     if (userBalance) {
       setUserCredits(userBalance.balance || 0);
@@ -1718,7 +1723,7 @@ export default function TicketViewPage(): React.ReactElement {
 
 
           {/* NFT Minting Section - Show for validated tickets with minting enabled */}
-          {ticket.isValidated && event.allowMinting && (
+          {ticket.isValidated && event.allowMinting && nftEnabled?.enabled && (
             <div className="card mt-3">
               <div className="card-body">
                 <h5 className="card-title mb-3">
