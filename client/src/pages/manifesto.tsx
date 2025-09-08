@@ -7,13 +7,13 @@ import {
   Sticker,
   Users,
   Calendar,
-  Ticket as TicketIcon,
   Zap,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import manifestoIcon from "@assets/image_1756696153574.png";
 import validationIcon from "@assets/users_green-4_1757356700434.png";
+import ticketLifeIcon from "@assets/certificate_server-1_1757356779647.png";
 
 export default function Manifesto() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -462,7 +462,7 @@ export default function Manifesto() {
       <div className="card mb-4">
         <div className="card-body">
           <h2 className="h4 mb-3 d-flex align-items-center">
-            <TicketIcon className="text-success me-2" size={24} />
+            <img src={ticketLifeIcon} alt="" style={{ width: "24px", height: "24px", marginRight: "8px" }} />
             The Life of a Ticket
           </h2>
 
