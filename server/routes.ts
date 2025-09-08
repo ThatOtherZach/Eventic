@@ -5898,6 +5898,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get SEO settings
+  app.get("/api/admin/seo/settings", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is admin
+      const isUserAdmin = await isAdmin(userId);
+      if (!isUserAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get SEO settings from database
+      const siteName = await storage.getSystemSetting('seo_site_name');
+      const defaultDescription = await storage.getSystemSetting('seo_default_description');
+      const defaultKeywords = await storage.getSystemSetting('seo_default_keywords');
+      const ogImage = await storage.getSystemSetting('seo_og_image');
+      const twitterImage = await storage.getSystemSetting('seo_twitter_image');
+      const favicon = await storage.getSystemSetting('seo_favicon');
+
+      res.json({
+        siteName: siteName?.value || 'Eventic',
+        defaultDescription: defaultDescription?.value || 'Create and manage events, generate tickets, and validate them via QR codes with Eventic - your complete event management platform.',
+        defaultKeywords: defaultKeywords?.value || 'events, tickets, event management, QR codes, event ticketing, event platform',
+        ogImage: ogImage?.value || '',
+        twitterImage: twitterImage?.value || '',
+        favicon: favicon?.value || ''
+      });
+    } catch (error) {
+      await logError(error, "GET /api/admin/seo/settings", { request: req });
+      res.status(500).json({ message: "Failed to get SEO settings" });
+    }
+  });
+
+  // Update SEO settings
+  app.put("/api/admin/seo/settings", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is admin
+      const isUserAdmin = await isAdmin(userId);
+      if (!isUserAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { siteName, defaultDescription, defaultKeywords, ogImage, twitterImage, favicon } = req.body;
+      
+      // Save SEO settings to database
+      if (siteName !== undefined) {
+        await storage.setSystemSetting('seo_site_name', siteName, userId);
+      }
+      if (defaultDescription !== undefined) {
+        await storage.setSystemSetting('seo_default_description', defaultDescription, userId);
+      }
+      if (defaultKeywords !== undefined) {
+        await storage.setSystemSetting('seo_default_keywords', defaultKeywords, userId);
+      }
+      if (ogImage !== undefined) {
+        await storage.setSystemSetting('seo_og_image', ogImage, userId);
+      }
+      if (twitterImage !== undefined) {
+        await storage.setSystemSetting('seo_twitter_image', twitterImage, userId);
+      }
+      if (favicon !== undefined) {
+        await storage.setSystemSetting('seo_favicon', favicon, userId);
+      }
+
+      res.json({
+        message: "SEO settings updated successfully"
+      });
+    } catch (error) {
+      await logError(error, "PUT /api/admin/seo/settings", { request: req });
+      res.status(500).json({ message: "Failed to update SEO settings" });
+    }
+  });
+
+  // Public endpoint to get SEO configuration for frontend
+  app.get("/api/seo/config", async (req, res) => {
+    try {
+      // Get SEO settings from database
+      const siteName = await storage.getSystemSetting('seo_site_name');
+      const defaultDescription = await storage.getSystemSetting('seo_default_description');
+      const defaultKeywords = await storage.getSystemSetting('seo_default_keywords');
+      const ogImage = await storage.getSystemSetting('seo_og_image');
+      const twitterImage = await storage.getSystemSetting('seo_twitter_image');
+      const favicon = await storage.getSystemSetting('seo_favicon');
+
+      res.json({
+        siteName: siteName?.value || 'Eventic',
+        defaultDescription: defaultDescription?.value || 'Create and manage events, generate tickets, and validate them via QR codes with Eventic - your complete event management platform.',
+        defaultKeywords: defaultKeywords?.value || 'events, tickets, event management, QR codes, event ticketing, event platform',
+        ogImage: ogImage?.value || '',
+        twitterImage: twitterImage?.value || '',
+        favicon: favicon?.value || ''
+      });
+    } catch (error) {
+      await logError(error, "GET /api/seo/config", { request: req });
+      // Return defaults on error
+      res.json({
+        siteName: 'Eventic',
+        defaultDescription: 'Create and manage events, generate tickets, and validate them via QR codes with Eventic - your complete event management platform.',
+        defaultKeywords: 'events, tickets, event management, QR codes, event ticketing, event platform',
+        ogImage: '',
+        twitterImage: '',
+        favicon: ''
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
