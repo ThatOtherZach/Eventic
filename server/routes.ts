@@ -3954,17 +3954,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check user has enough tickets
-      const userCurrency = await storage.getUserCurrency(userId);
+      const userBalance = await storage.getUserBalance(userId);
       const MINT_COST = withRoyalty ? 12 : 15;
       
-      if (userCurrency.ticketBalance < MINT_COST) {
+      if (!userBalance || userBalance.ticketBalance < MINT_COST) {
         return res.status(400).json({ 
-          message: `Insufficient tickets. Need ${MINT_COST}, have ${userCurrency.ticketBalance}` 
+          message: `Insufficient tickets. Need ${MINT_COST}, have ${userBalance?.ticketBalance || 0}` 
         });
       }
 
       // Deduct tickets immediately
-      await storage.updateTicketBalance(userId, -MINT_COST, `NFT mint preparation for ticket ${ticketId}`);
+      await storage.createLedgerTransaction({
+        entries: [
+          {
+            accountId: userId,
+            entryType: 'debit',
+            amount: MINT_COST,
+            currency: 'tickets',
+            description: `NFT mint preparation for ticket ${ticketId}`
+          }
+        ],
+        description: `NFT mint preparation for ticket ${ticketId}`,
+        relatedEntityId: ticketId,
+        relatedEntityType: 'ticket'
+      });
 
       // Create registry record (but not minted yet)
       const creator = await storage.getUser(event.userId);
@@ -4145,8 +4158,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Refund tickets
-      const refundAmount = registryRecord.nftMintCost || (registryRecord.withRoyalty ? 12 : 15);
-      await storage.updateTicketBalance(userId, refundAmount, `Refund for failed NFT mint (ticket ${ticketId})`);
+      const refundAmount = registryRecord.nftMintCost || 12; // Default to standard mint cost
+      await storage.createLedgerTransaction({
+        entries: [
+          {
+            accountId: userId,
+            entryType: 'credit',
+            amount: refundAmount,
+            currency: 'tickets',
+            description: `Refund for failed NFT mint (ticket ${ticketId})`
+          }
+        ],
+        description: `Refund for failed NFT mint (ticket ${ticketId})`,
+        relatedEntityId: ticketId,
+        relatedEntityType: 'ticket'
+      });
 
       // TODO: Mark registry record as failed
       // This would require adding an updateRegistryRecord method

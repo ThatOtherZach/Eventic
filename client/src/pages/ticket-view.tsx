@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
+import { MintNFTButtonV2 } from "@/components/registry/mint-nft-button-v2";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import {
@@ -1755,7 +1756,8 @@ export default function TicketViewPage(): React.ReactElement {
                   (Ethereum). You will need a valid address to recieve it. This
                   is completely optional.
                 </p>
-                <MintNFTButton ticket={ticket} event={event} />
+                {/* Always use V2 button for user-controlled minting - more friendly approach */}
+                <MintNFTButtonV2 ticket={ticket} event={event} />
               </div>
             </div>
           )}
