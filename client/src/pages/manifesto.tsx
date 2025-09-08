@@ -357,7 +357,7 @@ export default function Manifesto() {
             <h5 className="text-warning">🎫 Golden Tickets (10% Chance)</h5>
             <p style={sectionStyle}>
               Pure Wonka energy. When someone validates, they might strike
-              gold—literally. Their ticket transforms into a shimmering golden
+              gold. Their ticket transforms into a shimmering golden
               masterpiece. No chocolate factory required.
             </p>
             <small className="text-muted">
