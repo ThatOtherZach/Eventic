@@ -334,7 +334,7 @@ export default function Manifesto() {
           </h2>
 
           <div className="mb-4">
-            <h5 className="text-warning">🎫 Golden Tickets</h5>
+            <h5 className="text-warning">Golden Tickets</h5>
             <p style={sectionStyle}>
               Pure Wonka energy. When someone validates, they might strike gold.
               Their ticket transforms into a shimmering golden masterpiece. No
@@ -348,7 +348,7 @@ export default function Manifesto() {
 
           <div className="mb-4">
             <h5 className="text-purple">
-              ✨ Special Effects (Date-Based Magic)
+              Special Effects (Date-Based Magic)
             </h5>
             <p style={sectionStyle}>
               Some of the effects that can be applied to validated tickets are:
@@ -371,7 +371,7 @@ export default function Manifesto() {
           </div>
 
           <div className="mb-4">
-            <h5 className="text-danger">📈 Surge Pricing (1.5x - 5x)</h5>
+            <h5 className="text-danger">Surge Pricing (1.5x - 5x)</h5>
             <p style={sectionStyle}>
               When you hit 50% capacity, prices can multiply. Supply, meet
               demand. Demand, meet capitalism. It's like Uber but for fun.
@@ -382,7 +382,7 @@ export default function Manifesto() {
           </div>
 
           <div className="mb-4">
-            <h5 className="text-pink">🎨 Custom Stickers</h5>
+            <h5 className="text-pink">Custom Stickers</h5>
             <p style={sectionStyle}>
               Upload any image or gif URL. Set the probability. Watch it
               randomly appear on validated tickets. Pizza slices, crying Jordan,
@@ -394,7 +394,7 @@ export default function Manifesto() {
           </div>
 
           <div className="mb-4">
-            <h5 className="text-info">🤝 P2P Validation</h5>
+            <h5 className="text-info">P2P Validation</h5>
             <p style={sectionStyle}>
               Democratize the door. Any ticket holder becomes a validator.
               Perfect for events where "organized" is a loose concept. Flash
