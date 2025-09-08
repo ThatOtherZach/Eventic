@@ -5,20 +5,22 @@ export function formatDescription(text: string): string {
   if (!text) return '';
   
   // First, escape HTML to prevent injection
+  // Note: We don't escape quotes and apostrophes since they're safe in HTML content
+  // and escaping them causes display issues with HTML entities
   const escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/>/g, '&gt;');
   
   // Convert URLs to clickable links
   // Matches http://, https://, or www. URLs
   const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
   const withUrls = escaped.replace(urlPattern, (match) => {
     const href = match.startsWith('http') ? match : `https://${match}`;
+    // Escape quotes in href to prevent breaking the HTML attribute
+    const safeHref = href.replace(/"/g, '&quot;');
     // Ensure URLs are safe and add rel="noopener noreferrer" for security
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-primary">${match}</a>`;
+    return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer" class="text-primary">${match}</a>`;
   });
   
   // Convert hashtags to links
