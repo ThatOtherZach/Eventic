@@ -15,7 +15,7 @@ import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight } from "lucide-react";
+import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe } from "lucide-react";
 
 // Special effects configuration with ticket type previews
 const SPECIAL_EFFECTS = [
@@ -46,6 +46,7 @@ export default function AdminSettings() {
   const [newHeaderSubtitle, setNewHeaderSubtitle] = useState("");
   const [bannedWords, setBannedWords] = useState<string>("");
   const [bannedWordsLoading, setBannedWordsLoading] = useState(false);
+  const [seoSettings, setSeoSettings] = useState<any>({});
 
   // Check if user has admin access
   if (!isAdmin()) {
@@ -89,12 +90,25 @@ export default function AdminSettings() {
     enabled: isAdmin()
   });
 
+  // Get SEO settings
+  const { data: seoSettingsData } = useQuery({
+    queryKey: ["/api/admin/seo/settings"],
+    enabled: isAdmin()
+  });
+
   // Set banned words when data loads
   useEffect(() => {
     if (bannedWordsData) {
       setBannedWords(bannedWordsData.words || "");
     }
   }, [bannedWordsData]);
+
+  // Set SEO settings when data loads
+  useEffect(() => {
+    if (seoSettingsData) {
+      setSeoSettings(seoSettingsData);
+    }
+  }, [seoSettingsData]);
 
   // Update special effects odds
   const updateOddsMutation = useMutation({
@@ -267,6 +281,27 @@ export default function AdminSettings() {
     }
   });
 
+  // Update SEO settings mutation
+  const updateSeoSettingsMutation = useMutation({
+    mutationFn: async (settings: any) => {
+      return apiRequest("PUT", "/api/admin/seo/settings", settings);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Settings Updated",
+        description: "SEO settings have been updated successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/seo/settings"] });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update SEO settings.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const filteredEvents = (events as any[]).filter((event: any) =>
     event?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event?.venue?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -282,7 +317,7 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="effects" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="effects" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             Special Effects
@@ -302,6 +337,10 @@ export default function AdminSettings() {
           <TabsTrigger value="content" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Content
+          </TabsTrigger>
+          <TabsTrigger value="seo" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            SEO
           </TabsTrigger>
         </TabsList>
 
@@ -1039,6 +1078,150 @@ export default function AdminSettings() {
                   <li>• Metadata served from platform API</li>
                   <li>• One-time minting per validated ticket</li>
                   <li>• Base L2 blockchain for low gas fees</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* SEO Settings Tab */}
+        <TabsContent value="seo" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>SEO Configuration</CardTitle>
+              <CardDescription>
+                Manage search engine optimization settings including site name, default images, and meta tags.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Site Name */}
+              <div className="space-y-2">
+                <Label htmlFor="site-name">Site Name</Label>
+                <Input
+                  id="site-name"
+                  placeholder="Eventic"
+                  value={seoSettings?.siteName || "Eventic"}
+                  onChange={(e) => setSeoSettings((prev: any) => ({ ...prev, siteName: e.target.value }))}
+                  data-testid="input-site-name"
+                />
+                <p className="text-xs text-gray-500">
+                  The name of your platform that appears in search results and page titles.
+                </p>
+              </div>
+
+              {/* Default Description */}
+              <div className="space-y-2">
+                <Label htmlFor="default-description">Default Description</Label>
+                <textarea
+                  id="default-description"
+                  className="w-full min-h-[80px] p-3 border rounded-md resize-y"
+                  placeholder="Create and manage events, generate tickets, and validate them via QR codes..."
+                  value={seoSettings?.defaultDescription || ""}
+                  onChange={(e) => setSeoSettings((prev: any) => ({ ...prev, defaultDescription: e.target.value }))}
+                  data-testid="textarea-default-description"
+                />
+                <p className="text-xs text-gray-500">
+                  Default meta description for pages without specific descriptions (max 160 characters recommended).
+                </p>
+              </div>
+
+              {/* Default Keywords */}
+              <div className="space-y-2">
+                <Label htmlFor="default-keywords">Default Keywords</Label>
+                <Input
+                  id="default-keywords"
+                  placeholder="events, tickets, event management, QR codes..."
+                  value={seoSettings?.defaultKeywords || ""}
+                  onChange={(e) => setSeoSettings((prev: any) => ({ ...prev, defaultKeywords: e.target.value }))}
+                  data-testid="input-default-keywords"
+                />
+                <p className="text-xs text-gray-500">
+                  Comma-separated keywords for search engine optimization.
+                </p>
+              </div>
+
+              {/* Social Media Images */}
+              <div className="space-y-4">
+                <h3 className="font-medium">Social Media Images</h3>
+                
+                {/* OG Image */}
+                <div className="space-y-2">
+                  <Label htmlFor="og-image">Open Graph Image URL</Label>
+                  <Input
+                    id="og-image"
+                    type="url"
+                    placeholder="https://example.com/og-image.png"
+                    value={seoSettings?.ogImage || ""}
+                    onChange={(e) => setSeoSettings((prev: any) => ({ ...prev, ogImage: e.target.value }))}
+                    data-testid="input-og-image"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Default image for social media sharing (1200x630px recommended).
+                  </p>
+                </div>
+
+                {/* Twitter Image */}
+                <div className="space-y-2">
+                  <Label htmlFor="twitter-image">Twitter Card Image URL</Label>
+                  <Input
+                    id="twitter-image"
+                    type="url"
+                    placeholder="https://example.com/twitter-image.png"
+                    value={seoSettings?.twitterImage || ""}
+                    onChange={(e) => setSeoSettings((prev: any) => ({ ...prev, twitterImage: e.target.value }))}
+                    data-testid="input-twitter-image"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Image for Twitter cards (can be same as OG image).
+                  </p>
+                </div>
+              </div>
+
+              {/* Favicon URL */}
+              <div className="space-y-2">
+                <Label htmlFor="favicon">Favicon URL</Label>
+                <Input
+                  id="favicon"
+                  type="url"
+                  placeholder="https://example.com/favicon.ico"
+                  value={seoSettings?.favicon || ""}
+                  onChange={(e) => setSeoSettings((prev: any) => ({ ...prev, favicon: e.target.value }))}
+                  data-testid="input-favicon"
+                />
+                <p className="text-xs text-gray-500">
+                  Icon that appears in browser tabs (16x16px or 32x32px).
+                </p>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => updateSeoSettingsMutation.mutate(seoSettings)}
+                  disabled={updateSeoSettingsMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-save-seo"
+                >
+                  {updateSeoSettingsMutation.isPending ? "Saving..." : "Save SEO Settings"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSeoSettings(seoSettingsData)}
+                  disabled={updateSeoSettingsMutation.isPending}
+                  data-testid="button-reset-seo"
+                >
+                  Reset
+                </Button>
+              </div>
+
+              {/* SEO Tips */}
+              <div className="p-4 bg-blue-50 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-blue-800">SEO Best Practices</p>
+                <ul className="text-xs text-blue-700 space-y-1 ml-4">
+                  <li>• Keep descriptions between 150-160 characters for best display</li>
+                  <li>• Use unique, descriptive titles for each page</li>
+                  <li>• Include relevant keywords naturally in content</li>
+                  <li>• Ensure images have proper dimensions for social sharing</li>
+                  <li>• Update meta tags regularly to reflect current content</li>
                 </ul>
               </div>
             </CardContent>
