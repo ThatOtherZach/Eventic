@@ -43,6 +43,7 @@ export function Navigation() {
         <Link href="/events" className="navbar-brand d-flex align-items-center">
           <img src="/eventic-logo.png" alt="Eventic" style={{ width: '28px', height: '28px', marginRight: '8px' }} />
           <span className="fw-bold">Eventic</span>
+          <span className="badge bg-danger ms-2" style={{ fontSize: '0.7rem', fontWeight: 'normal', verticalAlign: 'middle' }}>Beta</span>
         </Link>
         
         <button 
