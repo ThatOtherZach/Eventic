@@ -73,6 +73,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
       specialEffectsEnabled: false,
       allowMinting: false,
       isPrivate: false,
+      paymentProcessing: "None",
+      walletAddress: undefined,
     },
   });
 
@@ -795,11 +797,14 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
               {createEventMutation.isPending ? "Creating..." : (() => {
                 const maxTickets = form.watch('maxTickets') || 0;
                 const ticketPrice = parseFloat(form.watch('ticketPrice') || '0');
-                const paymentProcessing = form.watch('paymentProcessing');
+                const paymentProcessing = form.watch('paymentProcessing') || 'None';
                 
-                // Calculate payment processing fee
+                // Calculate base cost: free events cost capacity tickets, paid events cost 0
+                let baseCost = ticketPrice > 0 ? 0 : maxTickets;
+                
+                // Calculate payment processing fee if enabled
                 let paymentFee = 0;
-                if (ticketPrice > 0 && paymentProcessing && paymentProcessing !== 'None') {
+                if (paymentProcessing !== 'None') {
                   if (paymentProcessing === 'Ethereum' || paymentProcessing === 'Bitcoin') {
                     paymentFee = 100;
                   } else if (paymentProcessing === 'USDC') {
@@ -807,10 +812,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
                   }
                 }
                 
-                // Calculate total tickets needed
-                // For free events: charge for capacity + payment fee
-                // For paid events: only charge payment fee (attendees pay for tickets)
-                const ticketsNeeded = ticketPrice > 0 ? paymentFee : maxTickets + paymentFee;
+                // Total tickets needed = base cost + payment processing fee
+                const ticketsNeeded = baseCost + paymentFee;
                 
                 return ticketsNeeded > 0 ? `Create for ${ticketsNeeded} Tickets` : "Create Event";
               })()}
