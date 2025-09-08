@@ -5808,6 +5808,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NFT Settings Management Endpoints
+
+  // Get NFT settings and status
+  app.get("/api/admin/nft/settings", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is admin
+      const isUserAdmin = await isAdmin(userId);
+      if (!isUserAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get NFT enabled setting from database
+      const nftEnabledSetting = await storage.getSystemSetting('nft_enabled');
+      const isEnabled = nftEnabledSetting?.value === 'true';
+
+      // Check environment variables for NFT configuration
+      const hasContractAddress = !!process.env.NFT_CONTRACT_ADDRESS;
+      const hasMinterKey = !!process.env.NFT_MINTER_PRIVATE_KEY;
+      const hasRoyaltyWallet = !!process.env.NFT_ROYALTY_WALLET;
+      const baseRpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
+
+      res.json({
+        enabled: isEnabled,
+        configured: hasContractAddress && hasMinterKey,
+        status: {
+          contractAddress: hasContractAddress,
+          minterKey: hasMinterKey,
+          royaltyWallet: hasRoyaltyWallet,
+          rpcUrl: baseRpcUrl
+        },
+        requirements: {
+          contractAddress: "NFT_CONTRACT_ADDRESS - The deployed TicketRegistry contract address",
+          minterKey: "NFT_MINTER_PRIVATE_KEY - Private key of the wallet that can mint NFTs",
+          royaltyWallet: "NFT_ROYALTY_WALLET - Wallet address to receive 2.69% royalties",
+          rpcUrl: "BASE_RPC_URL - (Optional) RPC endpoint for Base L2, defaults to mainnet"
+        }
+      });
+    } catch (error) {
+      await logError(error, "GET /api/admin/nft/settings", { request: req });
+      res.status(500).json({ message: "Failed to get NFT settings" });
+    }
+  });
+
+  // Update NFT settings
+  app.post("/api/admin/nft/settings", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Check if user is admin
+      const isUserAdmin = await isAdmin(userId);
+      if (!isUserAdmin) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { enabled } = req.body;
+      
+      // Save the enabled state to database
+      await storage.setSystemSetting('nft_enabled', enabled ? 'true' : 'false', userId);
+
+      res.json({
+        message: `NFT features ${enabled ? 'enabled' : 'disabled'} successfully`,
+        enabled
+      });
+    } catch (error) {
+      await logError(error, "POST /api/admin/nft/settings", { request: req });
+      res.status(500).json({ message: "Failed to update NFT settings" });
+    }
+  });
+
+  // Public endpoint to check if NFT features are enabled
+  app.get("/api/nft/enabled", async (req, res) => {
+    try {
+      const nftEnabledSetting = await storage.getSystemSetting('nft_enabled');
+      const isEnabled = nftEnabledSetting?.value === 'true';
+      
+      res.json({ enabled: isEnabled });
+    } catch (error) {
+      await logError(error, "GET /api/nft/enabled", { request: req });
+      res.json({ enabled: false }); // Default to disabled on error
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
