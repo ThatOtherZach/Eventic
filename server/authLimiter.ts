@@ -6,7 +6,7 @@ import { logWarning } from './logger';
 // Track CAPTCHA attempts per IP
 const captchaAttempts = new Map<string, { failures: number; lastAttempt: Date }>();
 
-// Clean up old CAPTCHA attempts every 30 minutes
+// Clean up old CAPTCHA attempts bi-weekly
 setInterval(() => {
   const now = new Date();
   Array.from(captchaAttempts.entries()).forEach(([ip, data]) => {
@@ -14,7 +14,7 @@ setInterval(() => {
       captchaAttempts.delete(ip);
     }
   });
-}, 30 * 60 * 1000);
+}, 14 * 24 * 60 * 60 * 1000); // Bi-weekly (14 days)
 
 export async function checkLoginRateLimit(
   req: Request,
@@ -133,11 +133,11 @@ export async function checkLoginRateLimit(
   }
 }
 
-// Clean up expired IP blocks periodically
+// Clean up expired IP blocks bi-weekly
 setInterval(async () => {
   try {
     await storage.unblockExpiredIps();
   } catch (error) {
     console.error('Failed to unblock expired IPs:', error);
   }
-}, 5 * 60 * 1000); // Every 5 minutes
+}, 14 * 24 * 60 * 60 * 1000); // Bi-weekly (14 days)

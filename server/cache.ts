@@ -8,10 +8,10 @@ export class SimpleCache {
   private cleanupInterval: NodeJS.Timeout | null = null;
   
   constructor() {
-    // Start cleanup interval (every minute)
+    // Start cleanup interval (every 10 minutes)
     this.cleanupInterval = setInterval(() => {
       this.cleanupExpired();
-    }, 60000);
+    }, 10 * 60 * 1000); // 10 minutes
   }
   
   private cleanupExpired() {
