@@ -33,6 +33,7 @@ The system includes client-side QR code generation for tickets and server-side v
 - **Event Reputation System**: Attendees can rate events (thumbs up/down); event owners' reputation is displayed with badges and formatted vote counts. Users earn 1 ticket reward when rating an event for the first time.
 - **Ticket Resale System**: Replaces refunds, allowing tickets to be resold at original price (2% fee for paid tickets). Resale queue ensures automatic matching with new purchases.
 - **NFT Royalty System**: Users can choose between standard minting (12 tickets) with 2.69% royalty on resales or no-royalty minting (15 tickets). Implements ERC-2981 royalty standard for marketplace compatibility.
+- **User-Controlled NFT Minting**: Platform charges tickets (12 or 15) for NFT minting rights, but users pay gas fees directly from their wallets. Users connect MetaMask or Coinbase Wallet, approve the transaction, and the NFT is minted directly to their address. Transaction monitoring ensures successful mints or automatic ticket refunds on failure. Gas costs on Base L2 are typically $0.01-$0.50 per mint.
 - **Error Logging**: Comprehensive server error logging to a `system_logs` table with 90-day retention, categorizing errors by severity.
 - **Toast Notifications**: Bootstrap-style success, error, and system fault toasts for immediate visual feedback.
 - **Enhanced Event Management**: Date/time validation for event starts/ends, supporting multi-day events.
