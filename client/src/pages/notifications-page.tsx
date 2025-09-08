@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Bell, Settings, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import type { Notification, NotificationPreferences } from "@shared/schema";
@@ -12,6 +13,9 @@ export default function NotificationsPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [page, setPage] = useState(1);
   const notificationsPerPage = 10;
+
+  // Set page SEO
+  useSEO(SEO_CONFIG.notifications);
 
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: [`/api/notifications`],

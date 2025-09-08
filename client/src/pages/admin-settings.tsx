@@ -11,6 +11,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,9 @@ export default function AdminSettings() {
   const { user, isAdmin } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+
+  // Set page SEO
+  useSEO(SEO_CONFIG.admin);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
   const [effectOdds, setEffectOdds] = useState({

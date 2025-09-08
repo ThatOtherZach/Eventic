@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Mail, CheckCircle, Ticket } from "lucide-react";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 
 export default function AuthPage() {
   const { user, signUp } = useAuth();
@@ -9,6 +10,9 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Set page SEO
+  useSEO(SEO_CONFIG.login);
 
   // Redirect if already logged in
   if (user) {

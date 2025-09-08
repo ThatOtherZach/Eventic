@@ -1,7 +1,11 @@
 import { QrScannerImplementation } from "@/components/scanner/qr-scanner-implementation";
 import validateIcon from "@assets/image_1756750482438.png";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 
 export default function Scanner() {
+  // Set page SEO
+  useSEO(SEO_CONFIG.scanner);
+
   return (
     <div className="row justify-content-center">
       <div className="col-12 col-md-8 col-lg-6">

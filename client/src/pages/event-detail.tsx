@@ -25,6 +25,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useSEO } from "@/hooks/use-seo";
 import { formatDescription } from "@/lib/text-formatter";
 import {
   Tooltip,
@@ -175,93 +176,21 @@ export default function EventDetailPage() {
     },
   });
 
-  // Update SEO meta tags when event data loads
-  useEffect(() => {
-    if (event) {
-      // Set page title
-      document.title = `${event.name} - Event Tickets`;
+  // Set dynamic SEO based on event data
+  const eventDescription = event?.description
+    ? event.description.replace(/<[^>]*>/g, "").substring(0, 160) +
+      (event.description.length > 160 ? "..." : "")
+    : event ? `Join us for ${event.name} at ${event.venue} on ${event.date}. Get your tickets now!` : "";
 
-      // Remove existing meta tags we're going to replace
-      const existingMetaTags = document.querySelectorAll(
-        'meta[name="description"], meta[property^="og:"], meta[name="twitter:"]',
-      );
-      existingMetaTags.forEach((tag) => tag.remove());
-
-      // Create description from event description or fallback
-      const description = event.description
-        ? event.description.replace(/<[^>]*>/g, "").substring(0, 160) +
-          (event.description.length > 160 ? "..." : "")
-        : `Join us for ${event.name} at ${event.venue} on ${event.date}. Get your tickets now!`;
-
-      // Add meta description
-      const metaDescription = document.createElement("meta");
-      metaDescription.name = "description";
-      metaDescription.content = description;
-      document.head.appendChild(metaDescription);
-
-      // Add Open Graph tags
-      const ogTitle = document.createElement("meta");
-      ogTitle.setAttribute("property", "og:title");
-      ogTitle.content = event.name;
-      document.head.appendChild(ogTitle);
-
-      const ogDescription = document.createElement("meta");
-      ogDescription.setAttribute("property", "og:description");
-      ogDescription.content = description;
-      document.head.appendChild(ogDescription);
-
-      const ogType = document.createElement("meta");
-      ogType.setAttribute("property", "og:type");
-      ogType.content = "event";
-      document.head.appendChild(ogType);
-
-      const ogUrl = document.createElement("meta");
-      ogUrl.setAttribute("property", "og:url");
-      ogUrl.content = window.location.href;
-      document.head.appendChild(ogUrl);
-
-      // Add Open Graph image if event has featured image
-      if (event.imageUrl) {
-        const ogImage = document.createElement("meta");
-        ogImage.setAttribute("property", "og:image");
-        ogImage.content = event.imageUrl;
-        document.head.appendChild(ogImage);
-
-        const ogImageAlt = document.createElement("meta");
-        ogImageAlt.setAttribute("property", "og:image:alt");
-        ogImageAlt.content = `${event.name} event image`;
-        document.head.appendChild(ogImageAlt);
-      }
-
-      // Add Twitter Card tags
-      const twitterCard = document.createElement("meta");
-      twitterCard.name = "twitter:card";
-      twitterCard.content = "summary_large_image";
-      document.head.appendChild(twitterCard);
-
-      const twitterTitle = document.createElement("meta");
-      twitterTitle.name = "twitter:title";
-      twitterTitle.content = event.name;
-      document.head.appendChild(twitterTitle);
-
-      const twitterDescription = document.createElement("meta");
-      twitterDescription.name = "twitter:description";
-      twitterDescription.content = description;
-      document.head.appendChild(twitterDescription);
-
-      if (event.imageUrl) {
-        const twitterImage = document.createElement("meta");
-        twitterImage.name = "twitter:image";
-        twitterImage.content = event.imageUrl;
-        document.head.appendChild(twitterImage);
-      }
-    }
-
-    // Cleanup function to reset title when component unmounts
-    return () => {
-      document.title = "Event Tickets";
-    };
-  }, [event]);
+  useSEO({
+    title: event?.name || "Event Details",
+    description: eventDescription || "View event details, get tickets, and find venue information.",
+    ogTitle: event?.name,
+    ogDescription: eventDescription,
+    ogImage: event?.imageUrl,
+    ogUrl: typeof window !== "undefined" ? window.location.href : undefined,
+    keywords: event ? `${event.name}, event tickets, ${event.venue}, ${event.date}` : "event, tickets, venue"
+  });
 
   // Initialize Bootstrap tooltips
   useEffect(() => {

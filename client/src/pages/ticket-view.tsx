@@ -5,6 +5,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/use-seo";
 import {
   ArrowLeft,
   Clock,
@@ -119,6 +120,9 @@ export default function TicketViewPage(): React.ReactElement {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isValidating, setIsValidating] = useState(false);
+
+  // Set page SEO
+  useSEO({ title: "Ticket View", description: "View your event ticket details and access QR code for entry." });
   const [currentToken, setCurrentToken] = useState<string>("");
   const [currentCode, setCurrentCode] = useState<string>("");
   const [timeRemaining, setTimeRemaining] = useState<number>(0);

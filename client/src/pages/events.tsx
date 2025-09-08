@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { StatsCards } from "@/components/events/stats-cards";
 import { EventList } from "@/components/events/event-list";
 import { TicketPreviewModal } from "@/components/tickets/ticket-preview-modal";
@@ -24,60 +25,8 @@ export default function Events() {
     staleTime: 1000 * 60 * 5 // Cache for 5 minutes
   });
 
-  // Set SEO meta tags for events listing page
-  useEffect(() => {
-    // Set page title
-    document.title = 'Event Tickets - Browse and Book Events';
-    
-    // Remove existing meta tags we're going to replace
-    const existingMetaTags = document.querySelectorAll('meta[name="description"], meta[property^="og:"], meta[name="twitter:"]');
-    existingMetaTags.forEach(tag => tag.remove());
-    
-    const description = 'Discover and book tickets for amazing events. Browse our featured events, check availability, and secure your spot at the best events happening near you.';
-    
-    // Add meta description
-    const metaDescription = document.createElement('meta');
-    metaDescription.name = 'description';
-    metaDescription.content = description;
-    document.head.appendChild(metaDescription);
-    
-    // Add Open Graph tags
-    const ogTitle = document.createElement('meta');
-    ogTitle.setAttribute('property', 'og:title');
-    ogTitle.content = 'Event Tickets - Browse and Book Events';
-    document.head.appendChild(ogTitle);
-    
-    const ogDescription = document.createElement('meta');
-    ogDescription.setAttribute('property', 'og:description');
-    ogDescription.content = description;
-    document.head.appendChild(ogDescription);
-    
-    const ogType = document.createElement('meta');
-    ogType.setAttribute('property', 'og:type');
-    ogType.content = 'website';
-    document.head.appendChild(ogType);
-    
-    const ogUrl = document.createElement('meta');
-    ogUrl.setAttribute('property', 'og:url');
-    ogUrl.content = window.location.href;
-    document.head.appendChild(ogUrl);
-    
-    // Add Twitter Card tags
-    const twitterCard = document.createElement('meta');
-    twitterCard.name = 'twitter:card';
-    twitterCard.content = 'summary';
-    document.head.appendChild(twitterCard);
-    
-    const twitterTitle = document.createElement('meta');
-    twitterTitle.name = 'twitter:title';
-    twitterTitle.content = 'Event Tickets - Browse and Book Events';
-    document.head.appendChild(twitterTitle);
-    
-    const twitterDescription = document.createElement('meta');
-    twitterDescription.name = 'twitter:description';
-    twitterDescription.content = description;
-    document.head.appendChild(twitterDescription);
-  }, []);
+  // Set page SEO
+  useSEO(SEO_CONFIG.home);
 
   const handleGenerateTickets = (event: Event) => {
     if (!user) {

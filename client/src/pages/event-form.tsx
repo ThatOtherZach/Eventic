@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import {
@@ -67,6 +68,9 @@ export default function EventForm() {
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = checkIsAdmin();
+
+  // Set page SEO
+  useSEO(isEditMode ? SEO_CONFIG.editEvent : SEO_CONFIG.createEvent);
 
   // Get user's credit balance
   const { data: userBalance } = useQuery<{ balance: string }>({

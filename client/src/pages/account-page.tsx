@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import {
   Calendar,
   Ticket,
@@ -43,6 +44,9 @@ export default function AccountPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const searchParams = useSearch();
+
+  // Set page SEO
+  useSEO(SEO_CONFIG.profile);
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [secretCode, setSecretCode] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState(12);
