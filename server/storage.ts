@@ -117,6 +117,7 @@ export interface IStorage {
   getAllRegistryRecords(): Promise<RegistryRecord[]>;
   canMintTicket(ticketId: string): Promise<boolean>;
   createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction>;
+  updateRegistryLastAccessed(id: string): Promise<void>;
   
   // Featured Events Management
   getActiveFeaturedEvents(): Promise<FeaturedEvent[]>;
@@ -2423,6 +2424,13 @@ export class DatabaseStorage implements IStorage {
   async createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction> {
     const [newTransaction] = await db.insert(registryTransactions).values(transaction).returning();
     return newTransaction;
+  }
+
+  async updateRegistryLastAccessed(id: string): Promise<void> {
+    await db
+      .update(registryRecords)
+      .set({ lastAccessed: new Date() })
+      .where(eq(registryRecords.id, id));
   }
 
   // Featured Events Management

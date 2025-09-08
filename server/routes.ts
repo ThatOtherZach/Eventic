@@ -3999,6 +3999,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Registry record not found" });
       }
       
+      // Update lastAccessed timestamp to track NFT viewing
+      await storage.updateRegistryLastAccessed(id);
+      
       res.json(registryRecord);
     } catch (error) {
       await logError(error, "GET /api/registry/:id", {
@@ -4014,6 +4017,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const registryRecord = await storage.getRegistryRecord(id);
       
+      // Update lastAccessed for metadata endpoint too (OpenSea crawls this)
+      await storage.updateRegistryLastAccessed(id);
+      
       if (!registryRecord) {
         return res.status(404).json({ message: "Registry record not found" });
       }
@@ -4022,6 +4028,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const metadata = {
         name: registryRecord.title || `Ticket #${registryRecord.ticketNumber}`,
         description: registryRecord.description || `Validated ticket from ${registryRecord.eventName}`,
+        // Serve compressed or original image based on isCompressed flag
+        // The data is already in base64 format, whether compressed or not
         image: registryRecord.ticketGifData || registryRecord.eventImageData || registryRecord.imageUrl || "",
         external_url: `${req.protocol}://${req.get('host')}/registry/${id}`,
         attributes: [
