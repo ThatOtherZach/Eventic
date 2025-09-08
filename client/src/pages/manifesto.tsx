@@ -109,7 +109,7 @@ export default function Manifesto() {
           </p>
 
           <p className="mb-3" style={paragraphStyle}>
-            Here there be dragons. This is a beta and lord knows there's bugs around here somewhere. I'm just a one man show at the momnet, so if you find something wacky weird, please fly over to <a href="https://github.com/ThatOtherZach/Eventic" target="_blank">Github and report it</a>. Otherwise I'll never know.
+            Here there be dragons. This is a beta and lord knows there's bugs around here somewhere. I'm just a one man show at the moment, so if you find something wacky weird, please fly over to <a href="https://github.com/ThatOtherZach/Eventic" target="_blank">Github and report it</a>. Otherwise I'll never know.
           </p>
 
           <CollapsibleSection id="tickets" title="🎟 Tickets That Don't Suck">
