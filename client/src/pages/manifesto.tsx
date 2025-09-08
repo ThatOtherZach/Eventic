@@ -94,7 +94,7 @@ export default function Manifesto() {
         <div className="card-body">
           <h2 className="h4 mb-3">But... Why?</h2>
           <p className="mb-3" style={paragraphStyle}>
-            I hate Ticketmaster. Those parasitic fees. The endless spam. All for
+            I hate Ticketmaster. Parasitic fees, endless spam and all for
             a lousy PDF that costs more in "convenience charges" than actual
             convenience.
           </p>
@@ -104,13 +104,13 @@ export default function Manifesto() {
           </p>
           <p className="mb-3" style={paragraphStyle}>
             These companies are digital toll collectors at the gates of fun.
-            Gatekeepers nobody asked for. Middleware... So here's my silly
+            Gatekeepers nobody asked for. So here's my silly
             solution, Eventic!
           </p>
 
           <CollapsibleSection id="tickets" title="🎟 Tickets That Don't Suck">
             <p className="mb-3" style={paragraphStyle}>
-              Your ticket can glow golden. It can transform based on the day,
+              Now your ticket can glow golden. It can transform based on the day,
               the month, your birthday, or other random chaos.
             </p>
             <p className="mb-3" style={paragraphStyle}>
@@ -132,10 +132,8 @@ export default function Manifesto() {
               survives up to a year, then vanishes too.
             </p>
             <p className="mb-3" style={paragraphStyle}>
-              Until I ship the NFT feature. $2.69 turns your ticket into an
-              eternal proof-of-experience. Optional. Zero pressure. Proof. You.
-              Were. There. Stuck in the blockchain forever. Or until the world
-              ends. Whichever comes first.
+              Want to keep it long term? For just $2.69 you can mint your ticket into an
+              eternal proof-of-experience digital collectable. Totally optional. Zero pressure. We store the anchor point for your collectable and you're free to take it where evever the blockchain takes you.
             </p>
           </CollapsibleSection>
 
@@ -144,54 +142,50 @@ export default function Manifesto() {
             title="🎢 The 69-Day Reputation Window"
           >
             <p className="mb-3" style={paragraphStyle}>
-              Here's how reputation actually works: Only events from the last 69
+              Only events from the last 69
               days count toward your score. Run an amazing event today? Those
               thumbs up boost your rep immediately. But in 69 days? Poof, they
-              fall out of the window. Your reputation is always based on what
+              fall off. Your reputation is always based on what
               you've done lately, not what you did last year.
             </p>
             <p className="mb-3" style={paragraphStyle}>
               Think of it like a rolling average of your recent vibe. Got 100
               thumbs up from an event 68 days ago? Tomorrow you'll need fresh
               ones to maintain your status. Your badge evolves in real-time: NPC
-              → Interesting → Nice → 😎. But slack off, and you'll slide right
-              back down.
+              → Interesting → Nice → 😎.
             </p>
             <p className="mb-3" style={paragraphStyle}>
-              This rolling window is genius for three reasons: (1) Bad events
-              can't haunt you forever—redemption is always 69 days away. (2) You
-              can't coast on past glory—stay active or fade away. (3) Gaming the
-              system is pointless since fake upvotes expire too, and creating
-              100 fake accounts costs 10,000 credits.
+              This revolving door reputation system means bad events
+              can't haunt you forever as redemption is always 69 days away. You
+              can't coast on past glory—stay active or fade away. Gaming the
+              system is pointless since the ratings expire with the events.
             </p>
             <p className="mb-3" style={paragraphStyle}>
               It's reputation with an expiration date. Fresh, organic, and
-              impossible to hoard. Like farmers market reputation, not Walmart
-              reputation.
+              impossible to hoard.
             </p>
           </CollapsibleSection>
 
           <CollapsibleSection
             id="credits"
-            title="💸 The Credits Game (Yes, It's a Game)"
+            title="💸 The Ticket Economy"
           >
             <p className="mb-3" style={paragraphStyle}>
-              OK, so here's where it gets weird (in a good way). We built an
-              entire economy around... wait for it... being nice. I know,
+              OK, so here's where it gets weird (in a good way). Eventic has an
+              entire economy around... wait for it... being nice! I know,
               revolutionary.
             </p>
             <p className="mb-3" style={paragraphStyle}>
-              <strong>Credits are NOT tickets.</strong> Credits are like arcade
-              tokens for creating events. Tickets are what people use to
-              actually show up. Got it? Good. Everyone starts with 10 credits.
-              You spend them to create events (100-person event = 100 credits).
-              But attending? Always free.
+              Tickets for all users are like arcade
+              tokens, they're used for interacting with the platform for actions like creating events. So an event with 50 attendees will cost you 50 tickets. Tickets are what people use to
+              actually show up. Got it? Good. Everyone starts with 10 tickets as a signup bonus.
+              You spend them to create events, boost to the featured section of the home page as well as increase odds of getting specials effects applied. Attending an event is always free, unless the event organizer has applied a ticket price to pay at the door on online with one of our payment options.
             </p>
             <p className="mb-3" style={paragraphStyle}>
               Here's the fun part: Rate an event with a thumbs up? Boom, you
-              earn 1 credit. First time only though—we're not running a credit
+              earn 1 ticket. First time only though—we're not running a credit
               farm here. Want to thumbs down that terrible DJ set? That'll cost
-              you 1 credit. Why? Because negativity should cost something, even
+              you 1 ticket. Why? Because negativity should cost something, even
               if it's tiny.
             </p>
             <p className="mb-3" style={paragraphStyle}>
@@ -202,7 +196,7 @@ export default function Manifesto() {
 
           <CollapsibleSection
             id="surge"
-            title="📈 Surge Pricing (But Make It Gentle)"
+            title="📈 Gentle Surge Pricing"
           >
             <p className="mb-3" style={paragraphStyle}>
               Remember Uber's 10x surge pricing during that snowstorm? Yeah, we
@@ -219,24 +213,20 @@ export default function Manifesto() {
 
           <CollapsibleSection
             id="money"
-            title="💰 Real Money? Not Our Problem (Yet)"
+            title="💰 Real Money? Not Here"
           >
             <p className="mb-3" style={paragraphStyle}>
-              Cash happens at the door. Venmo in the DMs. Crypto in the
+              Event ticket payments happens at the door. Venmo in the DMs. Crypto in the
               metaverse. Whatever. We don't touch it. We're just the matchmaker
               between people who throw parties and people who show up to them.
             </p>
             <p className="mb-3" style={paragraphStyle}>
-              Soon™ we'll add Stripe (2% fee) and crypto payments for the
-              brave. But credits? They stay in the platform. No cash out.
-              They're utility tokens, not securities. The SEC can't hurt us
-              here.
-            </p>
+              We do allow event creators to add crypto payments, but we don't touch any of those funds, creators keep 100% of their ticket revenue.</p>
           </CollapsibleSection>
 
           <CollapsibleSection
             id="absurdist"
-            title="🎭 The Absurdist Social Experiment"
+            title="🎭 Absurd Social Experiment Included"
           >
             <p className="mb-3" style={paragraphStyle}>
               Here's the beautiful, chaotic part: With P2P validation, you can
@@ -249,15 +239,12 @@ export default function Manifesto() {
               The kicker? These ridiculous moments can become permanent. That
               ticket from "Emergency dance party in Steve's backyard because his
               ex got engaged"? That proof you were at "The great pillow fight of
-              2025"? Mint it as an NFT for under 5 bucks (price TBD, we're not
-              greedy).
+              2025"? Mint it as an digital collectable and keep it forever.
             </p>
             <p className="mb-3" style={paragraphStyle}>
-              Everything else vanishes after 69 days. But minted tickets?
-              They're forever. A permanent record that yes, you were there when
+              Everything else vanishes after 69 days unless you mint it as a digital collectable. A permanent record that yes, you were there when
               47 strangers decided to have a staring contest in a Denny's
-              parking lot at 3am. Was it stupid? Absolutely. Was it real? The
-              blockchain says yes.
+              parking lot at 3am. Was it stupid? Absolutely. Can you prove it for years to come? Yup.
             </p>
             <p className="mb-3" style={paragraphStyle}>
               This isn't about creating value. It's about proving existence. "I
@@ -274,18 +261,13 @@ export default function Manifesto() {
             </p>
             <p className="mb-3" style={paragraphStyle}>
               <strong>Geofencing:</strong> If enabled, your ticket becomes
-              location aware. It's only valid within a 690-meter radius. If
+              location aware. It's only valid within a 300 meter radius. If
               disabled, users can enter from wherever they want. Defaults: off.
             </p>
             <p className="mb-3" style={paragraphStyle}>
               <strong>Multi-pass:</strong> Enable if one ticket allows multiple
               entries. Perfect for conferences or multi-day festivals. All event
               creation settings are permanent.
-            </p>
-            <p className="mb-3" style={paragraphStyle}>
-              <strong>Surge pricing:</strong> Let capitalism work when demand
-              spikes, like ride-sharing apps, you set the multiplier, 1.5x to
-              5x.
             </p>
           </CollapsibleSection>
 
@@ -301,7 +283,7 @@ export default function Manifesto() {
             </p>
             <p className="mb-3" style={paragraphStyle}>
               When you validate a geofenced ticket, your browser checks if
-              you're within 690 meters of the venue. This happens{" "}
+              you're within 300 meters of the venue. This happens{" "}
               <strong>on your device</strong>, takes 2 seconds, then we forget
               it forever. The GPS check never leaves your phone. We literally
               don't know where you are and don't want to know.
@@ -314,9 +296,7 @@ export default function Manifesto() {
               days if you don't.
             </p>
             <p className="mb-3" style={paragraphStyle}>
-              We treat location like a vampire treats your house—we can't come
-              in unless you explicitly invite us, and even then, we leave
-              immediately.
+              We treat data passivley, only used when we need it and dumped like a bad ex the second we don't. You can also delete your account if you want.
             </p>
           </CollapsibleSection>
 
@@ -354,7 +334,7 @@ export default function Manifesto() {
           </h2>
 
           <div className="mb-4">
-            <h5 className="text-warning">🎫 Golden Tickets (10% Chance)</h5>
+            <h5 className="text-warning">🎫 Golden Tickets</h5>
             <p style={sectionStyle}>
               Pure Wonka energy. When someone validates, they might strike gold.
               Their ticket transforms into a shimmering golden masterpiece. No
@@ -511,7 +491,7 @@ export default function Manifesto() {
           <div className="alert alert-info">
             <strong>Ticket Economics:</strong>
             <ul className="mb-0 mt-2" style={sectionStyle}>
-              <li>Returns allowed at original price (2% platform fee)</li>
+              <li>Returns allowed at original price, refunds are with the event creators</li>
               <li>Free tickets can be returned to the pool</li>
               <li>Return window closes 1 hour before showtime</li>
               <li>Purchase history is transparent (no scalper paradise)</li>
