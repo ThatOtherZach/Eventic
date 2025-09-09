@@ -2432,7 +2432,7 @@ export default function EventForm() {
                                       htmlFor="geofence"
                                     >
                                       <span className="badge bg-success me-2">
-                                        🌎
+                                        <img src="@assets/world-2_1757376669110.png" alt="World" style={{width: "16px", height: "16px"}} />
                                       </span>
                                       Geofence
                                       {isEditMode && (
@@ -2475,7 +2475,7 @@ export default function EventForm() {
                                       htmlFor="treasureHunt"
                                     >
                                       <span className="badge bg-info me-2">
-                                        🗺️
+                                        <img src="@assets/spider-1_1757376690334.png" alt="Spider" style={{width: "16px", height: "16px"}} />
                                       </span>
                                       Treasure Hunt
                                     </label>
