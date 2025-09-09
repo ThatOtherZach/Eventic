@@ -13,6 +13,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserLoginTime(id: string): Promise<User | undefined>;
   updateUserDisplayName(id: string, displayName: string): Promise<User | undefined>;
+  getTotalUsersCount(): Promise<number>;
+  deleteUsersWhoNeverSignedIn(daysOld?: number): Promise<number>;
 
   // Account Deletion Management
   scheduleAccountDeletion(userId: string): Promise<User | undefined>;
@@ -385,6 +387,43 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  async getTotalUsersCount(): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(users);
+    return result[0]?.count || 0;
+  }
+
+  async deleteUsersWhoNeverSignedIn(daysOld: number = 30): Promise<number> {
+    // Calculate the cutoff date (users created more than X days ago)
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    
+    // Find users who were created before the cutoff date and have never signed in
+    const usersToDelete = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        and(
+          lt(users.createdAt, cutoffDate),
+          isNull(users.lastLoginAt)
+        )
+      );
+    
+    if (usersToDelete.length === 0) {
+      return 0;
+    }
+    
+    // Delete these users
+    const userIds = usersToDelete.map(u => u.id);
+    await db
+      .delete(users)
+      .where(inArray(users.id, userIds));
+    
+    console.log(`[CLEANUP] Deleted ${usersToDelete.length} users who never signed in after ${daysOld} days`);
+    return usersToDelete.length;
   }
 
   // Account Deletion Management

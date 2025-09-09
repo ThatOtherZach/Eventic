@@ -122,6 +122,9 @@ async function processScheduledJobs(): Promise<void> {
     
     // Process NFT compression for inactive records (runs daily)
     await compressInactiveNFTs();
+    
+    // Clean up users who never signed in (runs monthly on the 1st)
+    await cleanupInactiveUsers();
   } catch (error) {
     console.error('[JOBS] Error processing scheduled jobs:', error);
   }
@@ -321,6 +324,37 @@ export function calculateDeletionDate(eventDate: string, eventEndDate: string | 
 }
 
 // Compress NFT registry records that haven't been accessed in 3+ years
+async function cleanupInactiveUsers(): Promise<void> {
+  try {
+    const now = new Date();
+    
+    // Only run on the first day of each month
+    if (now.getDate() !== 1) {
+      return;
+    }
+    
+    // Check if we've already run this month (to avoid duplicate runs)
+    const lastRunKey = `last_inactive_user_cleanup_${now.getFullYear()}_${now.getMonth()}`;
+    const lastRun = await storage.getSystemSetting(lastRunKey);
+    if (lastRun) {
+      return; // Already ran this month
+    }
+    
+    // Delete users who never signed in after 30 days
+    const deletedCount = await storage.deleteUsersWhoNeverSignedIn(30);
+    
+    if (deletedCount > 0) {
+      console.log(`[CLEANUP] Deleted ${deletedCount} users who never signed in after 30 days`);
+    }
+    
+    // Mark that we've run this month
+    await storage.setSystemSetting(lastRunKey, 'true');
+    
+  } catch (error) {
+    console.error('[CLEANUP] Error cleaning up inactive users:', error);
+  }
+}
+
 async function compressInactiveNFTs(): Promise<void> {
   try {
     const now = new Date();

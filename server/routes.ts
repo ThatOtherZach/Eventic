@@ -418,6 +418,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(existingUser);
       }
 
+      // Check registration limit before creating new user
+      const registrationLimitSetting = await storage.getSystemSetting('userRegistrationLimit');
+      if (registrationLimitSetting && registrationLimitSetting.value !== 'unlimited') {
+        const currentUserCount = await storage.getTotalUsersCount();
+        const limit = parseInt(registrationLimitSetting.value, 10);
+        
+        // Allow super admins to bypass the limit
+        const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+        const isSuperAdmin = email && adminEmails.includes(email.toLowerCase());
+        
+        if (!isSuperAdmin && currentUserCount >= limit) {
+          return res.status(403).json({
+            message: "We're currently at capacity! Please check back soon.",
+            currentCount: currentUserCount,
+            limit: limit
+          });
+        }
+      }
+      
       // Get all existing display names to ensure uniqueness
       const allUsers = await storage.getAllUsers();
       const existingDisplayNames = allUsers
@@ -3060,6 +3079,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     christmas: 25,
     nice: 69
   };
+
+  // Get user registration limit and current user count
+  app.get("/api/admin/registration-limit", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check admin access
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get current limit from system settings
+      const limitSetting = await storage.getSystemSetting('userRegistrationLimit');
+      const userCount = await storage.getTotalUsersCount();
+
+      res.json({
+        limit: limitSetting?.value || 'unlimited',
+        userCount
+      });
+    } catch (error) {
+      await logError(error, "GET /api/admin/registration-limit", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch registration limit" });
+    }
+  });
+
+  // Update user registration limit
+  app.put("/api/admin/registration-limit", async (req: AuthenticatedRequest, res) => {
+    try {
+      // Check admin access
+      const userId = req.user?.id;
+      if (!userId || !(await storage.hasPermission(userId, 'manage_settings'))) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { limit } = req.body;
+      
+      if (!['100', '500', '1000', '10000', 'unlimited'].includes(limit)) {
+        return res.status(400).json({ message: "Invalid limit value" });
+      }
+
+      await storage.setSystemSetting('userRegistrationLimit', limit, userId);
+
+      res.json({ message: "Registration limit updated successfully" });
+    } catch (error) {
+      await logError(error, "PUT /api/admin/registration-limit", {
+        request: req,
+        metadata: { limit: req.body.limit }
+      });
+      res.status(500).json({ message: "Failed to update registration limit" });
+    }
+  });
 
   app.get("/api/admin/special-effects-odds", async (req: AuthenticatedRequest, res) => {
     try {

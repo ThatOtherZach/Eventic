@@ -15,7 +15,7 @@ import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe } from "lucide-react";
+import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe, Users, AlertCircle } from "lucide-react";
 
 // Special effects configuration with ticket type previews
 const SPECIAL_EFFECTS = [
@@ -47,6 +47,8 @@ export default function AdminSettings() {
   const [bannedWords, setBannedWords] = useState<string>("");
   const [bannedWordsLoading, setBannedWordsLoading] = useState(false);
   const [seoSettings, setSeoSettings] = useState<any>({});
+  const [registrationLimit, setRegistrationLimit] = useState<string>("unlimited");
+  const [userCount, setUserCount] = useState<number | null>(null);
 
   // Check if user has admin access
   if (!isAdmin()) {
@@ -104,6 +106,20 @@ export default function AdminSettings() {
     queryKey: ["/api/admin/seo/settings"],
     enabled: isAdmin()
   });
+
+  // Get user registration limit
+  const { data: registrationLimitData } = useQuery<{ limit: string; userCount: number }>({
+    queryKey: ["/api/admin/registration-limit"],
+    enabled: isAdmin()
+  });
+
+  // Set registration limit and user count when data loads
+  useEffect(() => {
+    if (registrationLimitData) {
+      setRegistrationLimit(registrationLimitData.limit || "unlimited");
+      setUserCount(registrationLimitData.userCount || 0);
+    }
+  }, [registrationLimitData]);
 
   // Set banned words when data loads
   useEffect(() => {
@@ -312,6 +328,27 @@ export default function AdminSettings() {
     }
   });
 
+  // Update registration limit mutation
+  const updateRegistrationLimitMutation = useMutation({
+    mutationFn: async (limit: string) => {
+      return apiRequest("PUT", "/api/admin/registration-limit", { limit });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Registration Limit Updated",
+        description: "User registration limit has been updated successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/registration-limit"] });
+    },
+    onError: () => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update registration limit.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const filteredEvents = (events as any[]).filter((event: any) =>
     event?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event?.venue?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -327,7 +364,7 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="effects" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="effects" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             Special Effects
@@ -335,6 +372,10 @@ export default function AdminSettings() {
           <TabsTrigger value="events" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Event Management
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            User Management
           </TabsTrigger>
           <TabsTrigger value="payments" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
@@ -561,6 +602,96 @@ export default function AdminSettings() {
                   </div>
                 )}
               </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Registration Management</CardTitle>
+              <CardDescription>
+                Control user registration limits and manage platform growth
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Registration Limit Setting */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="registration-limit">Registration Limit</Label>
+                  <Select
+                    value={registrationLimit}
+                    onValueChange={(value) => setRegistrationLimit(value)}
+                    data-testid="select-registration-limit"
+                  >
+                    <SelectTrigger id="registration-limit">
+                      <SelectValue placeholder="Select a limit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="100">100 users</SelectItem>
+                      <SelectItem value="500">500 users</SelectItem>
+                      <SelectItem value="1000">1,000 users</SelectItem>
+                      <SelectItem value="10000">10,000 users</SelectItem>
+                      <SelectItem value="unlimited">Unlimited</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-500">
+                    Limit new user registrations during early stage. Super admins can always register.
+                  </p>
+                </div>
+
+                {/* Current User Count Display */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">Current Users</p>
+                      <p className="text-2xl font-bold">
+                        {userCount ? userCount.toLocaleString() : "..."}
+                        {registrationLimit !== "unlimited" && (
+                          <span className="text-base font-normal text-gray-500">
+                            {" "}/ {parseInt(registrationLimit).toLocaleString()}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {registrationLimit !== "unlimited" && userCount && (
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">Capacity</p>
+                        <p className="text-lg font-semibold">
+                          {Math.round((userCount / parseInt(registrationLimit)) * 100)}%
+                        </p>
+                        {userCount >= parseInt(registrationLimit) * 0.9 && (
+                          <Badge variant="destructive" className="mt-1">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Near Limit
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <Button 
+                  onClick={() => updateRegistrationLimitMutation.mutate(registrationLimit)}
+                  disabled={updateRegistrationLimitMutation.isPending}
+                  className="w-full"
+                  data-testid="button-save-registration-limit"
+                >
+                  {updateRegistrationLimitMutation.isPending ? "Saving..." : "Save Registration Limit"}
+                </Button>
+              </div>
+
+              {/* Cleanup Info */}
+              <div className="border-t pt-4">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Automatic Cleanup</h4>
+                  <p className="text-sm text-gray-500">
+                    Users who register but never sign in are automatically removed after 30 days on the 1st of each month.
+                    This helps keep your user count accurate and frees up space for active users.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
