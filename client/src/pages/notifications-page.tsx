@@ -111,14 +111,6 @@ export default function NotificationsPage() {
                   Mark All Read
                 </button>
               )}
-              <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => setShowSettings(!showSettings)}
-                data-testid="button-notification-settings"
-              >
-                <Settings size={16} className="me-1" />
-                Settings
-              </button>
             </div>
           </div>
 
