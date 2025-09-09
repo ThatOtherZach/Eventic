@@ -338,8 +338,8 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(events.p2pValidation, true),
-            gte(events.date, todayStart),
-            lte(events.date, todayEnd)
+            gte(events.date, todayStart.toISOString()),
+            lte(events.date, todayEnd.toISOString())
           )
         );
       
@@ -384,8 +384,7 @@ export class DatabaseStorage implements IStorage {
                 .update(tickets)
                 .set({
                   isValidated: true,
-                  validatedAt: validation.timestamp,
-                  validatedBy: validation.validatorId
+                  validatedAt: validation.timestamp
                 })
                 .where(eq(tickets.id, validation.ticketId));
             }
@@ -2121,18 +2120,17 @@ export class DatabaseStorage implements IStorage {
     );
     const recentTicketCount = Number(recentTicketsQuery.rows[0]?.count) || 0;
     
-    // Count unique users who have tickets (active attendees)
-    const [uniqueUsersResult] = await db
-      .select({ 
-        count: sql<number>`COUNT(DISTINCT ${tickets.userId})` 
-      })
-      .from(tickets)
-      .where(isNotNull(tickets.userId));
+    // Count validations in the last 24 hours (active attendees at events)
+    // This shows real-time activity and serves as a system load indicator
+    const validationsQuery = await db.execute(
+      sql`SELECT COUNT(*) as count FROM ${tickets} WHERE ${tickets.validatedAt} >= NOW() - INTERVAL '24 hours' AND ${tickets.isValidated} = true`
+    );
+    const validationsLast24Hours = Number(validationsQuery.rows[0]?.count) || 0;
 
     return {
       totalEvents: eventResult?.count || 0,
       totalTickets: recentTicketCount, // Now shows tickets from last 48 hours
-      validatedTickets: Number(uniqueUsersResult?.count) || 0, // Active attendees count
+      validatedTickets: validationsLast24Hours, // Validations in last 24 hours
     };
   }
 
@@ -2239,7 +2237,11 @@ export class DatabaseStorage implements IStorage {
         if (ticketsToReturn > 0) {
           try {
             // Return tickets to event owner
-            await this.updateUserBalance(event.userId, ticketsToReturn);
+            await this.creditUserAccount(
+              event.userId, 
+              ticketsToReturn, 
+              `Refund: ${ticketsToReturn} unvalidated capacity tickets from archived event "${event.name}"`
+            );
             console.log(`[ARCHIVE] Returned ${ticketsToReturn} unvalidated capacity tickets to event owner ${event.userId} (payment fee of ${event.paymentProcessingFee || 0} tickets not returned)`);
           } catch (error) {
             console.error(`[ARCHIVE] Failed to return tickets to event owner ${event.userId}:`, error);
