@@ -10,7 +10,7 @@ Eventbrite? A spreadsheet with delusions of grandeur, skimming 10% to generate t
 
 These companies are digital toll collectors at the gates of fun. Gatekeepers nobody asked for. So here's my silly solution, Evantic!
 
-This is a one man show and project, some help would be nice. Also, totally beta software so watch your cornhole. Read the wikipedia here for more.
+This is a one man show and project, some help would be nice. Also, totally beta software so watch your cornhole. [Read the wiki here](https://github.com/ThatOtherZach/Eventic/wiki) for more.
 
 ## 🎟 Tickets That Don't Suck
 
