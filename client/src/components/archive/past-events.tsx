@@ -98,11 +98,12 @@ export function PastEvents() {
   return (
     <>
       <Button 
-        variant="outline" 
+        variant="default" 
         size="sm" 
         onClick={() => setIsOpen(true)}
         data-testid="button-past-events"
       >
+        <Download className="mr-2 h-4 w-4" />
         Archive
       </Button>
       
