@@ -5,6 +5,7 @@ import { Download, Archive, Database, Clock } from "lucide-react";
 import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
 import type { ArchivedEvent, Event, Ticket } from "@shared/schema";
 import directoryHistoryIcon from "@assets/directory_closed_history-4_1757452662398.png";
+import chipRamdriveIcon from "@assets/chip_ramdrive-2_1757452723019.png";
 
 export function PastEvents() {
   const [isOpen, setIsOpen] = useState(false);
@@ -116,7 +117,7 @@ export function PastEvents() {
             {/* Current Data Download */}
             <div className="p-4 border rounded-lg">
               <div className="flex items-start space-x-3">
-                <Database className="h-5 w-5 text-primary mt-1" />
+                <img src={chipRamdriveIcon} alt="" className="h-5 w-5 mt-1" />
                 <div className="flex-1">
                   <h4 className="font-semibold mb-1">Download Current Data</h4>
                   <p className="text-sm text-muted-foreground mb-3">
