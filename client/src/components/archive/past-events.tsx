@@ -98,12 +98,11 @@ export function PastEvents() {
   return (
     <>
       <Button 
-        variant="default" 
+        variant="outline" 
         size="sm" 
         onClick={() => setIsOpen(true)}
         data-testid="button-past-events"
       >
-        <Download className="mr-2 h-4 w-4" />
         Archive
       </Button>
       
@@ -122,15 +121,15 @@ export function PastEvents() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Export all your active events and tickets as a CSV file
                   </p>
-                  <Button 
+                  <button 
                     onClick={downloadAllCurrentData}
                     disabled={isDownloading || loadingEvents || loadingTickets}
-                    className="w-full"
+                    className="btn btn-primary w-100 d-flex align-items-center justify-content-center"
                     data-testid="button-download-current"
                   >
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="me-2" size={16} />
                     {isDownloading ? "Preparing download..." : "Download All Current Data"}
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -144,16 +143,15 @@ export function PastEvents() {
                   <p className="text-sm text-muted-foreground mb-3">
                     Export events that ended over 69 days ago (kept for 1 year before permanent deletion)
                   </p>
-                  <Button 
+                  <button 
                     onClick={downloadArchivedData}
                     disabled={loadingArchive}
-                    variant="secondary"
-                    className="w-full"
+                    className="btn btn-secondary w-100 d-flex align-items-center justify-content-center"
                     data-testid="button-download-archive"
                   >
-                    <Archive className="mr-2 h-4 w-4" />
+                    <Archive className="me-2" size={16} />
                     {loadingArchive ? "Loading..." : `Download Archived Events (${pastEvents.length})`}
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
