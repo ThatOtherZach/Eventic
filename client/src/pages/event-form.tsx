@@ -30,6 +30,8 @@ import specialEffectsIcon from "@assets/display_properties-5_1757236054502.png";
 import customStickerIcon from "@assets/wm-4_1757236109199.png";
 import mintingIcon from "@assets/briefcase-4_1757236135278.png";
 import featuredImageIcon from "@assets/wia_img_color-0_1757238840076.png";
+import worldIcon from "@assets/world-2_1757376669110.png";
+import spiderIcon from "@assets/spider-1_1757376690334.png";
 import { Textarea } from "@/components/ui/textarea";
 import { countCharacters, extractHashtags } from "@/lib/text-formatter";
 import { countries } from "@/lib/countries";
@@ -2432,7 +2434,7 @@ export default function EventForm() {
                                       htmlFor="geofence"
                                     >
                                       <span className="badge bg-success me-2">
-                                        <img src="@assets/world-2_1757376669110.png" alt="World" style={{width: "16px", height: "16px"}} />
+                                        <img src={worldIcon} alt="World" style={{width: "16px", height: "16px"}} />
                                       </span>
                                       Geofence
                                       {isEditMode && (
@@ -2475,7 +2477,7 @@ export default function EventForm() {
                                       htmlFor="treasureHunt"
                                     >
                                       <span className="badge bg-info me-2">
-                                        <img src="@assets/spider-1_1757376690334.png" alt="Spider" style={{width: "16px", height: "16px"}} />
+                                        <img src={spiderIcon} alt="Spider" style={{width: "16px", height: "16px"}} />
                                       </span>
                                       Treasure Hunt
                                     </label>
