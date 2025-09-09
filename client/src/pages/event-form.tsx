@@ -2433,9 +2433,7 @@ export default function EventForm() {
                                       className="form-check-label"
                                       htmlFor="geofence"
                                     >
-                                      <span className="badge bg-success me-2">
-                                        <img src={worldIcon} alt="World" style={{width: "16px", height: "16px"}} />
-                                      </span>
+                                      <img src={worldIcon} alt="World" style={{width: "16px", height: "16px"}} className="me-2" />
                                       Geofence
                                       {isEditMode && (
                                         <span className="text-muted ms-2">
@@ -2476,9 +2474,7 @@ export default function EventForm() {
                                       className="form-check-label"
                                       htmlFor="treasureHunt"
                                     >
-                                      <span className="badge bg-info me-2">
-                                        <img src={spiderIcon} alt="Spider" style={{width: "16px", height: "16px"}} />
-                                      </span>
+                                      <img src={spiderIcon} alt="Spider" style={{width: "16px", height: "16px"}} className="me-2" />
                                       Treasure Hunt
                                     </label>
                                   </div>
