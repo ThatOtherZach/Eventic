@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Archive, Database, Clock } from "lucide-react";
 import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
 import type { ArchivedEvent, Event, Ticket } from "@shared/schema";
+import directoryHistoryIcon from "@assets/directory_closed_history-4_1757452662398.png";
 
 export function PastEvents() {
   const [isOpen, setIsOpen] = useState(false);
@@ -136,7 +137,7 @@ export function PastEvents() {
             {/* Archived Data Download */}
             <div className="p-4 border rounded-lg">
               <div className="flex items-start space-x-3">
-                <Clock className="h-5 w-5 text-muted-foreground mt-1" />
+                <img src={directoryHistoryIcon} alt="" className="h-5 w-5 mt-1" style={{ opacity: 0.6 }} />
                 <div className="flex-1">
                   <h4 className="font-semibold mb-1">Download Archived Events</h4>
                   <p className="text-sm text-muted-foreground mb-3">
