@@ -560,8 +560,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all public events only - private events must never appear in location listings
       let events = (await storage.getEvents()).filter(event => !event.isPrivate);
       
-      // Get featured events to check which events are boosted
-      const featuredEvents = await storage.getActiveFeaturedEvents();
+      // Import isCountry helper to check if location is a country
+      const { isCountry } = require("@shared/countries");
+      
+      // Only get featured events if this is a city (not a country)
+      const isLocationACountry = isCountry(location);
+      const featuredEvents = !isLocationACountry ? await storage.getActiveFeaturedEvents() : [];
       const featuredEventIds = new Set(featuredEvents.map(fe => fe.eventId));
       
       // Filter out past events (only if more than 24 hours past)
@@ -604,8 +608,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return venueParts.some(part => part.includes(location) || location.includes(part));
       });
       
-      // Sort events: boosted events first (sorted by position), then regular events by date
+      // Sort events: 
+      // - For cities: boosted events first (sorted by position), then regular events by date
+      // - For countries: just sort by date (no boosting priority)
       filteredEvents.sort((a, b) => {
+        // If this is a country page, just sort by date (no boosting)
+        if (isLocationACountry) {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateA - dateB;
+        }
+        
+        // For city pages, apply boosting logic
         const aIsBoosted = featuredEventIds.has(a.id);
         const bIsBoosted = featuredEventIds.has(b.id);
         
@@ -616,7 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return (aFeatured?.position || 999) - (bFeatured?.position || 999);
         }
         
-        // Boosted events come first
+        // Boosted events come first (only for cities)
         if (aIsBoosted && !bIsBoosted) return -1;
         if (!aIsBoosted && bIsBoosted) return 1;
         
