@@ -1,6 +1,7 @@
 import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
+import { generateValidationCode, addCodeToEvent, validateCodeInstant, queueValidation, getPendingValidations, preloadP2PEventCodes, clearEventCodes } from "./codePoolManager";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -291,6 +292,63 @@ export class DatabaseStorage implements IStorage {
     
     // Start cleanup interval for expired sessions (every 30 seconds)
     this.startSessionCleanup();
+    
+    // Initialize code pool with existing tickets
+    this.initializeCodePool();
+  }
+  
+  private async initializeCodePool() {
+    try {
+      // Load all existing tickets with validation codes
+      const allTickets = await db.select()
+        .from(tickets)
+        .where(isNotNull(tickets.validationCode));
+      
+      let loadedCount = 0;
+      for (const ticket of allTickets) {
+        if (ticket.validationCode) {
+          // Remove any suffix (S, P, U) from the code
+          const baseCode = ticket.validationCode.replace(/[SPU]$/, '');
+          addCodeToEvent(ticket.eventId, baseCode);
+          loadedCount++;
+        }
+      }
+      
+      console.log(`[CODE POOL] Loaded ${loadedCount} existing validation codes into pool`);
+      
+      // Preload any active P2P events
+      await this.preloadActiveP2PEvents();
+    } catch (error) {
+      console.error('[CODE POOL] Error initializing code pool:', error);
+    }
+  }
+  
+  private async preloadActiveP2PEvents() {
+    try {
+      // Find events that are happening today with P2P validation enabled
+      const now = new Date();
+      const todayStart = new Date(now.setHours(0, 0, 0, 0));
+      const todayEnd = new Date(now.setHours(23, 59, 59, 999));
+      
+      const p2pEvents = await db.select()
+        .from(events)
+        .where(
+          and(
+            eq(events.p2pValidation, true),
+            gte(events.date, todayStart),
+            lte(events.date, todayEnd)
+          )
+        );
+      
+      for (const event of p2pEvents) {
+        const count = preloadP2PEventCodes(event.id);
+        if (count > 0) {
+          console.log(`[CODE POOL] Preloaded ${count} codes for P2P event: ${event.name}`);
+        }
+      }
+    } catch (error) {
+      console.error('[CODE POOL] Error preloading P2P events:', error);
+    }
   }
   
   private startSessionCleanup() {
@@ -1810,36 +1868,8 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Ticket not found");
     }
     
-    // Generate a unique 4-digit code for this event
-    let code: string;
-    let attempts = 0;
-    const maxAttempts = 100; // Prevent infinite loop
-    
-    do {
-      code = Math.floor(1000 + Math.random() * 9000).toString();
-      attempts++;
-      
-      // Check if this code is already in use for this event (including with suffixes)
-      const existingTickets = await this.getTicketsByEventId(ticket.eventId);
-      const codeInUse = existingTickets.some(t => {
-        if (!t.validationCode) return false;
-        // Check if the base code (without suffix) matches
-        const baseCode = t.validationCode.replace(/[SPU]$/, '');
-        return baseCode === code;
-      });
-      
-      // Also check current active codes
-      const activeCodeInUse = this.validationCodes.has(code);
-      
-      if (!codeInUse && !activeCodeInUse) {
-        break; // Found a unique code
-      }
-    } while (attempts < maxAttempts);
-    
-    if (attempts >= maxAttempts) {
-      // Fallback to a longer code if we can't find a unique 4-digit one
-      code = Math.floor(10000 + Math.random() * 90000).toString();
-    }
+    // Generate a unique 4-digit code using the code pool manager
+    const code = generateValidationCode(ticket.eventId);
     
     const now = Date.now();
     
@@ -3734,6 +3764,9 @@ export class DatabaseStorage implements IStorage {
       // Generate unique ticket number with username
       const ticketNumber = `${event.id.slice(0, 8)}-${displayName}-${(currentCount + 1).toString().padStart(6, '0')}`;
       
+      // Generate a unique 4-digit validation code from the pool
+      const validationCode = generateValidationCode(ticket.eventId);
+      
       // Calculate scheduled deletion date (69 days after event end)
       let scheduledDeletion: Date | null = null;
       if (event.endDate || event.date) {
@@ -3749,6 +3782,7 @@ export class DatabaseStorage implements IStorage {
           ...ticket,
           ticketNumber,
           qrData: ticket.qrData || ticketNumber,
+          validationCode,
           scheduledDeletion
         })
         .returning();
