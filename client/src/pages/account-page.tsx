@@ -41,6 +41,7 @@ import secretCodesIcon from "@assets/image_1757232159397.png";
 import walletIcon from "@assets/image_1757232668791.png";
 import ticketIcon from "@assets/Untitled_1757452099150.png";
 import calendarIcon from "@assets/calendar-3_1757451947055.png";
+import minesweeperIcon from "@assets/minesweeper-0_1757452125602.png";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -642,7 +643,16 @@ export default function AccountPage() {
                   disabled={scheduleDeleteMutation.isPending}
                   data-testid="button-delete-account"
                 >
-                  <Trash2 className="me-1" size={16} />
+                  <img
+                    src={minesweeperIcon}
+                    alt=""
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      marginRight: "4px",
+                      verticalAlign: "middle"
+                    }}
+                  />
                   {scheduleDeleteMutation.isPending
                     ? "Scheduling..."
                     : "Delete Account"}
