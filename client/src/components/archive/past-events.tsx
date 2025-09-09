@@ -127,7 +127,6 @@ export function PastEvents() {
                     className="btn btn-primary w-100 d-flex align-items-center justify-content-center"
                     data-testid="button-download-current"
                   >
-                    <Download className="me-2" size={16} />
                     {isDownloading ? "Preparing download..." : "Download All Current Data"}
                   </button>
                 </div>
@@ -149,7 +148,6 @@ export function PastEvents() {
                     className="btn btn-primary w-100 d-flex align-items-center justify-content-center"
                     data-testid="button-download-archive"
                   >
-                    <Archive className="me-2" size={16} />
                     {loadingArchive ? "Loading..." : `Download Archived Events (${pastEvents.length})`}
                   </button>
                 </div>
