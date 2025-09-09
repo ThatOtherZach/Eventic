@@ -2781,6 +2781,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Performance test endpoints
+  app.get("/api/performance/test/:eventId", requireAuth, async (req: AuthenticatedRequest, res) => {
+    const { testValidationPerformance, getCapacityComparison } = await import('./performanceTest');
+    
+    try {
+      const eventId = req.params.eventId;
+      const iterations = parseInt(req.query.iterations as string) || 1000;
+      
+      // Check if event exists
+      const event = await storage.getEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      // Run performance test
+      const testResults = await testValidationPerformance(eventId, iterations);
+      const capacityComparison = getCapacityComparison();
+      
+      res.json({
+        event: {
+          id: event.id,
+          name: event.name,
+          p2pValidation: event.p2pValidation
+        },
+        testResults,
+        systemCapacity: capacityComparison,
+        summary: {
+          message: `The optimized system is ${testResults.comparison.speedImprovement} compared to database-based validation`,
+          canHandle: `${testResults.memoryBased.operationsPerSecond.toLocaleString()} validations per second`,
+          improvement: testResults.comparison
+        }
+      });
+    } catch (error) {
+      await logError(error, "GET /api/performance/test/:eventId", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
+      res.status(500).json({ message: "Failed to run performance test" });
+    }
+  });
+  
+  app.post("/api/performance/simulate-p2p/:eventId", requireAuth, async (req: AuthenticatedRequest, res) => {
+    const { simulateP2PValidationStorm } = await import('./performanceTest');
+    
+    try {
+      const eventId = req.params.eventId;
+      const validators = parseInt(req.body.validators as string) || 100;
+      const validationsPerValidator = parseInt(req.body.validationsPerValidator as string) || 5;
+      
+      // Check if event exists and has P2P enabled
+      const event = await storage.getEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      if (!event.p2pValidation) {
+        return res.status(400).json({ message: "Event does not have P2P validation enabled" });
+      }
+      
+      // Run P2P storm simulation
+      const results = await simulateP2PValidationStorm(eventId, validators, validationsPerValidator);
+      
+      res.json({
+        event: {
+          id: event.id,
+          name: event.name
+        },
+        simulation: {
+          validators,
+          validationsPerValidator,
+          results
+        },
+        analysis: {
+          message: `Successfully processed ${results.totalValidations.toLocaleString()} validations in ${(results.totalTime / 1000).toFixed(2)} seconds`,
+          throughput: `${results.validationsPerSecond.toLocaleString()} validations per second`,
+          concurrency: `Peak of ${results.peakConcurrency} concurrent validators`,
+          successRate: `${results.successRate}% success rate`
+        }
+      });
+    } catch (error) {
+      await logError(error, "POST /api/performance/simulate-p2p/:eventId", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
+      res.status(500).json({ message: "Failed to run P2P simulation" });
+    }
+  });
+  
   // Code pool stats route
   app.get("/api/code-pool/stats", requireAuth, async (req: AuthenticatedRequest, res) => {
     const { getCodePoolStats } = await import('./codePoolManager');
