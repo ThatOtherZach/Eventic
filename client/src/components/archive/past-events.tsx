@@ -146,7 +146,7 @@ export function PastEvents() {
                   <button 
                     onClick={downloadArchivedData}
                     disabled={loadingArchive}
-                    className="btn btn-secondary w-100 d-flex align-items-center justify-content-center"
+                    className="btn btn-primary w-100 d-flex align-items-center justify-content-center"
                     data-testid="button-download-archive"
                   >
                     <Archive className="me-2" size={16} />
