@@ -39,7 +39,7 @@ import smileyIcon from "@assets/image_1756856574950.png";
 import checkIcon from "@assets/check-0_1757231603464.png";
 import secretCodesIcon from "@assets/image_1757232159397.png";
 import walletIcon from "@assets/image_1757232668791.png";
-import ticketIcon from "@assets/image_1757451651635.png";
+import ticketIcon from "@assets/Untitled_1757452099150.png";
 import calendarIcon from "@assets/calendar-3_1757451947055.png";
 
 export default function AccountPage() {
