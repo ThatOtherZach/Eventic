@@ -295,6 +295,9 @@ export class DatabaseStorage implements IStorage {
     
     // Initialize code pool with existing tickets
     this.initializeCodePool();
+    
+    // Start batch processing for validation updates
+    this.startBatchValidationProcessor();
   }
   
   private async initializeCodePool() {
@@ -355,6 +358,45 @@ export class DatabaseStorage implements IStorage {
     this.cleanupInterval = setInterval(() => {
       this.cleanupExpiredValidationSessions();
     }, 60000); // Run every 60 seconds instead of 30 (reduced frequency)
+  }
+  
+  private startBatchValidationProcessor() {
+    // Process pending validations every 30 seconds
+    setInterval(async () => {
+      try {
+        const pendingValidations = getPendingValidations();
+        
+        if (pendingValidations.length === 0) {
+          return;
+        }
+        
+        console.log(`[BATCH PROCESSOR] Processing ${pendingValidations.length} pending validations`);
+        
+        // Process in batches of 100 to avoid overwhelming the database
+        const batchSize = 100;
+        for (let i = 0; i < pendingValidations.length; i += batchSize) {
+          const batch = pendingValidations.slice(i, i + batchSize);
+          
+          // Update tickets in batch using a transaction
+          await db.transaction(async (tx) => {
+            for (const validation of batch) {
+              await tx
+                .update(tickets)
+                .set({
+                  isValidated: true,
+                  validatedAt: validation.timestamp,
+                  validatedBy: validation.validatorId
+                })
+                .where(eq(tickets.id, validation.ticketId));
+            }
+          });
+        }
+        
+        console.log(`[BATCH PROCESSOR] Successfully processed ${pendingValidations.length} validations`);
+      } catch (error) {
+        console.error('[BATCH PROCESSOR] Error processing validations:', error);
+      }
+    }, 30000); // Run every 30 seconds
   }
   
   private cleanupExpiredValidationSessions() {

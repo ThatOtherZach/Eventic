@@ -2781,6 +2781,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Code pool stats route
+  app.get("/api/code-pool/stats", requireAuth, async (req: AuthenticatedRequest, res) => {
+    const { getCodePoolStats } = await import('./codePoolManager');
+    
+    try {
+      const stats = getCodePoolStats();
+      res.json(stats);
+    } catch (error) {
+      await logError(error, "GET /api/code-pool/stats", {
+        request: req
+      });
+      res.status(500).json({ message: "Failed to fetch code pool stats" });
+    }
+  });
+  
+  // Preload P2P event codes
+  app.post("/api/events/:eventId/preload-codes", requireAuth, async (req: AuthenticatedRequest, res) => {
+    const { preloadP2PEventCodes } = await import('./codePoolManager');
+    
+    try {
+      const event = await storage.getEvent(req.params.eventId);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      
+      if (!event.p2pValidation) {
+        return res.status(400).json({ message: "Event does not have P2P validation enabled" });
+      }
+      
+      const codeCount = preloadP2PEventCodes(event.id);
+      
+      res.json({
+        message: `Preloaded ${codeCount} codes for P2P event`,
+        eventId: event.id,
+        eventName: event.name,
+        codesLoaded: codeCount
+      });
+    } catch (error) {
+      await logError(error, "POST /api/events/:eventId/preload-codes", {
+        request: req,
+        metadata: { eventId: req.params.eventId }
+      });
+      res.status(500).json({ message: "Failed to preload event codes" });
+    }
+  });
+  
   // Stats route
   app.get("/api/stats", async (req, res) => {
     try {
