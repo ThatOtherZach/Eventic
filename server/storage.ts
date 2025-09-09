@@ -1000,13 +1000,12 @@ export class DatabaseStorage implements IStorage {
 
   async getTicketsByUserId(userId: string): Promise<Ticket[]> {
     // Limit to 100 tickets by default for performance
-    // Exclude tickets that are listed for resale or have been sold
+    // Exclude tickets that have been sold to someone else
     return db
       .select()
       .from(tickets)
       .where(and(
         eq(tickets.userId, userId),
-        ne(tickets.resellStatus, "for_resale"),
         ne(tickets.resellStatus, "sold")
       ))
       .orderBy(desc(tickets.createdAt))
@@ -3722,20 +3721,19 @@ export class DatabaseStorage implements IStorage {
     const { page = 1, limit = 20 } = params;
     const offset = (page - 1) * limit;
     
-    // Get total count - exclude tickets listed for resale or sold
+    // Get total count - exclude tickets sold to someone else
     const [countResult] = await db
       .select({ count: count() })
       .from(tickets)
       .where(and(
         eq(tickets.userId, userId),
-        ne(tickets.resellStatus, "for_resale"),
         ne(tickets.resellStatus, "sold")
       ));
     
     const total = countResult?.count || 0;
     
     // Get paginated tickets with joined event data for user view
-    // Exclude tickets that are listed for resale or have been sold
+    // Exclude tickets that have been sold to someone else
     const ticketList = await db
       .select({
         id: tickets.id,
@@ -3752,7 +3750,6 @@ export class DatabaseStorage implements IStorage {
       .from(tickets)
       .where(and(
         eq(tickets.userId, userId),
-        ne(tickets.resellStatus, "for_resale"),
         ne(tickets.resellStatus, "sold")
       ))
       .orderBy(desc(tickets.createdAt))
