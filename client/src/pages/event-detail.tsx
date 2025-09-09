@@ -2026,7 +2026,7 @@ export default function EventDetailPage() {
 
               {/* Boost Button for event owners and ticket holders - not shown for private events */}
               {!event.isPrivate &&
-                (isOwner || (userTickets && userTickets.length > 0)) &&
+                (isOwner || (userTickets && userTickets.filter((t) => (t as any).resellStatus !== "for_resale").length > 0)) &&
                 !eventHasStarted && (
                   <button
                     onClick={() => setIsBoostModalOpen(true)}
@@ -2205,7 +2205,7 @@ export default function EventDetailPage() {
 
       {/* Boost Event Modal - not shown for private events */}
       {!event.isPrivate &&
-        (isOwner || (userTickets && userTickets.length > 0)) && (
+        (isOwner || (userTickets && userTickets.filter((t) => (t as any).resellStatus !== "for_resale").length > 0)) && (
           <>
             <BoostEventModal
               eventId={id!}
