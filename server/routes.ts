@@ -2423,6 +2423,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Validation routes
   app.post("/api/validate", validationRateLimiter, async (req: AuthenticatedRequest, res) => {
+    const { validateCodeInstant, queueValidation, preloadP2PEventCodes } = await import('./codePoolManager');
+    
     try {
       const { qrData, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng } = req.body;
       if (!qrData) {
@@ -2431,8 +2433,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = req.user?.id || null;
       const userEmail = req.user?.email || null;
+      
+      // For 4-digit codes, try memory-first validation for P2P events
+      if (/^\d{4}$/.test(qrData)) {
+        // Try to find which event this code belongs to by checking all tickets
+        const ticket = await storage.getTicketByValidationCode(qrData);
+        if (ticket) {
+          const event = await storage.getEvent(ticket.eventId);
+          if (event && event.p2pValidation) {
+            // Ensure P2P event is preloaded
+            preloadP2PEventCodes(event.id);
+            
+            // Use instant memory validation
+            const isValid = validateCodeInstant(event.id, qrData);
+            if (isValid) {
+              // Queue the database update for later
+              queueValidation(ticket.id, userId || undefined);
+              
+              // Return instant success
+              return res.json({
+                message: "Ticket validated successfully (P2P)",
+                valid: true,
+                canValidate: true,
+                ticket,
+                event,
+                instant: true
+              });
+            }
+          }
+        }
+      }
 
-      // First check if it's a dynamic validation token
+      // Fall back to original validation logic for non-P2P or non-4-digit codes
       const tokenCheck = await storage.checkDynamicToken(qrData);
       
       if (tokenCheck.valid && tokenCheck.ticketId) {
