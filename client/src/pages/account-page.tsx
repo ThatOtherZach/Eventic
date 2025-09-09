@@ -39,6 +39,8 @@ import smileyIcon from "@assets/image_1756856574950.png";
 import checkIcon from "@assets/check-0_1757231603464.png";
 import secretCodesIcon from "@assets/image_1757232159397.png";
 import walletIcon from "@assets/image_1757232668791.png";
+import ticketIcon from "@assets/image_1757451651635.png";
+import calendarIcon from "@assets/calendar-3_1757451947055.png";
 
 export default function AccountPage() {
   const { user } = useAuth();
@@ -1724,7 +1726,16 @@ export default function AccountPage() {
           ) : tickets?.length === 0 ? (
             <div className="card">
               <div className="card-body text-center py-5">
-                <Ticket className="text-muted mb-3 mx-auto" size={48} />
+                <img
+                  src={ticketIcon}
+                  alt=""
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    opacity: 0.5,
+                    marginBottom: "12px"
+                  }}
+                />
                 <h6 className="text-muted">No tickets yet</h6>
                 <p className="text-muted small">
                   Tickets you purchase will appear here
@@ -1941,7 +1952,16 @@ export default function AccountPage() {
           ) : events?.length === 0 ? (
             <div className="card">
               <div className="card-body text-center py-5">
-                <Calendar className="text-muted mb-3 mx-auto" size={48} />
+                <img
+                  src={calendarIcon}
+                  alt=""
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    opacity: 0.5,
+                    marginBottom: "12px"
+                  }}
+                />
                 <h6 className="text-muted">No events created</h6>
                 <p className="text-muted small">
                   Events you create will appear here
