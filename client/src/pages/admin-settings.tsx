@@ -617,22 +617,57 @@ export default function AdminSettings() {
             <CardContent className="space-y-6">
               {/* Registration Limit Setting */}
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="registration-limit">Registration Limit</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="registration-limit" className="text-base font-semibold">Registration Limit</Label>
                   <Select
                     value={registrationLimit}
                     onValueChange={(value) => setRegistrationLimit(value)}
                     data-testid="select-registration-limit"
                   >
-                    <SelectTrigger id="registration-limit">
-                      <SelectValue placeholder="Select a limit" />
+                    <SelectTrigger id="registration-limit" className="w-full h-11 px-4 text-base">
+                      <SelectValue placeholder="Select a limit">
+                        {registrationLimit === "unlimited" 
+                          ? "🚀 Unlimited users" 
+                          : `👥 ${parseInt(registrationLimit).toLocaleString()} users`
+                        }
+                      </SelectValue>
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="100">100 users</SelectItem>
-                      <SelectItem value="500">500 users</SelectItem>
-                      <SelectItem value="1000">1,000 users</SelectItem>
-                      <SelectItem value="10000">10,000 users</SelectItem>
-                      <SelectItem value="unlimited">Unlimited</SelectItem>
+                    <SelectContent className="w-full">
+                      <SelectItem value="100" className="py-3 px-4 text-base cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">👥</span>
+                          <span>100 users</span>
+                          <Badge variant="secondary" className="ml-auto text-xs">Early Stage</Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="500" className="py-3 px-4 text-base cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">👥</span>
+                          <span>500 users</span>
+                          <Badge variant="secondary" className="ml-auto text-xs">Testing</Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="1000" className="py-3 px-4 text-base cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">👥</span>
+                          <span>1,000 users</span>
+                          <Badge variant="secondary" className="ml-auto text-xs">Beta</Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="10000" className="py-3 px-4 text-base cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">👥</span>
+                          <span>10,000 users</span>
+                          <Badge variant="secondary" className="ml-auto text-xs">Growth</Badge>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="unlimited" className="py-3 px-4 text-base cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🚀</span>
+                          <span>Unlimited</span>
+                          <Badge variant="default" className="ml-auto text-xs">Open Access</Badge>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-500">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CheckCircle, XCircle, Info, AlertTriangle, X, AlertOctagon } from "lucide-react";
+import { CheckCircle, XCircle, Info, AlertTriangle, AlertOctagon } from "lucide-react";
 
 export interface BootstrapToast {
   id: string;
@@ -104,16 +104,6 @@ const ToastItem: React.FC<{ toast: BootstrapToast; onDismiss: (id: string) => vo
             {toast.description && <div className="text-muted small">{toast.description}</div>}
           </div>
         </div>
-        <button
-          type="button"
-          className="btn-close me-2 m-auto"
-          aria-label="Close"
-          onClick={() => {
-            setShow(false);
-            setTimeout(() => onDismiss(toast.id), 300);
-          }}
-          data-testid="button-close-toast"
-        />
       </div>
     </div>
   );
