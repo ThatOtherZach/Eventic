@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe, Users, AlertCircle } from "lucide-react";
+import "@/styles/admin.css";
 
 // Special effects configuration with ticket type previews
 const SPECIAL_EFFECTS = [
@@ -355,58 +356,59 @@ export default function AdminSettings() {
   );
 
   return (
-    <div className="container mx-auto py-6 space-y-6" data-testid="admin-settings-page">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Admin Settings</h1>
-        <Badge variant="secondary" className="text-sm">
-          Admin Access
-        </Badge>
-      </div>
+    <div className="admin-container">
+      <div className="admin-content-wrapper" data-testid="admin-settings-page">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="admin-header text-4xl">Admin Settings</h1>
+          <Badge className="admin-badge primary">
+            Admin Access
+          </Badge>
+        </div>
 
-      <Tabs defaultValue="effects" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="effects" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
-            Special Effects
-          </TabsTrigger>
-          <TabsTrigger value="events" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Event Management
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            User Management
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Payment Settings
-          </TabsTrigger>
-          <TabsTrigger value="nft" className="flex items-center gap-2">
-            <Ticket className="h-4 w-4" />
-            NFT Settings
-          </TabsTrigger>
-          <TabsTrigger value="content" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Content
-          </TabsTrigger>
-          <TabsTrigger value="seo" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            SEO
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="effects" className="w-full">
+          <TabsList className="admin-tabs-list">
+            <TabsTrigger value="effects" className="admin-tab-trigger">
+              <Sparkles className="h-4 w-4" />
+              Special Effects
+            </TabsTrigger>
+            <TabsTrigger value="events" className="admin-tab-trigger">
+              <Settings className="h-4 w-4" />
+              Event Management
+            </TabsTrigger>
+            <TabsTrigger value="users" className="admin-tab-trigger">
+              <Users className="h-4 w-4" />
+              User Management
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="admin-tab-trigger">
+              <CreditCard className="h-4 w-4" />
+              Payment Settings
+            </TabsTrigger>
+            <TabsTrigger value="nft" className="admin-tab-trigger">
+              <Ticket className="h-4 w-4" />
+              NFT Settings
+            </TabsTrigger>
+            <TabsTrigger value="content" className="admin-tab-trigger">
+              <FileText className="h-4 w-4" />
+              Content
+            </TabsTrigger>
+            <TabsTrigger value="seo" className="admin-tab-trigger">
+              <Globe className="h-4 w-4" />
+              SEO
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="effects" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Special Effects Odds Configuration</CardTitle>
-              <CardDescription>
-                Adjust the odds for special ticket effects. Lower numbers mean more frequent effects.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Ticket Type Preview Selector */}
-              <div className="space-y-3">
-                <Label>Preview Ticket Type</Label>
+          <TabsContent value="effects" className="space-y-6 mt-6">
+            <Card className="admin-card">
+              <CardHeader className="admin-card-header">
+                <CardTitle className="admin-card-title">Special Effects Odds Configuration</CardTitle>
+                <CardDescription className="admin-card-description">
+                  Adjust the odds for special ticket effects. Lower numbers mean more frequent effects.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="admin-card-content space-y-6">
+                {/* Ticket Type Preview Selector */}
+                <div className="space-y-3">
+                  <Label className="admin-label">Preview Ticket Type</Label>
                 <Select value={selectedEffect || ""} onValueChange={setSelectedEffect}>
                   <SelectTrigger data-testid="select-effect-preview">
                     <SelectValue placeholder="Select a ticket type to preview" />
@@ -444,11 +446,12 @@ export default function AdminSettings() {
                   const key = effect.name.toLowerCase().replace(/\s+/g, '').replace('\'sday', 's');
                   return (
                     <div key={effect.name} className="space-y-2">
-                      <Label className="flex items-center gap-2">
+                      <Label className="admin-label">
                         <span className={effect.color}>{effect.icon}</span>
                         {effect.name} (1 in X)
                       </Label>
                       <Input
+                        className="admin-input"
                         type="number"
                         min="1"
                         max="1000"
@@ -467,41 +470,41 @@ export default function AdminSettings() {
                 })}
               </div>
 
-              <Button 
-                onClick={() => updateOddsMutation.mutate(effectOdds)}
-                disabled={updateOddsMutation.isPending}
-                className="w-full"
-                data-testid="button-save-odds"
-              >
-                {updateOddsMutation.isPending ? "Saving..." : "Save Odds Configuration"}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <Button 
+                  onClick={() => updateOddsMutation.mutate(effectOdds)}
+                  disabled={updateOddsMutation.isPending}
+                  className="admin-btn-primary w-full"
+                  data-testid="button-save-odds"
+                >
+                  {updateOddsMutation.isPending ? "Saving..." : "Save Odds Configuration"}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="events" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Management</CardTitle>
-              <CardDescription>
-                Find and manage all events in the system. Control visibility and ticket sales.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search events by name or venue..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+          <TabsContent value="events" className="space-y-6 mt-6">
+            <Card className="admin-card">
+              <CardHeader className="admin-card-header">
+                <CardTitle className="admin-card-title">Event Management</CardTitle>
+                <CardDescription className="admin-card-description">
+                  Find and manage all events in the system. Control visibility and ticket sales.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="admin-card-content space-y-4">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search events by name or venue..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="admin-input pl-10"
                   data-testid="input-search-events"
                 />
               </div>
 
-              {/* Events List */}
-              <ScrollArea className="h-[500px] pr-4">
+                {/* Events List */}
+                <ScrollArea className="admin-scroll-area h-[500px] pr-4">
                 {eventsLoading ? (
                   <div className="text-center py-8 text-gray-500">Loading events...</div>
                 ) : filteredEvents.length === 0 ? (
@@ -509,7 +512,7 @@ export default function AdminSettings() {
                 ) : (
                   <div className="space-y-3">
                     {filteredEvents.map((event: any) => (
-                      <Card key={event.id} className="p-4">
+                      <div key={event.id} className="admin-event-item">
                         <div className="space-y-3">
                           <div className="flex items-start justify-between">
                             <div className="space-y-1">
@@ -597,7 +600,7 @@ export default function AdminSettings() {
                             )}
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -606,7 +609,7 @@ export default function AdminSettings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-6">
+          <TabsContent value="users" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
               <CardTitle>User Registration Management</CardTitle>
@@ -1405,7 +1408,8 @@ export default function AdminSettings() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 }
