@@ -1006,8 +1006,13 @@ export class DatabaseStorage implements IStorage {
       .from(tickets)
       .where(and(
         eq(tickets.userId, userId),
-        ne(tickets.resellStatus, "for_resale"),
-        ne(tickets.resellStatus, "sold")
+        or(
+          isNull(tickets.resellStatus),
+          and(
+            ne(tickets.resellStatus, "for_resale"),
+            ne(tickets.resellStatus, "sold")
+          )
+        )
       ))
       .orderBy(desc(tickets.createdAt))
       .limit(100);
@@ -3728,8 +3733,13 @@ export class DatabaseStorage implements IStorage {
       .from(tickets)
       .where(and(
         eq(tickets.userId, userId),
-        ne(tickets.resellStatus, "for_resale"),
-        ne(tickets.resellStatus, "sold")
+        or(
+          isNull(tickets.resellStatus),
+          and(
+            ne(tickets.resellStatus, "for_resale"),
+            ne(tickets.resellStatus, "sold")
+          )
+        )
       ));
     
     const total = countResult?.count || 0;
@@ -3752,8 +3762,13 @@ export class DatabaseStorage implements IStorage {
       .from(tickets)
       .where(and(
         eq(tickets.userId, userId),
-        ne(tickets.resellStatus, "for_resale"),
-        ne(tickets.resellStatus, "sold")
+        or(
+          isNull(tickets.resellStatus),
+          and(
+            ne(tickets.resellStatus, "for_resale"),
+            ne(tickets.resellStatus, "sold")
+          )
+        )
       ))
       .orderBy(desc(tickets.createdAt))
       .limit(limit)
