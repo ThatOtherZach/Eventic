@@ -8,7 +8,9 @@ I hate Ticketmaster. Those parasitic fees. The endless spam. All for a lousy PDF
 
 Eventbrite? A spreadsheet with delusions of grandeur, skimming 10% to generate the world's most boring tickets.
 
-These companies are digital toll collectors at the gates of fun. Gatekeepers nobody asked for. Middleware... So here's my silly solution, Evantic!
+These companies are digital toll collectors at the gates of fun. Gatekeepers nobody asked for. So here's my silly solution, Evantic!
+
+This is a one man show and project, some help would be nice. Also, totally beta software so watch your cornhole. Read the wikipedia here for more.
 
 ## 🎟 Tickets That Don't Suck
 
