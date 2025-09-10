@@ -38,7 +38,6 @@ import { format } from "date-fns";
 import { downloadICalendar, addToGoogleCalendar } from "@/lib/calendar-utils";
 import { BoostEventModal } from "@/components/boost/boost-event-modal";
 import { ValidatedTicketsList } from "@/components/validated-tickets-list";
-import { CryptoPaymentInfo } from "@/components/crypto-payment-info";
 import ticketIcon from "@assets/image_1756532232153.png";
 import ownerIcon from "@assets/image_1756532723922.png";
 import calendarIcon from "@assets/image_1756578631464.png";
@@ -1970,15 +1969,6 @@ export default function EventDetailPage() {
                   </div>
                 )}
               </div>
-
-              {/* Crypto Payment Information - Show above purchase button for crypto-enabled events */}
-              {event.paymentProcessing && event.paymentProcessing !== "None" && event.walletAddress && event.currentPrice > 0 && (
-                <CryptoPaymentInfo
-                  walletAddress={event.walletAddress}
-                  ticketPrice={event.currentPrice}
-                  paymentMethod={event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC"}
-                />
-              )}
 
               {/* Purchase Button for everyone including owners */}
               <button
