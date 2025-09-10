@@ -2088,24 +2088,72 @@ export default function EventDetailPage() {
                     Edit Event
                   </Link>
                   
-                  {/* CSV Export Button for Crypto Payment Events */}
-                  {event.paymentProcessing && event.paymentProcessing !== "None" && event.walletAddress && (
+                  {/* Download Transactions Button - Only show for crypto events without prepay */}
+                  {event.paymentProcessing && event.paymentProcessing !== "None" && 
+                   event.walletAddress && !(event as any).allowPrepay && (
                     <button
                       className="btn btn-outline-success w-100 mb-2"
-                      onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = `/api/events/${id}/payment-intents/export`;
-                        link.download = `payment-intents-${event.name.replace(/[^a-z0-9]/gi, '-')}.csv`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                      onClick={async () => {
                         toast({
-                          title: "Downloading payment data",
-                          description: "Your payment intents CSV is being prepared",
+                          title: "Fetching transactions...",
+                          description: "Querying blockchain for transactions",
                         });
+                        
+                        // Import the blockchain API
+                        const { fetchBlockchainTransactions, formatTransactionData } = await import('@/lib/blockchain-api');
+                        
+                        // Calculate date range
+                        const startDate = new Date(event.date);
+                        if (event.time) {
+                          const [hours, minutes] = event.time.split(':').map(Number);
+                          startDate.setHours(hours || 0, minutes || 0, 0, 0);
+                        }
+                        
+                        let endDate: Date;
+                        if (event.endDate) {
+                          endDate = new Date(event.endDate);
+                          endDate.setHours(23, 59, 59, 999);
+                        } else {
+                          // No end date - use 24 hours from start
+                          endDate = new Date(startDate);
+                          endDate.setDate(endDate.getDate() + 1);
+                        }
+                        
+                        try {
+                          const transactions = await fetchBlockchainTransactions(
+                            event.walletAddress,
+                            event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC',
+                            startDate,
+                            endDate
+                          );
+                          
+                          const formatted = formatTransactionData(transactions, event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC');
+                          
+                          // Create and download text file
+                          const blob = new Blob([formatted], { type: 'text/plain' });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = `${event.name.replace(/[^a-z0-9]/gi, '-')}-transactions.txt`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          URL.revokeObjectURL(url);
+                          
+                          toast({
+                            title: "Downloaded transactions",
+                            description: `Found ${transactions.length} transaction(s)`,
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error fetching transactions",
+                            description: "Could not retrieve blockchain data. Please try again later.",
+                            variant: "destructive",
+                          });
+                        }
                       }}
                     >
-                      💳 Export Payment Data (CSV)
+                      📥 Download Transactions
                     </button>
                   )}
                   
