@@ -2013,16 +2013,16 @@ export default function EventForm() {
                                                 <>
                                                   ✅ Attendees can pay anytime before the event.
                                                   <br />
-                                                  <span className="text-warning">
-                                                    Note: Transaction download will be disabled due to extended payment window.
+                                                  <span className="text-muted">
+                                                    Transaction download available after event starts (fetches pre-event payments).
                                                   </span>
                                                 </>
                                               ) : (
                                                 <>
-                                                  Payments will only be accepted starting at event time.
+                                                  Payments only accepted during the event.
                                                   <br />
                                                   <span className="text-muted">
-                                                    Enables transaction download for easier reconciliation.
+                                                    Transaction download available 24 hours after event ends.
                                                   </span>
                                                 </>
                                               )}
