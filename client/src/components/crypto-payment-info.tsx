@@ -68,6 +68,15 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
     });
   };
 
+  const handleCopyAmount = () => {
+    const amount = getCryptoAmount();
+    navigator.clipboard.writeText(amount);
+    toast({
+      title: "Amount copied",
+      description: `${amount} ${getCurrencySymbol()} copied to clipboard`,
+    });
+  };
+
   const getCryptoAmount = () => {
     if (!cryptoPrices) return "Loading...";
     
@@ -169,8 +178,25 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
       
       {/* Amount and conversion rate */}
       <div className="mt-3 pt-3 border-top">
-        <div className="d-flex justify-content-between align-items-baseline mb-1">
-          <span className="text-muted">{getCurrencySymbol()}</span>
+        <div className="d-flex justify-content-between align-items-center mb-1">
+          <div className="d-flex align-items-center gap-2">
+            <span className="text-muted">{getCurrencySymbol()}</span>
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={handleCopyAmount}
+              style={{ 
+                padding: "2px 8px",
+                minWidth: "auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+              title="Copy amount"
+              data-testid="button-copy-amount"
+            >
+              <Copy size={14} />
+            </button>
+          </div>
           <strong style={{ fontFamily: "monospace", fontSize: "16px" }}>
             {getCryptoAmount()}
           </strong>
