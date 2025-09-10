@@ -14,6 +14,8 @@ import {
   RefreshCw,
   MapPin,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
   Shield,
   Users,
   HelpCircle,
@@ -137,6 +139,7 @@ export default function TicketViewPage(): React.ReactElement {
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCharging, setIsCharging] = useState(false);
+  const [showCryptoPayment, setShowCryptoPayment] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
   
@@ -850,28 +853,80 @@ export default function TicketViewPage(): React.ReactElement {
           {/* Crypto Payment Section - Only show if event has crypto payment enabled */}
           {event.ticketPrice && parseFloat(event.ticketPrice.toString()) > 0 && 
            event.paymentProcessing && event.paymentProcessing !== "None" && 
-           event.walletAddress && !ticket.isValidated && (
-            <div className="card mb-4">
-              <div className="card-body">
-                <CryptoPaymentInfo
-                  walletAddress={event.walletAddress}
-                  ticketPrice={parseFloat(ticket.purchasePrice?.toString() || event.ticketPrice?.toString() || "0")}
-                  paymentMethod={event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC"}
-                />
-                <p className="text-muted small mt-2 mb-0 text-end">
-                  <a 
-                    href="https://www.coingecko.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-muted"
-                    style={{ textDecoration: "underline" }}
+           event.walletAddress && !ticket.isValidated && (() => {
+            // Check if payment should be visible based on allowPrepay and event timing
+            const now = new Date();
+            const eventStartDate = new Date(event.date);
+            
+            // Parse event time to add to date
+            if (event.time) {
+              const [hours, minutes] = event.time.split(':').map(Number);
+              eventStartDate.setHours(hours || 0, minutes || 0, 0, 0);
+            }
+            
+            // If allowPrepay is true, always show payment info
+            // If allowPrepay is false, only show if event has started
+            const shouldShow = (event as any).allowPrepay || now >= eventStartDate;
+            
+            if (!shouldShow) {
+              // Event hasn't started and prepay is not allowed
+              return (
+                <div className="card mb-4">
+                  <div className="card-body text-center">
+                    <Clock size={24} className="text-muted mb-2" />
+                    <h6 className="card-title">Payment Opens at Event Time</h6>
+                    <p className="text-muted mb-0">
+                      Crypto payment information will be available when the event starts on{' '}
+                      {new Date(eventStartDate).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            
+            return (
+              <div className="card mb-4">
+                <div className="card-header">
+                  <button
+                    className="btn btn-link text-decoration-none p-0 d-flex align-items-center justify-content-between w-100"
+                    onClick={() => setShowCryptoPayment(!showCryptoPayment)}
+                    data-testid="button-toggle-crypto-payment"
                   >
-                    CoinGecko
-                  </a>
-                </p>
+                    <span className="fw-bold">
+                      Crypto Payment Information
+                    </span>
+                    {showCryptoPayment ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </button>
+                </div>
+                {showCryptoPayment && (
+                  <div className="card-body">
+                    <CryptoPaymentInfo
+                      walletAddress={event.walletAddress}
+                      ticketPrice={parseFloat(ticket.purchasePrice?.toString() || event.ticketPrice?.toString() || "0")}
+                      paymentMethod={event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC"}
+                    />
+                    <p className="text-muted small mt-2 mb-0 text-end">
+                      <a 
+                        href="https://www.coingecko.com" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-muted"
+                        style={{ textDecoration: "underline" }}
+                      >
+                        CoinGecko
+                      </a>
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Vote Count Display - Only for voting-enabled events */}
           {event.enableVoting && (
