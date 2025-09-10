@@ -99,10 +99,10 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
     <div className="border rounded p-3 mb-3" style={{ backgroundColor: "#f8f9fa" }}>
       <h6 className="mb-3">💳 Crypto Payment Information</h6>
       
-      {/* Two column layout */}
-      <div className="row">
-        {/* Left column - Address */}
-        <div className="col-8">
+      {/* Mobile-first vertical layout */}
+      <div>
+        {/* Address section */}
+        <div className="mb-3">
           <div className="mb-2">
             <small className="text-muted">Send {paymentMethod} to:</small>
           </div>
@@ -116,21 +116,20 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
             borderRadius: "4px",
             border: "1px solid #dee2e6"
           }}>
-            <div>{walletAddress.substring(0, Math.ceil(walletAddress.length / 2))}</div>
-            <div>{walletAddress.substring(Math.ceil(walletAddress.length / 2))}</div>
+            {walletAddress}
           </div>
         </div>
         
-        {/* Right column - QR code and buttons */}
-        <div className="col-4 text-center">
+        {/* QR code and buttons section */}
+        <div className="text-center">
           {qrCodeUrl && (
             <img 
               src={qrCodeUrl} 
               alt="Wallet QR Code" 
-              style={{ width: "100px", height: "100px" }}
+              style={{ width: "150px", height: "150px", marginBottom: "12px" }}
             />
           )}
-          <div className="mt-2 d-flex gap-2 justify-content-center">
+          <div className="d-flex gap-2 justify-content-center">
             <button
               className="btn btn-outline-secondary"
               onClick={handleCopyAddress}
