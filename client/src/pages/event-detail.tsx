@@ -2121,7 +2121,7 @@ export default function EventDetailPage() {
                         
                         try {
                           const transactions = await fetchBlockchainTransactions(
-                            event.walletAddress,
+                            event.walletAddress!,
                             event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC',
                             startDate,
                             endDate
