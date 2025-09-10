@@ -170,17 +170,17 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
       {/* Amount and conversion rate */}
       <div className="mt-3 pt-3 border-top">
         <div className="d-flex justify-content-between align-items-baseline mb-1">
-          <span className="text-muted">Amount to send:</span>
+          <span className="text-muted">{getCurrencySymbol()}</span>
           <strong style={{ fontFamily: "monospace", fontSize: "16px" }}>
-            {getCryptoAmount()} {getCurrencySymbol()}
+            {getCryptoAmount()}
           </strong>
         </div>
-        <div className="text-end">
+        <div className="text-start">
           <small className="text-muted">
             {getConversionRate()}
           </small>
         </div>
-        <div className="text-end">
+        <div className="text-start">
           <small className="text-muted">
             Ticket price: ${ticketPrice.toFixed(2)} USD
           </small>

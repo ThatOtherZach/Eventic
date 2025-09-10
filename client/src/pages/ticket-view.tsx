@@ -858,8 +858,16 @@ export default function TicketViewPage(): React.ReactElement {
                   ticketPrice={parseFloat(ticket.purchasePrice?.toString() || event.ticketPrice?.toString() || "0")}
                   paymentMethod={event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC"}
                 />
-                <p className="text-muted small mt-2 mb-0">
-                  Amount: ${event.ticketPrice} USD
+                <p className="text-muted small mt-2 mb-0 text-end">
+                  <a 
+                    href="https://www.coingecko.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted"
+                    style={{ textDecoration: "underline" }}
+                  >
+                    CoinGecko
+                  </a>
                 </p>
               </div>
             </div>
