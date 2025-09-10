@@ -1904,6 +1904,9 @@ export default function EventForm() {
                                       <option value="USDC">
                                         $ USDC (Stablecoin)
                                       </option>
+                                      <option value="Dogecoin">
+                                        Ð Dogecoin
+                                      </option>
                                     </select>
                                   </FormControl>
                                   {field.value !== "None" && (
@@ -3177,7 +3180,7 @@ export default function EventForm() {
                                     if (paymentProcessing && paymentProcessing !== 'None') {
                                       if (paymentProcessing === 'Ethereum' || paymentProcessing === 'Bitcoin') {
                                         paymentFee = 100;
-                                      } else if (paymentProcessing === 'USDC') {
+                                      } else if (paymentProcessing === 'USDC' || paymentProcessing === 'Dogecoin') {
                                         paymentFee = 50;
                                       }
                                     }

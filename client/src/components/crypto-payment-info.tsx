@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 interface CryptoPaymentInfoProps {
   walletAddress: string;
   ticketPrice: number;
-  paymentMethod: "Bitcoin" | "Ethereum" | "USDC";
+  paymentMethod: "Bitcoin" | "Ethereum" | "USDC" | "Dogecoin";
 }
 
 export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }: CryptoPaymentInfoProps) {
@@ -100,6 +100,7 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
       case "Bitcoin": return "BTC";
       case "Ethereum": return "ETH";
       case "USDC": return "USDC";
+      case "Dogecoin": return "DOGE";
       default: return "";
     }
   };

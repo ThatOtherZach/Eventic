@@ -909,7 +909,7 @@ export default function TicketViewPage(): React.ReactElement {
                     <CryptoPaymentInfo
                       walletAddress={event.walletAddress}
                       ticketPrice={parseFloat(ticket.purchasePrice?.toString() || event.ticketPrice?.toString() || "0")}
-                      paymentMethod={event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC"}
+                      paymentMethod={event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC" | "Dogecoin"}
                     />
                     <p className="text-muted small mt-2 mb-0 text-end">
                       <a 

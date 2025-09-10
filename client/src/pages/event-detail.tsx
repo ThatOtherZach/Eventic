@@ -2166,12 +2166,12 @@ export default function EventDetailPage() {
                           try {
                             const transactions = await fetchBlockchainTransactions(
                               event.walletAddress!,
-                              event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC',
+                              event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC' | 'Dogecoin',
                               startDate,
                               endDate
                             );
                             
-                            const formatted = formatTransactionData(transactions, event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC');
+                            const formatted = formatTransactionData(transactions, event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC' | 'Dogecoin');
                             
                             // Add date range info to the output
                             const dateRangeInfo = `Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}\n` +

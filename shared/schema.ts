@@ -167,7 +167,7 @@ export const events = pgTable("events", {
   // Hashtags extracted from description
   hashtags: text("hashtags").array().default(sql`ARRAY[]::text[]`), // Array of hashtags found in description
   // Payment processing configuration
-  paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, USDC
+  paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, USDC, Dogecoin
   walletAddress: text("wallet_address"), // Event owner's wallet address for receiving crypto payments
   paymentProcessingFee: integer("payment_processing_fee").default(0), // Tickets spent on payment configuration (non-refundable)
   allowPrepay: boolean("allow_prepay").default(false), // Allow crypto payments before event starts
@@ -180,7 +180,7 @@ export const cryptoPaymentIntents = pgTable("crypto_payment_intents", {
   eventId: varchar("event_id").references(() => events.id).notNull(),
   reference: varchar("reference", { length: 50 }).notNull().unique(), // Format: Ta4f2c891K1736424325T
   receiverAddress: text("receiver_address").notNull(), // Event creator's wallet address
-  blockchain: text("blockchain").notNull(), // Bitcoin, Ethereum, USDC
+  blockchain: text("blockchain").notNull(), // Bitcoin, Ethereum, USDC, Dogecoin
   amountCrypto: decimal("amount_crypto", { precision: 20, scale: 8 }).notNull(), // Amount in cryptocurrency
   amountUsd: decimal("amount_usd", { precision: 10, scale: 2 }).notNull(), // USD value at time of creation
   status: text("status").default("pending"), // pending, monitoring, confirmed, expired
@@ -748,6 +748,9 @@ export const insertEventSchema = createInsertSchema(events).omit({
   surgePricing: z.boolean().optional().default(false),
   p2pValidation: z.boolean().optional().default(false),
   enableVoting: z.boolean().optional().default(false),
+  paymentProcessing: z.enum(["None", "Ethereum", "Bitcoin", "USDC", "Dogecoin"]).optional().default("None"),
+  walletAddress: z.string().optional().nullable(),
+  allowPrepay: z.boolean().optional().default(false),
 }).superRefine((data, ctx) => {
   // Validate that end date/time is after start date/time
   if (data.endDate && data.endTime) {

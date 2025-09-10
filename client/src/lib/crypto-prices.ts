@@ -3,15 +3,16 @@ export interface CryptoPrice {
   bitcoin: number;
   ethereum: number;
   usd: number; // USDC is pegged to 1 USD
+  dogecoin: number;
 }
 
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 
 export async function fetchCryptoPrices(): Promise<CryptoPrice> {
   try {
-    // Fetch BTC and ETH prices in USD
+    // Fetch BTC, ETH and DOGE prices in USD
     const response = await fetch(
-      `${COINGECKO_API}/simple/price?ids=bitcoin,ethereum&vs_currencies=usd`
+      `${COINGECKO_API}/simple/price?ids=bitcoin,ethereum,dogecoin&vs_currencies=usd`
     );
     
     if (!response.ok) {
@@ -24,6 +25,7 @@ export async function fetchCryptoPrices(): Promise<CryptoPrice> {
       bitcoin: data.bitcoin?.usd || 0,
       ethereum: data.ethereum?.usd || 0,
       usd: 1, // USDC is always 1:1 with USD
+      dogecoin: data.dogecoin?.usd || 0,
     };
   } catch (error) {
     console.error('Error fetching crypto prices:', error);
@@ -32,6 +34,7 @@ export async function fetchCryptoPrices(): Promise<CryptoPrice> {
       bitcoin: 0,
       ethereum: 0,
       usd: 1,
+      dogecoin: 0,
     };
   }
 }
@@ -39,7 +42,7 @@ export async function fetchCryptoPrices(): Promise<CryptoPrice> {
 export function calculateCryptoAmount(
   usdAmount: number,
   cryptoPrice: number,
-  currency: 'bitcoin' | 'ethereum' | 'usd'
+  currency: 'bitcoin' | 'ethereum' | 'usd' | 'dogecoin'
 ): string {
   if (currency === 'usd') {
     // USDC is 1:1 with USD, show 2 decimal places
@@ -57,7 +60,7 @@ export function calculateCryptoAmount(
 
 export function formatConversionRate(
   cryptoPrice: number,
-  currency: 'Bitcoin' | 'Ethereum' | 'USDC'
+  currency: 'Bitcoin' | 'Ethereum' | 'USDC' | 'Dogecoin'
 ): string {
   if (currency === 'USDC') {
     return '1 USDC = $1.00 USD';
