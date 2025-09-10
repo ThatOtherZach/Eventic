@@ -181,25 +181,26 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
         <div className="d-flex justify-content-between align-items-center mb-1">
           <div className="d-flex align-items-center gap-2">
             <span className="text-muted">{getCurrencySymbol()}</span>
-            <button
-              className="btn btn-outline-secondary btn-sm"
-              onClick={handleCopyAmount}
-              style={{ 
-                padding: "2px 8px",
-                minWidth: "auto",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}
-              title="Copy amount"
-              data-testid="button-copy-amount"
-            >
-              <Copy size={14} />
-            </button>
+            <strong style={{ fontFamily: "monospace", fontSize: "16px" }}>
+              {getCryptoAmount()}
+            </strong>
           </div>
-          <strong style={{ fontFamily: "monospace", fontSize: "16px" }}>
-            {getCryptoAmount()}
-          </strong>
+          <button
+            className="btn btn-outline-secondary"
+            onClick={handleCopyAmount}
+            style={{ 
+              width: "40px",
+              height: "40px",
+              padding: "0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+            title="Copy amount"
+            data-testid="button-copy-amount"
+          >
+            <Copy size={16} />
+          </button>
         </div>
         <div className="text-start">
           <small className="text-muted">
