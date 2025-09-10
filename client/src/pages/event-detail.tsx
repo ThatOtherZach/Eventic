@@ -2088,74 +2088,124 @@ export default function EventDetailPage() {
                     Edit Event
                   </Link>
                   
-                  {/* Download Transactions Button - Only show for crypto events without prepay */}
+                  {/* Download Transactions Button - Show for crypto events based on prepay setting */}
                   {event.paymentProcessing && event.paymentProcessing !== "None" && 
-                   event.walletAddress && !(event as any).allowPrepay && (
-                    <button
-                      className="btn btn-outline-success w-100 mb-2"
-                      onClick={async () => {
-                        toast({
-                          title: "Fetching transactions...",
-                          description: "Querying blockchain for transactions",
-                        });
-                        
-                        // Import the blockchain API
-                        const { fetchBlockchainTransactions, formatTransactionData } = await import('@/lib/blockchain-api');
-                        
-                        // Calculate date range
-                        const startDate = new Date(event.date);
-                        if (event.time) {
-                          const [hours, minutes] = event.time.split(':').map(Number);
-                          startDate.setHours(hours || 0, minutes || 0, 0, 0);
-                        }
-                        
-                        let endDate: Date;
-                        if (event.endDate) {
-                          endDate = new Date(event.endDate);
-                          endDate.setHours(23, 59, 59, 999);
-                        } else {
-                          // No end date - use 24 hours from start
-                          endDate = new Date(startDate);
-                          endDate.setDate(endDate.getDate() + 1);
-                        }
-                        
-                        try {
-                          const transactions = await fetchBlockchainTransactions(
-                            event.walletAddress!,
-                            event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC',
-                            startDate,
-                            endDate
-                          );
-                          
-                          const formatted = formatTransactionData(transactions, event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC');
-                          
-                          // Create and download text file
-                          const blob = new Blob([formatted], { type: 'text/plain' });
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.download = `${event.name.replace(/[^a-z0-9]/gi, '-')}-transactions.txt`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          URL.revokeObjectURL(url);
-                          
+                   event.walletAddress && (() => {
+                    const now = new Date();
+                    const eventStart = new Date(event.date);
+                    if (event.time) {
+                      const [hours, minutes] = event.time.split(':').map(Number);
+                      eventStart.setHours(hours || 0, minutes || 0, 0, 0);
+                    }
+                    
+                    let eventEnd = eventStart;
+                    if (event.endDate) {
+                      eventEnd = new Date(event.endDate);
+                      eventEnd.setHours(23, 59, 59, 999);
+                    } else {
+                      // No end date - use 24 hours from start
+                      eventEnd = new Date(eventStart);
+                      eventEnd.setDate(eventEnd.getDate() + 1);
+                    }
+                    
+                    // Add 24 hours buffer after event end for settlement
+                    const settlementTime = new Date(eventEnd);
+                    settlementTime.setDate(settlementTime.getDate() + 1);
+                    
+                    const allowPrepay = (event as any).allowPrepay || false;
+                    
+                    // Determine if button should be shown and enabled
+                    let showButton = true;
+                    let isDisabled = false;
+                    let buttonText = "📥 Download Transactions";
+                    let disabledReason = "";
+                    
+                    if (allowPrepay) {
+                      // Prepay ON: Show after event starts
+                      if (now < eventStart) {
+                        showButton = false;
+                      }
+                    } else {
+                      // Prepay OFF: Show but disable until 24 hours after event ends
+                      if (now < settlementTime) {
+                        isDisabled = true;
+                        const hoursRemaining = Math.ceil((settlementTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+                        disabledReason = `Available in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`;
+                        buttonText = `📥 Download Transactions (${disabledReason})`;
+                      }
+                    }
+                    
+                    if (!showButton) return null;
+                    
+                    return (
+                      <button
+                        className="btn btn-outline-success w-100 mb-2"
+                        disabled={isDisabled}
+                        onClick={async () => {
                           toast({
-                            title: "Downloaded transactions",
-                            description: `Found ${transactions.length} transaction(s)`,
+                            title: "Fetching transactions...",
+                            description: "Querying blockchain for transactions",
                           });
-                        } catch (error) {
-                          toast({
-                            title: "Error fetching transactions",
-                            description: "Could not retrieve blockchain data. Please try again later.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                    >
-                      📥 Download Transactions
-                    </button>
-                  )}
+                          
+                          // Import the blockchain API
+                          const { fetchBlockchainTransactions, formatTransactionData } = await import('@/lib/blockchain-api');
+                          
+                          let startDate: Date;
+                          let endDate: Date;
+                          
+                          if (allowPrepay) {
+                            // Prepay ON: Fetch from event creation to event start
+                            startDate = new Date(event.createdAt);
+                            endDate = eventStart;
+                          } else {
+                            // Prepay OFF: Fetch from event start to end
+                            startDate = eventStart;
+                            endDate = eventEnd;
+                          }
+                          
+                          try {
+                            const transactions = await fetchBlockchainTransactions(
+                              event.walletAddress!,
+                              event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC',
+                              startDate,
+                              endDate
+                            );
+                            
+                            const formatted = formatTransactionData(transactions, event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC');
+                            
+                            // Add date range info to the output
+                            const dateRangeInfo = `Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}\n` +
+                                                 `Payment Mode: ${allowPrepay ? 'Prepayment Allowed' : 'Event-time Only'}\n\n`;
+                            const finalOutput = dateRangeInfo + formatted;
+                            
+                            // Create and download text file
+                            const blob = new Blob([finalOutput], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${event.name.replace(/[^a-z0-9]/gi, '-')}-transactions.txt`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+                            
+                            toast({
+                              title: "Downloaded transactions",
+                              description: `Found ${transactions.length} transaction(s)`,
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Error fetching transactions",
+                              description: "Could not retrieve blockchain data. Please try again later.",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        {buttonText}
+                      </button>
+                    );
+                  })()}
                   
                   <div className="alert alert-info mt-3">
                     <small className="d-flex align-items-center">
