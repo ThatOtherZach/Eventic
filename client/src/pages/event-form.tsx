@@ -167,6 +167,7 @@ export default function EventForm() {
       rollingTimezone: false,
       paymentProcessing: "None",
       walletAddress: "",
+      allowPrepay: false,
     },
   });
 
@@ -310,6 +311,9 @@ export default function EventForm() {
         ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
         timezone: event.timezone || "America/New_York",
         rollingTimezone: event.rollingTimezone || false,
+        paymentProcessing: event.paymentProcessing || "None",
+        walletAddress: event.walletAddress || "",
+        allowPrepay: event.allowPrepay || false,
       });
 
       setImageUrl(event.imageUrl || "");
@@ -528,6 +532,7 @@ export default function EventForm() {
       rollingTimezone: data.rollingTimezone || false,
       paymentProcessing: data.paymentProcessing || "None",
       walletAddress: data.walletAddress || undefined,
+      allowPrepay: data.allowPrepay || false,
     };
 
     // If in edit mode, perform update with proper validation
@@ -576,6 +581,7 @@ export default function EventForm() {
         allowMinting: event?.allowMinting || data.allowMinting || false,
         paymentProcessing: data.paymentProcessing || "None",
         walletAddress: data.walletAddress || undefined,
+        allowPrepay: data.allowPrepay || false,
       };
 
       updateEventMutation.mutate(updateData);
@@ -1970,6 +1976,55 @@ export default function EventForm() {
                                                 </>
                                               ) : (
                                                 "This is where ticket payments will be sent"
+                                              )}
+                                            </div>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      
+                                      {/* Allow Prepay Checkbox */}
+                                      <FormField
+                                        control={form.control}
+                                        name="allowPrepay"
+                                        render={({ field: prepayField }) => (
+                                          <FormItem className="mt-3">
+                                            <div className="form-check">
+                                              <FormControl>
+                                                <input
+                                                  type="checkbox"
+                                                  className="form-check-input"
+                                                  id="allowPrepay"
+                                                  checked={prepayField.value || false}
+                                                  onChange={(e) => prepayField.onChange(e.target.checked)}
+                                                  disabled={isPaymentLocked}
+                                                  data-testid="checkbox-allow-prepay"
+                                                />
+                                              </FormControl>
+                                              <label
+                                                className="form-check-label"
+                                                htmlFor="allowPrepay"
+                                              >
+                                                Allow Prepayment
+                                              </label>
+                                            </div>
+                                            <div className="form-text">
+                                              {prepayField.value ? (
+                                                <>
+                                                  ✅ Attendees can pay anytime before the event.
+                                                  <br />
+                                                  <span className="text-warning">
+                                                    Note: Transaction download will be disabled due to extended payment window.
+                                                  </span>
+                                                </>
+                                              ) : (
+                                                <>
+                                                  Payments will only be accepted starting at event time.
+                                                  <br />
+                                                  <span className="text-muted">
+                                                    Enables transaction download for easier reconciliation.
+                                                  </span>
+                                                </>
                                               )}
                                             </div>
                                             <FormMessage />
