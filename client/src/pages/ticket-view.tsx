@@ -39,11 +39,11 @@ interface ValidationSession {
 // Helper function to check if event has started (for NFT minting)
 function hasEventStarted(event: Event | undefined): boolean {
   if (!event) return false;
-  
+
   const now = new Date();
   const startDateTime = `${event.date}T${event.time}:00`;
   const startDate = new Date(startDateTime);
-  
+
   // Check if event has started yet
   return now >= startDate;
 }
@@ -143,7 +143,7 @@ export default function TicketViewPage(): React.ReactElement {
   const [showCryptoPayment, setShowCryptoPayment] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
   const [currentColorIndex, setCurrentColorIndex] = useState(0);
-  
+
   // Event type colors for background cycling
   const eventTypeColors = [
     "#3B82F6", // Blue - P2P
@@ -187,13 +187,15 @@ export default function TicketViewPage(): React.ReactElement {
 
   // Set dynamic SEO based on event data
   useSEO({
-    title: ticketData?.event ? `${ticketData.event.name} Ticket` : "Ticket View",
-    description: ticketData?.event 
+    title: ticketData?.event
+      ? `${ticketData.event.name} Ticket`
+      : "Ticket View",
+    description: ticketData?.event
       ? `Your ticket for ${ticketData.event.name} at ${ticketData.event.venue} on ${ticketData.event.date}. Access QR code for entry.`
       : "View your event ticket details and access QR code for entry.",
-    keywords: ticketData?.event 
+    keywords: ticketData?.event
       ? `${ticketData.event.name}, ticket, QR code, ${ticketData.event.venue}, event entry`
-      : "ticket, QR code, event entry"
+      : "ticket, QR code, event entry",
   });
 
   // Check if NFT features are enabled
@@ -378,7 +380,7 @@ export default function TicketViewPage(): React.ReactElement {
   const startTokenRotation = () => {
     // Fetch initial token
     fetchNewToken();
-    
+
     // Reset color index
     setCurrentColorIndex(0);
 
@@ -747,7 +749,7 @@ export default function TicketViewPage(): React.ReactElement {
           {/* Charge Ticket Section - Only show if event has special effects OR stickers enabled, ticket not validated, and event hasn't started */}
           {(event.specialEffectsEnabled || event.stickerUrl) &&
             !ticket.isCharged &&
-            !ticket.isValidated && 
+            !ticket.isValidated &&
             (() => {
               const now = new Date();
               const startDateTime = `${event.date}T${event.time}:00`;
@@ -757,7 +759,12 @@ export default function TicketViewPage(): React.ReactElement {
               <div className="card mb-4">
                 <div className="card-body">
                   <h6 className="card-title mb-3">
-                    <img src={batteryIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
+                    <img
+                      src={batteryIcon}
+                      alt=""
+                      style={{ width: "18px", height: "18px" }}
+                      className="me-2"
+                    />
                     Charge Ticket
                   </h6>
                   <p className="text-muted small mb-3">
@@ -839,12 +846,22 @@ export default function TicketViewPage(): React.ReactElement {
                       </>
                     ) : userCredits < 3 ? (
                       <>
-                        <img src={batteryIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
+                        <img
+                          src={batteryIcon}
+                          alt=""
+                          style={{ width: "18px", height: "18px" }}
+                          className="me-2"
+                        />
                         Insufficient Credits
                       </>
                     ) : (
                       <>
-                        <img src={batteryIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
+                        <img
+                          src={batteryIcon}
+                          alt=""
+                          style={{ width: "18px", height: "18px" }}
+                          className="me-2"
+                        />
                         Charge Ticket (3 Credits)
                       </>
                     )}
@@ -858,7 +875,12 @@ export default function TicketViewPage(): React.ReactElement {
             <div className="card mb-4">
               <div className="card-body">
                 <div className="d-flex align-items-center">
-                  <img src={batteryIcon} alt="" style={{ width: "20px", height: "20px" }} className="me-2" />
+                  <img
+                    src={batteryIcon}
+                    alt=""
+                    style={{ width: "20px", height: "20px" }}
+                    className="me-2"
+                  />
                   <div>
                     <h6 className="mb-0">Ticket Charged!</h6>
                     <p className="text-muted small mb-0">
@@ -871,98 +893,117 @@ export default function TicketViewPage(): React.ReactElement {
           )}
 
           {/* Crypto Payment Section - Only show if event has crypto payment enabled */}
-          {event.ticketPrice && parseFloat(event.ticketPrice.toString()) > 0 && 
-           event.paymentProcessing && event.paymentProcessing !== "None" && 
-           event.walletAddress && !ticket.isValidated && (() => {
-            // Check if payment should be visible based on allowPrepay and event timing
-            const now = new Date();
-            const eventStartDate = new Date(event.date);
-            
-            // Parse event time to add to date
-            if (event.time) {
-              const [hours, minutes] = event.time.split(':').map(Number);
-              eventStartDate.setHours(hours || 0, minutes || 0, 0, 0);
-            }
-            
-            // If allowPrepay is true, always show payment info
-            // If allowPrepay is false, only show if event has started
-            const shouldShow = (event as any).allowPrepay || now >= eventStartDate;
-            
-            if (!shouldShow) {
-              // Event hasn't started and prepay is not allowed
+          {event.ticketPrice &&
+            parseFloat(event.ticketPrice.toString()) > 0 &&
+            event.paymentProcessing &&
+            event.paymentProcessing !== "None" &&
+            event.walletAddress &&
+            !ticket.isValidated &&
+            (() => {
+              // Check if payment should be visible based on allowPrepay and event timing
+              const now = new Date();
+              const eventStartDate = new Date(event.date);
+
+              // Parse event time to add to date
+              if (event.time) {
+                const [hours, minutes] = event.time.split(":").map(Number);
+                eventStartDate.setHours(hours || 0, minutes || 0, 0, 0);
+              }
+
+              // If allowPrepay is true, always show payment info
+              // If allowPrepay is false, only show if event has started
+              const shouldShow =
+                (event as any).allowPrepay || now >= eventStartDate;
+
+              if (!shouldShow) {
+                // Event hasn't started and prepay is not allowed
+                return (
+                  <div className="card mb-4">
+                    <div className="card-body text-center">
+                      <Clock size={24} className="text-muted mb-2" />
+                      <h6 className="card-title">
+                        Payment Opens at Event Time
+                      </h6>
+                      <p className="text-muted mb-0">
+                        Crypto payment information will be available when the
+                        event starts on{" "}
+                        {new Date(eventStartDate).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+
+              const ticketPrice = parseFloat(
+                ticket.purchasePrice?.toString() ||
+                  event.ticketPrice?.toString() ||
+                  "0",
+              );
+              const paymentMethod = event.paymentProcessing as
+                | "Bitcoin"
+                | "Ethereum"
+                | "USDC"
+                | "Dogecoin";
+
               return (
                 <div className="card mb-4">
-                  <div className="card-body text-center">
-                    <Clock size={24} className="text-muted mb-2" />
-                    <h6 className="card-title">Payment Opens at Event Time</h6>
-                    <p className="text-muted mb-0">
-                      Crypto payment information will be available when the event starts on{' '}
-                      {new Date(eventStartDate).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit'
-                      })}
+                  <div className="card-body">
+                    <h6 className="card-title mb-3">
+                      <img
+                        src={cryptoPaymentIcon}
+                        alt=""
+                        style={{ width: "18px", height: "18px" }}
+                        className="me-2"
+                      />
+                      Payment Information
+                    </h6>
+                    <p className="text-muted small mb-3">
+                      The event creator has requested that you pay with{" "}
+                      {paymentMethod}
+                    </p>
+
+                    <div className="alert alert-info small mb-3">
+                      <strong>How it works:</strong>
+                      <ul className="mb-0 mt-2">
+                        <li>
+                          Send the exact payment to the wallet address shown
+                          below
+                        </li>
+                        <li>
+                          Current conversion rates are displayed in real-time
+                        </li>
+                        <li>Payment to be verified by the event organizer</li>
+                      </ul>
+                    </div>
+
+                    <CryptoPaymentInfo
+                      walletAddress={event.walletAddress}
+                      ticketPrice={ticketPrice}
+                      paymentMethod={paymentMethod}
+                    />
+
+                    <p className="text-muted small mt-3 mb-0 text-end">
+                      Price Data from{" "}
+                      <a
+                        href="https://www.coingecko.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted"
+                        style={{ textDecoration: "underline" }}
+                      >
+                        CoinGecko
+                      </a>
                     </p>
                   </div>
                 </div>
               );
-            }
-            
-            const ticketPrice = parseFloat(ticket.purchasePrice?.toString() || event.ticketPrice?.toString() || "0");
-            const paymentMethod = event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC" | "Dogecoin";
-            
-            return (
-              <div className="card mb-4">
-                <div className="card-body">
-                  <h6 className="card-title mb-3">
-                    <img src={cryptoPaymentIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
-                    Crypto Payment Information
-                  </h6>
-                  <p className="text-muted small mb-3">
-                    Pay for your ticket using {paymentMethod}.
-                    <HelpCircle
-                      size={14}
-                      className="ms-1"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="top"
-                      data-bs-title="Send the exact amount shown below to the provided wallet address. Payment will be verified by the event organizer."
-                      style={{ cursor: "help" }}
-                    />
-                  </p>
-                  
-                  <div className="alert alert-info small mb-3">
-                    <strong>How it works:</strong>
-                    <ul className="mb-0 mt-2">
-                      <li>Send payment to the wallet address shown below</li>
-                      <li>Current conversion rates are displayed in real-time</li>
-                      <li>Include the exact amount for proper verification</li>
-                    </ul>
-                  </div>
-                  
-                  <CryptoPaymentInfo
-                    walletAddress={event.walletAddress}
-                    ticketPrice={ticketPrice}
-                    paymentMethod={paymentMethod}
-                  />
-                  
-                  <p className="text-muted small mt-3 mb-0 text-end">
-                    Powered by{" "}
-                    <a 
-                      href="https://www.coingecko.com" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-muted"
-                      style={{ textDecoration: "underline" }}
-                    >
-                      CoinGecko
-                    </a>
-                  </p>
-                </div>
-              </div>
-            );
-          })()}
+            })()}
 
           {/* Vote Count Display - Only for voting-enabled events */}
           {event.enableVoting && (
@@ -1129,11 +1170,12 @@ export default function TicketViewPage(): React.ReactElement {
                         <div className="alert alert-success">
                           {currentCode && (
                             <div className="my-3">
-                              <div 
+                              <div
                                 className="text-white rounded-3 p-4 mb-3"
-                                style={{ 
-                                  backgroundColor: eventTypeColors[currentColorIndex],
-                                  transition: "background-color 0.5s ease"
+                                style={{
+                                  backgroundColor:
+                                    eventTypeColors[currentColorIndex],
+                                  transition: "background-color 0.5s ease",
                                 }}
                               >
                                 <p className="text-white-50 small mb-2">
@@ -1345,7 +1387,12 @@ export default function TicketViewPage(): React.ReactElement {
 
                       <div className="alert alert-light">
                         <h6 className="mb-2">
-                          <span style={{ fontSize: "18px", fontWeight: "bold" }} className="me-2">+1</span>
+                          <span
+                            style={{ fontSize: "18px", fontWeight: "bold" }}
+                            className="me-2"
+                          >
+                            +1
+                          </span>
                           Vote for Another Attendee
                         </h6>
                         <p className="small mb-2">Enter their vote code:</p>
@@ -1412,11 +1459,12 @@ export default function TicketViewPage(): React.ReactElement {
                     <div className="text-center mb-3">
                       {currentCode && (
                         <div>
-                          <div 
+                          <div
                             className="text-white rounded-3 p-4 mb-3"
-                            style={{ 
-                              backgroundColor: eventTypeColors[currentColorIndex],
-                              transition: "background-color 0.5s ease"
+                            style={{
+                              backgroundColor:
+                                eventTypeColors[currentColorIndex],
+                              transition: "background-color 0.5s ease",
                             }}
                           >
                             <p className="text-white-50 mb-2">
@@ -1775,11 +1823,17 @@ export default function TicketViewPage(): React.ReactElement {
                   </div>
                   <div>
                     {selectedRating === "thumbs_up" ? (
-                      <span className="text-success" style={{ fontSize: "20px", fontWeight: "bold" }}>
+                      <span
+                        className="text-success"
+                        style={{ fontSize: "20px", fontWeight: "bold" }}
+                      >
                         +1
                       </span>
                     ) : (
-                      <span className="text-danger" style={{ fontSize: "20px", fontWeight: "bold" }}>
+                      <span
+                        className="text-danger"
+                        style={{ fontSize: "20px", fontWeight: "bold" }}
+                      >
                         -1
                       </span>
                     )}
@@ -1788,7 +1842,6 @@ export default function TicketViewPage(): React.ReactElement {
               </div>
             </div>
           )}
-
 
           {/* NFT Minting Section - Show for validated tickets with minting enabled */}
           {ticket.isValidated && event.allowMinting && nftEnabled?.enabled && (
