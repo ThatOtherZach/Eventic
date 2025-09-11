@@ -61,6 +61,7 @@ export interface IStorage {
   checkUserHasTicketForEvent(eventId: string, userId: string, email: string, ip: string): Promise<boolean>;
   getCurrentPrice(eventId: string): Promise<number>;
   getUniqueTicketHolders(eventId: string): Promise<string[]>;
+  toggleTicketPaymentStatus(ticketId: string): Promise<Ticket | undefined>;
   
   // Paginated ticket queries
   getTicketsPaginated(params: { page: number; limit: number }): Promise<{ tickets: Ticket[]; total: number; hasMore: boolean }>;
@@ -1059,6 +1060,23 @@ export class DatabaseStorage implements IStorage {
     return results.map(result => result.userId).filter(Boolean) as string[];
   }
 
+  async toggleTicketPaymentStatus(ticketId: string): Promise<Ticket | undefined> {
+    // Get current ticket state
+    const currentTicket = await this.getTicket(ticketId);
+    if (!currentTicket) return undefined;
+    
+    // Toggle the payment status
+    const newStatus = !currentTicket.paymentConfirmed;
+    
+    const [updatedTicket] = await db
+      .update(tickets)
+      .set({ paymentConfirmed: newStatus })
+      .where(eq(tickets.id, ticketId))
+      .returning();
+    
+    return updatedTicket || undefined;
+  }
+
   async getValidatedTicketsForEvent(eventId: string): Promise<any[]> {
     const validatedTickets = await db
       .select({
@@ -1069,6 +1087,7 @@ export class DatabaseStorage implements IStorage {
         isGoldenTicket: tickets.isGoldenTicket,
         userEmail: users.email,
         eventReentryType: events.reentryType,
+        paymentConfirmed: tickets.paymentConfirmed,
       })
       .from(tickets)
       .innerJoin(users, eq(tickets.userId, users.id))
@@ -1079,7 +1098,8 @@ export class DatabaseStorage implements IStorage {
     return validatedTickets.map(ticket => ({
       ...ticket,
       ticketType: ticket.eventReentryType === "No Reentry (Single Use)" ? "Single Use" :
-                 ticket.eventReentryType === "Pass (Multiple Use)" ? "Pass" : "Unlimited"
+                 ticket.eventReentryType === "Pass (Multiple Use)" ? "Pass" : "Unlimited",
+      paymentConfirmed: ticket.paymentConfirmed || false
     }));
   }
 

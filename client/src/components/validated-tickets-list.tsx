@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Check, Calendar, Ticket } from "lucide-react";
 import { format } from "date-fns";
 import poweredByImage from "@assets/image_1756973626753.png";
 import singleTicketIcon from "@assets/certificate_seal_1757234773120.png";
+import { useToast } from "@/hooks/use-toast";
 
 interface ValidatedTicket {
   ticketId: string;
@@ -15,16 +16,62 @@ interface ValidatedTicket {
   isGoldenTicket: boolean;
   userEmail: string;
   ticketType: string;
+  paymentConfirmed?: boolean;
 }
 
 interface ValidatedTicketsListProps {
   eventId: string;
   isEventOwner: boolean;
   enableVoting?: boolean;
+  ticketPrice?: number;
 }
 
-export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: ValidatedTicketsListProps) {
+function TogglePaymentButton({ ticketId, isConfirmed, eventId }: { ticketId: string; isConfirmed: boolean; eventId: string }) {
+  const { toast } = useToast();
+  
+  const togglePaymentMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/tickets/${ticketId}/toggle-payment`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/validated-tickets`] });
+      toast({
+        title: "Payment status updated",
+        description: `Ticket marked as ${!isConfirmed ? 'paid' : 'not paid'}`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update payment status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <button
+      className={`btn btn-sm ${isConfirmed ? 'btn-success' : 'btn-outline-secondary'} ms-2`}
+      onClick={() => togglePaymentMutation.mutate()}
+      disabled={togglePaymentMutation.isPending}
+    >
+      {togglePaymentMutation.isPending ? (
+        <span className="spinner-border spinner-border-sm" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </span>
+      ) : isConfirmed ? (
+        "Not Paid"
+      ) : (
+        "Paid"
+      )}
+    </button>
+  );
+}
+
+export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting, ticketPrice }: ValidatedTicketsListProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const { data: validatedTickets, isLoading, error } = useQuery<ValidatedTicket[]>({
     queryKey: [`/api/events/${eventId}/validated-tickets`],
@@ -148,6 +195,13 @@ export function ValidatedTicketsList({ eventId, isEventOwner, enableVoting }: Va
             <div key={ticket.ticketId} className="list-group-item">
               <div className="mb-2">
                 <span className="badge bg-primary">{ticket.ticketNumber}</span>
+                {ticketPrice && ticketPrice > 0 && (
+                  <TogglePaymentButton 
+                    ticketId={ticket.ticketId} 
+                    isConfirmed={ticket.paymentConfirmed || false}
+                    eventId={eventId}
+                  />
+                )}
               </div>
               <div className="mb-2 text-muted small">
                 {format(new Date(ticket.validatedAt), "MMM d, yyyy 'at' h:mm a")}

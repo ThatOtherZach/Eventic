@@ -218,6 +218,7 @@ export const tickets = pgTable("tickets", {
   isCharged: boolean("is_charged").default(false), // Whether ticket is charged for better special effects odds
   nftMediaUrl: text("nft_media_url"), // URL to the pre-generated MP4 file for NFT minting
   scheduledDeletion: timestamp("scheduled_deletion"), // When this ticket should be automatically deleted (69 days after event end)
+  paymentConfirmed: boolean("payment_confirmed").default(false), // Whether payment has been confirmed for this ticket (for paid events)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

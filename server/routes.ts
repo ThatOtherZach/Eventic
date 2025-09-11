@@ -3679,6 +3679,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Toggle payment status for a ticket (for event owners)
+  app.post("/api/tickets/:ticketId/toggle-payment", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Get the ticket to check event ownership
+      const ticket = await storage.getTicket(req.params.ticketId);
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      // Check if user owns the event
+      const event = await storage.getEvent(ticket.eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      if (event.userId !== userId) {
+        return res.status(403).json({ message: "Only event owners can toggle payment status" });
+      }
+      
+      // Toggle the payment status
+      const updatedTicket = await storage.toggleTicketPaymentStatus(req.params.ticketId);
+      res.json(updatedTicket);
+    } catch (error) {
+      await logError(error, "POST /api/tickets/:ticketId/toggle-payment", {
+        request: req,
+        metadata: { ticketId: req.params.ticketId }
+      });
+      res.status(500).json({ message: "Failed to toggle payment status" });
+    }
+  });
+
   // Export payment intents as CSV for event owners
   app.get("/api/events/:eventId/payment-intents/export", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

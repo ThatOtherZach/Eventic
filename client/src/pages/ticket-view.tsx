@@ -719,6 +719,19 @@ export default function TicketViewPage(): React.ReactElement {
                         })
                       : "Unknown"}
                   </p>
+                  {/* Show payment status for paid events */}
+                  {parseFloat(event.ticketPrice) > 0 && (
+                    <>
+                      <span className="text-muted">Payment Status:</span>
+                      <p className="mb-0 fw-bold">
+                        {ticket.paymentConfirmed === true ? (
+                          <span className="text-success">Paid</span>
+                        ) : (
+                          <span className="text-warning">Not Paid</span>
+                        )}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="text-end">
                   <span className="text-muted">Price:</span>
