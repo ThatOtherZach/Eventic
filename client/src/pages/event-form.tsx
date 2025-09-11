@@ -176,7 +176,7 @@ export default function EventForm() {
     if (!isEditMode && userBalance && creditBalance > 0) {
       const currentValue = form.getValues("maxTickets");
       // Only update if it's still the default 100 or if balance is less than current value
-      if (currentValue === 100 || currentValue > creditBalance) {
+      if (currentValue && (currentValue === 100 || currentValue > creditBalance)) {
         form.setValue("maxTickets", Math.min(creditBalance, 5000));
       }
     }
@@ -311,7 +311,7 @@ export default function EventForm() {
         ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
         timezone: event.timezone || "America/New_York",
         rollingTimezone: event.rollingTimezone || false,
-        paymentProcessing: event.paymentProcessing || "None",
+        paymentProcessing: (event.paymentProcessing as "None" | "Ethereum" | "Bitcoin" | "USDC" | "Dogecoin") || "None",
         walletAddress: event.walletAddress || "",
         allowPrepay: event.allowPrepay || false,
       });
@@ -631,12 +631,12 @@ export default function EventForm() {
     validatedAt: null,
     validationCode: null,
     useCount: 0,
+    voteCount: 0,
     isGoldenTicket: isGolden, // Apply golden ticket when enabled and no other effect
     isDoubleGolden: isDoubleGolden, // Show double golden for rainbow effect
     specialEffect:
       currentEffect ||
       (stickerEnabled && form.watch("stickerUrl") ? "sticker" : null),
-    createdAt: new Date(),
     recipientName: "John Doe",
     recipientEmail: user?.email || "user@example.com",
     seatNumber: null,
@@ -648,6 +648,11 @@ export default function EventForm() {
     purchasePrice: "0",
     resellStatus: null,
     originalOwnerId: null,
+    isCharged: false,
+    nftMediaUrl: null,
+    scheduledDeletion: null,
+    paymentConfirmed: false,
+    createdAt: new Date(),
     // Add preview effect type for special effects preview
     previewEffectType: currentEffect,
     // Add sticker URL for overlay on any effect
@@ -699,6 +704,7 @@ export default function EventForm() {
         : null,
     stickerOdds: watchedValues.stickerOdds || 25,
     allowMinting: watchedValues.allowMinting || false,
+    isAdminCreated: false,
     isPrivate: watchedValues.isPrivate || false,
     isEnabled: true,
     ticketPurchasesEnabled: true,
@@ -707,7 +713,17 @@ export default function EventForm() {
     p2pValidation: watchedValues.p2pValidation || false,
     enableVoting: watchedValues.enableVoting || false,
     geofence: watchedValues.geofence || false,
+    treasureHunt: watchedValues.treasureHunt || false,
+    huntCode: watchedValues.huntCode || null,
+    rollingTimezone: watchedValues.rollingTimezone || false,
     timezone: watchedValues.timezone || "America/New_York",
+    hashtags: [],
+    paymentProcessing: watchedValues.paymentProcessing || "None",
+    walletAddress: watchedValues.walletAddress || null,
+    paymentProcessingFee: 0,
+    allowPrepay: watchedValues.allowPrepay || false,
+    recurringType: watchedValues.recurringType || null,
+    recurringEndDate: watchedValues.recurringEndDate || null,
     createdAt: new Date(),
   };
 
@@ -953,6 +969,7 @@ export default function EventForm() {
                             <FormControl>
                               <Textarea
                                 {...field}
+                                value={field.value || ""}
                                 placeholder="Describe your event... You can include URLs and hashtags (#example)"
                                 className="form-control"
                                 rows={8}
@@ -1348,7 +1365,7 @@ export default function EventForm() {
                                 data-testid="select-timezone"
                                 value={field.value || "America/New_York"}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                disabled={isEditMode && event?.rollingTimezone}
+                                disabled={isEditMode && Boolean(event?.rollingTimezone)}
                                 style={
                                   isEditMode && event?.rollingTimezone
                                     ? { cursor: "not-allowed", opacity: 0.7 }
@@ -1891,7 +1908,7 @@ export default function EventForm() {
                                       onChange={(e) =>
                                         field.onChange(e.target.value)
                                       }
-                                      disabled={isPaymentLocked}
+                                      disabled={Boolean(isPaymentLocked)}
                                       data-testid="select-payment-processing"
                                     >
                                       <option value="None">
@@ -1964,7 +1981,7 @@ export default function EventForm() {
                                                 placeholder={`Enter your ${field.value} wallet address`}
                                                 {...walletField}
                                                 value={walletField.value || ""}
-                                                readOnly={isPaymentLocked}
+                                                readOnly={Boolean(isPaymentLocked)}
                                                 data-testid="input-wallet-address"
                                               />
                                             </FormControl>
@@ -2000,7 +2017,7 @@ export default function EventForm() {
                                                   id="allowPrepay"
                                                   checked={prepayField.value || false}
                                                   onChange={(e) => prepayField.onChange(e.target.checked)}
-                                                  disabled={isPaymentLocked}
+                                                  disabled={Boolean(isPaymentLocked)}
                                                   data-testid="checkbox-allow-prepay"
                                                 />
                                               </FormControl>
@@ -3169,7 +3186,8 @@ export default function EventForm() {
                               ? "Please hold..."
                               : !isEditMode
                                 ? (() => {
-                                    const maxTickets = parseInt(form.watch("maxTickets") as string) || 100;
+                                    const maxTicketsValue = form.watch("maxTickets");
+                                    const maxTickets = typeof maxTicketsValue === 'string' ? parseInt(maxTicketsValue) : Number(maxTicketsValue) || 100;
                                     const paymentProcessing = form.watch("paymentProcessing") || 'None';
                                     
                                     // Base cost: event capacity

@@ -294,7 +294,7 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                       {/* Color squares for event features */}
                       {(event.isAdminCreated || event.goldenTicketEnabled || event.specialEffectsEnabled || 
                         event.surgePricing || event.stickerUrl || event.p2pValidation || event.allowMinting || 
-                        event.geofence || event.treasureHunt || event.enableVoting || event.recurringType || event.endDate) && (
+                        event.geofence || event.treasureHunt || event.enableVoting || event.recurringType || event.endDate || event.oneTicketPerUser) && (
                         <div className="d-flex mb-1" style={{ gap: '2px' }}>
                           {event.isAdminCreated && (
                             <div 
@@ -368,10 +368,10 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                               title="Multi-day Event"
                             />
                           )}
-                          {event.maxTickets && (
+                          {event.oneTicketPerUser && (
                             <div 
                               style={{ width: '5px', height: '5px', backgroundColor: '#14B8A6' }}
-                              title="Limited Tickets"
+                              title="Limited Sales"
                             />
                           )}
                         </div>
@@ -383,22 +383,23 @@ export function EventList({ onGenerateTickets }: EventListProps) {
                     </div>
                     <div className="text-end ms-auto">
                       <p className="mb-0 fw-semibold text-dark" style={{ cursor: 'pointer' }}>
-                        {event.currentPrice === 0 ? 'Free' : `$${event.currentPrice.toFixed(2)}`}
-                        {event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
+                        {(() => {
+                          const basePrice = parseFloat(event.ticketPrice);
+                          // For surge pricing, we'd need to calculate current price from API
+                          // For now, just use base price since currentPrice isn't in Event type
+                          const currentPrice = basePrice;
+                          return currentPrice === 0 ? 'Free' : `$${currentPrice.toFixed(2)}`;
+                        })()}
+                        {event.surgePricing && (
                           <small className="text-danger ms-1">
-                            ({(() => {
-                              const basePrice = parseFloat(event.ticketPrice);
-                              const increase = event.currentPrice - basePrice;
-                              const increasePercent = Math.round((increase / basePrice) * 100);
-                              return `+${increasePercent}%`;
-                            })()})
+                            (surge pricing)
                           </small>
                         )}
                       </p>
-                      {event.currentPrice !== 0 && event.surgePricing && event.currentPrice !== parseFloat(event.ticketPrice) && (
+                      {parseFloat(event.ticketPrice) !== 0 && event.surgePricing && (
                         <span className="badge bg-danger small">Surge</span>
                       )}
-                      {event.currentPrice !== 0 && event.currentPrice === parseFloat(event.ticketPrice) && (
+                      {parseFloat(event.ticketPrice) !== 0 && !event.surgePricing && (
                         <p className="text-muted small mb-0">at door</p>
                       )}
                     </div>
