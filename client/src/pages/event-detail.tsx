@@ -1486,36 +1486,7 @@ export default function EventDetailPage() {
 
                         {/* Percentage and Badge Container */}
                         <div style={{ textAlign: "center" }}>
-                          {/* Percentage Display */}
-                          <div
-                            style={{
-                              fontSize: "28px",
-                              fontWeight: "bold",
-                              color:
-                                organizerReputation?.percentage !== null &&
-                                organizerReputation?.percentage !== undefined &&
-                                organizerReputation.percentage >= 80
-                                  ? "#28a745"
-                                  : organizerReputation?.percentage !== null &&
-                                      organizerReputation?.percentage !==
-                                        undefined &&
-                                      organizerReputation.percentage >= 50
-                                    ? "#ffc107"
-                                    : organizerReputation?.percentage !==
-                                          null &&
-                                        organizerReputation?.percentage !==
-                                          undefined
-                                      ? "#dc3545"
-                                      : "#6c757d",
-                            }}
-                          >
-                            {organizerReputation?.percentage !== null &&
-                            organizerReputation?.percentage !== undefined
-                              ? `${organizerReputation.percentage}%`
-                              : "—"}
-                          </div>
-
-                          {/* Badge below percentage */}
+                          {/* Badge Display */}
                           {organizerReputation &&
                             (() => {
                               const reputationInfo = getReputationDisplay();
