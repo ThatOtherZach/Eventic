@@ -5797,7 +5797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Stripe checkout session
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2024-06-20'
+        apiVersion: '2025-08-27.basil'
       });
       
       const session = await stripe.checkout.sessions.create({
@@ -5843,7 +5843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-        apiVersion: '2024-06-20'
+        apiVersion: '2025-08-27.basil'
       });
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
       

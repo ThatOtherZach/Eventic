@@ -1,12 +1,4 @@
-// Note: ethers library must be installed to enable on-chain minting
-// npm install ethers
-let ethers: any;
-try {
-  ethers = require('ethers');
-} catch (error) {
-  console.log("[NFT] ethers library not installed. On-chain minting disabled.");
-  console.log("[NFT] To enable: npm install ethers");
-}
+import { ethers } from 'ethers';
 
 // Contract ABI (only the functions we need)
 const CONTRACT_ABI = [
@@ -33,11 +25,6 @@ class NFTMintingService {
   }
 
   private initialize() {
-    // Skip if ethers is not installed
-    if (!ethers) {
-      return;
-    }
-    
     // Check if environment variables are set
     const contractAddress = process.env.NFT_CONTRACT_ADDRESS;
     const privateKey = process.env.NFT_MINTER_PRIVATE_KEY;
@@ -54,8 +41,8 @@ class NFTMintingService {
     }
 
     try {
-      // Initialize provider and wallet
-      this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      // Initialize provider and wallet (ethers v6 syntax)
+      this.provider = new ethers.JsonRpcProvider(rpcUrl);
       this.wallet = new ethers.Wallet(privateKey, this.provider);
       
       // Initialize contract
@@ -98,7 +85,7 @@ class NFTMintingService {
       }
 
       // Estimate gas
-      const gasEstimate = await this.contract.estimateGas.mintTicket(
+      const gasEstimate = await this.contract.mintTicket.estimateGas(
         walletAddress,
         registryId,
         metadataPath,
@@ -106,7 +93,7 @@ class NFTMintingService {
       );
 
       // Add 20% buffer to gas estimate
-      const gasLimit = gasEstimate.mul(120).div(100);
+      const gasLimit = gasEstimate * BigInt(120) / BigInt(100);
 
       // Get current gas price
       const gasPrice = await this.provider.getGasPrice();
@@ -199,14 +186,15 @@ class NFTMintingService {
     }
 
     try {
-      const gasEstimate = await this.contract.estimateGas.mintTicket(
+      const gasEstimate = await this.contract.mintTicket.estimateGas(
         walletAddress,
         registryId,
-        metadataPath
+        metadataPath,
+        true // default to with royalty
       );
       const gasPrice = await this.provider.getGasPrice();
-      const cost = gasEstimate.mul(gasPrice);
-      return ethers?.utils?.formatEther(cost) || "0";
+      const cost = gasEstimate * gasPrice;
+      return ethers.formatEther(cost);
     } catch (error) {
       console.error("[NFT] Failed to estimate gas:", error);
       return null;
