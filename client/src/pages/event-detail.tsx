@@ -174,7 +174,7 @@ export default function EventDetailPage() {
   useEffect(() => {
     if (event?.id) {
       const shortcode = event.id.substring(0, 8);
-      const shortUrl = `${window.location.origin}/e/${shortcode}`;
+      const shortUrl = `https://eventic.quest/e/${shortcode}`;
       
       // Generate QR code as data URL
       QRCode.toDataURL(shortUrl, {
@@ -1825,7 +1825,7 @@ export default function EventDetailPage() {
                     data-testid="img-event-qr-code"
                   />
                   <div className="text-muted small">
-                    Share this event: /e/{event?.id?.substring(0, 8)}
+                    Share this event: eventic.quest/e/{event?.id?.substring(0, 8)}
                   </div>
                 </div>
               )}
