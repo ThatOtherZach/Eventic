@@ -201,7 +201,7 @@ export default function EventDetailPage() {
   // Query for user's credit balance
   const { data: userBalance } = useQuery<{ balance: string }>({
     queryKey: [`/api/currency/balance`],
-    enabled: !!user && event?.userId === user?.id,
+    enabled: !!user,
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/currency/balance`);
       return response.json();
@@ -2037,11 +2037,17 @@ export default function EventDetailPage() {
                     onClick={() => setIsBoostModalOpen(true)}
                     className="btn btn-warning w-100 mb-3"
                     data-testid="button-boost-event"
+                    disabled={!userBalance || parseFloat(userBalance.balance) < 2}
                     style={{
                       padding: "0.375rem 0.75rem",
                       fontSize: "1rem",
                       lineHeight: "1.5",
                     }}
+                    title={
+                      !userBalance || parseFloat(userBalance.balance) < 2
+                        ? "You need at least 2 tickets to boost an event"
+                        : ""
+                    }
                   >
                     <img
                       src="/boost-icon.png"
@@ -2053,7 +2059,9 @@ export default function EventDetailPage() {
                         verticalAlign: "text-bottom",
                       }}
                     />
-                    Boost
+                    {!userBalance || parseFloat(userBalance.balance) < 2
+                      ? "Boost (2+ tickets required)"
+                      : "Boost"}
                   </button>
                 )}
 
