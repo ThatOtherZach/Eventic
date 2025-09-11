@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import QRCode from "qrcode";
 import {
   Calendar,
   MapPin,
@@ -83,7 +84,8 @@ interface EventWithStats extends Event {
 }
 
 export default function EventDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id, shortcode } = useParams<{ id?: string; shortcode?: string }>();
+  const eventId = id || shortcode;
   const { user } = useAuth();
   const { toast } = useToast();
   const { addNotification } = useNotifications();
@@ -94,33 +96,35 @@ export default function EventDetailPage() {
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
   const [isBoostModalOpen, setIsBoostModalOpen] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
+  const [eventQrCode, setEventQrCode] = useState<string>("");
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const {
     data: event,
     isLoading,
     error,
   } = useQuery<EventWithStats>({
-    queryKey: [`/api/events/${id}`],
-    enabled: !!id,
+    queryKey: [`/api/events/${eventId}`],
+    enabled: !!eventId,
   });
 
   const { data: userTickets } = useQuery<TicketType[]>({
-    queryKey: [`/api/events/${id}/user-tickets`],
-    enabled: !!id && !!user,
+    queryKey: [`/api/events/${eventId}/user-tickets`],
+    enabled: !!eventId && !!user,
     queryFn: async () => {
       const response = await apiRequest(
         "GET",
-        `/api/events/${id}/user-tickets`,
+        `/api/events/${eventId}/user-tickets`,
       );
       return response.json();
     },
   });
 
   const { data: validators } = useQuery<any[]>({
-    queryKey: [`/api/events/${id}/validators`],
-    enabled: !!id && !!user && event?.userId === user.id,
+    queryKey: [`/api/events/${eventId}/validators`],
+    enabled: !!eventId && !!user && event?.userId === user.id,
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/events/${id}/validators`);
+      const response = await apiRequest("GET", `/api/events/${eventId}/validators`);
       return response.json();
     },
   });
@@ -165,6 +169,28 @@ export default function EventDetailPage() {
       return response.json();
     },
   });
+
+  // Generate QR code for short event URL
+  useEffect(() => {
+    if (event?.id) {
+      const shortcode = event.id.substring(0, 8);
+      const shortUrl = `${window.location.origin}/e/${shortcode}`;
+      
+      // Generate QR code as data URL
+      QRCode.toDataURL(shortUrl, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      }).then((url) => {
+        setEventQrCode(url);
+      }).catch((err) => {
+        console.error("Error generating QR code:", err);
+      });
+    }
+  }, [event?.id]);
 
   // Query for user's credit balance
   const { data: userBalance } = useQuery<{ balance: string }>({
@@ -1787,34 +1813,20 @@ export default function EventDetailPage() {
             <div className="card-body">
               <h5 className="card-title">Ticket Information</h5>
 
-              {/* Creator Details */}
-              {(organizerDetails || organizerReputation) && (
-                <div className="mb-3 p-3 bg-light rounded">
-                  {organizerDetails && (
-                    <div className="mb-2">
-                      <div className="text-muted small">Creator</div>
-                      <div className="mt-1">
-                        <span
-                          className="badge bg-secondary small"
-                          style={{ textTransform: "capitalize" }}
-                        >
-                          {organizerReputation &&
-                            (() => {
-                              const reputationInfo = getReputationDisplay();
-                              if (!reputationInfo) return null;
-                              if (reputationInfo.badge === "😎") {
-                                return <>{reputationInfo.badge} </>;
-                              }
-                              return null;
-                            })()}
-                          {organizerDetails.type}
-                        </span>
-                      </div>
-                      <div className="mt-1">
-                        <strong>{organizerDetails.displayName}</strong>
-                      </div>
-                    </div>
-                  )}
+              {/* Event QR Code */}
+              {eventQrCode && (
+                <div className="mb-3 p-3 bg-light rounded text-center">
+                  <div className="text-muted small mb-2">Event Link QR Code</div>
+                  <img 
+                    src={eventQrCode} 
+                    alt="Event QR Code" 
+                    style={{ width: "200px", height: "200px" }}
+                    className="mb-2"
+                    data-testid="img-event-qr-code"
+                  />
+                  <div className="text-muted small">
+                    Share this event: /e/{event?.id?.substring(0, 8)}
+                  </div>
                 </div>
               )}
 
