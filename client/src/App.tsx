@@ -78,7 +78,15 @@ function App() {
                 </div>
               </main>
               <footer className="text-center py-3 mt-auto">
-                <small className="text-muted">Evantic Core by Saym Services</small>
+                <small className="text-muted">
+                  <a href="https://github.com/ThatOtherZach/Eventic" target="_blank" rel="noopener noreferrer" className="text-muted text-decoration-none">
+                    Eventic Core
+                  </a>
+                  {" by "}
+                  <a href="https://www.saymservices.com/eventic-core" target="_blank" rel="noopener noreferrer" className="text-muted text-decoration-none">
+                    Saym Services
+                  </a>
+                </small>
               </footer>
             </div>
             <Toaster />
