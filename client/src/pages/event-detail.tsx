@@ -73,6 +73,7 @@ import huntIcon from "@assets/image_1756971767387.png";
 import p2pValidationIcon from "@assets/address_book_users_1757234713487.png";
 import multipleTicketsIcon from "@assets/certificate_multiple-1_1757234773120.png";
 import singleTicketIcon from "@assets/certificate_seal_1757234773120.png";
+import cryptoSettingsIcon from "@assets/expand_hierarchial_array-1_1757599985274.png";
 import type { Event, Ticket as TicketType } from "@shared/schema";
 
 interface EventWithStats extends Event {
@@ -1743,7 +1744,10 @@ export default function EventDetailPage() {
           {isOwner && event.paymentProcessing && event.paymentProcessing !== "None" && event.walletAddress && (
             <div className="card mb-4">
               <div className="card-body">
-                <h5 className="card-title mb-3">💳 Crypto Payment Tracker</h5>
+                <h5 className="card-title mb-3">
+                  <img src={cryptoSettingsIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
+                  Cryptocurrency Payment Settings
+                </h5>
                 <p className="text-muted small mb-3">
                   View and track cryptocurrency payment attempts for your event
                 </p>
