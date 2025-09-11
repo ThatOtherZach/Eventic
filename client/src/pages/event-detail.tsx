@@ -223,7 +223,7 @@ export default function EventDetailPage() {
       "View event details, get tickets, and find venue information.",
     ogTitle: event?.name,
     ogDescription: eventDescription,
-    ogImage: event?.imageUrl,
+    ogImage: event?.imageUrl || undefined,
     ogUrl: typeof window !== "undefined" ? window.location.href : undefined,
     keywords: event
       ? `${event.name}, event tickets, ${event.venue}, ${event.date}`
@@ -2171,7 +2171,7 @@ export default function EventDetailPage() {
 
                             if (allowPrepay) {
                               // Prepay ON: Fetch from event creation to event start
-                              startDate = new Date(event.createdAt);
+                              startDate = event.createdAt ? new Date(event.createdAt) : new Date();
                               endDate = eventStart;
                             } else {
                               // Prepay OFF: Fetch from event start to end

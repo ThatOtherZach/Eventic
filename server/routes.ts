@@ -4272,7 +4272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Required ticket fields
         ticketNumber: ticket.ticketNumber,
-        ticketStatus: ticket.status,
+        ticketStatus: ticket.status || 'pending',
         ticketRecipientName: ticket.recipientName || '',
         ticketRecipientEmail: ticket.recipientEmail || '',
         

@@ -54,7 +54,13 @@ export default function AdminSettings() {
   // Check if user has admin access
   if (!isAdmin()) {
     navigate("/");
-    return null;
+    return (
+      <div className="d-flex align-items-center justify-content-center min-vh-100">
+        <div className="text-center">
+          <p>Redirecting...</p>
+        </div>
+      </div>
+    );
   }
 
   // Get all events for management

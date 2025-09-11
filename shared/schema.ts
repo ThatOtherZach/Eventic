@@ -171,6 +171,9 @@ export const events = pgTable("events", {
   walletAddress: text("wallet_address"), // Event owner's wallet address for receiving crypto payments
   paymentProcessingFee: integer("payment_processing_fee").default(0), // Tickets spent on payment configuration (non-refundable)
   allowPrepay: boolean("allow_prepay").default(false), // Allow crypto payments before event starts
+  // Recurring event fields
+  recurringType: text("recurring_type"), // "weekly", "monthly", "annually", "annual", null for non-recurring
+  recurringEndDate: text("recurring_end_date"), // End date for recurring events
   createdAt: timestamp("created_at").defaultNow(),
 });
 
