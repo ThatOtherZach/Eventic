@@ -62,10 +62,6 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
 
   const handleCopyAddress = () => {
     navigator.clipboard.writeText(walletAddress);
-    toast({
-      title: "Address copied",
-      description: "Wallet address copied to clipboard",
-    });
   };
 
   const handleCopyAmount = () => {
