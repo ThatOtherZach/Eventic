@@ -79,11 +79,11 @@ function App() {
               </main>
               <footer className="text-center py-3 mt-auto">
                 <small className="text-muted">
-                  <a href="https://github.com/ThatOtherZach/Eventic" target="_blank" rel="noopener noreferrer" className="text-muted text-decoration-none">
+                  <a href="https://github.com/ThatOtherZach/Eventic" target="_blank" rel="noopener noreferrer" className="link-primary">
                     Eventic Core
                   </a>
                   {" by "}
-                  <a href="https://www.saymservices.com/eventic-core" target="_blank" rel="noopener noreferrer" className="text-muted text-decoration-none">
+                  <a href="https://www.saymservices.com/eventic-core" target="_blank" rel="noopener noreferrer" className="link-primary">
                     Saym Services
                   </a>
                 </small>
