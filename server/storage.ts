@@ -2,7 +2,7 @@ import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { generateValidationCode, addCodeToEvent, validateCodeInstant, queueValidation, getPendingValidations, preloadP2PEventCodes, clearEventCodes } from "./codePoolManager";
-import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc } from "drizzle-orm";
+import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc, like } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -896,7 +896,7 @@ export class DatabaseStorage implements IStorage {
 
   async getEventByShortcode(shortcode: string): Promise<(Event & { creatorEmail?: string }) | undefined> {
     // Shortcode is the first 8 characters of the event ID
-    // Use SQL LIKE to find events where ID starts with the shortcode
+    // Use proper LIKE operator to find events where ID starts with the shortcode
     const [result] = await db
       .select({
         event: events,
@@ -904,7 +904,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(events)
       .leftJoin(users, eq(events.userId, users.id))
-      .where(sql`${events.id} LIKE ${shortcode + '%'}`)
+      .where(like(events.id, `${shortcode}%`))
       .limit(1);
     
     if (!result) return undefined;
