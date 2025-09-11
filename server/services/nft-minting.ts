@@ -1,9 +1,12 @@
-// DEPRECATED: This service is no longer used.
-// Users are responsible for minting their own NFTs using the registry page as metadata.
-// The platform only creates registry entries (paywalled with tickets).
-
-// Keeping ethers import disabled
-let ethers: any = null;
+// Note: ethers library must be installed to enable on-chain minting
+// npm install ethers
+let ethers: any;
+try {
+  ethers = require('ethers');
+} catch (error) {
+  console.log("[NFT] ethers library not installed. On-chain minting disabled.");
+  console.log("[NFT] To enable: npm install ethers");
+}
 
 // Contract ABI (only the functions we need)
 const CONTRACT_ABI = [
@@ -30,12 +33,44 @@ class NFTMintingService {
   }
 
   private initialize() {
-    // Service is deprecated - users mint their own NFTs
-    console.log("[Registry] Registry service initialized (on-chain minting disabled)");
+    // Skip if ethers is not installed
+    if (!ethers) {
+      return;
+    }
+    
+    // Check if environment variables are set
+    const contractAddress = process.env.NFT_CONTRACT_ADDRESS;
+    const privateKey = process.env.NFT_MINTER_PRIVATE_KEY;
+    const royaltyWallet = process.env.NFT_ROYALTY_WALLET;
+    const rpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
+
+    if (!contractAddress || !privateKey) {
+      console.log("[NFT] Contract not configured. Set NFT_CONTRACT_ADDRESS and NFT_MINTER_PRIVATE_KEY to enable on-chain minting.");
+      return;
+    }
+    
+    if (!royaltyWallet) {
+      console.log("[NFT] Warning: NFT_ROYALTY_WALLET not set. Royalty collection will not work properly.");
+    }
+
+    try {
+      // Initialize provider and wallet
+      this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      this.wallet = new ethers.Wallet(privateKey, this.provider);
+      
+      // Initialize contract
+      this.contract = new ethers.Contract(contractAddress, CONTRACT_ABI, this.wallet);
+      
+      console.log("[NFT] NFT minting service initialized");
+      console.log("[NFT] Contract address:", contractAddress);
+      console.log("[NFT] Minter address:", this.wallet.address);
+    } catch (error) {
+      console.error("[NFT] Failed to initialize minting service:", error);
+    }
   }
 
   /**
-   * @deprecated Platform no longer mints NFTs. Users mint their own.
+   * Mint an NFT for a registry record
    */
   async mintNFT(
     walletAddress: string,
@@ -43,10 +78,12 @@ class NFTMintingService {
     metadataPath: string,
     withRoyalty: boolean = true
   ): Promise<MintResult> {
-    return {
-      success: false,
-      error: "Platform minting is deprecated. Users should mint their own NFTs using the registry page as metadata."
-    };
+    if (!this.contract || !this.wallet) {
+      return {
+        success: false,
+        error: "NFT minting not configured"
+      };
+    }
 
     try {
       // Check if already minted
@@ -123,13 +160,15 @@ class NFTMintingService {
   }
 
   /**
-   * @deprecated Platform no longer tracks on-chain minting
+   * Check if a registry record has been minted
    */
   async checkMintStatus(registryId: string): Promise<{
     minted: boolean;
     tokenId?: string;
   }> {
-    return { minted: false };
+    if (!this.contract) {
+      return { minted: false };
+    }
 
     try {
       const isMinted = await this.contract.isMinted(registryId);
@@ -148,14 +187,16 @@ class NFTMintingService {
   }
 
   /**
-   * @deprecated Platform no longer estimates gas
+   * Get estimated gas cost in ETH
    */
   async estimateGasCost(
     walletAddress: string,
     registryId: string,
     metadataPath: string
   ): Promise<string | null> {
-    return null;
+    if (!this.contract || !this.provider) {
+      return null;
+    }
 
     try {
       const gasEstimate = await this.contract.estimateGas.mintTicket(

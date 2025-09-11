@@ -4209,8 +4209,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create registry entry (paywalled with tickets) - users mint their own NFTs
-  app.post("/api/tickets/:ticketId/create-registry", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // Prepare mint parameters for user-controlled minting
+  app.post("/api/tickets/:ticketId/prepare-mint", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -4272,7 +4272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Deduct tickets for registry creation
+      // Deduct tickets immediately
       await storage.createLedgerTransaction({
         entries: [
           {
@@ -4280,10 +4280,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             entryType: 'debit',
             amount: MINT_COST,
             currency: 'tickets',
-            description: `Registry entry creation for ticket ${ticketId}`
+            description: `NFT mint preparation for ticket ${ticketId}`
           }
         ],
-        description: `Registry entry creation for ticket ${ticketId}`,
+        description: `NFT mint preparation for ticket ${ticketId}`,
         relatedEntityId: ticketId,
         relatedEntityType: 'ticket'
       });
@@ -4364,36 +4364,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedAt: ticket.validatedAt!,
       });
 
-      // Return registry URLs for user to mint their own NFT
-      const baseUrl = process.env.APP_URL || `https://${req.get('host')}`;
-      const registryUrl = `${baseUrl}/registry/${registryRecord.id}`;
-      const metadataUrl = `${baseUrl}/api/registry/${registryRecord.id}/metadata`;
+      // Get contract details
+      const contractAddress = process.env.NFT_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
+      const contractABI = [
+        "function mintTicket(address recipient, string registryId, string metadataPath, bool withRoyalty) returns (uint256)",
+        "event TicketMinted(uint256 indexed tokenId, address indexed recipient, string registryId, string metadataURI, bool withRoyalty)"
+      ];
+
+      // Estimate gas (approximate for Base L2)
+      const estimatedGas = "150000"; // Standard gas limit for NFT minting on Base
 
       res.json({
-        success: true,
-        message: "Registry entry created successfully! You can now mint your own NFT using the metadata URL.",
+        contractAddress,
+        contractABI,
         registryId: registryRecord.id,
-        registryUrl,
-        metadataUrl,
-        cost: MINT_COST,
+        metadataPath: `${registryRecord.id}/metadata`,
         withRoyalty,
-        instructions: {
-          step1: "Copy the metadata URL above",
-          step2: "Use any NFT minting platform (OpenZeppelin, Zora, Manifold, etc.)",
-          step3: "Set the token URI to the metadata URL when minting",
-          step4: "Your NFT will automatically display the ticket information"
-        }
+        estimatedGas,
+        ticketCost: MINT_COST
       });
     } catch (error) {
-      await logError(error, "POST /api/tickets/:ticketId/create-registry", {
+      await logError(error, "POST /api/tickets/:ticketId/prepare-mint", {
         request: req
       });
-      res.status(500).json({ message: "Failed to create registry entry" });
+      res.status(500).json({ message: "Failed to prepare mint" });
     }
   });
 
-  // Optional: Link user's self-minted NFT to registry
-  app.post("/api/tickets/:ticketId/link-nft", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // Confirm mint after user executes transaction
+  app.post("/api/tickets/:ticketId/confirm-mint", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -4401,10 +4400,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { ticketId } = req.params;
-      const { contractAddress, tokenId, transactionHash, network } = req.body;
+      const { transactionHash, tokenId } = req.body;
 
-      if (!contractAddress || !tokenId) {
-        return res.status(400).json({ message: "Contract address and token ID required" });
+      if (!transactionHash) {
+        return res.status(400).json({ message: "Transaction hash required" });
       }
 
       // Get the ticket
@@ -4419,33 +4418,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Registry record not found" });
       }
 
-      // Store the user's NFT details for reference
-      // TODO: Add fields to registryRecords to store user-minted NFT details
-      
-      const networkPrefix = network === 'ethereum' ? '' : `${network}/`;
-      const openSeaUrl = `https://opensea.io/assets/${networkPrefix}${contractAddress}/${tokenId}`;
-      const explorerUrl = network === 'base' 
-        ? `https://basescan.org/token/${contractAddress}?a=${tokenId}`
-        : `https://etherscan.io/token/${contractAddress}?a=${tokenId}`;
+      // TODO: Update registry record with on-chain data
+      // This would require adding an updateRegistryRecord method to storage
+      // For now, just return success
 
       res.json({
-        message: "NFT linked to registry successfully",
+        message: "NFT mint confirmed",
         registryRecord,
-        contractAddress,
-        tokenId,
         transactionHash,
-        openSeaUrl,
-        explorerUrl
+        tokenId,
+        openSeaUrl: `https://opensea.io/assets/base/${process.env.NFT_CONTRACT_ADDRESS}/${tokenId}`,
+        baseScanUrl: `https://basescan.org/tx/${transactionHash}`
       });
     } catch (error) {
-      await logError(error, "POST /api/tickets/:ticketId/link-nft", {
+      await logError(error, "POST /api/tickets/:ticketId/confirm-mint", {
         request: req
       });
-      res.status(500).json({ message: "Failed to link NFT" });
+      res.status(500).json({ message: "Failed to confirm mint" });
     }
   });
 
-  // DEPRECATED: Refunds no longer needed as users mint their own NFTs
+  // Refund tickets if mint fails
   app.post("/api/tickets/:ticketId/refund-mint", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
@@ -4502,11 +4495,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await logError(error, "POST /api/tickets/:ticketId/refund-mint", {
         request: req
       });
-      res.status(400).json({ message: "This endpoint is deprecated. Users mint their own NFTs so refunds are not applicable." });
+      res.status(500).json({ message: "Failed to process refund" });
     }
   });
 
-  app.get("/api/tickets/:ticketId/registry-status", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/tickets/:ticketId/mint-status", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -4528,16 +4521,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           canMint: false,
           alreadyMinted: false,
           needsValidation: false,
-          registryDisabled: true
+          mintingDisabled: true
         });
       }
 
-      // Check if registry entry already exists
+      // Check if already minted
       const registryRecord = await storage.getRegistryRecordByTicket(ticketId);
       if (registryRecord) {
         return res.json({
-          canCreateRegistry: false,
-          registryExists: true,
+          canMint: false,
+          alreadyMinted: true,
           registryRecord
         });
       }
@@ -4545,29 +4538,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check validation status
       if (!ticket.isValidated || !ticket.validatedAt) {
         return res.json({
-          canCreateRegistry: false,
-          registryExists: false,
+          canMint: false,
+          alreadyMinted: false,
           needsValidation: true
         });
       }
 
-      // Check 24-hour waiting period
-      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-      const timeSinceValidation = Date.now() - new Date(ticket.validatedAt).getTime();
-      const canCreate = timeSinceValidation >= TWENTY_FOUR_HOURS;
-      
+      // If ticket is validated, allow minting regardless of event time
+      // (Validated tickets prove attendance, so they should always be mintable)
       res.json({
-        canCreateRegistry: canCreate,
-        registryExists: false,
+        canMint: true,
+        alreadyMinted: false,
         validatedAt: ticket.validatedAt,
-        timeRemaining: canCreate ? 0 : TWENTY_FOUR_HOURS - timeSinceValidation,
-        timeRemainingHours: canCreate ? 0 : Math.ceil((TWENTY_FOUR_HOURS - timeSinceValidation) / (60 * 60 * 1000))
+        timeRemaining: 0,
+        timeRemainingHours: 0
       });
     } catch (error) {
-      await logError(error, "GET /api/tickets/:ticketId/registry-status", {
+      await logError(error, "GET /api/tickets/:ticketId/mint-status", {
         request: req
       });
-      res.status(500).json({ message: "Failed to get registry status" });
+      res.status(500).json({ message: "Failed to get mint status" });
     }
   });
 
