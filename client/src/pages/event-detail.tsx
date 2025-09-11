@@ -125,7 +125,10 @@ export default function EventDetailPage() {
     queryKey: [`/api/events/${eventId}/validators`],
     enabled: !!eventId && !!user && event?.userId === user.id,
     queryFn: async () => {
-      const response = await apiRequest("GET", `/api/events/${eventId}/validators`);
+      const response = await apiRequest(
+        "GET",
+        `/api/events/${eventId}/validators`,
+      );
       return response.json();
     },
   });
@@ -176,7 +179,7 @@ export default function EventDetailPage() {
     if (event?.id) {
       const shortcode = event.id.substring(0, 8);
       const shortUrl = `https://eventic.quest/e/${shortcode}`;
-      
+
       // Generate QR code as data URL
       QRCode.toDataURL(shortUrl, {
         width: 200,
@@ -185,11 +188,13 @@ export default function EventDetailPage() {
           dark: "#000000",
           light: "#FFFFFF",
         },
-      }).then((url) => {
-        setEventQrCode(url);
-      }).catch((err) => {
-        console.error("Error generating QR code:", err);
-      });
+      })
+        .then((url) => {
+          setEventQrCode(url);
+        })
+        .catch((err) => {
+          console.error("Error generating QR code:", err);
+        });
     }
   }, [event?.id]);
 
@@ -207,16 +212,22 @@ export default function EventDetailPage() {
   const eventDescription = event?.description
     ? event.description.replace(/<[^>]*>/g, "").substring(0, 160) +
       (event.description.length > 160 ? "..." : "")
-    : event ? `Join us for ${event.name} at ${event.venue} on ${event.date}. Get your tickets now!` : "";
+    : event
+      ? `Join us for ${event.name} at ${event.venue} on ${event.date}. Get your tickets now!`
+      : "";
 
   useSEO({
     title: event?.name || "Event Details",
-    description: eventDescription || "View event details, get tickets, and find venue information.",
+    description:
+      eventDescription ||
+      "View event details, get tickets, and find venue information.",
     ogTitle: event?.name,
     ogDescription: eventDescription,
     ogImage: event?.imageUrl,
     ogUrl: typeof window !== "undefined" ? window.location.href : undefined,
-    keywords: event ? `${event.name}, event tickets, ${event.venue}, ${event.date}` : "event, tickets, venue"
+    keywords: event
+      ? `${event.name}, event tickets, ${event.venue}, ${event.date}`
+      : "event, tickets, venue",
   });
 
   // Initialize Bootstrap tooltips
@@ -932,7 +943,9 @@ export default function EventDetailPage() {
                     />
                     {event.recurringType === "weekly" && "Weekly Recurring"}
                     {event.recurringType === "monthly" && "Monthly Recurring"}
-                    {(event.recurringType === "annually" || event.recurringType === "annual") && "Annual"}
+                    {(event.recurringType === "annually" ||
+                      event.recurringType === "annual") &&
+                      "Annual"}
                   </span>
                 </Link>
               )}
@@ -1052,9 +1065,12 @@ export default function EventDetailPage() {
                   style={{ width: "18px", height: "18px", marginRight: "8px" }}
                 />
                 <span style={{ fontSize: "0.9rem" }}>
-                  Ends {(() => {
+                  Ends{" "}
+                  {(() => {
                     try {
-                      const [year, month, day] = event.recurringEndDate.split("-").map(Number);
+                      const [year, month, day] = event.recurringEndDate
+                        .split("-")
+                        .map(Number);
                       const endDate = new Date(year, month - 1, day);
                       return isNaN(endDate.getTime())
                         ? event.recurringEndDate
@@ -1741,32 +1757,39 @@ export default function EventDetailPage() {
           </div>
 
           {/* Crypto Payment Intents Section - Only for event owners with crypto payment enabled */}
-          {isOwner && event.paymentProcessing && event.paymentProcessing !== "None" && event.walletAddress && (
-            <div className="card mb-4">
-              <div className="card-body">
-                <h5 className="card-title mb-3">
-                  <img src={cryptoSettingsIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
-                  Cryptocurrency Payment Settings
-                </h5>
-                <p className="text-muted small mb-3">
-                  View and track cryptocurrency payment attempts for your event
-                </p>
-                
-                {/* Terminal-style balance display */}
-                <div style={{
-                  backgroundColor: "#000000",
-                  color: "#00ff00",
-                  fontFamily: "monospace",
-                  padding: "12px",
-                  borderRadius: "4px",
-                  border: "1px solid #00ff00"
-                }}>
-                  <div>WALLET: {event.walletAddress}</div>
-                  <div>CHAIN: {event.paymentProcessing}</div>
+          {isOwner &&
+            event.paymentProcessing &&
+            event.paymentProcessing !== "None" &&
+            event.walletAddress && (
+              <div className="card mb-4">
+                <div className="card-body">
+                  <h5 className="card-title mb-3">
+                    <img
+                      src={cryptoSettingsIcon}
+                      alt=""
+                      style={{ width: "18px", height: "18px" }}
+                      className="me-2"
+                    />
+                    Cryptocurrency Payment Settings
+                  </h5>
+
+                  {/* Terminal-style balance display */}
+                  <div
+                    style={{
+                      backgroundColor: "#000000",
+                      color: "#00ff00",
+                      fontFamily: "monospace",
+                      padding: "12px",
+                      borderRadius: "4px",
+                      border: "1px solid #00ff00",
+                    }}
+                  >
+                    <div>WALLET: {event.walletAddress}</div>
+                    <div>CHAIN: {event.paymentProcessing}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         <div className="col-lg-4">
@@ -1777,16 +1800,19 @@ export default function EventDetailPage() {
               {/* Event QR Code */}
               {eventQrCode && (
                 <div className="mb-3 p-3 bg-light rounded text-center">
-                  <div className="text-muted small mb-2">Event Link QR Code</div>
-                  <img 
-                    src={eventQrCode} 
-                    alt="Event QR Code" 
+                  <div className="text-muted small mb-2">
+                    Event Link QR Code
+                  </div>
+                  <img
+                    src={eventQrCode}
+                    alt="Event QR Code"
                     style={{ width: "200px", height: "200px" }}
                     className="mb-2"
                     data-testid="img-event-qr-code"
                   />
                   <div className="text-muted small">
-                    Share this event: eventic.quest/e/{event?.id?.substring(0, 8)}
+                    Share this event: eventic.quest/e/
+                    {event?.id?.substring(0, 8)}
                   </div>
                 </div>
               )}
@@ -1841,7 +1867,9 @@ export default function EventDetailPage() {
                                 <span>Tickets Sold:</span>
                                 <div className="d-flex align-items-center gap-2">
                                   <span>
-                                    {event.ticketsSold === 0 ? "Be the first :)" : `${event.ticketsSold} / ${event.maxTickets}`}
+                                    {event.ticketsSold === 0
+                                      ? "Be the first :)"
+                                      : `${event.ticketsSold} / ${event.maxTickets}`}
                                   </span>
                                   {/* Show +5 button only for event owner with sufficient credits and event hasn't started */}
                                   {isOwner &&
@@ -1999,7 +2027,11 @@ export default function EventDetailPage() {
 
               {/* Boost Button for event owners and ticket holders - not shown for private events */}
               {!event.isPrivate &&
-                (isOwner || (userTickets && userTickets.filter((t) => (t as any).resellStatus !== "for_resale").length > 0)) &&
+                (isOwner ||
+                  (userTickets &&
+                    userTickets.filter(
+                      (t) => (t as any).resellStatus !== "for_resale",
+                    ).length > 0)) &&
                 !eventHasStarted && (
                   <button
                     onClick={() => setIsBoostModalOpen(true)}
@@ -2060,126 +2092,153 @@ export default function EventDetailPage() {
                     />
                     Edit Event
                   </Link>
-                  
+
                   {/* Download Transactions Button - Show for crypto events based on prepay setting */}
-                  {event.paymentProcessing && event.paymentProcessing !== "None" && 
-                   event.walletAddress && (() => {
-                    const now = new Date();
-                    const eventStart = new Date(event.date);
-                    if (event.time) {
-                      const [hours, minutes] = event.time.split(':').map(Number);
-                      eventStart.setHours(hours || 0, minutes || 0, 0, 0);
-                    }
-                    
-                    let eventEnd = eventStart;
-                    if (event.endDate) {
-                      eventEnd = new Date(event.endDate);
-                      eventEnd.setHours(23, 59, 59, 999);
-                    } else {
-                      // No end date - use 24 hours from start
-                      eventEnd = new Date(eventStart);
-                      eventEnd.setDate(eventEnd.getDate() + 1);
-                    }
-                    
-                    // Add 24 hours buffer after event end for settlement
-                    const settlementTime = new Date(eventEnd);
-                    settlementTime.setDate(settlementTime.getDate() + 1);
-                    
-                    const allowPrepay = (event as any).allowPrepay || false;
-                    
-                    // Determine if button should be shown and enabled
-                    let showButton = true;
-                    let isDisabled = false;
-                    let buttonText = "📥 Download Transactions";
-                    let disabledReason = "";
-                    
-                    if (allowPrepay) {
-                      // Prepay ON: Show after event starts
-                      if (now < eventStart) {
-                        showButton = false;
+                  {event.paymentProcessing &&
+                    event.paymentProcessing !== "None" &&
+                    event.walletAddress &&
+                    (() => {
+                      const now = new Date();
+                      const eventStart = new Date(event.date);
+                      if (event.time) {
+                        const [hours, minutes] = event.time
+                          .split(":")
+                          .map(Number);
+                        eventStart.setHours(hours || 0, minutes || 0, 0, 0);
                       }
-                    } else {
-                      // Prepay OFF: Show but disable until 24 hours after event ends
-                      if (now < settlementTime) {
-                        isDisabled = true;
-                        const hoursRemaining = Math.ceil((settlementTime.getTime() - now.getTime()) / (1000 * 60 * 60));
-                        disabledReason = `Available in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`;
-                        buttonText = `📥 Download Transactions (${disabledReason})`;
+
+                      let eventEnd = eventStart;
+                      if (event.endDate) {
+                        eventEnd = new Date(event.endDate);
+                        eventEnd.setHours(23, 59, 59, 999);
+                      } else {
+                        // No end date - use 24 hours from start
+                        eventEnd = new Date(eventStart);
+                        eventEnd.setDate(eventEnd.getDate() + 1);
                       }
-                    }
-                    
-                    if (!showButton) return null;
-                    
-                    return (
-                      <button
-                        className="btn btn-outline-success w-100 mb-2"
-                        disabled={isDisabled}
-                        onClick={async () => {
-                          toast({
-                            title: "Fetching transactions...",
-                            description: "Querying blockchain for transactions",
-                          });
-                          
-                          // Import the blockchain API
-                          const { fetchBlockchainTransactions, formatTransactionData } = await import('@/lib/blockchain-api');
-                          
-                          let startDate: Date;
-                          let endDate: Date;
-                          
-                          if (allowPrepay) {
-                            // Prepay ON: Fetch from event creation to event start
-                            startDate = new Date(event.createdAt);
-                            endDate = eventStart;
-                          } else {
-                            // Prepay OFF: Fetch from event start to end
-                            startDate = eventStart;
-                            endDate = eventEnd;
-                          }
-                          
-                          try {
-                            const transactions = await fetchBlockchainTransactions(
-                              event.walletAddress!,
-                              event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC' | 'Dogecoin',
-                              startDate,
-                              endDate
-                            );
-                            
-                            const formatted = formatTransactionData(transactions, event.paymentProcessing as 'Bitcoin' | 'Ethereum' | 'USDC' | 'Dogecoin');
-                            
-                            // Add date range info to the output
-                            const dateRangeInfo = `Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}\n` +
-                                                 `Payment Mode: ${allowPrepay ? 'Prepayment Allowed' : 'Event-time Only'}\n\n`;
-                            const finalOutput = dateRangeInfo + formatted;
-                            
-                            // Create and download text file
-                            const blob = new Blob([finalOutput], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `${event.name.replace(/[^a-z0-9]/gi, '-')}-transactions.txt`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
-                            
+
+                      // Add 24 hours buffer after event end for settlement
+                      const settlementTime = new Date(eventEnd);
+                      settlementTime.setDate(settlementTime.getDate() + 1);
+
+                      const allowPrepay = (event as any).allowPrepay || false;
+
+                      // Determine if button should be shown and enabled
+                      let showButton = true;
+                      let isDisabled = false;
+                      let buttonText = "📥 Download Transactions";
+                      let disabledReason = "";
+
+                      if (allowPrepay) {
+                        // Prepay ON: Show after event starts
+                        if (now < eventStart) {
+                          showButton = false;
+                        }
+                      } else {
+                        // Prepay OFF: Show but disable until 24 hours after event ends
+                        if (now < settlementTime) {
+                          isDisabled = true;
+                          const hoursRemaining = Math.ceil(
+                            (settlementTime.getTime() - now.getTime()) /
+                              (1000 * 60 * 60),
+                          );
+                          disabledReason = `Available in ${hoursRemaining} hour${hoursRemaining !== 1 ? "s" : ""}`;
+                          buttonText = `📥 Download Transactions (${disabledReason})`;
+                        }
+                      }
+
+                      if (!showButton) return null;
+
+                      return (
+                        <button
+                          className="btn btn-outline-success w-100 mb-2"
+                          disabled={isDisabled}
+                          onClick={async () => {
                             toast({
-                              title: "Downloaded transactions",
-                              description: `Found ${transactions.length} transaction(s)`,
+                              title: "Fetching transactions...",
+                              description:
+                                "Querying blockchain for transactions",
                             });
-                          } catch (error) {
-                            toast({
-                              title: "Error fetching transactions",
-                              description: "Could not retrieve blockchain data. Please try again later.",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                      >
-                        {buttonText}
-                      </button>
-                    );
-                  })()}
-                  
+
+                            // Import the blockchain API
+                            const {
+                              fetchBlockchainTransactions,
+                              formatTransactionData,
+                            } = await import("@/lib/blockchain-api");
+
+                            let startDate: Date;
+                            let endDate: Date;
+
+                            if (allowPrepay) {
+                              // Prepay ON: Fetch from event creation to event start
+                              startDate = new Date(event.createdAt);
+                              endDate = eventStart;
+                            } else {
+                              // Prepay OFF: Fetch from event start to end
+                              startDate = eventStart;
+                              endDate = eventEnd;
+                            }
+
+                            try {
+                              const transactions =
+                                await fetchBlockchainTransactions(
+                                  event.walletAddress!,
+                                  event.paymentProcessing as
+                                    | "Bitcoin"
+                                    | "Ethereum"
+                                    | "USDC"
+                                    | "Dogecoin",
+                                  startDate,
+                                  endDate,
+                                );
+
+                              const formatted = formatTransactionData(
+                                transactions,
+                                event.paymentProcessing as
+                                  | "Bitcoin"
+                                  | "Ethereum"
+                                  | "USDC"
+                                  | "Dogecoin",
+                              );
+
+                              // Add date range info to the output
+                              const dateRangeInfo =
+                                `Date Range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}\n` +
+                                `Payment Mode: ${allowPrepay ? "Prepayment Allowed" : "Event-time Only"}\n\n`;
+                              const finalOutput = dateRangeInfo + formatted;
+
+                              // Create and download text file
+                              const blob = new Blob([finalOutput], {
+                                type: "text/plain",
+                              });
+                              const url = URL.createObjectURL(blob);
+                              const link = document.createElement("a");
+                              link.href = url;
+                              link.download = `${event.name.replace(/[^a-z0-9]/gi, "-")}-transactions.txt`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              URL.revokeObjectURL(url);
+
+                              toast({
+                                title: "Downloaded transactions",
+                                description: `Found ${transactions.length} transaction(s)`,
+                              });
+                            } catch (error) {
+                              toast({
+                                title: "Error fetching transactions",
+                                description:
+                                  "Could not retrieve blockchain data. Please try again later.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          {buttonText}
+                        </button>
+                      );
+                    })()}
+
                   <div className="alert alert-info mt-3">
                     <small className="d-flex align-items-center">
                       <img
@@ -2276,7 +2335,10 @@ export default function EventDetailPage() {
 
       {/* Boost Event Modal - not shown for private events */}
       {!event.isPrivate &&
-        (isOwner || (userTickets && userTickets.filter((t) => (t as any).resellStatus !== "for_resale").length > 0)) && (
+        (isOwner ||
+          (userTickets &&
+            userTickets.filter((t) => (t as any).resellStatus !== "for_resale")
+              .length > 0)) && (
           <>
             <BoostEventModal
               eventId={id!}
