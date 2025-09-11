@@ -30,7 +30,6 @@ import expiredIcon from "@assets/image_1757231398193.png";
 import gearIcon from "@assets/image_1757231239743.png";
 import cryptoPaymentIcon from "@assets/expand_hierarchial_array-1_1757599748433.png";
 import type { Ticket, Event } from "@shared/schema";
-import { createEventDateTime, formatDateInTimezone } from "@/lib/timezone-utils";
 
 interface ValidationSession {
   token: string;
@@ -42,12 +41,8 @@ function hasEventStarted(event: Event | undefined): boolean {
   if (!event) return false;
 
   const now = new Date();
-  
-  // Get the event's timezone (default to "America/New_York" if not specified)
-  const eventTimezone = event.timezone || "America/New_York";
-  
-  // Create the start date in the event's timezone
-  const startDate = createEventDateTime(event.date, event.time, eventTimezone);
+  const startDateTime = `${event.date}T${event.time}:00`;
+  const startDate = new Date(startDateTime);
 
   // Check if event has started yet
   return now >= startDate;
@@ -61,12 +56,9 @@ function isTicketWithinValidTime(event: Event | undefined): {
   if (!event) return { valid: false, message: "Event data not available" };
 
   const now = new Date();
-  
-  // Get the event's timezone (default to "America/New_York" if not specified)
-  const eventTimezone = event.timezone || "America/New_York";
-  
-  // Create the start date in the event's timezone
-  const startDate = createEventDateTime(event.date, event.time, eventTimezone);
+  // Combine date and time fields for start date using ISO format
+  const startDateTime = `${event.date}T${event.time}:00`;
+  const startDate = new Date(startDateTime);
 
   // Check early validation setting
   const earlyValidation = event.earlyValidation || "Allow at Anytime";
@@ -90,10 +82,10 @@ function isTicketWithinValidTime(event: Event | undefined): {
     if (now < validationStartTime) {
       const timeDescription =
         earlyValidation === "At Start Time"
-          ? `at ${formatDateInTimezone(startDate, eventTimezone)}`
+          ? `at ${startDate.toLocaleString()}`
           : earlyValidation === "One Hour Before"
-            ? `starting ${formatDateInTimezone(validationStartTime, eventTimezone)} (1 hour before event)`
-            : `starting ${formatDateInTimezone(validationStartTime, eventTimezone)} (2 hours before event)`;
+            ? `starting ${validationStartTime.toLocaleString()} (1 hour before event)`
+            : `starting ${validationStartTime.toLocaleString()} (2 hours before event)`;
 
       return {
         valid: false,
@@ -104,11 +96,12 @@ function isTicketWithinValidTime(event: Event | undefined): {
 
   // If event has an end date and time, check if we're past it
   if (event.endDate && event.endTime) {
-    const endDate = createEventDateTime(event.endDate, event.endTime, eventTimezone);
+    const endDateTime = `${event.endDate}T${event.endTime}:00`;
+    const endDate = new Date(endDateTime);
     if (now > endDate) {
       return {
         valid: false,
-        message: `Event has ended. It ended on ${formatDateInTimezone(endDate, eventTimezone)}`,
+        message: `Event has ended. It ended on ${endDate.toLocaleString()}`,
       };
     }
   } else {
@@ -119,7 +112,7 @@ function isTicketWithinValidTime(event: Event | undefined): {
     if (now > twentyFourHoursAfterStart) {
       return {
         valid: false,
-        message: `Ticket has expired. It was valid for 24 hours after ${formatDateInTimezone(startDate, eventTimezone)}`,
+        message: `Ticket has expired. It was valid for 24 hours after ${startDate.toLocaleString()}`,
       };
     }
   }
