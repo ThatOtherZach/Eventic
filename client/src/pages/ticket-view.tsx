@@ -743,10 +743,16 @@ export default function TicketViewPage(): React.ReactElement {
             </div>
           </div>
 
-          {/* Charge Ticket Section - Only show if event has special effects OR stickers enabled, ticket not validated */}
+          {/* Charge Ticket Section - Only show if event has special effects OR stickers enabled, ticket not validated, and event hasn't started */}
           {(event.specialEffectsEnabled || event.stickerUrl) &&
             !ticket.isCharged &&
-            !ticket.isValidated && (
+            !ticket.isValidated && 
+            (() => {
+              const now = new Date();
+              const startDateTime = `${event.date}T${event.time}:00`;
+              const startDate = new Date(startDateTime);
+              return now < startDate;
+            })() && (
               <div className="card mb-4">
                 <div className="card-body">
                   <h6 className="card-title mb-3">
