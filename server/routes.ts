@@ -3682,6 +3682,229 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: User Role Management Routes
+  
+  // Get paginated list of users with their roles
+  app.get("/api/admin/users", requirePermission('manage_users'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { page = 1, limit = 20, search = '' } = req.query;
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = Math.min(parseInt(limit as string) || 20, 100); // Max 100 per page
+      const searchTerm = (search as string).toLowerCase();
+      
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      
+      // Filter users by search term (email or displayName)
+      let filteredUsers = allUsers;
+      if (searchTerm) {
+        filteredUsers = allUsers.filter(user => 
+          user.email.toLowerCase().includes(searchTerm) ||
+          (user.displayName && user.displayName.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      // Calculate pagination
+      const totalUsers = filteredUsers.length;
+      const totalPages = Math.ceil(totalUsers / limitNum);
+      const offset = (pageNum - 1) * limitNum;
+      const paginatedUsers = filteredUsers.slice(offset, offset + limitNum);
+      
+      // Get roles for each user
+      const usersWithRoles = await Promise.all(
+        paginatedUsers.map(async (user) => {
+          const roles = await storage.getUserRoles(user.id);
+          return {
+            id: user.id,
+            email: user.email,
+            displayName: user.displayName,
+            memberStatus: user.memberStatus,
+            createdAt: user.createdAt,
+            lastLoginAt: user.lastLoginAt,
+            roles: roles.map(role => ({
+              id: role.id,
+              name: role.name,
+              displayName: role.displayName
+            }))
+          };
+        })
+      );
+      
+      res.json({
+        users: usersWithRoles,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalUsers,
+          totalPages
+        }
+      });
+    } catch (error) {
+      await logError(error, "GET /api/admin/users", { 
+        request: req,
+        metadata: { query: req.query }
+      });
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  
+  // Get available roles for assignment
+  app.get("/api/admin/roles", requirePermission('manage_users'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const roles = await storage.getRoles();
+      
+      // Filter to only show assignable roles (exclude regular 'user' role if it exists)
+      const assignableRoles = roles.filter(role => 
+        role.name === 'super_admin' || 
+        role.name === 'event_moderator' ||
+        role.name === 'support'
+      );
+      
+      res.json({
+        roles: assignableRoles.map(role => ({
+          id: role.id,
+          name: role.name,
+          displayName: role.displayName,
+          description: role.description
+        }))
+      });
+    } catch (error) {
+      await logError(error, "GET /api/admin/roles", { request: req });
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+  
+  // Assign a role to a user
+  app.post("/api/admin/users/:userId/roles", requirePermission('manage_users'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userId } = req.params;
+      const { roleId } = req.body;
+      const assignedBy = req.user?.id;
+      
+      if (!roleId) {
+        return res.status(400).json({ message: "Role ID is required" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if role exists
+      const roles = await storage.getRoles();
+      const role = roles.find(r => r.id === roleId);
+      if (!role) {
+        return res.status(404).json({ message: "Role not found" });
+      }
+      
+      // Check if it's an assignable role
+      if (role.name !== 'super_admin' && role.name !== 'event_moderator' && role.name !== 'support') {
+        return res.status(400).json({ message: "This role cannot be assigned manually" });
+      }
+      
+      // Check if user already has this role
+      const currentRoles = await storage.getUserRoles(userId);
+      if (currentRoles.some(r => r.id === roleId)) {
+        return res.status(400).json({ message: "User already has this role" });
+      }
+      
+      // Assign the role
+      await storage.assignUserRole(userId, roleId, assignedBy);
+      
+      // Get updated roles
+      const updatedRoles = await storage.getUserRoles(userId);
+      
+      res.json({
+        message: `Role '${role.displayName}' assigned successfully`,
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          roles: updatedRoles.map(r => ({
+            id: r.id,
+            name: r.name,
+            displayName: r.displayName
+          }))
+        }
+      });
+    } catch (error) {
+      await logError(error, "POST /api/admin/users/:userId/roles", { 
+        request: req,
+        metadata: { userId: req.params.userId, roleId: req.body.roleId }
+      });
+      res.status(500).json({ message: "Failed to assign role" });
+    }
+  });
+  
+  // Remove a role from a user
+  app.delete("/api/admin/users/:userId/roles/:roleId", requirePermission('manage_users'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userId, roleId } = req.params;
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if user has this role
+      const currentRoles = await storage.getUserRoles(userId);
+      const hasRole = currentRoles.some(r => r.id === roleId);
+      if (!hasRole) {
+        return res.status(400).json({ message: "User does not have this role" });
+      }
+      
+      // Find the role details
+      const role = currentRoles.find(r => r.id === roleId);
+      
+      // Prevent removing the last super_admin if this is one
+      if (role?.name === 'super_admin') {
+        // Count total super admins
+        const allUsers = await storage.getAllUsers();
+        let superAdminCount = 0;
+        for (const u of allUsers) {
+          const roles = await storage.getUserRoles(u.id);
+          if (roles.some(r => r.name === 'super_admin')) {
+            superAdminCount++;
+          }
+        }
+        
+        if (superAdminCount <= 1) {
+          return res.status(400).json({ 
+            message: "Cannot remove the last super admin role. Assign another super admin first." 
+          });
+        }
+      }
+      
+      // Remove the role
+      await storage.removeUserRole(userId, roleId);
+      
+      // Get updated roles
+      const updatedRoles = await storage.getUserRoles(userId);
+      
+      res.json({
+        message: `Role '${role?.displayName}' removed successfully`,
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          roles: updatedRoles.map(r => ({
+            id: r.id,
+            name: r.name,
+            displayName: r.displayName
+          }))
+        }
+      });
+    } catch (error) {
+      await logError(error, "DELETE /api/admin/users/:userId/roles/:roleId", { 
+        request: req,
+        metadata: { userId: req.params.userId, roleId: req.params.roleId }
+      });
+      res.status(500).json({ message: "Failed to remove role" });
+    }
+  });
+
 
   // Delegated Validators routes
   app.get("/api/events/:eventId/validators", async (req: AuthenticatedRequest, res) => {
