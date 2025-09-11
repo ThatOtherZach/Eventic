@@ -935,7 +935,6 @@ export default function TicketViewPage(): React.ReactElement {
                   <div className="alert alert-info small mb-3">
                     <strong>How it works:</strong>
                     <ul className="mb-0 mt-2">
-                      <li>Ticket price: ${ticketPrice.toFixed(2)} USD</li>
                       <li>Send payment to the wallet address shown below</li>
                       <li>Current conversion rates are displayed in real-time</li>
                       <li>Include the exact amount for proper verification</li>
