@@ -131,16 +131,18 @@ export default function AdminSettings() {
   });
 
   // Get all users for role management
-  const { data: allUsers = [], isLoading: usersLoading } = useQuery<any[]>({
+  const { data: usersData, isLoading: usersLoading } = useQuery<{ users: any[]; pagination: any }>({
     queryKey: ["/api/admin/users"],
     enabled: isAdmin()
   });
+  const allUsers = usersData?.users || [];
 
   // Get available roles
-  const { data: availableRoles = [], isLoading: rolesLoading } = useQuery<any[]>({
+  const { data: rolesData, isLoading: rolesLoading } = useQuery<{ roles: any[] }>({
     queryKey: ["/api/admin/roles"],
     enabled: isAdmin()
   });
+  const availableRoles = rolesData?.roles || [];
 
   // Set registration limit and user count when data loads
   useEffect(() => {
