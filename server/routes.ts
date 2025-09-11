@@ -111,28 +111,81 @@ function getTimeInTimezone(date: Date, timezone: string): Date {
   return new Date(localDateStr);
 }
 
+// Helper function to parse a date/time string in a specific timezone
+function parseInTimezone(dateStr: string, timeStr: string, timezone: string): Date {
+  // Parse the date and time components
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hour, minute] = timeStr.split(':').map(Number);
+  
+  // Create a date for this time in the specified timezone
+  // We need to find what UTC time corresponds to this local time in the timezone
+  
+  // First, create a guess date in UTC
+  const guessDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+  
+  // Format this UTC date in the target timezone to see what local time it represents
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(guessDate);
+  const localParts: any = {};
+  parts.forEach(part => {
+    localParts[part.type] = part.value;
+  });
+  
+  // Calculate the offset between what we want and what we got
+  const localHour = parseInt(localParts.hour);
+  const localMinute = parseInt(localParts.minute);
+  const localDay = parseInt(localParts.day);
+  
+  // Calculate how many minutes off we are
+  let minutesDiff = (hour - localHour) * 60 + (minute - localMinute);
+  
+  // Account for day boundary (if the date changed)
+  if (localDay !== day) {
+    if (localDay > day) {
+      minutesDiff -= 24 * 60; // We went forward a day, subtract 24 hours
+    } else {
+      minutesDiff += 24 * 60; // We went back a day, add 24 hours
+    }
+  }
+  
+  // Adjust the guess date by the difference
+  return new Date(guessDate.getTime() + minutesDiff * 60 * 1000);
+}
+
 // Helper function to check if a ticket is within its valid time window
 function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
   const serverNow = new Date();
   
-  // Convert server time to event's timezone (default to America/New_York if not set)
+  // Get event's timezone (default to America/New_York if not set)
   const eventTimezone = event.timezone || 'America/New_York';
-  const now = getTimeInTimezone(serverNow, eventTimezone);
   
-  // Parse event start date/time (already in event's timezone)
-  const startDateTime = `${event.date}T${event.time}:00`;
-  const startDate = new Date(startDateTime);
+  // Parse event start date/time in the event's timezone
+  const startDate = parseInTimezone(event.date, event.time, eventTimezone);
+  
+  // Now we can compare directly with server time (both are in UTC)
+  const now = serverNow;
   
   // Check if this is a rolling timezone event
   if (event.rollingTimezone) {
     // For rolling timezone events, check if the current time in ANY timezone
     // matches or has passed the event start time
+    // Convert server time to event's timezone for rolling timezone comparison
+    const nowInEventTz = getTimeInTimezone(serverNow, eventTimezone);
     const eventHour = parseInt(event.time.split(':')[0]);
     const eventMinute = parseInt(event.time.split(':')[1]);
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    const currentHour = nowInEventTz.getHours();
+    const currentMinute = nowInEventTz.getMinutes();
     const eventDate = new Date(event.date + 'T00:00:00');
-    const todayDate = new Date(now.toISOString().split('T')[0] + 'T00:00:00');
+    const todayDate = new Date(nowInEventTz.toISOString().split('T')[0] + 'T00:00:00');
     
     // Check if we're on the same day or after the event date
     if (todayDate >= eventDate) {
@@ -194,17 +247,18 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   
   // If event has an end date and time, check if we're past it
   if (event.endDate && event.endTime) {
-    const endDateTime = `${event.endDate}T${event.endTime}:00`;
-    const endDate = new Date(endDateTime);
+    // Parse end date/time in the event's timezone
+    const endDate = parseInTimezone(event.endDate, event.endTime, eventTimezone);
     
     // For rolling timezone events, check against local time
     if (event.rollingTimezone) {
+      const nowInEventTz = getTimeInTimezone(serverNow, eventTimezone);
       const eventEndHour = parseInt(event.endTime.split(':')[0]);
       const eventEndMinute = parseInt(event.endTime.split(':')[1]);
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
+      const currentHour = nowInEventTz.getHours();
+      const currentMinute = nowInEventTz.getMinutes();
       const eventEndDateObj = new Date(event.endDate + 'T00:00:00');
-      const todayDate = new Date(now.toISOString().split('T')[0] + 'T00:00:00');
+      const todayDate = new Date(nowInEventTz.toISOString().split('T')[0] + 'T00:00:00');
       
       if (todayDate > eventEndDateObj || 
           (todayDate.getTime() === eventEndDateObj.getTime() && 
@@ -231,12 +285,13 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
     // No end date - check if we're within 24 hours of start
     if (event.rollingTimezone) {
       // For rolling events without end date, valid for 24 hours after local start time
+      const nowInEventTz = getTimeInTimezone(serverNow, eventTimezone);
       const eventHour = parseInt(event.time.split(':')[0]);
       const eventMinute = parseInt(event.time.split(':')[1]);
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
+      const currentHour = nowInEventTz.getHours();
+      const currentMinute = nowInEventTz.getMinutes();
       const eventDate = new Date(event.date + 'T00:00:00');
-      const todayDate = new Date(now.toISOString().split('T')[0] + 'T00:00:00');
+      const todayDate = new Date(nowInEventTz.toISOString().split('T')[0] + 'T00:00:00');
       const dayAfterEvent = new Date(eventDate);
       dayAfterEvent.setDate(dayAfterEvent.getDate() + 1);
       
