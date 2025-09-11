@@ -2439,11 +2439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id || null;
       const userEmail = req.user?.email || null;
       
-      // For 4-digit codes (with or without suffix), try memory-first validation for P2P events
-      if (/^\d{4}[SPU]?$/.test(qrData)) {
-        // Strip any suffix (S, P, U) for processing but search with original code
-        const cleanCode = qrData.replace(/[SPU]$/, '');
-        
+      // For 4-digit codes, try memory-first validation for P2P events
+      if (/^\d{4}$/.test(qrData)) {
         // Try to find which event this code belongs to by checking all tickets
         const ticket = await storage.getTicketByValidationCode(qrData);
         if (ticket) {
@@ -2452,8 +2449,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Ensure P2P event is preloaded
             preloadP2PEventCodes(event.id);
             
-            // Use instant memory validation with clean code
-            const isValid = validateCodeInstant(event.id, cleanCode);
+            // Use instant memory validation
+            const isValid = validateCodeInstant(event.id, qrData);
             if (isValid) {
               // Queue the database update for later
               queueValidation(ticket.id, userId || undefined);
