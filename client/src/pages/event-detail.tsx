@@ -1755,25 +1755,11 @@ export default function EventDetailPage() {
                   fontFamily: "monospace",
                   padding: "12px",
                   borderRadius: "4px",
-                  marginBottom: "20px",
                   border: "1px solid #00ff00"
                 }}>
-                  <div>WALLET: {event.walletAddress.substring(0, 10)}...{event.walletAddress.slice(-8)}</div>
+                  <div>WALLET: {event.walletAddress}</div>
                   <div>CHAIN: {event.paymentProcessing}</div>
-                  <div>PRICE: ${event.ticketPrice} USD</div>
                 </div>
-
-                <button 
-                  className="btn btn-outline-success w-100"
-                  onClick={() => {
-                    toast({
-                      title: "Payment tracking coming soon",
-                      description: "Real-time payment monitoring will be available shortly",
-                    });
-                  }}
-                >
-                  View Payment Intents
-                </button>
               </div>
             </div>
           )}
