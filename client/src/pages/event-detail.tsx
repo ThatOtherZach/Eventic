@@ -949,7 +949,7 @@ export default function EventDetailPage() {
                   </span>
                 </Link>
               )}
-              {event.maxTickets && (
+              {event.oneTicketPerUser && (
                 <Link href="/type/limited">
                   <span
                     className="badge"
