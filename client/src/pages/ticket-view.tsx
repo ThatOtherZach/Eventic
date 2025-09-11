@@ -28,6 +28,7 @@ import deletionWarningIcon from "@assets/image_1756936869495.png";
 import batteryIcon from "@assets/image_1756977732648.png";
 import expiredIcon from "@assets/image_1757231398193.png";
 import gearIcon from "@assets/image_1757231239743.png";
+import cryptoPaymentIcon from "@assets/expand_hierarchial_array-1_1757599748433.png";
 import type { Ticket, Event } from "@shared/schema";
 
 interface ValidationSession {
@@ -916,7 +917,7 @@ export default function TicketViewPage(): React.ReactElement {
               <div className="card mb-4">
                 <div className="card-body">
                   <h6 className="card-title mb-3">
-                    <Shield size={18} className="me-2" />
+                    <img src={cryptoPaymentIcon} alt="" style={{ width: "18px", height: "18px" }} className="me-2" />
                     Crypto Payment Information
                   </h6>
                   <p className="text-muted small mb-3">
