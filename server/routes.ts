@@ -4159,6 +4159,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Prepare mint parameters for user-controlled minting
   app.post("/api/tickets/:ticketId/prepare-mint", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
+      const { ethers } = await import('ethers');
+      
       const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -4337,21 +4339,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get contract details
       const contractAddress = process.env.NFT_CONTRACT_ADDRESS || "0x0000000000000000000000000000000000000000";
       const contractABI = [
-        "function mintTicket(address recipient, string registryId, string metadataPath, bool withRoyalty) returns (uint256)",
-        "event TicketMinted(uint256 indexed tokenId, address indexed recipient, string registryId, string metadataURI, bool withRoyalty)"
+        "function mintTicket(address recipient, string registryId, string metadataPath, bool withRoyalty) returns (uint256)"
       ];
 
-      // Estimate gas (approximate for Base L2)
-      const estimatedGas = "150000"; // Standard gas limit for NFT minting on Base
+      // Create the interface and encode the function call
+      const iface = new ethers.Interface(contractABI);
+      const data = iface.encodeFunctionData("mintTicket", [
+        walletAddress,
+        registryRecord.id,
+        `${registryRecord.id}/metadata`,
+        withRoyalty
+      ]);
+
+      // Prepare unsigned transaction for Base L2
+      const unsignedTx = {
+        to: contractAddress,
+        data: data,
+        value: "0x0", // No ETH value needed
+        chainId: process.env.BASE_NETWORK === "testnet" ? 84532 : 8453, // Base Sepolia or Base Mainnet
+        gasLimit: "0x249F0", // 150000 in hex
+      };
+
+      // Get registry and metadata URLs
+      const registryUrl = `${req.protocol}://${req.get('host')}/registry/${registryRecord.id}`;
+      const metadataUrl = `${req.protocol}://${req.get('host')}/api/registry/${registryRecord.id}/metadata`;
 
       res.json({
-        contractAddress,
-        contractABI,
+        unsignedTransaction: unsignedTx,
         registryId: registryRecord.id,
-        metadataPath: `${registryRecord.id}/metadata`,
+        registryUrl,
+        metadataUrl,
         withRoyalty,
-        estimatedGas,
-        ticketCost: MINT_COST
+        ticketCost: MINT_COST,
+        contractAddress,
+        chainName: process.env.BASE_NETWORK === "testnet" ? "Base Sepolia" : "Base"
       });
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/prepare-mint", {
