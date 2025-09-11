@@ -83,7 +83,7 @@ function App() {
                     Eventic Core
                   </a>
                   {" by "}
-                  <a href="https://www.saymservices.com/eventic-core" target="_blank" rel="noopener noreferrer" className="link-primary">
+                  <a href="https://www.saymservices.com/eventic-core" target="_blank" rel="noopener noreferrer" style={{ color: '#ff7300' }}>
                     Saym Services
                   </a>
                 </small>
