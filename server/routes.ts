@@ -4266,35 +4266,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userBalance = await storage.getUserBalance(userId);
       const MINT_COST = withRoyalty ? 12 : 15;
       
-      if (!userBalance || userBalance.ticketBalance < MINT_COST) {
+      if (!userBalance || parseFloat(userBalance.balance) < MINT_COST) {
         return res.status(400).json({ 
-          message: `Insufficient tickets. Need ${MINT_COST}, have ${userBalance?.ticketBalance || 0}` 
+          message: `Insufficient tickets. Need ${MINT_COST}, have ${userBalance ? parseFloat(userBalance.balance) : 0}` 
         });
       }
 
       // Deduct tickets immediately
       await storage.createLedgerTransaction({
-        entries: [
-          {
-            accountId: userId,
-            entryType: 'debit',
-            amount: MINT_COST,
-            currency: 'tickets',
-            description: `NFT mint preparation for ticket ${ticketId}`
-          }
-        ],
+        transactionType: 'nft_mint',
         description: `NFT mint preparation for ticket ${ticketId}`,
+        debits: [{ accountId: userId, accountType: 'user', amount: MINT_COST }],
+        credits: [{ accountId: 'system_revenue', accountType: 'system', amount: MINT_COST }],
+        metadata: { ticketId, withRoyalty },
         relatedEntityId: ticketId,
-        relatedEntityType: 'ticket'
+        relatedEntityType: 'ticket',
+        createdBy: userId
       });
 
+      // Fetch base64 encoded images for complete preservation
+      const fetchImageAsBase64 = async (url: string | null | undefined): Promise<string | null> => {
+        if (!url) return null;
+        try {
+          const response = await fetch(url);
+          if (!response.ok) return null;
+          const buffer = await response.buffer();
+          return `data:${response.headers.get('content-type') || 'image/jpeg'};base64,${buffer.toString('base64')}`;
+        } catch (error) {
+          console.error('Error fetching image as base64:', error);
+          return null;
+        }
+      };
+
+      // Fetch all images as base64 for preservation
+      const [eventImageData, eventStickerData, ticketBackgroundData] = await Promise.all([
+        fetchImageAsBase64(event.imageUrl),
+        fetchImageAsBase64(event.stickerUrl),
+        fetchImageAsBase64(event.ticketBackgroundUrl || event.imageUrl)
+      ]);
+
       // Create registry record (but not minted yet)
-      const creator = await storage.getUser(event.userId);
+      const creator = await storage.getUser(event.userId!);
       const owner = await storage.getUser(ticket.userId!);
       
       const registryRecord = await storage.createRegistryRecord({
         ticketId: ticket.id,
-        userId: userId,
+        ownerId: userId,
+        creatorId: event.userId!,
         eventId: event.id,
         title: title || `${event.name} - Validated Ticket`,
         description: description || `Validated ticket for ${event.name} on ${event.date}`,
@@ -4305,21 +4323,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ticketCreatedAt: ticket.createdAt || new Date(),
         ticketValidatedAt: ticket.validatedAt!,
         ticketIsGoldenTicket: ticket.isGoldenTicket || false,
-        ticketStickerUrl: ticket.stickerUrl || null,
         ticketPurchasePrice: ticket.purchasePrice || null,
-        ticketPaymentIntent: ticket.paymentIntent || null,
         
         // Preserve event data
         eventName: event.name,
         eventDate: event.date,
         eventTime: event.time,
         eventVenue: event.venue,
-        eventCapacity: event.capacity,
-        eventDescription: event.description,
+        eventDescription: event.description || '',
         eventTicketPrice: event.ticketPrice,
         eventImageUrl: event.imageUrl || null,
-        eventStreet: event.street || null,
-        eventCity: event.city || null,
         eventIsPrivate: event.isPrivate || false,
         eventAllowMinting: event.allowMinting || true,
         eventEndDate: event.endDate || null,
@@ -4354,6 +4367,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Sync tracking
         synced: false,
         syncedAt: null,
+        
+        // Binary data storage for complete preservation
+        eventImageData: eventImageData,
+        eventStickerData: eventStickerData,
+        ticketBackgroundData: ticketBackgroundData,
         
         // NFT minting data
         walletAddress: walletAddress,
@@ -4469,18 +4487,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Refund tickets
       const refundAmount = registryRecord.nftMintCost || 12; // Default to standard mint cost
       await storage.createLedgerTransaction({
-        entries: [
-          {
-            accountId: userId,
-            entryType: 'credit',
-            amount: refundAmount,
-            currency: 'tickets',
-            description: `Refund for failed NFT mint (ticket ${ticketId})`
-          }
-        ],
+        transactionType: 'nft_refund',
         description: `Refund for failed NFT mint (ticket ${ticketId})`,
+        debits: [{ accountId: 'system_revenue', accountType: 'system', amount: refundAmount }],
+        credits: [{ accountId: userId, accountType: 'user', amount: refundAmount }],
+        metadata: { ticketId, reason },
         relatedEntityId: ticketId,
-        relatedEntityType: 'ticket'
+        relatedEntityType: 'ticket',
+        createdBy: userId
       });
 
       // TODO: Mark registry record as failed
