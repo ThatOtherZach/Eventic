@@ -15,7 +15,9 @@ import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe, Users, AlertCircle, Shield } from "lucide-react";
+import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe, Users, AlertCircle, Shield, UserPlus, UserMinus, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import "@/styles/admin.css";
 
 // Special effects configuration with ticket type previews
@@ -50,6 +52,14 @@ export default function AdminSettings() {
   const [seoSettings, setSeoSettings] = useState<any>({});
   const [registrationLimit, setRegistrationLimit] = useState<string>("unlimited");
   const [userCount, setUserCount] = useState<number | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [roleToAssign, setRoleToAssign] = useState<string>("");
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [roleToRemove, setRoleToRemove] = useState<string>("");
+  const usersPerPage = 10;
 
   // Check if user has admin access
   if (!isAdmin()) {
@@ -117,6 +127,18 @@ export default function AdminSettings() {
   // Get user registration limit
   const { data: registrationLimitData } = useQuery<{ limit: string; userCount: number }>({
     queryKey: ["/api/admin/registration-limit"],
+    enabled: isAdmin()
+  });
+
+  // Get all users for role management
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/users"],
+    enabled: isAdmin()
+  });
+
+  // Get available roles
+  const { data: availableRoles = [], isLoading: rolesLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/roles"],
     enabled: isAdmin()
   });
 
@@ -356,10 +378,91 @@ export default function AdminSettings() {
     }
   });
 
+  // Assign role mutation
+  const assignRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      return apiRequest("POST", `/api/admin/users/${userId}/roles`, { role });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Role Assigned",
+        description: "Role has been assigned successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setShowAssignDialog(false);
+      setSelectedUser(null);
+      setRoleToAssign("");
+    },
+    onError: () => {
+      toast({
+        title: "Assignment Failed",
+        description: "Failed to assign role.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Remove role mutation
+  const removeRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      return apiRequest("DELETE", `/api/admin/users/${userId}/roles/${role}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Role Removed",
+        description: "Role has been removed successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setShowRemoveDialog(false);
+      setSelectedUser(null);
+      setRoleToRemove("");
+    },
+    onError: () => {
+      toast({
+        title: "Removal Failed",
+        description: "Failed to remove role.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const filteredEvents = (events as any[]).filter((event: any) =>
     event?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event?.venue?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Filter and paginate users
+  const filteredUsers = allUsers.filter((user: any) =>
+    user?.email?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+    user?.displayName?.toLowerCase().includes(userSearchQuery.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIdx = (currentPage - 1) * usersPerPage;
+  const paginatedUsers = filteredUsers.slice(startIdx, startIdx + usersPerPage);
+
+  // Check if removing role would leave no super admins
+  const wouldRemoveLastSuperAdmin = (userId: string, role: string) => {
+    if (role !== "super_admin") return false;
+    const superAdmins = allUsers.filter((u: any) => 
+      u.roles?.some((r: any) => r.name === "super_admin")
+    );
+    return superAdmins.length === 1 && superAdmins[0].id === userId;
+  };
+
+  // Get role badge color
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "super_admin":
+        return "bg-purple-500 text-white";
+      case "event_moderator":
+        return "bg-blue-500 text-white";
+      case "support":
+        return "bg-green-500 text-white";
+      default:
+        return "bg-gray-500 text-white";
+    }
+  };
 
   return (
     <div className="admin-container">
@@ -616,94 +719,331 @@ export default function AdminSettings() {
         </TabsContent>
 
           <TabsContent value="users" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Registration Management</CardTitle>
-              <CardDescription>
-                Control user registration limits and manage platform growth
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Registration Limit Setting */}
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <Label htmlFor="registration-limit" className="text-base font-semibold">Registration Limit</Label>
-                  <Select
-                    value={registrationLimit}
-                    onValueChange={(value) => setRegistrationLimit(value)}
-                    data-testid="select-registration-limit"
-                  >
-                    <SelectTrigger id="registration-limit" className="w-full">
-                      <SelectValue placeholder="Select a limit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="100">100 users</SelectItem>
-                      <SelectItem value="500">500 users</SelectItem>
-                      <SelectItem value="1000">1,000 users</SelectItem>
-                      <SelectItem value="10000">10,000 users</SelectItem>
-                      <SelectItem value="unlimited">Unlimited</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-gray-500">
-                    Limit new user registrations during early stage. Super admins can always register.
-                  </p>
+            {/* User Role Management Card */}
+            <Card className="admin-card">
+              <CardHeader className="admin-card-header">
+                <CardTitle className="admin-card-title">User Role Management</CardTitle>
+                <CardDescription className="admin-card-description">
+                  Manage user permissions and roles across the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="admin-card-content space-y-6">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search users by email or display name..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="admin-input pl-10"
+                    data-testid="input-search-users"
+                  />
                 </div>
 
-                {/* Current User Count Display */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">Current Users</p>
-                      <p className="text-2xl font-bold">
-                        {userCount ? userCount.toLocaleString() : "..."}
-                        {registrationLimit !== "unlimited" && (
-                          <span className="text-base font-normal text-gray-500">
-                            {" "}/ {parseInt(registrationLimit).toLocaleString()}
-                          </span>
-                        )}
-                      </p>
+                {/* Users Table */}
+                {usersLoading ? (
+                  <div className="text-center py-8 text-gray-500">Loading users...</div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    {userSearchQuery ? "No users found matching your search" : "No users available"}
+                  </div>
+                ) : (
+                  <>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Display Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Roles</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedUsers.map((user: any) => (
+                            <TableRow key={user.id} data-testid={`row-user-${user.id}`}>
+                              <TableCell className="font-medium">
+                                {user.displayName || "No display name"}
+                              </TableCell>
+                              <TableCell className="text-gray-600">
+                                {user.email}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {user.roles && user.roles.length > 0 ? (
+                                    user.roles.map((role: any) => (
+                                      <Badge 
+                                        key={role.name} 
+                                        className={getRoleBadgeColor(role.name)}
+                                        data-testid={`badge-role-${role.name}-${user.id}`}
+                                      >
+                                        {role.name === "super_admin" && <Shield className="h-3 w-3 mr-1" />}
+                                        {role.displayName || role.name}
+                                      </Badge>
+                                    ))
+                                  ) : (
+                                    <span className="text-gray-400 text-sm">No roles</span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex gap-2 justify-end">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setRoleToAssign("");
+                                      setShowAssignDialog(true);
+                                    }}
+                                    data-testid={`button-assign-role-${user.id}`}
+                                  >
+                                    <UserPlus className="h-4 w-4" />
+                                  </Button>
+                                  {user.roles && user.roles.length > 0 && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setRoleToRemove("");
+                                        setShowRemoveDialog(true);
+                                      }}
+                                      data-testid={`button-remove-role-${user.id}`}
+                                    >
+                                      <UserMinus className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                    {registrationLimit !== "unlimited" && userCount && (
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">Capacity</p>
-                        <p className="text-lg font-semibold">
-                          {Math.round((userCount / parseInt(registrationLimit)) * 100)}%
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-500">
+                          Showing {startIdx + 1} to {Math.min(startIdx + usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
                         </p>
-                        {userCount >= parseInt(registrationLimit) * 0.9 && (
-                          <Badge variant="destructive" className="mt-1">
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Near Limit
-                          </Badge>
-                        )}
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            data-testid="button-prev-page"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                            data-testid="button-next-page"
+                          >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Registration Limit Card */}
+            <Card className="admin-card">
+              <CardHeader className="admin-card-header">
+                <CardTitle className="admin-card-title">Registration Settings</CardTitle>
+                <CardDescription className="admin-card-description">
+                  Control user registration limits and platform growth
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="admin-card-content space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <Label htmlFor="registration-limit" className="admin-label">Registration Limit</Label>
+                    <Select
+                      value={registrationLimit}
+                      onValueChange={(value) => setRegistrationLimit(value)}
+                      data-testid="select-registration-limit"
+                    >
+                      <SelectTrigger id="registration-limit" className="admin-input">
+                        <SelectValue placeholder="Select a limit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="100">100 users</SelectItem>
+                        <SelectItem value="500">500 users</SelectItem>
+                        <SelectItem value="1000">1,000 users</SelectItem>
+                        <SelectItem value="10000">10,000 users</SelectItem>
+                        <SelectItem value="unlimited">Unlimited</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-gray-500">
+                      Limit new user registrations during early stage. Super admins can always register.
+                    </p>
                   </div>
-                </div>
 
-                {/* Save Button */}
-                <Button 
-                  onClick={() => updateRegistrationLimitMutation.mutate(registrationLimit)}
-                  disabled={updateRegistrationLimitMutation.isPending}
-                  className="w-full"
-                  data-testid="button-save-registration-limit"
-                >
-                  {updateRegistrationLimitMutation.isPending ? "Saving..." : "Save Registration Limit"}
-                </Button>
-              </div>
+                  {/* Current User Count Display */}
+                  <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Current Users</p>
+                        <p className="text-2xl font-bold">
+                          {userCount ? userCount.toLocaleString() : "..."}
+                          {registrationLimit !== "unlimited" && (
+                            <span className="text-base font-normal text-gray-500">
+                              {" "}/ {parseInt(registrationLimit).toLocaleString()}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      {registrationLimit !== "unlimited" && userCount && (
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">Capacity</p>
+                          <p className="text-lg font-semibold">
+                            {Math.round((userCount / parseInt(registrationLimit)) * 100)}%
+                          </p>
+                          {userCount >= parseInt(registrationLimit) * 0.9 && (
+                            <Badge variant="destructive" className="mt-1">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Near Limit
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Cleanup Info */}
-              <div className="border-t pt-4">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">Automatic Cleanup</h4>
-                  <p className="text-sm text-gray-500">
-                    Users who register but never sign in are automatically removed after 30 days on the 1st of each month.
-                    This helps keep your user count accurate and frees up space for active users.
-                  </p>
+                  <Button 
+                    onClick={() => updateRegistrationLimitMutation.mutate(registrationLimit)}
+                    disabled={updateRegistrationLimitMutation.isPending}
+                    className="admin-btn-primary w-full"
+                    data-testid="button-save-registration-limit"
+                  >
+                    {updateRegistrationLimitMutation.isPending ? "Saving..." : "Save Registration Limit"}
+                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+
+            {/* Assign Role Dialog */}
+            <AlertDialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Assign Role</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Select a role to assign to {selectedUser?.displayName || selectedUser?.email}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-4 py-4">
+                  <Select
+                    value={roleToAssign}
+                    onValueChange={setRoleToAssign}
+                    data-testid="select-role-to-assign"
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Choose a role..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRoles.map((role: any) => (
+                        <SelectItem key={role.name} value={role.name}>
+                          <div className="flex items-center gap-2">
+                            {role.name === "super_admin" && <Shield className="h-4 w-4 text-purple-500" />}
+                            <span>{role.displayName || role.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {roleToAssign === "super_admin" && (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
+                        <AlertCircle className="h-4 w-4 inline mr-1" />
+                        Super Admin role grants full system access. Please confirm this action.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel data-testid="button-cancel-assign">Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (selectedUser && roleToAssign) {
+                        assignRoleMutation.mutate({ userId: selectedUser.id, role: roleToAssign });
+                      }
+                    }}
+                    disabled={!roleToAssign || assignRoleMutation.isPending}
+                    data-testid="button-confirm-assign"
+                  >
+                    {assignRoleMutation.isPending ? "Assigning..." : "Assign Role"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Remove Role Dialog */}
+            <AlertDialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove Role</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Select a role to remove from {selectedUser?.displayName || selectedUser?.email}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-4 py-4">
+                  <Select
+                    value={roleToRemove}
+                    onValueChange={setRoleToRemove}
+                    data-testid="select-role-to-remove"
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Choose a role to remove..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedUser?.roles?.map((role: any) => (
+                        <SelectItem key={role.name} value={role.name}>
+                          <div className="flex items-center gap-2">
+                            {role.name === "super_admin" && <Shield className="h-4 w-4 text-purple-500" />}
+                            <span>{role.displayName || role.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {roleToRemove && wouldRemoveLastSuperAdmin(selectedUser?.id, roleToRemove) && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-800">
+                        <AlertCircle className="h-4 w-4 inline mr-1" />
+                        Warning: This would remove the last Super Admin. The system must have at least one Super Admin.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel data-testid="button-cancel-remove">Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (selectedUser && roleToRemove && !wouldRemoveLastSuperAdmin(selectedUser.id, roleToRemove)) {
+                        removeRoleMutation.mutate({ userId: selectedUser.id, role: roleToRemove });
+                      }
+                    }}
+                    disabled={!roleToRemove || removeRoleMutation.isPending || wouldRemoveLastSuperAdmin(selectedUser?.id, roleToRemove)}
+                    className="bg-red-500 hover:bg-red-600"
+                    data-testid="button-confirm-remove"
+                  >
+                    {removeRoleMutation.isPending ? "Removing..." : "Remove Role"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </TabsContent>
 
         <TabsContent value="payments" className="space-y-6">
           <Card>
