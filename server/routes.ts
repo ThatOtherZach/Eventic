@@ -17,6 +17,7 @@ import { execFile } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { nftMintingService } from './services/nft-minting';
+import { createEventDateTime, formatDateInTimezone } from './utils/timezone-utils';
 
 // Rate limiter configuration for ticket purchases
 const purchaseRateLimiter = rateLimit({
@@ -89,14 +90,14 @@ const generalRateLimiter = rateLimit({
 // Helper function to check if a ticket is within its valid time window
 function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
   const now = new Date();
-  // Combine date and time fields for start date
-  const startDateTime = `${event.date}T${event.time}:00`;
-  const startDate = new Date(startDateTime);
+  
+  // Get the event's timezone (default to "America/New_York" if not specified)
+  const eventTimezone = event.timezone || "America/New_York";
   
   // Check if this is a rolling timezone event
   if (event.rollingTimezone) {
     // For rolling timezone events, check if the current time in ANY timezone
-    // matches or has passed the event start time
+    // matches or has passed the event start time (keep existing logic)
     const eventHour = parseInt(event.time.split(':')[0]);
     const eventMinute = parseInt(event.time.split(':')[1]);
     const currentHour = now.getHours();
@@ -124,6 +125,9 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
     }
   }
   
+  // For non-rolling timezone events, use the event's specified timezone
+  const startDate = createEventDateTime(event.date, event.time, eventTimezone);
+  
   // Check early validation setting
   const earlyValidation = event.earlyValidation || "Allow at Anytime";
   
@@ -143,10 +147,10 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
     
     if (now < validationStartTime) {
       const timeDescription = earlyValidation === "At Start Time" 
-        ? `at ${startDate.toLocaleString()}`
+        ? `at ${formatDateInTimezone(startDate, eventTimezone)}`
         : earlyValidation === "One Hour Before"
-        ? `starting ${validationStartTime.toLocaleString()} (1 hour before event)`
-        : `starting ${validationStartTime.toLocaleString()} (2 hours before event)`;
+        ? `starting ${formatDateInTimezone(validationStartTime, eventTimezone)} (1 hour before event)`
+        : `starting ${formatDateInTimezone(validationStartTime, eventTimezone)} (2 hours before event)`;
       
       return {
         valid: false,
@@ -157,10 +161,7 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   
   // If event has an end date and time, check if we're past it
   if (event.endDate && event.endTime) {
-    const endDateTime = `${event.endDate}T${event.endTime}:00`;
-    const endDate = new Date(endDateTime);
-    
-    // For rolling timezone events, check against local time
+    // For rolling timezone events, check against local time (keep existing logic)
     if (event.rollingTimezone) {
       const eventEndHour = parseInt(event.endTime.split(':')[0]);
       const eventEndMinute = parseInt(event.endTime.split(':')[1]);
@@ -177,16 +178,21 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
           message: `Global Sync event ended at ${event.endTime} in your local timezone`
         };
       }
-    } else if (now > endDate) {
-      return {
-        valid: false,
-        message: `Event has ended. It ended on ${endDate.toLocaleString()}`
-      };
+    } else {
+      // For non-rolling timezone events, use the event's timezone
+      const endDate = createEventDateTime(event.endDate, event.endTime, eventTimezone);
+      
+      if (now > endDate) {
+        return {
+          valid: false,
+          message: `Event has ended. It ended on ${formatDateInTimezone(endDate, eventTimezone)}`
+        };
+      }
     }
   } else {
     // No end date - check if we're within 24 hours of start
     if (event.rollingTimezone) {
-      // For rolling events without end date, valid for 24 hours after local start time
+      // For rolling events without end date, valid for 24 hours after local start time (keep existing logic)
       const eventHour = parseInt(event.time.split(':')[0]);
       const eventMinute = parseInt(event.time.split(':')[1]);
       const currentHour = now.getHours();
@@ -204,11 +210,12 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
         };
       }
     } else {
+      // For non-rolling timezone events, use the event's timezone
       const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
       if (now > twentyFourHoursAfterStart) {
         return {
           valid: false,
-          message: `Ticket has expired. It was valid for 24 hours after ${startDate.toLocaleString()}`
+          message: `Ticket has expired. It was valid for 24 hours after ${formatDateInTimezone(startDate, eventTimezone)}`
         };
       }
     }
