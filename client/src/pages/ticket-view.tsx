@@ -903,40 +903,57 @@ export default function TicketViewPage(): React.ReactElement {
               );
             }
             
+            const ticketPrice = parseFloat(ticket.purchasePrice?.toString() || event.ticketPrice?.toString() || "0");
+            const paymentMethod = event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC" | "Dogecoin";
+            
             return (
               <div className="card mb-4">
-                <div className="card-header">
-                  <button
-                    className="btn btn-link text-decoration-none p-0 d-flex align-items-center justify-content-between w-100"
-                    onClick={() => setShowCryptoPayment(!showCryptoPayment)}
-                    data-testid="button-toggle-crypto-payment"
-                  >
-                    <span className="fw-bold">
-                      Crypto Payment Information
-                    </span>
-                    {showCryptoPayment ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  </button>
-                </div>
-                {showCryptoPayment && (
-                  <div className="card-body">
-                    <CryptoPaymentInfo
-                      walletAddress={event.walletAddress}
-                      ticketPrice={parseFloat(ticket.purchasePrice?.toString() || event.ticketPrice?.toString() || "0")}
-                      paymentMethod={event.paymentProcessing as "Bitcoin" | "Ethereum" | "USDC" | "Dogecoin"}
+                <div className="card-body">
+                  <h6 className="card-title mb-3">
+                    <Shield size={18} className="me-2" />
+                    Crypto Payment Information
+                  </h6>
+                  <p className="text-muted small mb-3">
+                    Pay for your ticket using {paymentMethod}.
+                    <HelpCircle
+                      size={14}
+                      className="ms-1"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      data-bs-title="Send the exact amount shown below to the provided wallet address. Payment will be verified by the event organizer."
+                      style={{ cursor: "help" }}
                     />
-                    <p className="text-muted small mt-2 mb-0 text-end">
-                      <a 
-                        href="https://www.coingecko.com" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-muted"
-                        style={{ textDecoration: "underline" }}
-                      >
-                        CoinGecko
-                      </a>
-                    </p>
+                  </p>
+                  
+                  <div className="alert alert-info small mb-3">
+                    <strong>How it works:</strong>
+                    <ul className="mb-0 mt-2">
+                      <li>Ticket price: ${ticketPrice.toFixed(2)} USD</li>
+                      <li>Send payment to the wallet address shown below</li>
+                      <li>Current conversion rates are displayed in real-time</li>
+                      <li>Include the exact amount for proper verification</li>
+                    </ul>
                   </div>
-                )}
+                  
+                  <CryptoPaymentInfo
+                    walletAddress={event.walletAddress}
+                    ticketPrice={ticketPrice}
+                    paymentMethod={paymentMethod}
+                  />
+                  
+                  <p className="text-muted small mt-3 mb-0 text-end">
+                    Powered by{" "}
+                    <a 
+                      href="https://www.coingecko.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted"
+                      style={{ textDecoration: "underline" }}
+                    >
+                      CoinGecko
+                    </a>
+                  </p>
+                </div>
               </div>
             );
           })()}
