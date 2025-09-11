@@ -111,54 +111,103 @@ function getTimeInTimezone(date: Date, timezone: string): Date {
   return new Date(localDateStr);
 }
 
-// Helper function to parse a date/time string in a specific timezone
+// Helper function to parse a date/time string in a specific timezone  
 function parseInTimezone(dateStr: string, timeStr: string, timezone: string): Date {
-  // Parse the date and time components
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const [hour, minute] = timeStr.split(':').map(Number);
-  
-  // Create a date for this time in the specified timezone
-  // We need to find what UTC time corresponds to this local time in the timezone
-  
-  // First, create a guess date in UTC
-  const guessDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
-  
-  // Format this UTC date in the target timezone to see what local time it represents
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-  
-  const parts = formatter.formatToParts(guessDate);
-  const localParts: any = {};
-  parts.forEach(part => {
-    localParts[part.type] = part.value;
-  });
-  
-  // Calculate the offset between what we want and what we got
-  const localHour = parseInt(localParts.hour);
-  const localMinute = parseInt(localParts.minute);
-  const localDay = parseInt(localParts.day);
-  
-  // Calculate how many minutes off we are
-  let minutesDiff = (hour - localHour) * 60 + (minute - localMinute);
-  
-  // Account for day boundary (if the date changed)
-  if (localDay !== day) {
-    if (localDay > day) {
-      minutesDiff -= 24 * 60; // We went forward a day, subtract 24 hours
-    } else {
-      minutesDiff += 24 * 60; // We went back a day, add 24 hours
+  try {
+    // Parse the date and time components
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hour, minute] = timeStr.split(':').map(Number);
+    
+    // Create a localized date string for the timezone
+    // Use a reference date to figure out the offset for this specific date/time
+    const localStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+    
+    // Try parsing with the Intl API to get the correct UTC time
+    // We'll check multiple possible UTC times to find the one that matches our local time
+    for (let offsetMinutes = -720; offsetMinutes <= 840; offsetMinutes += 30) {
+      // Create a test UTC date
+      const testUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, 0) - offsetMinutes * 60 * 1000);
+      
+      // Format it in the target timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      const parts = formatter.formatToParts(testUtc);
+      const parsed: any = {};
+      parts.forEach(p => { if (p.type !== 'literal') parsed[p.type] = p.value; });
+      
+      // Check if this UTC time gives us the correct local time in the target timezone
+      if (parseInt(parsed.year) === year &&
+          parseInt(parsed.month) === month &&
+          parseInt(parsed.day) === day &&
+          parseInt(parsed.hour) === hour &&
+          parseInt(parsed.minute) === minute) {
+        return testUtc;
+      }
     }
+    
+    // Fallback: Create a date assuming the timezone offset
+    // This is a last resort and may not be perfectly accurate
+    console.warn(`Could not find exact timezone match for ${dateStr} ${timeStr} in ${timezone}, using fallback`);
+    const fallback = new Date(`${dateStr}T${timeStr}:00`);
+    
+    // Try to adjust based on common timezone offsets
+    if (timezone.includes('America/Denver') || timezone.includes('America/Phoenix')) {
+      // Mountain Time: UTC-7 (MST) or UTC-6 (MDT)
+      const isDST = isDaylightSavingTime(fallback, timezone);
+      fallback.setHours(fallback.getHours() + (isDST ? 6 : 7));
+    } else if (timezone.includes('America/Los_Angeles')) {
+      // Pacific Time: UTC-8 (PST) or UTC-7 (PDT)
+      const isDST = isDaylightSavingTime(fallback, timezone);
+      fallback.setHours(fallback.getHours() + (isDST ? 7 : 8));
+    } else if (timezone.includes('America/New_York')) {
+      // Eastern Time: UTC-5 (EST) or UTC-4 (EDT)
+      const isDST = isDaylightSavingTime(fallback, timezone);
+      fallback.setHours(fallback.getHours() + (isDST ? 4 : 5));
+    } else if (timezone.includes('America/Chicago')) {
+      // Central Time: UTC-6 (CST) or UTC-5 (CDT)
+      const isDST = isDaylightSavingTime(fallback, timezone);
+      fallback.setHours(fallback.getHours() + (isDST ? 5 : 6));
+    }
+    
+    return fallback;
+  } catch (error) {
+    console.error(`Error parsing timezone date: ${error}`);
+    // Ultimate fallback
+    return new Date(`${dateStr}T${timeStr}:00`);
   }
+}
+
+// Helper to check if a date is in daylight saving time for a timezone
+function isDaylightSavingTime(date: Date, timezone: string): boolean {
+  const january = new Date(date.getFullYear(), 0, 1);
+  const july = new Date(date.getFullYear(), 6, 1);
   
-  // Adjust the guess date by the difference
-  return new Date(guessDate.getTime() + minutesDiff * 60 * 1000);
+  const getOffset = (d: Date) => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'short'
+    });
+    const parts = formatter.formatToParts(d);
+    const tzName = parts.find(p => p.type === 'timeZoneName')?.value || '';
+    return tzName.includes('DT') || tzName.includes('ST');
+  };
+  
+  const janOffset = getOffset(january);
+  const julOffset = getOffset(july);
+  const dateOffset = getOffset(date);
+  
+  // If offsets differ between Jan and Jul, timezone has DST
+  // Check if current date matches the summer offset
+  return janOffset !== julOffset && dateOffset === julOffset;
 }
 
 // Helper function to check if a ticket is within its valid time window
