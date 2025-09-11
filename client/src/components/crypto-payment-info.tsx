@@ -67,10 +67,6 @@ export function CryptoPaymentInfo({ walletAddress, ticketPrice, paymentMethod }:
   const handleCopyAmount = () => {
     const amount = getCryptoAmount();
     navigator.clipboard.writeText(amount);
-    toast({
-      title: "Amount copied",
-      description: `${amount} ${getCurrencySymbol()} copied to clipboard`,
-    });
   };
 
   const getCryptoAmount = () => {
