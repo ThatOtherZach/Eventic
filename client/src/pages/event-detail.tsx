@@ -2219,11 +2219,6 @@ export default function EventDetailPage() {
                               link.click();
                               document.body.removeChild(link);
                               URL.revokeObjectURL(url);
-
-                              toast({
-                                title: "Downloaded transactions",
-                                description: `Found ${transactions.length} transaction(s)`,
-                              });
                             } catch (error) {
                               toast({
                                 title: "Error fetching transactions",
