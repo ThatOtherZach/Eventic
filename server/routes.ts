@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema, insertNotificationSchema, insertNotificationPreferencesSchema } from "@shared/schema";
 import { z } from "zod";
+import { fromZonedTime } from 'date-fns-tz';
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { supabaseSyncService } from "./supabaseSync";
 import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
@@ -86,9 +87,19 @@ const generalRateLimiter = rateLimit({
   // Use default keyGenerator which handles IPv6 properly
 });
 
-// Helper function to convert server time to event timezone
+// Helper function to convert event time to UTC timestamp
+function convertEventTimeToUtc(dateStr: string, timeStr: string, timezone: string): Date {
+  // Create datetime string in the event's timezone
+  const dateTimeStr = `${dateStr} ${timeStr}:00`;
+  
+  // Convert from the event's timezone to UTC
+  // fromZonedTime treats the input as being in the specified timezone
+  // and returns the equivalent UTC date
+  return fromZonedTime(dateTimeStr, timezone);
+}
+
+// Helper function for rolling timezone events (kept for backward compatibility)
 function getTimeInTimezone(date: Date, timezone: string): Date {
-  // Format the date in the target timezone and parse components
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     year: 'numeric',
@@ -106,109 +117,11 @@ function getTimeInTimezone(date: Date, timezone: string): Date {
     dateParts[part.type] = part.value;
   });
   
-  // Create a date string in the event's timezone
   const localDateStr = `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`;
   return new Date(localDateStr);
 }
 
-// Helper function to parse a date/time string in a specific timezone  
-function parseInTimezone(dateStr: string, timeStr: string, timezone: string): Date {
-  try {
-    // Parse the date and time components
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const [hour, minute] = timeStr.split(':').map(Number);
-    
-    // Create a localized date string for the timezone
-    // Use a reference date to figure out the offset for this specific date/time
-    const localStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
-    
-    // Try parsing with the Intl API to get the correct UTC time
-    // We'll check multiple possible UTC times to find the one that matches our local time
-    for (let offsetMinutes = -720; offsetMinutes <= 840; offsetMinutes += 30) {
-      // Create a test UTC date
-      const testUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, 0) - offsetMinutes * 60 * 1000);
-      
-      // Format it in the target timezone
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone,
-        year: 'numeric',
-        month: '2-digit', 
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-      
-      const parts = formatter.formatToParts(testUtc);
-      const parsed: any = {};
-      parts.forEach(p => { if (p.type !== 'literal') parsed[p.type] = p.value; });
-      
-      // Check if this UTC time gives us the correct local time in the target timezone
-      if (parseInt(parsed.year) === year &&
-          parseInt(parsed.month) === month &&
-          parseInt(parsed.day) === day &&
-          parseInt(parsed.hour) === hour &&
-          parseInt(parsed.minute) === minute) {
-        return testUtc;
-      }
-    }
-    
-    // Fallback: Create a date assuming the timezone offset
-    // This is a last resort and may not be perfectly accurate
-    console.warn(`Could not find exact timezone match for ${dateStr} ${timeStr} in ${timezone}, using fallback`);
-    const fallback = new Date(`${dateStr}T${timeStr}:00`);
-    
-    // Try to adjust based on common timezone offsets
-    if (timezone.includes('America/Denver') || timezone.includes('America/Phoenix')) {
-      // Mountain Time: UTC-7 (MST) or UTC-6 (MDT)
-      const isDST = isDaylightSavingTime(fallback, timezone);
-      fallback.setHours(fallback.getHours() + (isDST ? 6 : 7));
-    } else if (timezone.includes('America/Los_Angeles')) {
-      // Pacific Time: UTC-8 (PST) or UTC-7 (PDT)
-      const isDST = isDaylightSavingTime(fallback, timezone);
-      fallback.setHours(fallback.getHours() + (isDST ? 7 : 8));
-    } else if (timezone.includes('America/New_York')) {
-      // Eastern Time: UTC-5 (EST) or UTC-4 (EDT)
-      const isDST = isDaylightSavingTime(fallback, timezone);
-      fallback.setHours(fallback.getHours() + (isDST ? 4 : 5));
-    } else if (timezone.includes('America/Chicago')) {
-      // Central Time: UTC-6 (CST) or UTC-5 (CDT)
-      const isDST = isDaylightSavingTime(fallback, timezone);
-      fallback.setHours(fallback.getHours() + (isDST ? 5 : 6));
-    }
-    
-    return fallback;
-  } catch (error) {
-    console.error(`Error parsing timezone date: ${error}`);
-    // Ultimate fallback
-    return new Date(`${dateStr}T${timeStr}:00`);
-  }
-}
 
-// Helper to check if a date is in daylight saving time for a timezone
-function isDaylightSavingTime(date: Date, timezone: string): boolean {
-  const january = new Date(date.getFullYear(), 0, 1);
-  const july = new Date(date.getFullYear(), 6, 1);
-  
-  const getOffset = (d: Date) => {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      timeZoneName: 'short'
-    });
-    const parts = formatter.formatToParts(d);
-    const tzName = parts.find(p => p.type === 'timeZoneName')?.value || '';
-    return tzName.includes('DT') || tzName.includes('ST');
-  };
-  
-  const janOffset = getOffset(january);
-  const julOffset = getOffset(july);
-  const dateOffset = getOffset(date);
-  
-  // If offsets differ between Jan and Jul, timezone has DST
-  // Check if current date matches the summer offset
-  return janOffset !== julOffset && dateOffset === julOffset;
-}
 
 // Helper function to check if a ticket is within its valid time window
 function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
@@ -217,8 +130,15 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   // Get event's timezone (default to America/New_York if not set)
   const eventTimezone = event.timezone || 'America/New_York';
   
-  // Parse event start date/time in the event's timezone
-  const startDate = parseInTimezone(event.date, event.time, eventTimezone);
+  // Use pre-computed UTC timestamps if available (new approach)
+  // Fall back to computing on-the-fly for older events without UTC fields
+  let startDate: Date;
+  if (event.startAtUtc) {
+    startDate = new Date(event.startAtUtc);
+  } else {
+    // Fallback for events created before UTC fields were added
+    startDate = convertEventTimeToUtc(event.date, event.time, eventTimezone);
+  }
   
   // Now we can compare directly with server time (both are in UTC)
   const now = serverNow;
@@ -296,8 +216,14 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
   
   // If event has an end date and time, check if we're past it
   if (event.endDate && event.endTime) {
-    // Parse end date/time in the event's timezone
-    const endDate = parseInTimezone(event.endDate, event.endTime, eventTimezone);
+    // Use pre-computed UTC timestamp if available
+    let endDate: Date;
+    if (event.endAtUtc) {
+      endDate = new Date(event.endAtUtc);
+    } else {
+      // Fallback for events created before UTC fields were added
+      endDate = convertEventTimeToUtc(event.endDate, event.endTime, eventTimezone);
+    }
     
     // For rolling timezone events, check against local time
     if (event.rollingTimezone) {
@@ -1713,6 +1639,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.debitUserAccount(userId, totalTicketsRequired, "Event Creation", {});
       }
       
+      // Compute UTC timestamps for validation (unless it's a rolling timezone event)
+      let startAtUtc: Date | null = null;
+      let endAtUtc: Date | null = null;
+      
+      if (!createData.rollingTimezone) {
+        // Convert event start time to UTC
+        const timezone = createData.timezone || 'America/New_York';
+        startAtUtc = convertEventTimeToUtc(createData.date, createData.time, timezone);
+        
+        // If event has an end date/time, convert that too
+        if (createData.endDate && createData.endTime) {
+          endAtUtc = convertEventTimeToUtc(createData.endDate, createData.endTime, timezone);
+        }
+      }
+      
       // Body is already validated by middleware
       const event = await storage.createEvent({
         ...createData,
@@ -1720,6 +1661,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentProcessingFee, // Store the fee amount
         isAdminCreated, // Set the isAdminCreated flag based on user's email
         userId, // Now we can use the actual userId since user exists in DB
+        startAtUtc,
+        endAtUtc,
       });
       
       // Create Hunt secret code if Treasure Hunt is enabled
@@ -1969,9 +1912,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Recompute UTC timestamps if date/time/timezone changed (unless it's a rolling timezone event)
+      let startAtUtc: Date | undefined;
+      let endAtUtc: Date | undefined;
+      
+      if (!event.rollingTimezone) {
+        const timezone = validatedData.timezone || event.timezone || 'America/New_York';
+        const eventDate = validatedData.date || event.date;
+        const eventTime = validatedData.time || event.time;
+        
+        // If any date/time/timezone field changed, recompute UTC timestamps
+        if (validatedData.date || validatedData.time || validatedData.timezone) {
+          startAtUtc = convertEventTimeToUtc(eventDate, eventTime, timezone);
+        }
+        
+        // Handle end date/time updates
+        const eventEndDate = validatedData.endDate !== undefined ? validatedData.endDate : event.endDate;
+        const eventEndTime = validatedData.endTime !== undefined ? validatedData.endTime : event.endTime;
+        
+        if (eventEndDate && eventEndTime) {
+          // If any end date/time/timezone field changed, recompute end UTC
+          if (validatedData.endDate !== undefined || validatedData.endTime !== undefined || validatedData.timezone) {
+            endAtUtc = convertEventTimeToUtc(eventEndDate, eventEndTime, timezone);
+          }
+        } else {
+          // If end date/time was cleared, set endAtUtc to undefined (will be null in DB)
+          endAtUtc = undefined;
+        }
+      }
+      
       const updatedEvent = await storage.updateEvent(req.params.id, {
         ...validatedData,
-        ...(hashtags !== undefined && { hashtags })
+        ...(hashtags !== undefined && { hashtags }),
+        ...(startAtUtc !== undefined && { startAtUtc }),
+        ...(endAtUtc !== undefined && { endAtUtc })
       });
       
       // Send notifications to all ticket holders

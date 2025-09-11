@@ -6,6 +6,9 @@ This is a full-stack event ticketing application built with React and Express.js
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Updates
+- **Fixed Timezone Validation Bug (2025-09-11)**: Resolved critical issue where events in non-UTC timezones (especially Mountain Time) were incorrectly validating tickets. Solution: Added UTC timestamp columns (startAtUtc, endAtUtc) to events table, converting local times to UTC on save. Validation now uses simple UTC comparisons instead of complex runtime timezone parsing.
+
 ## System Architecture
 
 ### Frontend Architecture

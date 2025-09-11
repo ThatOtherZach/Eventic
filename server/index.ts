@@ -6,6 +6,7 @@ import { initializeJobScheduler } from "./jobScheduler";
 import { storage } from "./storage";
 import { migrateDescriptionsToPlainText } from "./migrate-descriptions";
 import { seedPlatformHeaders } from "./seedPlatformHeaders";
+import { populateUtcTimestamps } from "./migrateExistingEvents";
 
 const app = express();
 app.use(express.json());
@@ -89,6 +90,14 @@ app.use((req, res, next) => {
     await migrateDescriptionsToPlainText();
   } catch (error) {
     console.error("[MIGRATION] Failed to convert descriptions:", error);
+    // Don't stop server startup if migration fails
+  }
+  
+  // Populate UTC timestamps for existing events
+  try {
+    await populateUtcTimestamps();
+  } catch (error) {
+    console.error("[MIGRATION] Failed to populate UTC timestamps:", error);
     // Don't stop server startup if migration fails
   }
   

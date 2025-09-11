@@ -174,6 +174,9 @@ export const events = pgTable("events", {
   // Recurring event fields
   recurringType: text("recurring_type"), // "weekly", "monthly", "annually", "annual", null for non-recurring
   recurringEndDate: text("recurring_end_date"), // End date for recurring events
+  // UTC timestamps for validation - computed from date/time/timezone when saving
+  startAtUtc: timestamp("start_at_utc"), // Event start time in UTC
+  endAtUtc: timestamp("end_at_utc"), // Event end time in UTC (if endDate/endTime provided)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -671,6 +674,8 @@ export const insertAuthTokenSchema = createInsertSchema(authTokens).omit({
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
   createdAt: true,
+  startAtUtc: true,  // Computed server-side from date/time/timezone
+  endAtUtc: true,    // Computed server-side from endDate/endTime/timezone
 }).extend({
   name: z.string()
     .min(1, "Event name is required")
