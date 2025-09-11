@@ -381,7 +381,12 @@ export default function AdminSettings() {
   // Assign role mutation
   const assignRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      return apiRequest("POST", `/api/admin/users/${userId}/roles`, { role });
+      // Find the role ID from the available roles
+      const roleObj = availableRoles.find((r: any) => r.name === role);
+      if (!roleObj) {
+        throw new Error("Role not found");
+      }
+      return apiRequest("POST", `/api/admin/users/${userId}/roles`, { roleId: roleObj.id });
     },
     onSuccess: () => {
       toast({
@@ -393,10 +398,10 @@ export default function AdminSettings() {
       setSelectedUser(null);
       setRoleToAssign("");
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Assignment Failed",
-        description: "Failed to assign role.",
+        description: error.message || "Failed to assign role.",
         variant: "destructive"
       });
     }
@@ -405,7 +410,12 @@ export default function AdminSettings() {
   // Remove role mutation
   const removeRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      return apiRequest("DELETE", `/api/admin/users/${userId}/roles/${role}`);
+      // Find the role ID from the user's current roles
+      const userRole = selectedUser?.roles?.find((r: any) => r.name === role);
+      if (!userRole) {
+        throw new Error("Role not found on user");
+      }
+      return apiRequest("DELETE", `/api/admin/users/${userId}/roles/${userRole.id}`);
     },
     onSuccess: () => {
       toast({
@@ -417,10 +427,10 @@ export default function AdminSettings() {
       setSelectedUser(null);
       setRoleToRemove("");
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Removal Failed",
-        description: "Failed to remove role.",
+        description: error.message || "Failed to remove role.",
         variant: "destructive"
       });
     }
