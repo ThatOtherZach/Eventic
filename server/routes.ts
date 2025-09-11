@@ -1353,7 +1353,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/events/:id", async (req, res) => {
     try {
-      const eventWithCreator = await storage.getEventWithCreator(req.params.id);
+      // Check if it's a shortcode (8 characters) or full UUID
+      const isShortcode = req.params.id.length === 8;
+      const eventWithCreator = isShortcode 
+        ? await storage.getEventByShortcode(req.params.id)
+        : await storage.getEventWithCreator(req.params.id);
+      
       if (!eventWithCreator) {
         return res.status(404).json({ message: "Event not found" });
       }

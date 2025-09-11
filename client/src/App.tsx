@@ -37,6 +37,7 @@ function Router() {
       <Route path="/events" component={Events} />
       <ProtectedRoute path="/events/create" component={EventForm} />
       <Route path="/events/:id">{(params) => <EventDetail />}</Route>
+      <Route path="/e/:shortcode">{(params) => <EventDetail />}</Route>
       <ProtectedRoute path="/events/:id/edit" component={EventForm} />
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />

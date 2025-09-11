@@ -893,6 +893,27 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getEventByShortcode(shortcode: string): Promise<(Event & { creatorEmail?: string }) | undefined> {
+    // Shortcode is the first 8 characters of the event ID
+    // Use SQL LIKE to find events where ID starts with the shortcode
+    const [result] = await db
+      .select({
+        event: events,
+        creatorEmail: users.email,
+      })
+      .from(events)
+      .leftJoin(users, eq(events.userId, users.id))
+      .where(sql`${events.id} LIKE ${shortcode + '%'}`)
+      .limit(1);
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.event,
+      creatorEmail: result.creatorEmail || undefined,
+    };
+  }
+
   async getEventByHuntCode(huntCode: string): Promise<Event | undefined> {
     // First find the secret code with this hunt code
     const [secretCode] = await db
