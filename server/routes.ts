@@ -4137,69 +4137,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const registryUrl = `${req.protocol}://${req.get('host')}/registry/${registryRecord.id}`;
       const metadataUrl = `${req.protocol}://${req.get('host')}/api/registry/${registryRecord.id}/metadata`;
       
-      // Attempt on-chain minting if configured
-      let onChainResult = null;
-      if (process.env.NFT_CONTRACT_ADDRESS && process.env.NFT_MINTER_PRIVATE_KEY) {
-        try {
-          const mintResult = await nftMintingService.mintNFT(
-            walletAddress,
-            registryRecord.id,
-            `${registryRecord.id}/metadata`,
-            withRoyalty
-          );
-          
-          if (mintResult.success) {
-            // TODO: Update registry record with on-chain data
-            // Currently no updateRegistryRecord method in storage
-            // await storage.updateRegistryRecord(registryRecord.id, {
-            //   nftMinted: true,
-            //   nftMintingStatus: "completed",
-            //   nftTransactionHash: mintResult.transactionHash,
-            //   nftTokenId: mintResult.tokenId,
-            //   nftContractAddress: process.env.NFT_CONTRACT_ADDRESS
-            // });
-            
-            onChainResult = {
-              success: true,
-              transactionHash: mintResult.transactionHash,
-              tokenId: mintResult.tokenId,
-              openSeaUrl: nftMintingService.getOpenSeaUrl(mintResult.tokenId!),
-              baseScanUrl: nftMintingService.getBaseScanUrl(mintResult.transactionHash!)
-            };
-          } else {
-            // On-chain minting failed but registry record still created
-            // TODO: Update registry record status
-            // await storage.updateRegistryRecord(registryRecord.id, {
-            //   nftMintingStatus: "failed",
-            //   nftMintError: mintResult.error
-            // });
-            
-            onChainResult = {
-              success: false,
-              error: mintResult.error
-            };
-          }
-        } catch (error: any) {
-          console.error("On-chain minting error:", error);
-          // Don't fail the entire request if on-chain minting fails
-          onChainResult = {
-            success: false,
-            error: error.message || "On-chain minting failed"
-          };
-        }
-      }
+      // Decentralized minting - no server-side minting
       
       res.json({
-        message: onChainResult?.success 
-          ? "NFT successfully minted on Base L2!" 
-          : "Registry record created. On-chain minting pending or not configured.",
+        message: "Registry record created successfully. Ready for NFT minting.",
         registryRecord,
         registryUrl,
         metadataUrl,
         walletAddress,
         cost: MINT_COST,
-        withRoyalty,
-        onChain: onChainResult
+        withRoyalty
       });
     } catch (error) {
       await logError(error, "POST /api/tickets/:ticketId/mint", {
@@ -4314,15 +4261,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ownerId: userId,
         creatorId: event.userId!,
         eventId: event.id,
-        title: title || `${event.name} - Validated Ticket`,
-        description: description || `Validated ticket for ${event.name} on ${event.date}`,
-        metadata: metadata || "{}",
-        withRoyalty: withRoyalty,
+        title: (title || `${event.name} - Validated Ticket`) as string,
+        description: (description || `Validated ticket for ${event.name} on ${event.date}`) as string,
+        metadata: (metadata || "{}") as string,
+        
+        // Required ticket fields
+        ticketNumber: ticket.ticketNumber,
+        ticketStatus: ticket.status,
+        ticketRecipientName: ticket.recipientName || '',
+        ticketRecipientEmail: ticket.recipientEmail || '',
         
         // Preserve ticket data
         ticketCreatedAt: ticket.createdAt || new Date(),
         ticketValidatedAt: ticket.validatedAt!,
-        ticketIsGoldenTicket: ticket.isGoldenTicket || false,
+        ticketIsGolden: ticket.isGoldenTicket || false,
         ticketPurchasePrice: ticket.purchasePrice || null,
         
         // Preserve event data
@@ -6441,27 +6393,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const nftEnabledSetting = await storage.getSystemSetting('nft_enabled');
       const isEnabled = nftEnabledSetting?.value === 'true';
 
-      // Check environment variables for NFT configuration
+      // Check environment variables for decentralized NFT configuration
       const hasContractAddress = !!process.env.NFT_CONTRACT_ADDRESS;
-      const hasMinterKey = !!process.env.NFT_MINTER_PRIVATE_KEY;
       const hasRoyaltyWallet = !!process.env.NFT_ROYALTY_WALLET;
       const baseRpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
 
       res.json({
         enabled: isEnabled,
-        configured: hasContractAddress && hasMinterKey,
+        configured: hasContractAddress && hasRoyaltyWallet,
+        mode: "decentralized",
         status: {
           contractAddress: hasContractAddress,
-          minterKey: hasMinterKey,
           royaltyWallet: hasRoyaltyWallet,
           rpcUrl: baseRpcUrl
         },
         requirements: {
-          contractAddress: "NFT_CONTRACT_ADDRESS - The deployed TicketRegistry contract address",
-          minterKey: "NFT_MINTER_PRIVATE_KEY - Private key of the wallet that can mint NFTs",
-          royaltyWallet: "NFT_ROYALTY_WALLET - Wallet address to receive 2.69% royalties",
+          contractAddress: "NFT_CONTRACT_ADDRESS - The deployed TicketRegistry contract address on Base L2",
+          royaltyWallet: "NFT_ROYALTY_WALLET - Wallet address to receive 2.69% royalties from resales",
           rpcUrl: "BASE_RPC_URL - (Optional) RPC endpoint for Base L2, defaults to mainnet"
-        }
+        },
+        description: "Users pay tickets and receive unsigned transactions to mint NFTs themselves on Base L2"
       });
     } catch (error) {
       await logError(error, "GET /api/admin/nft/settings", { request: req });

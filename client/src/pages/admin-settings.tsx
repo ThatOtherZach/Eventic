@@ -15,7 +15,7 @@ import { useSEO, SEO_CONFIG } from "@/hooks/use-seo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe, Users, AlertCircle } from "lucide-react";
+import { Search, Settings, Ticket, Sparkles, Calendar, Eye, EyeOff, ShoppingCart, Ban, CreditCard, CheckCircle, XCircle, FileText, Edit, Trash2, Plus, ToggleLeft, ToggleRight, Globe, Users, AlertCircle, Shield } from "lucide-react";
 import "@/styles/admin.css";
 
 // Special effects configuration with ticket type previews
@@ -1100,17 +1100,36 @@ export default function AdminSettings() {
             <CardHeader>
               <CardTitle>NFT Configuration</CardTitle>
               <CardDescription>
-                Manage NFT minting features for validated tickets. Users can mint their validated tickets as collectible NFTs on the blockchain.
+                Configure decentralized NFT minting where users pay tickets and mint NFTs themselves on Base L2 blockchain.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Decentralized Minting Info */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <h4 className="font-medium text-blue-900">Decentralized NFT Minting Model</h4>
+                </div>
+                <div className="text-sm text-gray-700 space-y-2">
+                  <p>Users control their own NFT minting process:</p>
+                  <ul className="ml-4 space-y-1">
+                    <li>• Pay <strong>12 tickets</strong> for NFTs with 2.69% royalties on resales</li>
+                    <li>• Pay <strong>15 tickets</strong> for NFTs without royalties</li>
+                    <li>• Receive unsigned transaction data to mint on Base L2</li>
+                    <li>• Pay gas fees directly (typically very low on Base L2)</li>
+                    <li>• Complete minting through their own wallet</li>
+                  </ul>
+                  <p className="text-xs text-gray-600 mt-2">Registry records preserve complete event and ticket data in base64 format for permanent storage.</p>
+                </div>
+              </div>
+              
               {/* NFT Feature Toggle */}
               <div className="p-4 border rounded-lg space-y-4">
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <Label htmlFor="nft-status">NFT Feature Status</Label>
                     <p className="text-sm text-gray-500">
-                      Control whether users can mint validated tickets as NFTs
+                      Control whether users can mint validated tickets as NFTs using decentralized minting
                     </p>
                   </div>
                   <Select
@@ -1176,21 +1195,6 @@ export default function AdminSettings() {
                     )}
                   </div>
 
-                  {/* Minter Key */}
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Settings className="h-5 w-5 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Minter Private Key</p>
-                        <p className="text-sm text-gray-500">NFT_MINTER_PRIVATE_KEY</p>
-                      </div>
-                    </div>
-                    {nftSettings?.status?.minterKey ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
 
                   {/* Royalty Wallet */}
                   <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -1236,9 +1240,8 @@ export default function AdminSettings() {
                     <li>2. Open Replit's Secrets tab (Tools → Secrets)</li>
                     <li>3. Add the following secrets:
                       <ul className="ml-4 mt-1 space-y-1">
-                        <li>• <code className="bg-blue-100 px-1">NFT_CONTRACT_ADDRESS</code> - Deployed contract address</li>
-                        <li>• <code className="bg-blue-100 px-1">NFT_MINTER_PRIVATE_KEY</code> - Private key of minter wallet</li>
-                        <li>• <code className="bg-blue-100 px-1">NFT_ROYALTY_WALLET</code> - Wallet for 2.69% royalties</li>
+                        <li>• <code className="bg-blue-100 px-1">NFT_CONTRACT_ADDRESS</code> - Deployed contract address on Base L2</li>
+                        <li>• <code className="bg-blue-100 px-1">NFT_ROYALTY_WALLET</code> - Wallet for 2.69% royalties from resales</li>
                         <li>• <code className="bg-blue-100 px-1">BASE_RPC_URL</code> - Optional custom RPC endpoint</li>
                       </ul>
                     </li>

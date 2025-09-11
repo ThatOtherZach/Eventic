@@ -1,203 +1,23 @@
-import { ethers } from 'ethers';
-
-// Contract ABI (only the functions we need)
-const CONTRACT_ABI = [
-  "function mintTicket(address recipient, string registryId, string metadataPath, bool withRoyalty) returns (uint256)",
-  "function isMinted(string registryId) view returns (bool)",
-  "function getTokenId(string registryId) view returns (uint256)",
-  "event TicketMinted(uint256 indexed tokenId, address indexed recipient, string registryId, string metadataURI, bool withRoyalty)"
-];
-
-interface MintResult {
-  success: boolean;
-  transactionHash?: string;
-  tokenId?: string;
-  error?: string;
-}
+// Decentralized NFT minting service - users mint their own NFTs
+// This service only provides utility methods for the decentralized flow
 
 class NFTMintingService {
-  private contract: any = null;
-  private wallet: any = null;
-  private provider: any = null;
-
   constructor() {
-    this.initialize();
-  }
-
-  private initialize() {
-    // Check if environment variables are set
     const contractAddress = process.env.NFT_CONTRACT_ADDRESS;
-    const privateKey = process.env.NFT_MINTER_PRIVATE_KEY;
     const royaltyWallet = process.env.NFT_ROYALTY_WALLET;
-    const rpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
-
-    if (!contractAddress || !privateKey) {
-      console.log("[NFT] Contract not configured. Set NFT_CONTRACT_ADDRESS and NFT_MINTER_PRIVATE_KEY to enable on-chain minting.");
-      return;
+    
+    if (!contractAddress) {
+      console.log("[NFT] Contract address not configured. Set NFT_CONTRACT_ADDRESS to enable NFT features.");
     }
     
     if (!royaltyWallet) {
       console.log("[NFT] Warning: NFT_ROYALTY_WALLET not set. Royalty collection will not work properly.");
     }
-
-    try {
-      // Initialize provider and wallet (ethers v6 syntax)
-      this.provider = new ethers.JsonRpcProvider(rpcUrl);
-      this.wallet = new ethers.Wallet(privateKey, this.provider);
-      
-      // Initialize contract
-      this.contract = new ethers.Contract(contractAddress, CONTRACT_ABI, this.wallet);
-      
-      console.log("[NFT] NFT minting service initialized");
+    
+    if (contractAddress) {
+      console.log("[NFT] Decentralized minting service initialized");
       console.log("[NFT] Contract address:", contractAddress);
-      console.log("[NFT] Minter address:", this.wallet.address);
-    } catch (error) {
-      console.error("[NFT] Failed to initialize minting service:", error);
-    }
-  }
-
-  /**
-   * Mint an NFT for a registry record
-   */
-  async mintNFT(
-    walletAddress: string,
-    registryId: string,
-    metadataPath: string,
-    withRoyalty: boolean = true
-  ): Promise<MintResult> {
-    if (!this.contract || !this.wallet) {
-      return {
-        success: false,
-        error: "NFT minting not configured"
-      };
-    }
-
-    try {
-      // Check if already minted
-      const isMinted = await this.contract.isMinted(registryId);
-      if (isMinted) {
-        const tokenId = await this.contract.getTokenId(registryId);
-        return {
-          success: false,
-          error: "Already minted",
-          tokenId: tokenId.toString()
-        };
-      }
-
-      // Estimate gas
-      const gasEstimate = await this.contract.mintTicket.estimateGas(
-        walletAddress,
-        registryId,
-        metadataPath,
-        withRoyalty
-      );
-
-      // Add 20% buffer to gas estimate
-      const gasLimit = gasEstimate * BigInt(120) / BigInt(100);
-
-      // Get current gas price
-      const gasPrice = await this.provider.getGasPrice();
-
-      // Execute mint transaction
-      console.log(`[NFT] Minting NFT for registry ${registryId} to ${walletAddress} (royalty: ${withRoyalty})`);
-      const tx = await this.contract.mintTicket(
-        walletAddress,
-        registryId,
-        metadataPath,
-        withRoyalty,
-        {
-          gasLimit,
-          gasPrice
-        }
-      );
-
-      // Wait for confirmation
-      console.log(`[NFT] Transaction sent: ${tx.hash}`);
-      const receipt = await tx.wait();
-
-      // Extract token ID from event
-      const mintEvent = receipt.events?.find(
-        (e: any) => e.event === "TicketMinted"
-      );
-      const tokenId = mintEvent?.args?.tokenId?.toString() || "0";
-
-      console.log(`[NFT] Successfully minted token ${tokenId} in tx ${receipt.transactionHash}`);
-
-      return {
-        success: true,
-        transactionHash: receipt.transactionHash,
-        tokenId
-      };
-    } catch (error: any) {
-      console.error("[NFT] Minting failed:", error);
-      
-      // Parse error message
-      let errorMessage = "Failed to mint NFT";
-      if (error.reason) {
-        errorMessage = error.reason;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      return {
-        success: false,
-        error: errorMessage
-      };
-    }
-  }
-
-  /**
-   * Check if a registry record has been minted
-   */
-  async checkMintStatus(registryId: string): Promise<{
-    minted: boolean;
-    tokenId?: string;
-  }> {
-    if (!this.contract) {
-      return { minted: false };
-    }
-
-    try {
-      const isMinted = await this.contract.isMinted(registryId);
-      if (isMinted) {
-        const tokenId = await this.contract.getTokenId(registryId);
-        return {
-          minted: true,
-          tokenId: tokenId.toString()
-        };
-      }
-      return { minted: false };
-    } catch (error) {
-      console.error("[NFT] Failed to check mint status:", error);
-      return { minted: false };
-    }
-  }
-
-  /**
-   * Get estimated gas cost in ETH
-   */
-  async estimateGasCost(
-    walletAddress: string,
-    registryId: string,
-    metadataPath: string
-  ): Promise<string | null> {
-    if (!this.contract || !this.provider) {
-      return null;
-    }
-
-    try {
-      const gasEstimate = await this.contract.mintTicket.estimateGas(
-        walletAddress,
-        registryId,
-        metadataPath,
-        true // default to with royalty
-      );
-      const gasPrice = await this.provider.getGasPrice();
-      const cost = gasEstimate * gasPrice;
-      return ethers.formatEther(cost);
-    } catch (error) {
-      console.error("[NFT] Failed to estimate gas:", error);
-      return null;
+      console.log("[NFT] Users will mint their own NFTs on Base L2");
     }
   }
 
@@ -218,6 +38,20 @@ class NFTMintingService {
   getBaseScanUrl(transactionHash: string): string {
     const network = process.env.BASE_NETWORK === "testnet" ? "sepolia.basescan" : "basescan";
     return `https://${network}.org/tx/${transactionHash}`;
+  }
+  
+  /**
+   * Get the contract address for display purposes
+   */
+  getContractAddress(): string | undefined {
+    return process.env.NFT_CONTRACT_ADDRESS;
+  }
+  
+  /**
+   * Check if NFT features are properly configured
+   */
+  isConfigured(): boolean {
+    return !!process.env.NFT_CONTRACT_ADDRESS && !!process.env.NFT_ROYALTY_WALLET;
   }
 }
 
