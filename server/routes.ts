@@ -6419,9 +6419,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasRoyaltyWallet = !!process.env.NFT_ROYALTY_WALLET;
       const baseRpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
 
+      // In decentralized mode, we can allow enabling without a deployed contract
+      // Users will handle their own minting
+      const isConfigured = true; // Always allow enabling in decentralized model
+
       res.json({
         enabled: isEnabled,
-        configured: hasContractAddress && hasRoyaltyWallet,
+        configured: isConfigured,
         mode: "decentralized",
         status: {
           contractAddress: hasContractAddress,

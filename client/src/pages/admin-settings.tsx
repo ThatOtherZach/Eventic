@@ -1137,7 +1137,7 @@ export default function AdminSettings() {
                     onValueChange={(value) => {
                       updateNftSettingsMutation.mutate({ enabled: value === "enabled" });
                     }}
-                    disabled={updateNftSettingsMutation.isPending || !nftSettings?.configured}
+                    disabled={updateNftSettingsMutation.isPending}
                   >
                     <SelectTrigger id="nft-status" className="w-[200px]" data-testid="select-nft-status">
                       <SelectValue placeholder="Select status" />
@@ -1158,13 +1158,6 @@ export default function AdminSettings() {
                     </SelectContent>
                   </Select>
                 </div>
-                {!nftSettings?.configured && (
-                  <div className="p-3 bg-yellow-50 rounded-md">
-                    <p className="text-sm text-yellow-800">
-                      ⚠️ NFT features cannot be enabled until the smart contract is deployed and configured.
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Configuration Status */}
