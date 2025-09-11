@@ -86,10 +86,40 @@ const generalRateLimiter = rateLimit({
   // Use default keyGenerator which handles IPv6 properly
 });
 
+// Helper function to convert server time to event timezone
+function getTimeInTimezone(date: Date, timezone: string): Date {
+  // Format the date in the target timezone and parse components
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(date);
+  const dateParts: any = {};
+  parts.forEach(part => {
+    dateParts[part.type] = part.value;
+  });
+  
+  // Create a date string in the event's timezone
+  const localDateStr = `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`;
+  return new Date(localDateStr);
+}
+
 // Helper function to check if a ticket is within its valid time window
 function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
-  const now = new Date();
-  // Combine date and time fields for start date
+  const serverNow = new Date();
+  
+  // Convert server time to event's timezone (default to America/New_York if not set)
+  const eventTimezone = event.timezone || 'America/New_York';
+  const now = getTimeInTimezone(serverNow, eventTimezone);
+  
+  // Parse event start date/time (already in event's timezone)
   const startDateTime = `${event.date}T${event.time}:00`;
   const startDate = new Date(startDateTime);
   
@@ -142,11 +172,18 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
     }
     
     if (now < validationStartTime) {
+      // Format times in the event's timezone for display
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: eventTimezone,
+        dateStyle: 'short',
+        timeStyle: 'short'
+      });
+      
       const timeDescription = earlyValidation === "At Start Time" 
-        ? `at ${startDate.toLocaleString()}`
+        ? `at ${formatter.format(startDate)}`
         : earlyValidation === "One Hour Before"
-        ? `starting ${validationStartTime.toLocaleString()} (1 hour before event)`
-        : `starting ${validationStartTime.toLocaleString()} (2 hours before event)`;
+        ? `starting ${formatter.format(validationStartTime)} (1 hour before event)`
+        : `starting ${formatter.format(validationStartTime)} (2 hours before event)`;
       
       return {
         valid: false,
@@ -178,9 +215,16 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
         };
       }
     } else if (now > endDate) {
+      // Format end date in the event's timezone for display
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: eventTimezone,
+        dateStyle: 'short',
+        timeStyle: 'short'
+      });
+      
       return {
         valid: false,
-        message: `Event has ended. It ended on ${endDate.toLocaleString()}`
+        message: `Event has ended. It ended on ${formatter.format(endDate)}`
       };
     }
   } else {
@@ -206,9 +250,16 @@ function isTicketWithinValidTime(event: any): { valid: boolean; message?: string
     } else {
       const twentyFourHoursAfterStart = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
       if (now > twentyFourHoursAfterStart) {
+        // Format times in the event's timezone for display
+        const formatter = new Intl.DateTimeFormat('en-US', {
+          timeZone: eventTimezone,
+          dateStyle: 'short',
+          timeStyle: 'short'
+        });
+        
         return {
           valid: false,
-          message: `Ticket has expired. It was valid for 24 hours after ${startDate.toLocaleString()}`
+          message: `Ticket has expired. It was valid for 24 hours after ${formatter.format(startDate)}`
         };
       }
     }
