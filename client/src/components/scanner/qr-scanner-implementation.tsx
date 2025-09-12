@@ -51,22 +51,34 @@ export function QrScannerImplementation() {
 
   // Event badge colors to cycle through
   const badgeColors = [
-    '#DC2626', // Mission Events - red
-    '#FFD700', // Golden Ticket - gold
-    '#10B981', // Minting Enabled - green
-    '#8B5CF6', // Special Effects - purple
-    '#EC4899', // Surge Pricing - pink
-    '#F59E0B', // Sticker Drops - amber
-    '#3B82F6', // Geofenced - blue
-    '#14B8A6', // Voting Enabled - teal
-    '#6366F1', // Recurring - indigo
+    "#DC2626", // Mission Events - red
+    "#FFD700", // Golden Ticket - gold
+    "#10B981", // Minting Enabled - green
+    "#8B5CF6", // Special Effects - purple
+    "#EC4899", // Surge Pricing - pink
+    "#F59E0B", // Sticker Drops - amber
+    "#3B82F6", // Geofenced - blue
+    "#14B8A6", // Voting Enabled - teal
+    "#6366F1", // Recurring - indigo
   ];
 
   const validateTicketMutation = useMutation({
-    mutationFn: async ({code, validatorLat, validatorLng, ticketHolderLat, ticketHolderLng}: {code: string, validatorLat?: number, validatorLng?: number, ticketHolderLat?: number, ticketHolderLng?: number}) => {
+    mutationFn: async ({
+      code,
+      validatorLat,
+      validatorLng,
+      ticketHolderLat,
+      ticketHolderLng,
+    }: {
+      code: string;
+      validatorLat?: number;
+      validatorLng?: number;
+      ticketHolderLat?: number;
+      ticketHolderLng?: number;
+    }) => {
       // Add a 1 second delay to show the color animation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
         const response = await apiRequest("POST", "/api/validate", {
           qrData: code,
@@ -79,29 +91,29 @@ export function QrScannerImplementation() {
       } catch (error: any) {
         // Parse the error message to extract JSON if present
         const errorMessage = error.message || error.toString();
-        console.log('Raw error message:', errorMessage);
-        
+        console.log("Raw error message:", errorMessage);
+
         // Check if error message contains JSON (format: "400: {json}")
         const match = errorMessage.match(/^\d{3}:\s*([\s\S]+)$/);
         if (match) {
           try {
             const errorData = JSON.parse(match[1]);
-            console.log('Parsed error data:', errorData);
+            console.log("Parsed error data:", errorData);
             throw errorData;
           } catch (e) {
-            console.log('Failed to parse JSON from error:', e);
+            console.log("Failed to parse JSON from error:", e);
             // If parsing fails, throw original error
             throw error;
           }
         }
-        
+
         throw error;
       }
     },
     onSuccess: (result: any) => {
       // This will only be reached for successful validations now
       // since location-required responses return 400 status
-      
+
       setValidationResult(result);
 
       const validation: ValidationHistory = {
@@ -114,7 +126,9 @@ export function QrScannerImplementation() {
 
       // Invalidate ticket owner's validation count if ticket was successfully validated
       if (result.valid && result.canValidate && result.ticket?.userId) {
-        queryClient.invalidateQueries({ queryKey: [`/api/users/${result.ticket.userId}/validated-count`] });
+        queryClient.invalidateQueries({
+          queryKey: [`/api/users/${result.ticket.userId}/validated-count`],
+        });
       }
 
       if (result.valid && result.canValidate) {
@@ -160,9 +174,12 @@ export function QrScannerImplementation() {
       }
     },
     onError: async (error: any) => {
-      console.log('Error in onError handler:', error);
+      console.log("Error in onError handler:", error);
       // Check if this is a location-required error
-      if (error.requiresLocation || error.message?.includes("Location required for this event")) {
+      if (
+        error.requiresLocation ||
+        error.message?.includes("Location required for this event")
+      ) {
         // Automatically request validator's location
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -184,8 +201,8 @@ export function QrScannerImplementation() {
             {
               enableHighAccuracy: true,
               timeout: 10000,
-              maximumAge: 0
-            }
+              maximumAge: 0,
+            },
           );
         } else {
           toast({
@@ -197,11 +214,12 @@ export function QrScannerImplementation() {
       } else {
         // Handle other errors with proper context
         // The error should already be parsed as JSON from mutationFn
-        let errorMessage = error.message || error.error || "Failed to validate ticket";
-        
+        let errorMessage =
+          error.message || error.error || "Failed to validate ticket";
+
         // The error might still be coming through as "XXX: {json}" format (e.g., "404: {json}" or "400: {json}")
         // Let's check and parse it if needed
-        if (typeof errorMessage === 'string') {
+        if (typeof errorMessage === "string") {
           const match = errorMessage.match(/^(\d{3}):\s*([\s\S]+)$/);
           if (match) {
             try {
@@ -212,14 +230,14 @@ export function QrScannerImplementation() {
               // Also update the error object with parsed data
               Object.assign(error, parsed);
             } catch (e) {
-              console.log('Could not parse error message:', e);
+              console.log("Could not parse error message:", e);
             }
           }
         }
-        
+
         let title = "❌ Validation Error";
         let description = errorMessage;
-        
+
         // Check for specific error types
         if (error.outsideGeofence) {
           title = "📍 Outside Event Zone";
@@ -228,16 +246,16 @@ export function QrScannerImplementation() {
           title = "⏰ Invalid Time";
           description = errorMessage;
         }
-        
+
         const result = {
           valid: false,
           message: description,
           outsideGeofence: error.outsideGeofence,
           outsideValidTime: error.outsideValidTime,
           event: error.event,
-          ticket: error.ticket
+          ticket: error.ticket,
         };
-        console.log('Setting validation result:', result);
+        console.log("Setting validation result:", result);
         setValidationResult(result);
         addNotification({
           type: "error",
@@ -264,7 +282,6 @@ export function QrScannerImplementation() {
     setValidationResult(null);
   };
 
-  
   const handleManualCodeSubmit = () => {
     if (!manualCode || manualCode.length !== 4) {
       toast({
@@ -277,15 +294,17 @@ export function QrScannerImplementation() {
 
     // Store the code and try validation
     setPendingCode(manualCode);
-    validateTicketMutation.mutate({code: manualCode}, {
-      onSettled: () => {
-        // Only clear the code after validation completes
-        setManualCode("");
-      }
-    });
+    validateTicketMutation.mutate(
+      { code: manualCode },
+      {
+        onSettled: () => {
+          // Only clear the code after validation completes
+          setManualCode("");
+        },
+      },
+    );
     // Don't clear manualCode here - keep it during validation
   };
-
 
   return (
     <div className="animate-fade-in">
@@ -294,7 +313,12 @@ export function QrScannerImplementation() {
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h6 className="card-title mb-0 text-primary">
-              <img src={customIcon} alt="Validation" className="me-2" style={{ width: '18px', height: '18px' }} />
+              <img
+                src={customIcon}
+                alt="Validation"
+                className="me-2"
+                style={{ width: "18px", height: "18px" }}
+              />
               Ticket Code Validation
             </h6>
           </div>
@@ -307,7 +331,11 @@ export function QrScannerImplementation() {
           <div className="input-group input-group-lg mb-2">
             <input
               type="text"
-              className={validateTicketMutation.isPending ? "form-control text-center font-monospace fw-bold fs-3 rainbow-text" : "form-control text-center font-monospace fw-bold fs-3"}
+              className={
+                validateTicketMutation.isPending
+                  ? "form-control text-center font-monospace fw-bold fs-3 rainbow-text"
+                  : "form-control text-center font-monospace fw-bold fs-3"
+              }
               placeholder="0000"
               value={manualCode}
               onChange={(e) => {
@@ -329,20 +357,28 @@ export function QrScannerImplementation() {
               style={{ letterSpacing: "0.5rem" }}
             />
             <button
-              className={validateTicketMutation.isPending ? "btn btn-lg btn-color-cycling" : "btn btn-primary btn-lg"}
+              className={
+                validateTicketMutation.isPending
+                  ? "btn btn-lg btn-color-cycling"
+                  : "btn btn-primary btn-lg"
+              }
               onClick={handleManualCodeSubmit}
               disabled={
                 validateTicketMutation.isPending || manualCode.length !== 4
               }
               data-testid="button-submit-code"
-              style={validateTicketMutation.isPending ? {
-                '--btn-color': badgeColors[buttonColorIndex],
-                backgroundColor: badgeColors[buttonColorIndex],
-                borderColor: badgeColors[buttonColorIndex],
-                color: '#ffffff',
-                opacity: 1,
-                boxShadow: `0 0 10px ${badgeColors[buttonColorIndex]}40`
-              } as React.CSSProperties : {}}
+              style={
+                validateTicketMutation.isPending
+                  ? ({
+                      "--btn-color": badgeColors[buttonColorIndex],
+                      backgroundColor: badgeColors[buttonColorIndex],
+                      borderColor: badgeColors[buttonColorIndex],
+                      color: "#ffffff",
+                      opacity: 1,
+                      boxShadow: `0 0 10px ${badgeColors[buttonColorIndex]}40`,
+                    } as React.CSSProperties)
+                  : {}
+              }
             >
               Validate
             </button>
@@ -364,15 +400,24 @@ export function QrScannerImplementation() {
         <div className="card mb-3 border-warning">
           <div className="card-body">
             <h6 className="card-title text-warning">
-              <img src={warningIcon} alt="Location" className="me-2" style={{ width: '18px', height: '18px' }} />
+              <img
+                src={warningIcon}
+                alt="Location"
+                className="me-2"
+                style={{ width: "18px", height: "18px" }}
+              />
               Location Required
             </h6>
             <p className="mb-3">
-              This event has geofencing enabled. Both you and the ticket holder must be within 690 meters of the venue.
+              This event has geofencing enabled. Both you and the ticket holder
+              must be within 300 meters of the venue.
             </p>
             <div className="alert alert-info small mb-0">
-              <strong>📍 Requesting location access...</strong><br/>
-              Your browser will ask for permission to share your location. The ticket holder's location was already captured when they started validation.
+              <strong>📍 Requesting location access...</strong>
+              <br />
+              Your browser will ask for permission to share your location. The
+              ticket holder's location was already captured when they started
+              validation.
             </div>
           </div>
         </div>
@@ -389,18 +434,43 @@ export function QrScannerImplementation() {
               >
                 {validationResult.canValidate && validationResult.valid ? (
                   validationResult.ticket?.isGoldenTicket ? (
-                    <img src={spiderIcon} alt="Golden Ticket" style={{ width: '30px', height: '30px' }} />
+                    <img
+                      src={spiderIcon}
+                      alt="Golden Ticket"
+                      style={{ width: "30px", height: "30px" }}
+                    />
                   ) : (
-                    <img src={successIcon} alt="Success" style={{ width: '30px', height: '30px' }} />
+                    <img
+                      src={successIcon}
+                      alt="Success"
+                      style={{ width: "30px", height: "30px" }}
+                    />
                   )
                 ) : validationResult.outsideGeofence ? (
-                  <img src={geofenceIcon} alt="Outside Geofence" style={{ width: '30px', height: '30px' }} />
-                ) : validationResult.outsideValidTime || validationResult.alreadyValidated ? (
-                  <img src={warningIcon} alt="Warning" style={{ width: '30px', height: '30px' }} />
+                  <img
+                    src={geofenceIcon}
+                    alt="Outside Geofence"
+                    style={{ width: "30px", height: "30px" }}
+                  />
+                ) : validationResult.outsideValidTime ||
+                  validationResult.alreadyValidated ? (
+                  <img
+                    src={warningIcon}
+                    alt="Warning"
+                    style={{ width: "30px", height: "30px" }}
+                  />
                 ) : validationResult.isAuthentic ? (
-                  <img src={lockIcon} alt="Authentic" style={{ width: '30px', height: '30px' }} />
+                  <img
+                    src={lockIcon}
+                    alt="Authentic"
+                    style={{ width: "30px", height: "30px" }}
+                  />
                 ) : (
-                  <img src={errorIcon} alt="Error" style={{ width: '30px', height: '30px' }} />
+                  <img
+                    src={errorIcon}
+                    alt="Error"
+                    style={{ width: "30px", height: "30px" }}
+                  />
                 )}
               </div>
               <div className="flex-grow-1">
@@ -410,15 +480,18 @@ export function QrScannerImplementation() {
                     : validationResult.outsideGeofence
                       ? "📍 Outside Event Area"
                       : validationResult.outsideValidTime
-                      ? "⏰ Outside Valid Time"
-                      : validationResult.isAuthentic
-                        ? "✔️ Authentic Ticket"
-                        : validationResult.alreadyValidated
-                          ? "⚠️ Already Validated"
-                          : "❌ Validation Failed"}
+                        ? "⏰ Right Place, Wrong Time"
+                        : validationResult.isAuthentic
+                          ? "✔️ Authentic Ticket"
+                          : validationResult.alreadyValidated
+                            ? "⚠️ Already Validated"
+                            : "❌ Validation Failed"}
                 </h6>
                 <p className="text-muted small mb-0">
-                  {validationResult.message || (validationResult.valid ? "Ticket status checked" : "This ticket is not valid")}
+                  {validationResult.message ||
+                    (validationResult.valid
+                      ? "Ticket status checked"
+                      : "This ticket is not valid")}
                 </p>
               </div>
             </div>
@@ -516,9 +589,19 @@ export function QrScannerImplementation() {
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center">
                           {validation.valid ? (
-                            <img src={successIcon} alt="Success" className="me-2" style={{ width: '16px', height: '16px' }} />
+                            <img
+                              src={successIcon}
+                              alt="Success"
+                              className="me-2"
+                              style={{ width: "16px", height: "16px" }}
+                            />
                           ) : (
-                            <img src={errorIcon} alt="Error" className="me-2" style={{ width: '16px', height: '16px' }} />
+                            <img
+                              src={errorIcon}
+                              alt="Error"
+                              className="me-2"
+                              style={{ width: "16px", height: "16px" }}
+                            />
                           )}
                           <div>
                             <p className="mb-0 small fw-medium">
