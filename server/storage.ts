@@ -1037,7 +1037,7 @@ export class DatabaseStorage implements IStorage {
           )
         )
       ))
-      .orderBy(asc(events.date), asc(events.time), asc(tickets.createdAt));
+      .orderBy(desc(events.date), desc(events.time), asc(tickets.createdAt));
     
     return result.map(row => row.ticket);
   }
