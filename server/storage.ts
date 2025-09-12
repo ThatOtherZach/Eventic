@@ -1021,11 +1021,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTicketsByUserId(userId: string): Promise<Ticket[]> {
-    // Limit to 100 tickets by default for performance
+    // Show all tickets, ordered by event date (soonest to oldest)
     // Exclude tickets that are listed for resale or have been sold
-    return db
-      .select()
+    const result = await db
+      .select({ ticket: tickets })
       .from(tickets)
+      .innerJoin(events, eq(events.id, tickets.eventId))
       .where(and(
         eq(tickets.userId, userId),
         or(
@@ -1036,8 +1037,9 @@ export class DatabaseStorage implements IStorage {
           )
         )
       ))
-      .orderBy(desc(tickets.createdAt))
-      .limit(100);
+      .orderBy(asc(events.date), asc(events.time), asc(tickets.createdAt));
+    
+    return result.map(row => row.ticket);
   }
 
   async getTicketsByEventAndUser(eventId: string, userId: string): Promise<Ticket[]> {

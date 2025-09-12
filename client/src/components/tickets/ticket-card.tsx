@@ -21,7 +21,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
   // Check if this ticket has any special effects
   // For preview tickets with previewEffectType, use that directly
   const ticketWithPreview = ticket as any;
-  const specialEffect = ticketWithPreview.previewEffectType || detectSpecialEffect(event, ticket);
+  const specialEffect = ticketWithPreview.previewEffectType || detectSpecialEffect(event, ticket as any);
   const hasSpecialEffects = ticket.isGoldenTicket || specialEffect !== null;
   const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event, ticket) : null;
 
@@ -102,7 +102,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
       )}
 
       {/* Special Event Effects Badge */}
-      <SpecialEffectBadge event={event} ticket={ticket} />
+      <SpecialEffectBadge event={event} ticket={ticket as any} />
       
       {/* Special Effects Overlay (for glows and text) */}
       <SpecialEffectOverlay event={event} ticket={ticket} />
@@ -226,7 +226,6 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         if (event.surgePricing) colorSegments.push('#DC2626'); // Red
         if (event.stickerUrl) colorSegments.push('#EC4899'); // Pink
         if (event.recurringType) colorSegments.push('#059669'); // Green
-        if (event.maxTickets) colorSegments.push('#14B8A6'); // Teal
         if (event.endDate && event.endDate !== event.date) colorSegments.push('#6B7280'); // Gray for multi-day
         
         // Add special ticket status to colors
