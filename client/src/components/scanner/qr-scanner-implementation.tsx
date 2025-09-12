@@ -476,16 +476,16 @@ export function QrScannerImplementation() {
               <div className="flex-grow-1">
                 <h6 className="fw-semibold mb-1">
                   {validationResult.canValidate && validationResult.valid
-                    ? "✅ Ticket Validated"
+                    ? "✅ Ticket Validated :)"
                     : validationResult.outsideGeofence
-                      ? "📍 Outside Event Area"
+                      ? "📍 You're Outside the Event Area"
                       : validationResult.outsideValidTime
                         ? "⏰ Right Place, Wrong Time"
                         : validationResult.isAuthentic
-                          ? "✔️ Authentic Ticket"
+                          ? "✔️ Authentic Ticket ;)"
                           : validationResult.alreadyValidated
-                            ? "⚠️ Already Validated"
-                            : "❌ Validation Failed"}
+                            ? "⚠️ Already Validated :O"
+                            : "❌ Validation Failed :("}
                 </h6>
                 <p className="text-muted small mb-0">
                   {validationResult.message ||
