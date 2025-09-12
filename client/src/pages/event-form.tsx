@@ -182,50 +182,95 @@ export default function EventForm() {
     }
   }, [userBalance, creditBalance, isEditMode, form]);
 
+  // Leetspeak transformation function for hunt codes
+  const applyLeetspeak = (text: string): string => {
+    // Define leetspeak mappings
+    const leetMap: { [key: string]: string } = {
+      'a': '4',
+      'A': '4',
+      'e': '3',
+      'E': '3',
+      'i': '1',
+      'I': '1',
+      'o': '0',
+      'O': '0',
+      's': '5',
+      'S': '5',
+      't': '7',
+      'T': '7',
+      'l': '1',
+      'L': '1',
+      'g': '9',
+      'G': '9',
+    };
+
+    // Apply transformations with 40% probability per character, but skip the first character to keep codes readable
+    return text.split('').map((char, index) => {
+      // Skip first character to keep it readable
+      if (index === 0) {
+        return char;
+      }
+      if (leetMap[char] && Math.random() < 0.4) {
+        return leetMap[char];
+      }
+      return char;
+    }).join('');
+  };
+
+  // Generate Hunt code with leetspeak variations
+  const generateHuntCodeWithLeetspeak = (): string => {
+    const colors = [
+      "Red",
+      "Blue",
+      "Green",
+      "Purple",
+      "Orange",
+      "Yellow",
+      "Pink",
+      "Silver",
+      "Golden",
+      "Black",
+      "White",
+      "Emerald",
+      "Ruby",
+      "Sapphire",
+      "Diamond",
+    ];
+    const nouns = [
+      "Tiger",
+      "Dragon",
+      "Eagle",
+      "Wolf",
+      "Bear",
+      "Lion",
+      "Falcon",
+      "Phoenix",
+      "Raven",
+      "Shark",
+      "Panther",
+      "Cobra",
+      "Hawk",
+      "Lynx",
+      "Jaguar",
+    ];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+    const baseCode = `${randomColor}${randomNoun}`;
+    
+    // Apply leetspeak with 50% chance for the entire code
+    if (Math.random() < 0.5) {
+      return applyLeetspeak(baseCode);
+    }
+    return baseCode;
+  };
+
   // Generate Hunt code when Treasure Hunt is enabled
   useEffect(() => {
     const treasureHunt = form.watch("treasureHunt");
     const currentHuntCode = form.watch("huntCode");
 
     if (treasureHunt && !currentHuntCode && !isEditMode) {
-      const colors = [
-        "Red",
-        "Blue",
-        "Green",
-        "Purple",
-        "Orange",
-        "Yellow",
-        "Pink",
-        "Silver",
-        "Golden",
-        "Black",
-        "White",
-        "Emerald",
-        "Ruby",
-        "Sapphire",
-        "Diamond",
-      ];
-      const nouns = [
-        "Tiger",
-        "Dragon",
-        "Eagle",
-        "Wolf",
-        "Bear",
-        "Lion",
-        "Falcon",
-        "Phoenix",
-        "Raven",
-        "Shark",
-        "Panther",
-        "Cobra",
-        "Hawk",
-        "Lynx",
-        "Jaguar",
-      ];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-      const huntCode = `${randomColor}${randomNoun}`;
-
+      const huntCode = generateHuntCodeWithLeetspeak();
       form.setValue("huntCode", huntCode);
     } else if (!treasureHunt && !isEditMode) {
       form.setValue("huntCode", "");
@@ -470,45 +515,9 @@ export default function EventForm() {
       }
     }
 
-    // Generate Hunt code if Treasure Hunt is enabled
+    // Generate Hunt code if Treasure Hunt is enabled (use the same function as above)
     const generateHuntCode = () => {
-      const colors = [
-        "Red",
-        "Blue",
-        "Green",
-        "Purple",
-        "Orange",
-        "Yellow",
-        "Pink",
-        "Silver",
-        "Golden",
-        "Black",
-        "White",
-        "Emerald",
-        "Ruby",
-        "Sapphire",
-        "Diamond",
-      ];
-      const nouns = [
-        "Tiger",
-        "Dragon",
-        "Eagle",
-        "Wolf",
-        "Bear",
-        "Lion",
-        "Falcon",
-        "Phoenix",
-        "Raven",
-        "Shark",
-        "Panther",
-        "Cobra",
-        "Hawk",
-        "Lynx",
-        "Jaguar",
-      ];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-      const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-      return `${randomColor}${randomNoun}`;
+      return generateHuntCodeWithLeetspeak();
     };
 
     // Ensure maxTickets has a default value of 100 if not set
@@ -528,7 +537,7 @@ export default function EventForm() {
       longitude: longitude ? String(longitude) : undefined,
       geofence: watchedValues.geofence || false,
       treasureHunt: data.treasureHunt || false,
-      huntCode: data.treasureHunt ? generateHuntCode() : undefined,
+      huntCode: data.treasureHunt ? (data.huntCode || form.getValues('huntCode') || generateHuntCodeWithLeetspeak()) : undefined,
       rollingTimezone: data.rollingTimezone || false,
       paymentProcessing: data.paymentProcessing || "None",
       walletAddress: data.walletAddress || undefined,
@@ -687,6 +696,8 @@ export default function EventForm() {
     time: watchedValues.time || "19:00",
     endDate: watchedValues.endDate || null,
     endTime: watchedValues.endTime || null,
+    startAtUtc: null,
+    endAtUtc: null,
     ticketPrice: watchedValues.ticketPrice || "0",
     maxTickets: watchedValues.maxTickets || null,
     userId: user?.id || null,
