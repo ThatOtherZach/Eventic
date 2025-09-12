@@ -165,9 +165,9 @@ export function LocationEventsPage() {
               isValidated: false
             };
 
-            // Check for special effects
-            const specialEffect = detectSpecialEffect(event, mockTicket);
-            const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event, mockTicket) : null;
+            // Check for special effects - cast to any to handle partial event type
+            const specialEffect = detectSpecialEffect(event as any, mockTicket);
+            const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event as any, mockTicket) : null;
             
             return (
               <div key={event.id} className="col-md-6">
@@ -226,13 +226,13 @@ export function LocationEventsPage() {
                       )}
 
                       {/* Special Event Effects Badge */}
-                      <SpecialEffectBadge event={event} ticket={mockTicket} />
+                      <SpecialEffectBadge event={event as any} ticket={mockTicket} />
                       
                       {/* Special Effects Overlay (for glows and text) */}
-                      <SpecialEffectOverlay event={event} ticket={mockTicket} />
+                      <SpecialEffectOverlay event={event as any} ticket={mockTicket} />
                       
                       {/* Special Effects Animation (for particles) */}
-                      <SpecialEffects event={event} ticket={mockTicket} />
+                      <SpecialEffects event={event as any} ticket={mockTicket} />
 
                       {/* Event Feature Badge Bar */}
                       <BadgeBar event={event} />
