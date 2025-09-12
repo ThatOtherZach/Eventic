@@ -237,21 +237,30 @@ export default function EventForm() {
       "Diamond",
     ];
     const nouns = [
-      "Tiger",
-      "Dragon",
-      "Eagle",
-      "Wolf",
-      "Bear",
-      "Lion",
-      "Falcon",
-      "Phoenix",
-      "Raven",
-      "Shark",
-      "Panther",
-      "Cobra",
-      "Hawk",
-      "Lynx",
-      "Jaguar",
+      // Original animals
+      "Tiger", "Dragon", "Eagle", "Wolf", "Bear", "Lion", "Falcon", 
+      "Phoenix", "Raven", "Shark", "Panther", "Cobra", "Hawk", "Lynx", "Jaguar",
+      // More animals & creatures
+      "Stallion", "Viper", "Orca", "Kraken", "Griffin", "Mantis", "Rhino",
+      "Turtle", "Scorpion", "Leopard", "Cheetah", "Raptor", "Python",
+      "Dolphin", "Octopus", "Spider", "Hornet", "Mongoose", "Puma", "Cougar",
+      // Mythical beings
+      "Titan", "Golem", "Hydra", "Siren", "Cyclops", "Sphinx", "Wizard",
+      "Valkyrie", "Minotaur", "Centaur", "Pegasus", "Unicorn", "Banshee",
+      "Wraith", "Demon", "Angel", "Oracle", "Mystic", "Warlock", "Shaman",
+      // Natural phenomena
+      "Storm", "Thunder", "Lightning", "Tornado", "Aurora", "Comet",
+      "Meteor", "Eclipse", "Tsunami", "Avalanche", "Volcano", "Glacier",
+      "Hurricane", "Blizzard", "Monsoon", "Tempest", "Cyclone", "Typhoon",
+      // Cool objects & concepts
+      "Crystal", "Portal", "Blade", "Crown", "Dagger", "Shield", "Sword",
+      "Hammer", "Spear", "Arrow", "Cannon", "Pistol", "Rifle", "Saber",
+      "Trident", "Scythe", "Katana", "Kunai", "Shuriken", "Axe", "Mace",
+      // Powerful concepts
+      "Legend", "Shadow", "Spirit", "Vortex", "Phantom", "Specter",
+      "Enigma", "Cipher", "Paradox", "Nexus", "Matrix", "Cosmos",
+      "Nebula", "Galaxy", "Pulsar", "Quasar", "Photon", "Neutron",
+      "Proton", "Electron", "Atom", "Quantum", "Plasma", "Energy"
     ];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
