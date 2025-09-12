@@ -351,10 +351,7 @@ export default function AccountPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Admin Reward Claimed!",
-        description: `You received ${data.amount} Tickets!`,
-      });
+      // Toast notification removed per user request
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       queryClient.invalidateQueries({
         queryKey: ["/api/currency/admin-claim-status"],
