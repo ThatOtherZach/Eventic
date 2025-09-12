@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type AdminClaim, type InsertAdminClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, adminClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { generateValidationCode, addCodeToEvent, validateCodeInstant, queueValidation, getPendingValidations, preloadP2PEventCodes, clearEventCodes } from "./codePoolManager";
@@ -242,6 +242,10 @@ export interface IStorage {
   // Daily Claims
   canClaimDailyTickets(userId: string): Promise<{ canClaim: boolean; nextClaimAt?: Date }>;
   claimDailyTickets(userId: string): Promise<{ amount: number; nextClaimAt: Date }>;
+  
+  // Admin Claims (separate from daily claims for admin users)
+  canClaimAdminCredits(userId: string): Promise<{ canClaim: boolean; nextClaimAt?: Date }>;
+  claimAdminCredits(userId: string): Promise<{ amount: number; nextClaimAt: Date }>;
   
   // Secret Codes
   validateSecretCode(code: string): Promise<SecretCode | undefined>;
@@ -4430,6 +4434,81 @@ export class DatabaseStorage implements IStorage {
       return { amount, nextClaimAt };
     } catch (error) {
       console.error('Error claiming daily tickets:', error);
+      throw error;
+    }
+  }
+  
+  // Admin Claims Implementation
+  async canClaimAdminCredits(userId: string): Promise<{ canClaim: boolean; nextClaimAt?: Date }> {
+    try {
+      // First check if user has admin role
+      const roles = await this.getUserRoles(userId);
+      const isAdmin = roles.some(role => role.name === 'super_admin' || role.name === 'event_moderator');
+      
+      if (!isAdmin) {
+        return { canClaim: false };
+      }
+      
+      // Get the most recent admin claim for this user
+      const [lastClaim] = await db
+        .select()
+        .from(adminClaims)
+        .where(eq(adminClaims.userId, userId))
+        .orderBy(desc(adminClaims.claimedAt))
+        .limit(1);
+      
+      if (!lastClaim) {
+        // Admin has never claimed, they can claim now
+        return { canClaim: true };
+      }
+      
+      const now = new Date();
+      const nextClaimTime = new Date(lastClaim.nextClaimAt);
+      
+      if (now >= nextClaimTime) {
+        return { canClaim: true };
+      } else {
+        return { canClaim: false, nextClaimAt: nextClaimTime };
+      }
+    } catch (error) {
+      console.error('Error checking admin claim eligibility:', error);
+      return { canClaim: false };
+    }
+  }
+  
+  async claimAdminCredits(userId: string): Promise<{ amount: number; nextClaimAt: Date }> {
+    try {
+      // Check if user can claim
+      const eligibility = await this.canClaimAdminCredits(userId);
+      if (!eligibility.canClaim) {
+        throw new Error('Cannot claim admin credits yet');
+      }
+      
+      // Fixed amount: 250 tickets for admin claim
+      const now = new Date();
+      const amount = 250;
+      
+      // Calculate next claim time (24 hours from now)
+      const nextClaimAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      
+      // Record the claim
+      await db.insert(adminClaims).values({
+        userId,
+        amount: amount.toString(),
+        nextClaimAt,
+      });
+      
+      // Credit the user's account
+      await this.creditUserAccount(
+        userId,
+        amount,
+        `Admin reward claim: ${amount} Tickets`,
+        { claimTime: now.toISOString(), claimType: 'admin' }
+      );
+      
+      return { amount, nextClaimAt };
+    } catch (error) {
+      console.error('Error claiming admin credits:', error);
       throw error;
     }
   }

@@ -313,6 +313,63 @@ export default function AccountPage() {
     },
   });
 
+  // Admin claim queries and mutations
+  const { data: userRoles } = useQuery<any[]>({
+    queryKey: [`/api/users/${user?.id}/roles`],
+    queryFn: async () => {
+      const response = await apiRequest(
+        "GET",
+        `/api/users/${user?.id}/roles`,
+      );
+      return response.json();
+    },
+    enabled: !!user?.id,
+  });
+
+  const isAdmin = userRoles?.some(role => 
+    role.name === 'super_admin' || role.name === 'event_moderator'
+  );
+
+  const { data: adminClaimStatus } = useQuery<{
+    canClaim: boolean;
+    nextClaimAt?: string;
+  }>({
+    queryKey: ["/api/currency/admin-claim-status"],
+    queryFn: async () => {
+      const response = await apiRequest(
+        "GET",
+        "/api/currency/admin-claim-status",
+      );
+      return response.json();
+    },
+    enabled: !!user && isAdmin,
+    refetchInterval: 60000, // Check every minute
+  });
+
+  const claimAdminMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/currency/claim-admin");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Admin Reward Claimed!",
+        description: `You received ${data.amount} Tickets!`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/currency/admin-claim-status"],
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Admin Claim Failed",
+        description: error.message || "Failed to claim admin credits",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Calculate reputation discount
   useEffect(() => {
     if (reputation && reputation.totalRatings > 0) {
@@ -816,10 +873,27 @@ export default function AccountPage() {
                       onClick={() => claimDailyMutation.mutate()}
                       disabled={claimDailyMutation.isPending}
                       className="btn btn-success btn-sm"
+                      data-testid="button-claim-daily"
                     >
                       {claimDailyMutation.isPending
                         ? "Okay one sec..."
                         : "Claim Tickets"}
+                    </button>
+                  </div>
+                )}
+                
+                {/* Admin Claim Button - Show only for admins when not claimed */}
+                {isAdmin && adminClaimStatus && adminClaimStatus.canClaim && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => claimAdminMutation.mutate()}
+                      disabled={claimAdminMutation.isPending}
+                      className="btn btn-warning btn-sm"
+                      data-testid="button-claim-admin"
+                    >
+                      {claimAdminMutation.isPending
+                        ? "Processing..."
+                        : "Admin Claim (250)"}
                     </button>
                   </div>
                 )}

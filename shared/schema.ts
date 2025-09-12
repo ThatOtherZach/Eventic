@@ -408,6 +408,15 @@ export const dailyClaims = pgTable("daily_claims", {
   nextClaimAt: timestamp("next_claim_at").notNull(),
 });
 
+// Admin Claims tracking (separate from daily claims for admins)
+export const adminClaims = pgTable("admin_claims", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  claimedAt: timestamp("claimed_at").defaultNow().notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  nextClaimAt: timestamp("next_claim_at").notNull(),
+});
+
 // NFT Registry table for minted tickets
 export const registryRecords = pgTable("registry_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -996,6 +1005,11 @@ export const insertDailyClaimSchema = createInsertSchema(dailyClaims).omit({
   claimedAt: true,
 });
 
+export const insertAdminClaimSchema = createInsertSchema(adminClaims).omit({
+  id: true,
+  claimedAt: true,
+});
+
 export const insertSecretCodeSchema = createInsertSchema(secretCodes).omit({
   id: true,
   createdAt: true,
@@ -1089,6 +1103,8 @@ export type InsertCurrencyHold = z.infer<typeof insertCurrencyHoldSchema>;
 export type CurrencyHold = typeof currencyHolds.$inferSelect;
 export type InsertDailyClaim = z.infer<typeof insertDailyClaimSchema>;
 export type DailyClaim = typeof dailyClaims.$inferSelect;
+export type InsertAdminClaim = z.infer<typeof insertAdminClaimSchema>;
+export type AdminClaim = typeof adminClaims.$inferSelect;
 export type InsertSecretCode = z.infer<typeof insertSecretCodeSchema>;
 export type SecretCode = typeof secretCodes.$inferSelect;
 export type InsertCodeRedemption = z.infer<typeof insertCodeRedemptionSchema>;

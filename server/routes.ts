@@ -5987,6 +5987,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin claim status endpoint
+  app.get("/api/currency/admin-claim-status", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const status = await storage.canClaimAdminCredits(userId);
+      res.json(status);
+    } catch (error) {
+      await logError(error, "GET /api/currency/admin-claim-status", { request: req });
+      res.status(500).json({ message: "Failed to check admin claim status" });
+    }
+  });
+  
+  // Admin claim endpoint
+  app.post("/api/currency/claim-admin", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      // Check if user has admin role
+      const roles = await storage.getUserRoles(userId);
+      const isAdmin = roles.some((role: any) => role.name === 'super_admin' || role.name === 'event_moderator');
+      
+      if (!isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to claim admin credits" });
+      }
+      
+      const result = await storage.claimAdminCredits(userId);
+      res.json({
+        success: true,
+        amount: result.amount,
+        nextClaimAt: result.nextClaimAt,
+        message: `Admin reward: You received ${result.amount} Tickets!`
+      });
+    } catch (error: any) {
+      if (error.message === 'Cannot claim admin credits yet') {
+        return res.status(400).json({ message: "You've already claimed your admin credits. Please wait 24 hours." });
+      }
+      await logError(error, "POST /api/currency/claim-admin", { request: req });
+      res.status(500).json({ message: "Failed to claim admin credits" });
+    }
+  });
+  
   // Secret code redemption
   app.post("/api/currency/redeem-code", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
