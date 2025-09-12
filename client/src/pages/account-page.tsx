@@ -1818,7 +1818,7 @@ export default function AccountPage() {
                         opacity: 0.7
                       }}
                     />
-                    My Past Tickets
+                    Ticket Log
                   </h4>
 
                   <div className="row g-3">
