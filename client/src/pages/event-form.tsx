@@ -176,7 +176,10 @@ export default function EventForm() {
     if (!isEditMode && userBalance && creditBalance > 0) {
       const currentValue = form.getValues("maxTickets");
       // Only update if it's still the default 100 or if balance is less than current value
-      if (currentValue && (currentValue === 100 || currentValue > creditBalance)) {
+      if (
+        currentValue &&
+        (currentValue === 100 || currentValue > creditBalance)
+      ) {
         form.setValue("maxTickets", Math.min(creditBalance, 5000));
       }
     }
@@ -186,35 +189,38 @@ export default function EventForm() {
   const applyLeetspeak = (text: string): string => {
     // Define leetspeak mappings
     const leetMap: { [key: string]: string } = {
-      'a': '4',
-      'A': '4',
-      'e': '3',
-      'E': '3',
-      'i': '1',
-      'I': '1',
-      'o': '0',
-      'O': '0',
-      's': '5',
-      'S': '5',
-      't': '7',
-      'T': '7',
-      'l': '1',
-      'L': '1',
-      'g': '9',
-      'G': '9',
+      a: "4",
+      A: "4",
+      e: "3",
+      E: "3",
+      i: "1",
+      I: "1",
+      o: "0",
+      O: "0",
+      s: "5",
+      S: "5",
+      t: "7",
+      T: "7",
+      l: "1",
+      L: "1",
+      g: "9",
+      G: "9",
     };
 
     // Apply transformations with 40% probability per character, but skip the first character to keep codes readable
-    return text.split('').map((char, index) => {
-      // Skip first character to keep it readable
-      if (index === 0) {
+    return text
+      .split("")
+      .map((char, index) => {
+        // Skip first character to keep it readable
+        if (index === 0) {
+          return char;
+        }
+        if (leetMap[char] && Math.random() < 0.4) {
+          return leetMap[char];
+        }
         return char;
-      }
-      if (leetMap[char] && Math.random() < 0.4) {
-        return leetMap[char];
-      }
-      return char;
-    }).join('');
+      })
+      .join("");
   };
 
   // Generate Hunt code with leetspeak variations
@@ -238,34 +244,134 @@ export default function EventForm() {
     ];
     const nouns = [
       // Original animals
-      "Tiger", "Dragon", "Eagle", "Wolf", "Bear", "Lion", "Falcon", 
-      "Phoenix", "Raven", "Shark", "Panther", "Cobra", "Hawk", "Lynx", "Jaguar",
+      "Tiger",
+      "Dragon",
+      "Eagle",
+      "Wolf",
+      "Bear",
+      "Lion",
+      "Falcon",
+      "Phoenix",
+      "Raven",
+      "Shark",
+      "Panther",
+      "Cobra",
+      "Hawk",
+      "Lynx",
+      "Jaguar",
       // More animals & creatures
-      "Stallion", "Viper", "Orca", "Kraken", "Griffin", "Mantis", "Rhino",
-      "Turtle", "Scorpion", "Leopard", "Cheetah", "Raptor", "Python",
-      "Dolphin", "Octopus", "Spider", "Hornet", "Mongoose", "Puma", "Cougar",
+      "Stallion",
+      "Viper",
+      "Orca",
+      "Kraken",
+      "Griffin",
+      "Mantis",
+      "Rhino",
+      "Turtle",
+      "Scorpion",
+      "Leopard",
+      "Cheetah",
+      "Raptor",
+      "Python",
+      "Dolphin",
+      "Octopus",
+      "Spider",
+      "Hornet",
+      "Mongoose",
+      "Puma",
+      "Cougar",
       // Mythical beings
-      "Titan", "Golem", "Hydra", "Siren", "Cyclops", "Sphinx", "Wizard",
-      "Valkyrie", "Minotaur", "Centaur", "Pegasus", "Unicorn", "Banshee",
-      "Wraith", "Demon", "Angel", "Oracle", "Mystic", "Warlock", "Shaman",
+      "Titan",
+      "Golem",
+      "Hydra",
+      "Siren",
+      "Cyclops",
+      "Sphinx",
+      "Wizard",
+      "Valkyrie",
+      "Minotaur",
+      "Centaur",
+      "Pegasus",
+      "Unicorn",
+      "Banshee",
+      "Wraith",
+      "Demon",
+      "Angel",
+      "Oracle",
+      "Mystic",
+      "Warlock",
+      "Shaman",
       // Natural phenomena
-      "Storm", "Thunder", "Lightning", "Tornado", "Aurora", "Comet",
-      "Meteor", "Eclipse", "Tsunami", "Avalanche", "Volcano", "Glacier",
-      "Hurricane", "Blizzard", "Monsoon", "Tempest", "Cyclone", "Typhoon",
+      "Storm",
+      "Thunder",
+      "Lightning",
+      "Tornado",
+      "Aurora",
+      "Comet",
+      "Meteor",
+      "Eclipse",
+      "Tsunami",
+      "Avalanche",
+      "Volcano",
+      "Glacier",
+      "Hurricane",
+      "Blizzard",
+      "Monsoon",
+      "Tempest",
+      "Cyclone",
+      "Typhoon",
       // Cool objects & concepts
-      "Crystal", "Portal", "Blade", "Crown", "Dagger", "Shield", "Sword",
-      "Hammer", "Spear", "Arrow", "Cannon", "Pistol", "Rifle", "Saber",
-      "Trident", "Scythe", "Katana", "Kunai", "Shuriken", "Axe", "Mace",
+      "Crystal",
+      "Portal",
+      "Blade",
+      "Crown",
+      "Dagger",
+      "Shield",
+      "Sword",
+      "Hammer",
+      "Spear",
+      "Arrow",
+      "Cannon",
+      "Pistol",
+      "Rifle",
+      "Saber",
+      "Trident",
+      "Scythe",
+      "Katana",
+      "Kunai",
+      "Shuriken",
+      "Axe",
+      "Mace",
       // Powerful concepts
-      "Legend", "Shadow", "Spirit", "Vortex", "Phantom", "Specter",
-      "Enigma", "Cipher", "Paradox", "Nexus", "Matrix", "Cosmos",
-      "Nebula", "Galaxy", "Pulsar", "Quasar", "Photon", "Neutron",
-      "Proton", "Electron", "Atom", "Quantum", "Plasma", "Energy"
+      "Legend",
+      "Shadow",
+      "Spirit",
+      "Vortex",
+      "Phantom",
+      "Specter",
+      "Enigma",
+      "Cipher",
+      "Paradox",
+      "Nexus",
+      "Matrix",
+      "Cosmos",
+      "Nebula",
+      "Galaxy",
+      "Pulsar",
+      "Quasar",
+      "Photon",
+      "Neutron",
+      "Proton",
+      "Electron",
+      "Atom",
+      "Quantum",
+      "Plasma",
+      "Energy",
     ];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
     const baseCode = `${randomColor}${randomNoun}`;
-    
+
     // Apply leetspeak with 50% chance for the entire code
     if (Math.random() < 0.5) {
       return applyLeetspeak(baseCode);
@@ -365,7 +471,13 @@ export default function EventForm() {
         ticketPurchasesEnabled: event.ticketPurchasesEnabled !== false,
         timezone: event.timezone || "America/New_York",
         rollingTimezone: event.rollingTimezone || false,
-        paymentProcessing: (event.paymentProcessing as "None" | "Ethereum" | "Bitcoin" | "USDC" | "Dogecoin") || "None",
+        paymentProcessing:
+          (event.paymentProcessing as
+            | "None"
+            | "Ethereum"
+            | "Bitcoin"
+            | "USDC"
+            | "Dogecoin") || "None",
         walletAddress: event.walletAddress || "",
         allowPrepay: event.allowPrepay || false,
       });
@@ -546,7 +658,11 @@ export default function EventForm() {
       longitude: longitude ? String(longitude) : undefined,
       geofence: watchedValues.geofence || false,
       treasureHunt: data.treasureHunt || false,
-      huntCode: data.treasureHunt ? (data.huntCode || form.getValues('huntCode') || generateHuntCodeWithLeetspeak()) : undefined,
+      huntCode: data.treasureHunt
+        ? data.huntCode ||
+          form.getValues("huntCode") ||
+          generateHuntCodeWithLeetspeak()
+        : undefined,
       rollingTimezone: data.rollingTimezone || false,
       paymentProcessing: data.paymentProcessing || "None",
       walletAddress: data.walletAddress || undefined,
@@ -1385,7 +1501,9 @@ export default function EventForm() {
                                 data-testid="select-timezone"
                                 value={field.value || "America/New_York"}
                                 onChange={(e) => field.onChange(e.target.value)}
-                                disabled={isEditMode && Boolean(event?.rollingTimezone)}
+                                disabled={
+                                  isEditMode && Boolean(event?.rollingTimezone)
+                                }
                                 style={
                                   isEditMode && event?.rollingTimezone
                                     ? { cursor: "not-allowed", opacity: 0.7 }
@@ -1727,13 +1845,24 @@ export default function EventForm() {
                                   control={form.control}
                                   name="maxTickets"
                                   render={({ field }) => {
-                                    const paymentMethod = form.watch("paymentProcessing") || "None";
-                                    const ticketPrice = parseFloat(form.watch("ticketPrice") || "0");
-                                    const paymentFee = ticketPrice > 0 && paymentMethod !== "None" 
-                                      ? (paymentMethod === "Ethereum" || paymentMethod === "Bitcoin" ? 100 : paymentMethod === "USDC" ? 50 : 0)
-                                      : 0;
-                                    const totalRequired = (field.value || 0) + paymentFee;
-                                    
+                                    const paymentMethod =
+                                      form.watch("paymentProcessing") || "None";
+                                    const ticketPrice = parseFloat(
+                                      form.watch("ticketPrice") || "0",
+                                    );
+                                    const paymentFee =
+                                      ticketPrice > 0 &&
+                                      paymentMethod !== "None"
+                                        ? paymentMethod === "Ethereum" ||
+                                          paymentMethod === "Bitcoin"
+                                          ? 100
+                                          : paymentMethod === "USDC"
+                                            ? 50
+                                            : 0
+                                        : 0;
+                                    const totalRequired =
+                                      (field.value || 0) + paymentFee;
+
                                     return (
                                       <FormItem>
                                         <FormLabel>Tickets</FormLabel>
@@ -1753,8 +1882,11 @@ export default function EventForm() {
                                               field.onChange(value);
 
                                               // Check if total (including payment fee) exceeds user's credit balance
-                                              const totalWithFee = value + paymentFee;
-                                              if (totalWithFee > creditBalance) {
+                                              const totalWithFee =
+                                                value + paymentFee;
+                                              if (
+                                                totalWithFee > creditBalance
+                                              ) {
                                                 form.setError("maxTickets", {
                                                   type: "manual",
                                                   message: `Not Enough Credits (need ${totalWithFee} total)`,
@@ -1765,32 +1897,65 @@ export default function EventForm() {
                                             }}
                                           />
                                         </FormControl>
-                                        <div 
+                                        <div
                                           className="mt-3"
                                           style={{
-                                            backgroundColor: '#000000',
-                                            border: '2px solid #0a0a0a',
-                                            borderRadius: '4px',
-                                            fontFamily: 'monospace',
-                                            fontSize: '12px',
-                                            color: '#00ff00',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px',
-                                            padding: '6px 16px'
+                                            backgroundColor: "#000000",
+                                            border: "2px solid #0a0a0a",
+                                            borderRadius: "4px",
+                                            fontFamily: "monospace",
+                                            fontSize: "12px",
+                                            color: "#00ff00",
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.5px",
+                                            padding: "6px 16px",
                                           }}
                                         >
-                                          <div style={{ marginBottom: '8px' }}>
+                                          <div style={{ marginBottom: "8px" }}>
                                             BALANCE: {creditBalance} TICKETS
                                           </div>
                                           {paymentFee > 0 && (
                                             <>
-                                              <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
-                                                <div>ATTENDEES: {field.value || 0} TICKETS</div>
-                                                <div>{paymentMethod === "USDC" ? "USDC" : paymentMethod.toUpperCase()} PROCESSING: {paymentFee} TICKETS</div>
-                                                <div style={{ fontSize: '10px', opacity: '0.8' }}>(ONE-TIME, NON-REFUNDABLE)</div>
+                                              <div
+                                                style={{
+                                                  borderTop:
+                                                    "1px solid #00ff00",
+                                                  paddingTop: "8px",
+                                                  marginTop: "8px",
+                                                }}
+                                              >
+                                                <div>
+                                                  ATTENDEES: {field.value || 0}{" "}
+                                                  TICKETS
+                                                </div>
+                                                <div>
+                                                  {paymentMethod === "USDC"
+                                                    ? "USDC"
+                                                    : paymentMethod.toUpperCase()}{" "}
+                                                  PROCESSING: {paymentFee}{" "}
+                                                  TICKETS
+                                                </div>
+                                                <div
+                                                  style={{
+                                                    fontSize: "10px",
+                                                    opacity: "0.8",
+                                                  }}
+                                                >
+                                                  (ONE-TIME, NON-REFUNDABLE)
+                                                </div>
                                               </div>
-                                              <div style={{ borderTop: '1px solid #00ff00', paddingTop: '8px', marginTop: '8px' }}>
-                                                <strong>TOTAL REQUIRED: {totalRequired} TICKETS</strong>
+                                              <div
+                                                style={{
+                                                  borderTop:
+                                                    "1px solid #00ff00",
+                                                  paddingTop: "8px",
+                                                  marginTop: "8px",
+                                                }}
+                                              >
+                                                <strong>
+                                                  TOTAL REQUIRED:{" "}
+                                                  {totalRequired} TICKETS
+                                                </strong>
                                               </div>
                                             </>
                                           )}
@@ -1854,250 +2019,281 @@ export default function EventForm() {
                     {/* Payment Processing Section - Windows 98 Style - Only show if ticket price > 0 */}
                     {parseFloat(form.watch("ticketPrice") || "0") > 0 && (
                       <div className="col-12">
-                      <div
-                        style={{
-                          background: "#c0c0c0",
-                          border: "3px solid",
-                          borderColor: "#ffffff #000000 #000000 #ffffff",
-                          boxShadow: "1px 1px 0 #808080",
-                          marginBottom: "20px",
-                        }}
-                      >
                         <div
                           style={{
-                            background:
-                              "linear-gradient(to right, #000080, #1084d0)",
-                            padding: "2px 4px",
-                            marginBottom: "1px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
+                            background: "#c0c0c0",
+                            border: "3px solid",
+                            borderColor: "#ffffff #000000 #000000 #ffffff",
+                            boxShadow: "1px 1px 0 #808080",
+                            marginBottom: "20px",
                           }}
                         >
                           <div
-                            className="text-white fw-bold"
                             style={{
-                              fontSize: "11px",
-                              fontFamily: "Tahoma, sans-serif",
-                            }}
-                          >
-                            Payment Processing
-                          </div>
-                          <div
-                            style={{
-                              width: "13px",
-                              height: "11px",
-                              background: "#c0c0c0",
-                              border: "1px solid",
-                              borderColor: "#ffffff #000000 #000000 #ffffff",
+                              background:
+                                "linear-gradient(to right, #000080, #1084d0)",
+                              padding: "2px 4px",
+                              marginBottom: "1px",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "9px",
-                              fontWeight: "bold",
-                              lineHeight: "1",
-                              cursor: "pointer",
+                              justifyContent: "space-between",
                             }}
                           >
-                            ×
+                            <div
+                              className="text-white fw-bold"
+                              style={{
+                                fontSize: "11px",
+                                fontFamily: "Tahoma, sans-serif",
+                              }}
+                            >
+                              Payment Processing
+                            </div>
+                            <div
+                              style={{
+                                width: "13px",
+                                height: "11px",
+                                background: "#c0c0c0",
+                                border: "1px solid",
+                                borderColor: "#ffffff #000000 #000000 #ffffff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "9px",
+                                fontWeight: "bold",
+                                lineHeight: "1",
+                                cursor: "pointer",
+                              }}
+                            >
+                              ×
+                            </div>
                           </div>
-                        </div>
-                        <div className="p-3" style={{ background: "#c0c0c0" }}>
-                          <FormField
-                            control={form.control}
-                            name="paymentProcessing"
-                            render={({ field }) => {
-                              // Check if wallet address is already saved
-                              const isPaymentLocked = event?.walletAddress && event.walletAddress.length > 0;
-                              
-                              return (
-                                <FormItem>
-                                  <FormLabel>
-                                    Payment Method
-                                    {isPaymentLocked && (
-                                      <span className="text-muted ms-2">
-                                        (locked - wallet configured)
-                                      </span>
-                                    )}
-                                  </FormLabel>
-                                  <FormControl>
-                                    <select
-                                      className="form-select"
-                                      {...field}
-                                      value={field.value || "None"}
-                                      onChange={(e) =>
-                                        field.onChange(e.target.value)
-                                      }
-                                      disabled={Boolean(isPaymentLocked)}
-                                      data-testid="select-payment-processing"
-                                    >
-                                      <option value="None">
-                                        None - No payment processing
-                                      </option>
-                                      <option value="Ethereum">
-                                        Ξ Ethereum
-                                      </option>
-                                      <option value="Bitcoin">₿ Bitcoin</option>
-                                      <option value="USDC">
-                                        $ USDC (Stablecoin)
-                                      </option>
-                                      <option value="Dogecoin">
-                                        Ð Dogecoin
-                                      </option>
-                                    </select>
-                                  </FormControl>
-                                  {field.value !== "None" && (
-                                    <>
-                                      <div className="mt-3 p-3 bg-light border rounded">
-                                        <div className="d-flex align-items-center justify-content-between">
-                                          <div>
-                                            <strong>
-                                              {field.value} Payment Integration
-                                            </strong>
-                                            <div className="text-muted small mt-1">
-                                              Ticket holders can pay with their{" "}
-                                              {field.value} wallet.
+                          <div
+                            className="p-3"
+                            style={{ background: "#c0c0c0" }}
+                          >
+                            <FormField
+                              control={form.control}
+                              name="paymentProcessing"
+                              render={({ field }) => {
+                                // Check if wallet address is already saved
+                                const isPaymentLocked =
+                                  event?.walletAddress &&
+                                  event.walletAddress.length > 0;
+
+                                return (
+                                  <FormItem>
+                                    <FormLabel>
+                                      Payment Method
+                                      {isPaymentLocked && (
+                                        <span className="text-muted ms-2">
+                                          (locked - wallet configured)
+                                        </span>
+                                      )}
+                                    </FormLabel>
+                                    <FormControl>
+                                      <select
+                                        className="form-select"
+                                        {...field}
+                                        value={field.value || "None"}
+                                        onChange={(e) =>
+                                          field.onChange(e.target.value)
+                                        }
+                                        disabled={Boolean(isPaymentLocked)}
+                                        data-testid="select-payment-processing"
+                                      >
+                                        <option value="None">
+                                          None - No payment processing
+                                        </option>
+                                        <option value="Ethereum">
+                                          Ξ Ethereum
+                                        </option>
+                                        <option value="Bitcoin">
+                                          ₿ Bitcoin
+                                        </option>
+                                        <option value="USDC">
+                                          $ USDC (Stablecoin)
+                                        </option>
+                                        <option value="Dogecoin">
+                                          Ð Dogecoin
+                                        </option>
+                                      </select>
+                                    </FormControl>
+                                    {field.value !== "None" && (
+                                      <>
+                                        <div className="mt-3 p-3 bg-light border rounded">
+                                          <div className="d-flex align-items-center justify-content-between">
+                                            <div>
+                                              <strong>
+                                                {field.value} Payment
+                                                Integration
+                                              </strong>
+                                              <div className="text-muted small mt-1">
+                                                Ticket holders can pay with
+                                                their {field.value} wallet.
+                                              </div>
                                             </div>
-                                          </div>
-                                          <div className="text-end">
-                                            <span
-                                              className={`badge ${
-                                                field.value === "Ethereum" ||
+                                            <div className="text-end">
+                                              <span
+                                                className={`badge ${
+                                                  field.value === "Ethereum" ||
+                                                  field.value === "Bitcoin"
+                                                    ? "bg-warning text-dark"
+                                                    : "bg-info text-dark"
+                                                } fs-6`}
+                                              >
+                                                {field.value === "Ethereum" ||
                                                 field.value === "Bitcoin"
-                                                  ? "bg-warning text-dark"
-                                                  : "bg-info text-dark"
-                                              } fs-6`}
-                                            >
-                                              {field.value === "Ethereum" ||
-                                              field.value === "Bitcoin"
-                                                ? "100"
-                                                : "50"}{" "}
-                                              tickets
-                                            </span>
-                                            <div className="text-muted small mt-1">
-                                              Config. Fee
+                                                  ? "100"
+                                                  : "50"}{" "}
+                                                tickets
+                                              </span>
+                                              <div className="text-muted small mt-1">
+                                                Config. Fee
+                                              </div>
                                             </div>
                                           </div>
                                         </div>
-                                      </div>
 
-                                      <FormField
-                                        control={form.control}
-                                        name="walletAddress"
-                                        render={({ field: walletField }) => (
-                                          <FormItem className="mt-3">
-                                            <FormLabel>
-                                              Your {field.value} Wallet Address
-                                              {isPaymentLocked && (
-                                                <span className="text-muted ms-2">
-                                                  (read-only)
-                                                </span>
-                                              )}
-                                            </FormLabel>
-                                            <FormControl>
-                                              <input
-                                                type="text"
-                                                className="form-control"
-                                                placeholder={`Enter your ${field.value} wallet address`}
-                                                {...walletField}
-                                                value={walletField.value || ""}
-                                                readOnly={Boolean(isPaymentLocked)}
-                                                data-testid="input-wallet-address"
-                                              />
-                                            </FormControl>
-                                            <div className="form-text">
-                                              {isPaymentLocked ? (
-                                                <>
-                                                  <span className="text-warning">
-                                                    ⚠️ Wallet address is locked for security.
+                                        <FormField
+                                          control={form.control}
+                                          name="walletAddress"
+                                          render={({ field: walletField }) => (
+                                            <FormItem className="mt-3">
+                                              <FormLabel>
+                                                Your {field.value} Wallet
+                                                Address
+                                                {isPaymentLocked && (
+                                                  <span className="text-muted ms-2">
+                                                    (read-only)
                                                   </span>
-                                                  <br />
-                                                  Payments will be sent to this address.
-                                                </>
-                                              ) : (
-                                                "This is where ticket payments will be sent"
-                                              )}
-                                            </div>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                      
-                                      {/* Allow Prepay Checkbox */}
-                                      <FormField
-                                        control={form.control}
-                                        name="allowPrepay"
-                                        render={({ field: prepayField }) => (
-                                          <FormItem className="mt-3">
-                                            <div className="form-check">
+                                                )}
+                                              </FormLabel>
                                               <FormControl>
                                                 <input
-                                                  type="checkbox"
-                                                  className="form-check-input"
-                                                  id="allowPrepay"
-                                                  checked={prepayField.value || false}
-                                                  onChange={(e) => prepayField.onChange(e.target.checked)}
-                                                  disabled={Boolean(isPaymentLocked)}
-                                                  data-testid="checkbox-allow-prepay"
+                                                  type="text"
+                                                  className="form-control"
+                                                  placeholder={`Enter your ${field.value} wallet address`}
+                                                  {...walletField}
+                                                  value={
+                                                    walletField.value || ""
+                                                  }
+                                                  readOnly={Boolean(
+                                                    isPaymentLocked,
+                                                  )}
+                                                  data-testid="input-wallet-address"
                                                 />
                                               </FormControl>
-                                              <label
-                                                className="form-check-label"
-                                                htmlFor="allowPrepay"
-                                              >
-                                                Allow Prepayment
-                                              </label>
-                                            </div>
-                                            <div className="form-text">
-                                              {prepayField.value ? (
-                                                <>
-                                                  ✅ Attendees can pay anytime before the event.
-                                                  <br />
-                                                  <span className="text-muted">
-                                                    Transaction download available after event starts (fetches pre-event payments).
-                                                  </span>
-                                                </>
-                                              ) : (
-                                                <>
-                                                  Payments only accepted during the event.
-                                                  <br />
-                                                  <span className="text-muted">
-                                                    Transaction download available 24 hours after event ends.
-                                                  </span>
-                                                </>
-                                              )}
-                                            </div>
-                                            <FormMessage />
-                                          </FormItem>
-                                        )}
-                                      />
-                                    </>
-                                  )}
-                                  <div className="form-text mt-2">
-                                    {field.value === "None" ? (
-                                      <>
-                                        We don't handle payment processing for
-                                        ticket sales at events. You'll need to
-                                        manage payments independently.
-                                      </>
-                                    ) : (
-                                      <>
-                                        Enable {field.value} payments for your
-                                        event. Ticket holders can pay for their
-                                        tickets with {field.value}. We prepare
-                                        the transaction with a one-click "Pay
-                                        with {field.value}" button.
+                                              <div className="form-text">
+                                                {isPaymentLocked ? (
+                                                  <>
+                                                    <span className="text-warning">
+                                                      ⚠️ Wallet address is
+                                                      locked for security.
+                                                    </span>
+                                                    <br />
+                                                    Payments will be sent to
+                                                    this address.
+                                                  </>
+                                                ) : (
+                                                  "This is where ticket payments will be sent"
+                                                )}
+                                              </div>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
+
+                                        {/* Allow Prepay Checkbox */}
+                                        <FormField
+                                          control={form.control}
+                                          name="allowPrepay"
+                                          render={({ field: prepayField }) => (
+                                            <FormItem className="mt-3">
+                                              <div className="form-check">
+                                                <FormControl>
+                                                  <input
+                                                    type="checkbox"
+                                                    className="form-check-input"
+                                                    id="allowPrepay"
+                                                    checked={
+                                                      prepayField.value || false
+                                                    }
+                                                    onChange={(e) =>
+                                                      prepayField.onChange(
+                                                        e.target.checked,
+                                                      )
+                                                    }
+                                                    disabled={Boolean(
+                                                      isPaymentLocked,
+                                                    )}
+                                                    data-testid="checkbox-allow-prepay"
+                                                  />
+                                                </FormControl>
+                                                <label
+                                                  className="form-check-label"
+                                                  htmlFor="allowPrepay"
+                                                >
+                                                  Allow Prepayment
+                                                </label>
+                                              </div>
+                                              <div className="form-text">
+                                                {prepayField.value ? (
+                                                  <>
+                                                    ✅ Attendees can pay anytime
+                                                    before the event.
+                                                    <br />
+                                                    <span className="text-muted">
+                                                      Transaction download
+                                                      available after event
+                                                      starts (fetches pre-event
+                                                      payments).
+                                                    </span>
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    Payments only accepted
+                                                    during the event.
+                                                    <br />
+                                                    <span className="text-muted">
+                                                      Transaction download
+                                                      available 24 hours after
+                                                      event ends.
+                                                    </span>
+                                                  </>
+                                                )}
+                                              </div>
+                                              <FormMessage />
+                                            </FormItem>
+                                          )}
+                                        />
                                       </>
                                     )}
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              );
-                            }}
-                          />
+                                    <div className="form-text mt-2">
+                                      {field.value === "None" ? (
+                                        <>
+                                          We don't handle payment processing for
+                                          ticket sales at events. You'll need to
+                                          manage payments independently.
+                                        </>
+                                      ) : (
+                                        <>
+                                          Enable {field.value} payments for your
+                                          event. Ticket holders can pay for
+                                          their tickets with {field.value}. We
+                                          prepare the transaction with a
+                                          one-click "Pay with {field.value}"
+                                          button.
+                                        </>
+                                      )}
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                );
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
                     )}
 
                     {/* Additional Event Options - Windows 98 Style */}
@@ -2528,7 +2724,15 @@ export default function EventForm() {
                                       className="form-check-label"
                                       htmlFor="geofence"
                                     >
-                                      <img src={worldIcon} alt="World" style={{width: "16px", height: "16px"}} className="me-2" />
+                                      <img
+                                        src={worldIcon}
+                                        alt="World"
+                                        style={{
+                                          width: "16px",
+                                          height: "16px",
+                                        }}
+                                        className="me-2"
+                                      />
                                       Geofence
                                       {isEditMode && (
                                         <span className="text-muted ms-2">
@@ -2569,7 +2773,15 @@ export default function EventForm() {
                                       className="form-check-label"
                                       htmlFor="treasureHunt"
                                     >
-                                      <img src={spiderIcon} alt="Spider" style={{width: "16px", height: "16px"}} className="me-2" />
+                                      <img
+                                        src={spiderIcon}
+                                        alt="Spider"
+                                        style={{
+                                          width: "16px",
+                                          height: "16px",
+                                        }}
+                                        className="me-2"
+                                      />
                                       Treasure Hunt
                                     </label>
                                   </div>
@@ -2585,17 +2797,15 @@ export default function EventForm() {
                                           <strong>Your hunt URL:</strong>
                                           <br />
                                           <code className="text-primary">
-                                            www.eventic.quest/hunt/
+                                            https://eventic.quest/hunt/
                                             {form.watch("huntCode")}
                                           </code>
                                           <br />
                                           <small className="text-muted">
-                                            Share this URL, or hide it for
-                                            anyoneone to find! They can also
-                                            enter just the code "
-                                            {form.watch("huntCode")}" on their
-                                            account page in the Secret Codes
-                                            section.
+                                            Share this URL or hide it for
+                                            anyoneone to find! Remember your
+                                            hunt codee: "
+                                            {form.watch("huntCode")}".
                                           </small>
                                         </div>
                                       )}
@@ -3165,12 +3375,12 @@ export default function EventForm() {
                                       </label>
                                     </div>
                                     <div className="form-text">
-                                      Attendees will be allowed to mint a digital
-                                      collectible of the event ticket. The details
-                                      seen in the ticket preview will be publicly
-                                      accessible if enabled. Digital collectible
-                                      will be issued on the Coinbase L2 network
-                                      (Base, Ethereum)
+                                      Attendees will be allowed to mint a
+                                      digital collectible of the event ticket.
+                                      The details seen in the ticket preview
+                                      will be publicly accessible if enabled.
+                                      Digital collectible will be issued on the
+                                      Coinbase L2 network (Base, Ethereum)
                                       {isEditMode && !event?.allowMinting
                                         ? ". This can be enabled after event creation, but once enabled it cannot be disabled"
                                         : isEditMode && event?.allowMinting
@@ -3206,27 +3416,41 @@ export default function EventForm() {
                               ? "Please hold..."
                               : !isEditMode
                                 ? (() => {
-                                    const maxTicketsValue = form.watch("maxTickets");
-                                    const maxTickets = typeof maxTicketsValue === 'string' ? parseInt(maxTicketsValue) : Number(maxTicketsValue) || 100;
-                                    const paymentProcessing = form.watch("paymentProcessing") || 'None';
-                                    
+                                    const maxTicketsValue =
+                                      form.watch("maxTickets");
+                                    const maxTickets =
+                                      typeof maxTicketsValue === "string"
+                                        ? parseInt(maxTicketsValue)
+                                        : Number(maxTicketsValue) || 100;
+                                    const paymentProcessing =
+                                      form.watch("paymentProcessing") || "None";
+
                                     // Base cost: event capacity
                                     let baseCost = maxTickets;
-                                    
+
                                     // Calculate payment processing fee if enabled
                                     let paymentFee = 0;
-                                    if (paymentProcessing && paymentProcessing !== 'None') {
-                                      if (paymentProcessing === 'Ethereum' || paymentProcessing === 'Bitcoin') {
+                                    if (
+                                      paymentProcessing &&
+                                      paymentProcessing !== "None"
+                                    ) {
+                                      if (
+                                        paymentProcessing === "Ethereum" ||
+                                        paymentProcessing === "Bitcoin"
+                                      ) {
                                         paymentFee = 100;
-                                      } else if (paymentProcessing === 'USDC' || paymentProcessing === 'Dogecoin') {
+                                      } else if (
+                                        paymentProcessing === "USDC" ||
+                                        paymentProcessing === "Dogecoin"
+                                      ) {
                                         paymentFee = 50;
                                       }
                                     }
-                                    
+
                                     const ticketsNeeded = baseCost + paymentFee;
-                                    
+
                                     return ticketsNeeded > creditBalance
-                                      ? "Not Enough Tickets" 
+                                      ? "Not Enough Tickets"
                                       : `Create for ${ticketsNeeded} Tickets`;
                                   })()
                                 : "Save"}
