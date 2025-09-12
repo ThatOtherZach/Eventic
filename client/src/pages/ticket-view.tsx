@@ -781,9 +781,9 @@ export default function TicketViewPage(): React.ReactElement {
                   <div className="alert alert-info small mb-3">
                     <strong>How it works:</strong>
                     <ul className="mb-0 mt-2">
-                      <li>You have {userCredits} credits available</li>
+                      <li>You have {userCredits} tickets</li>
                       <li>
-                        Charging costs 3 credits to improve this ticket's odds.
+                        Charging costs 3 tickets to improve odds.
                       </li>
                       <li>
                         Special effects odds will be improved (better chances).
