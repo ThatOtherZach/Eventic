@@ -781,16 +781,15 @@ export default function TicketViewPage(): React.ReactElement {
                   <div className="alert alert-info small mb-3">
                     <strong>How it works:</strong>
                     <ul className="mb-0 mt-2">
-                      <li>You have {userCredits} tickets</li>
+                      <li>You have {userCredits} tickets, it costs 3 tickets to charge.<li>
                       <li>
-                        Charging costs 3 tickets to improve odds.
+                        
                       </li>
                       <li>
-                        Special effects odds will be improved (better chances).
+                        Special effects odds will be improved for better chances.
                       </li>
                       <li>
-                        Includes seasonal effects, stickers, and visual
-                        enhancements.
+                        Includes seasonal effects, stickers, and other stuff.
                       </li>
                     </ul>
                   </div>
@@ -808,7 +807,7 @@ export default function TicketViewPage(): React.ReactElement {
                           toast({
                             title: "Ticket Charged!",
                             description:
-                              "Your ticket now has improved special effects odds.",
+                              "Your ticket now has improved chances of special effects.",
                           });
                           // Refresh ticket data and balance
                           queryClient.invalidateQueries({
@@ -822,14 +821,14 @@ export default function TicketViewPage(): React.ReactElement {
                           toast({
                             title: "Failed to charge ticket",
                             description:
-                              error.message || "Something went wrong",
+                              error.message || "Something went wrong :(",
                             variant: "destructive",
                           });
                         }
                       } catch (error) {
                         toast({
                           title: "Error",
-                          description: "Failed to charge ticket",
+                          description: "Failed to charge :(",
                           variant: "destructive",
                         });
                       } finally {
@@ -852,7 +851,7 @@ export default function TicketViewPage(): React.ReactElement {
                           style={{ width: "18px", height: "18px" }}
                           className="me-2"
                         />
-                        Insufficient Credits
+                        Insufficient Tickets
                       </>
                     ) : (
                       <>
@@ -862,7 +861,7 @@ export default function TicketViewPage(): React.ReactElement {
                           style={{ width: "18px", height: "18px" }}
                           className="me-2"
                         />
-                        Charge Ticket (3 Credits)
+                        Charge (3 Tickets)
                       </>
                     )}
                   </button>
@@ -884,7 +883,7 @@ export default function TicketViewPage(): React.ReactElement {
                   <div>
                     <h6 className="mb-0">Ticket Charged!</h6>
                     <p className="text-muted small mb-0">
-                      This ticket has improved special effects odds
+                      This ticket has improved odds of special effects
                     </p>
                   </div>
                 </div>
