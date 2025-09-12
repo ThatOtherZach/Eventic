@@ -1786,19 +1786,20 @@ export default function AccountPage() {
 
       {/* Split tickets into current/upcoming and past */}
       {(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
         
         const upcomingTickets = tickets?.filter(ticket => {
           const eventDate = new Date(ticket.event.date);
-          eventDate.setHours(0, 0, 0, 0);
-          return eventDate >= today;
+          // Include events from today onwards (including events happening today)
+          return eventDate >= todayStart;
         }).sort((a, b) => new Date(a.event.date).getTime() - new Date(b.event.date).getTime());
         
         const pastTickets = tickets?.filter(ticket => {
           const eventDate = new Date(ticket.event.date);
-          eventDate.setHours(0, 0, 0, 0);
-          return eventDate < today;
+          // Only include events that ended before today
+          return eventDate < todayStart;
         }).sort((a, b) => new Date(b.event.date).getTime() - new Date(a.event.date).getTime());
         
         return (
