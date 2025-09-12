@@ -1306,8 +1306,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Fetch event data for each ticket
         const ticketsWithEvents = await Promise.all(
           result.tickets.map(async (ticket) => {
-            const event = await storage.getEvent(ticket.eventId);
-            return { ...ticket, event };
+            const eventWithCreator = await storage.getEventWithCreator(ticket.eventId);
+            if (!eventWithCreator) {
+              return { ...ticket, event: null };
+            }
+            const creatorId = eventWithCreator.userId;
+            const isAdminCreated = creatorId ? await isAdmin(creatorId) : false;
+            const { creatorEmail, ...event } = eventWithCreator;
+            return { ...ticket, event: { ...event, isAdminCreated } };
           })
         );
         res.json({ ...result, tickets: ticketsWithEvents });
@@ -1317,8 +1323,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Fetch event data for each ticket
         const ticketsWithEvents = await Promise.all(
           tickets.map(async (ticket) => {
-            const event = await storage.getEvent(ticket.eventId);
-            return { ...ticket, event };
+            const eventWithCreator = await storage.getEventWithCreator(ticket.eventId);
+            if (!eventWithCreator) {
+              return { ...ticket, event: null };
+            }
+            const creatorId = eventWithCreator.userId;
+            const isAdminCreated = creatorId ? await isAdmin(creatorId) : false;
+            const { creatorEmail, ...event } = eventWithCreator;
+            return { ...ticket, event: { ...event, isAdminCreated } };
           })
         );
         res.json(ticketsWithEvents);
