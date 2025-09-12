@@ -165,30 +165,9 @@ export function LocationEventsPage() {
               isValidated: false
             };
 
-            // Create a full event object for special effects components
-            const fullEvent = {
-              ...event,
-              description: null,
-              country: null,
-              maxTickets: null,
-              createdAt: new Date().toISOString(),
-              userId: '',
-              stripePaymentIntentId: null,
-              stripePriceId: null,
-              stripeProductId: null,
-              specialEffects: event.specialEffects || null,
-              ticketBackgroundUrl: event.ticketBackgroundUrl || null,
-              organizerName: null,
-              organizerEmail: null,
-              organizerPhone: null,
-              category: null,
-              tags: null,
-              isPrivate: false
-            };
-
             // Check for special effects
-            const specialEffect = detectSpecialEffect(fullEvent, mockTicket);
-            const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(fullEvent, mockTicket) : null;
+            const specialEffect = detectSpecialEffect(event, mockTicket);
+            const monthlyColor = specialEffect === 'monthly' ? getMonthlyColor(event, mockTicket) : null;
             
             return (
               <div key={event.id} className="col-md-6">
@@ -247,13 +226,13 @@ export function LocationEventsPage() {
                       )}
 
                       {/* Special Event Effects Badge */}
-                      <SpecialEffectBadge event={fullEvent} ticket={mockTicket} />
+                      <SpecialEffectBadge event={event} ticket={mockTicket} />
                       
                       {/* Special Effects Overlay (for glows and text) */}
-                      <SpecialEffectOverlay event={fullEvent} ticket={mockTicket} />
+                      <SpecialEffectOverlay event={event} ticket={mockTicket} />
                       
                       {/* Special Effects Animation (for particles) */}
-                      <SpecialEffects event={fullEvent} ticket={mockTicket} />
+                      <SpecialEffects event={event} ticket={mockTicket} />
 
                       {/* Event Feature Badge Bar */}
                       <BadgeBar event={event} />
