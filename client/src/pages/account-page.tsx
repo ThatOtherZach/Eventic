@@ -50,9 +50,8 @@ export default function AccountPage() {
 
   // Set page SEO
   useSEO(SEO_CONFIG.profile);
-  const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
+  const [ticketsDisplayed, setTicketsDisplayed] = useState(5);
   const [eventsDisplayed, setEventsDisplayed] = useState(10);
-  const [pastEventsDisplayed, setPastEventsDisplayed] = useState(5);
   const [secretCode, setSecretCode] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState(12);
   const [paymentMethod, setPaymentMethod] = useState("Stripe");
@@ -1715,107 +1714,168 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* My Tickets Section */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <h4 className="h5 fw-semibold mb-3">
-            <img
-              src="/tickets-icon.png"
-              alt=""
-              style={{
-                width: "20px",
-                height: "20px",
-                marginRight: "8px",
-                verticalAlign: "text-bottom",
-              }}
-            />
-            My Tickets
-          </h4>
+      {/* Split tickets into current/upcoming and past */}
+      {(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const upcomingTickets = tickets?.filter(ticket => {
+          const eventDate = new Date(ticket.event.date);
+          eventDate.setHours(0, 0, 0, 0);
+          return eventDate >= today;
+        }).sort((a, b) => new Date(a.event.date).getTime() - new Date(b.event.date).getTime());
+        
+        const pastTickets = tickets?.filter(ticket => {
+          const eventDate = new Date(ticket.event.date);
+          eventDate.setHours(0, 0, 0, 0);
+          return eventDate < today;
+        }).sort((a, b) => new Date(b.event.date).getTime() - new Date(a.event.date).getTime());
+        
+        return (
+          <>
+            {/* My Tickets Section (Upcoming/Current) */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <h4 className="h5 fw-semibold mb-3">
+                  <img
+                    src="/tickets-icon.png"
+                    alt=""
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      marginRight: "8px",
+                      verticalAlign: "text-bottom",
+                    }}
+                  />
+                  My Tickets
+                </h4>
 
-          {ticketsLoading ? (
-            <div className="card">
-              <div className="card-body">
-                <div className="placeholder-glow">
-                  <div className="placeholder col-12 mb-2"></div>
-                  <div className="placeholder col-8"></div>
-                </div>
-              </div>
-            </div>
-          ) : tickets?.length === 0 ? (
-            <div className="card">
-              <div className="card-body text-center py-5">
-                <img
-                  src={ticketIcon}
-                  alt=""
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    opacity: 0.5,
-                    marginBottom: "12px"
-                  }}
-                />
-                <h6 className="text-muted">No tickets yet</h6>
-                <p className="text-muted small">
-                  Tickets you purchase will appear here
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="row g-3">
-                {tickets?.slice(0, ticketsDisplayed).map((ticket) => (
-                  <div key={ticket.id} className="col-md-4">
-                    <div
-                      onClick={() => setLocation(`/tickets/${ticket.id}`)}
-                      style={{
-                        cursor: "pointer",
-                      }}
-                    >
-                      <TicketCard
-                        ticket={ticket}
-                        event={ticket.event}
-                        showQR={false}
-                        showBadges={true}
-                      />
+                {ticketsLoading ? (
+                  <div className="card">
+                    <div className="card-body">
+                      <div className="placeholder-glow">
+                        <div className="placeholder col-12 mb-2"></div>
+                        <div className="placeholder col-8"></div>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-              {tickets && tickets.length > ticketsDisplayed && (
-                <div className="text-center mt-4">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() =>
-                      setTicketsDisplayed((prev) =>
-                        Math.min(prev + 10, tickets.length),
-                      )
-                    }
-                    data-testid="button-show-more-tickets"
-                  >
-                    Show {Math.min(10, tickets.length - ticketsDisplayed)} More
-                  </button>
-                  <div className="text-muted small mt-2">
-                    Showing {ticketsDisplayed} of {tickets.length} tickets
+                ) : upcomingTickets?.length === 0 ? (
+                  <div className="card">
+                    <div className="card-body text-center py-5">
+                      <img
+                        src={ticketIcon}
+                        alt=""
+                        style={{
+                          width: "48px",
+                          height: "48px",
+                          opacity: 0.5,
+                          marginBottom: "12px"
+                        }}
+                      />
+                      <h6 className="text-muted">No upcoming tickets</h6>
+                      <p className="text-muted small">
+                        Tickets for future events will appear here
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-              {tickets &&
-                tickets.length > 10 &&
-                ticketsDisplayed >= tickets.length && (
-                  <div className="text-center mt-3">
-                    <button
-                      className="btn btn-outline-secondary btn-sm"
-                      onClick={() => setTicketsDisplayed(10)}
-                      data-testid="button-show-less-tickets"
-                    >
-                      Show Less
-                    </button>
+                ) : (
+                  <div className="row g-3">
+                    {upcomingTickets?.map((ticket) => (
+                      <div key={ticket.id} className="col-md-4">
+                        <div
+                          onClick={() => setLocation(`/tickets/${ticket.id}`)}
+                          style={{
+                            cursor: "pointer",
+                          }}
+                        >
+                          <TicketCard
+                            ticket={ticket}
+                            event={ticket.event}
+                            showQR={false}
+                            showBadges={true}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
-            </>
-          )}
-        </div>
-      </div>
+              </div>
+            </div>
+
+            {/* My Past Tickets Section */}
+            {pastTickets && pastTickets.length > 0 && (
+              <div className="row mb-4">
+                <div className="col-12">
+                  <h4 className="h5 fw-semibold mb-3">
+                    <img
+                      src={ticketIcon}
+                      alt=""
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        marginRight: "8px",
+                        verticalAlign: "text-bottom",
+                        opacity: 0.7
+                      }}
+                    />
+                    My Past Tickets
+                  </h4>
+
+                  <div className="row g-3">
+                    {pastTickets.slice(0, ticketsDisplayed).map((ticket) => (
+                      <div key={ticket.id} className="col-md-4">
+                        <div
+                          onClick={() => setLocation(`/tickets/${ticket.id}`)}
+                          style={{
+                            cursor: "pointer",
+                          }}
+                        >
+                          <TicketCard
+                            ticket={ticket}
+                            event={ticket.event}
+                            showQR={false}
+                            showBadges={true}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {pastTickets.length > ticketsDisplayed && (
+                    <div className="text-center mt-4">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() =>
+                          setTicketsDisplayed((prev) =>
+                            Math.min(prev + 10, pastTickets.length),
+                          )
+                        }
+                        data-testid="button-show-more-past-tickets"
+                      >
+                        Show {Math.min(10, pastTickets.length - ticketsDisplayed)} More
+                      </button>
+                      <div className="text-muted small mt-2">
+                        Showing {ticketsDisplayed} of {pastTickets.length} past tickets
+                      </div>
+                    </div>
+                  )}
+                  {pastTickets.length > 5 &&
+                    ticketsDisplayed >= pastTickets.length && (
+                      <div className="text-center mt-3">
+                        <button
+                          className="btn btn-outline-secondary btn-sm"
+                          onClick={() => setTicketsDisplayed(5)}
+                          data-testid="button-show-less-past-tickets"
+                        >
+                          Show Less
+                        </button>
+                      </div>
+                    )}
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* NFT Registry Section - Only show if user has minted NFTs */}
       {registryRecords && registryRecords.length > 0 && (
@@ -1941,43 +2001,24 @@ export default function AccountPage() {
         </div>
       )}
 
-      {/* Split events into upcoming and past */}
-      {(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const upcomingEvents = events?.filter(event => {
-          const eventDate = new Date(event.date);
-          eventDate.setHours(0, 0, 0, 0);
-          return eventDate >= today;
-        }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        
-        const pastEvents = events?.filter(event => {
-          const eventDate = new Date(event.date);
-          eventDate.setHours(0, 0, 0, 0);
-          return eventDate < today;
-        }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
-        return (
-          <>
-            {/* My Upcoming Events Section */}
-            <div className="row mb-4">
-              <div className="col-12">
-                <h4 className="h5 fw-semibold mb-3">
-                  <img
-                    src="/events-icon.png"
-                    alt=""
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      marginRight: "8px",
-                      verticalAlign: "text-bottom",
-                    }}
-                  />
-                  My Upcoming Events
-                </h4>
+      {/* My Events Section */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <h4 className="h5 fw-semibold mb-3">
+            <img
+              src="/events-icon.png"
+              alt=""
+              style={{
+                width: "20px",
+                height: "20px",
+                marginRight: "8px",
+                verticalAlign: "text-bottom",
+              }}
+            />
+            My Events
+          </h4>
 
-                {eventsLoading ? (
+          {eventsLoading ? (
             <div className="card">
               <div className="card-body">
                 <div className="placeholder-glow">
@@ -1986,7 +2027,7 @@ export default function AccountPage() {
                 </div>
               </div>
             </div>
-                ) : upcomingEvents?.length === 0 ? (
+          ) : events?.length === 0 ? (
             <div className="card">
               <div className="card-body text-center py-5">
                 <img
@@ -1999,167 +2040,111 @@ export default function AccountPage() {
                     marginBottom: "12px"
                   }}
                 />
-                    <h6 className="text-muted">No upcoming events</h6>
-                    <p className="text-muted small">
-                      Your future events will appear here
-                    </p>
+                <h6 className="text-muted">No events yet</h6>
+                <p className="text-muted small">
+                  Events you create will appear here
+                </p>
               </div>
-                </div>
-              ) : (
-                <>
-                  <div className="card">
-                    <div className="card-body p-0">
-                      {upcomingEvents?.map((event, index) => (
+            </div>
+          ) : (
+            <>
+              <div className="card">
+                <div className="card-body p-0">
+                  {events?.slice(0, eventsDisplayed).map((event, index) => (
                     <div
                       key={event.id}
-                        className={`p-3 ${index !== upcomingEvents.length - 1 ? "border-bottom" : ""}`}
+                      className={`p-3 ${index !== Math.min(eventsDisplayed, events.length) - 1 ? "border-bottom" : ""}`}
                     >
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                          <h6 className="mb-1">
-                            <Link
-                              href={`/events/${event.id}`}
-                              className="text-decoration-none text-dark"
-                            >
-                              {event.name}
-                            </Link>
-                          </h6>
-                          <p className="text-muted small mb-0">
-                            {event.date} • {event.time} • {event.venue}
-                        </p>
-                      </div>
-                      <div className="text-end">
-                        <p className="mb-0 fw-semibold">${event.ticketPrice}</p>
-                        <p className="text-muted small mb-0">per ticket</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* My Past Events Section */}
-          {pastEvents && pastEvents.length > 0 && (
-            <div className="row">
-              <div className="col-12">
-                <h4 className="h5 fw-semibold mb-3">
-                  <img
-                    src={calendarIcon}
-                    alt=""
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      marginRight: "8px",
-                      verticalAlign: "text-bottom",
-                      opacity: 0.7
-                    }}
-                  />
-                  My Past Events
-                </h4>
-                
-                <div className="card">
-                  <div className="card-body p-0">
-                    {pastEvents.slice(0, pastEventsDisplayed).map((event, index) => (
-                      <div 
-                        key={event.id} 
-                        className={`p-3 ${index !== Math.min(pastEventsDisplayed, pastEvents.length) - 1 ? 'border-bottom' : ''}`}
-                        data-testid={`card-past-event-${event.id}`}
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="text-decoration-none"
+                        style={{ cursor: "pointer" }}
                       >
-                        <Link 
-                          href={`/events/${event.id}`}
-                          className="text-decoration-none"
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="row align-items-center">
-                            <div className="col">
-                              <div className="d-flex align-items-center">
-                                {event.imageUrl ? (
-                                  <img 
-                                    src={event.imageUrl} 
-                                    alt={event.name}
-                                    className="rounded me-3"
-                                    style={{ 
-                                      width: '48px', 
-                                      height: '48px', 
-                                      objectFit: 'cover' 
-                                    }}
-                                  />
-                                ) : (
-                                  <div 
-                                    className="d-flex align-items-center justify-content-center bg-light rounded me-3" 
-                                    style={{ width: '48px', height: '48px' }}
-                                  >
-                                    <Calendar size={24} className="text-muted" />
-                                  </div>
-                                )}
-                                <div>
-                                  <h6 className="mb-1 text-dark">{event.name}</h6>
-                                  <div className="text-muted small">
-                                    <span>{event.date}</span>
-                                    <span className="mx-2">•</span>
-                                    <span>{event.time}</span>
-                                    {event.venue && (
-                                      <>
-                                        <span className="mx-2">•</span>
-                                        <span>{event.venue}</span>
-                                      </>
-                                    )}
-                                  </div>
+                        <div className="row align-items-center">
+                          <div className="col">
+                            <div className="d-flex align-items-center">
+                              {event.imageUrl ? (
+                                <img
+                                  src={event.imageUrl}
+                                  alt={event.name}
+                                  className="rounded me-3"
+                                  style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    objectFit: "cover"
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  className="d-flex align-items-center justify-content-center bg-light rounded me-3"
+                                  style={{ width: "48px", height: "48px" }}
+                                >
+                                  <Calendar size={24} className="text-muted" />
+                                </div>
+                              )}
+                              <div>
+                                <h6 className="mb-1 text-dark">{event.name}</h6>
+                                <div className="text-muted small">
+                                  <span>{event.date}</span>
+                                  <span className="mx-2">•</span>
+                                  <span>{event.time}</span>
+                                  {event.venue && (
+                                    <>
+                                      <span className="mx-2">•</span>
+                                      <span>{event.venue}</span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
-                            <div className="col-auto">
-                              <div className="text-end">
-                                <div className="fw-semibold">${event.ticketPrice}</div>
-                                <div className="text-muted small">per ticket</div>
-                              </div>
+                          </div>
+                          <div className="col-auto">
+                            <div className="text-end">
+                              <div className="fw-semibold">${event.ticketPrice}</div>
+                              <div className="text-muted small">per ticket</div>
                             </div>
                           </div>
-                        </Link>
-                      </div>
-                    ))}
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {events && events.length > eventsDisplayed && (
+                <div className="text-center mt-4">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() =>
+                      setEventsDisplayed((prev) =>
+                        Math.min(prev + 10, events.length),
+                      )
+                    }
+                    data-testid="button-show-more-events"
+                  >
+                    Show {Math.min(10, events.length - eventsDisplayed)} More
+                  </button>
+                  <div className="text-muted small mt-2">
+                    Showing {eventsDisplayed} of {events.length} events
                   </div>
                 </div>
-                
-                {pastEvents.length > pastEventsDisplayed && (
-                  <div className="text-center mt-4">
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() =>
-                        setPastEventsDisplayed((prev) =>
-                          Math.min(prev + 10, pastEvents.length)
-                        )
-                      }
-                      data-testid="button-show-more-past-events"
-                    >
-                      Show {Math.min(10, pastEvents.length - pastEventsDisplayed)} More
-                    </button>
-                    <div className="text-muted small mt-2">
-                      Showing {pastEventsDisplayed} of {pastEvents.length} past events
-                    </div>
-                  </div>
-                )}
-                {pastEvents.length > 5 && pastEventsDisplayed >= pastEvents.length && (
+              )}
+              {events &&
+                events.length > 10 &&
+                eventsDisplayed >= events.length && (
                   <div className="text-center mt-3">
                     <button
                       className="btn btn-outline-secondary btn-sm"
-                      onClick={() => setPastEventsDisplayed(5)}
-                      data-testid="button-show-less-past-events"
+                      onClick={() => setEventsDisplayed(10)}
+                      data-testid="button-show-less-events"
                     >
                       Show Less
                     </button>
                   </div>
                 )}
-              </div>
-            </div>
+            </>
           )}
-        </>
-      );
-    })()}
+        </div>
+      </div>
     </div>
   );
 }
