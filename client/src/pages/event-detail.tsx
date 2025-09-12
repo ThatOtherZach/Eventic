@@ -1139,61 +1139,96 @@ export default function EventDetailPage() {
                 style={{ width: "18px", height: "18px", marginRight: "8px" }}
               />
               {(() => {
-                // Parse venue to extract city
+                // Parse venue to extract parts
                 const venueParts = event.venue
                   .split(",")
                   .map((part) => part.trim());
 
                 if (venueParts.length === 1) {
-                  // Single location name (e.g., "Vancouver")
+                  // Single location name (e.g., "Vancouver") - treat as city
                   const location = venueParts[0];
                   return (
                     <Link
-                      href={`/${encodeURIComponent(location.replace(/\s+/g, ""))}`}
+                      href={`/city/${encodeURIComponent(location)}`}
+                      className="text-primary"
+                      style={{
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                      }}
                     >
-                      <a
+                      {location}
+                    </Link>
+                  );
+                } else if (venueParts.length === 2) {
+                  // Two parts (e.g., "Vancouver, Canada") - city and country
+                  const city = venueParts[0];
+                  const country = venueParts[1];
+                  
+                  return (
+                    <span>
+                      <Link
+                        href={`/city/${encodeURIComponent(city)}`}
                         className="text-primary"
                         style={{
                           textDecoration: "underline",
                           cursor: "pointer",
                         }}
                       >
-                        {location}
-                      </a>
-                    </Link>
+                        {city}
+                      </Link>
+                      ,{" "}
+                      <Link
+                        href={`/country/${encodeURIComponent(country)}`}
+                        className="text-primary"
+                        style={{
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {country}
+                      </Link>
+                    </span>
                   );
-                } else if (venueParts.length >= 2) {
-                  // Multi-part venue (e.g., "address, city, country")
-                  const cityIndex =
-                    venueParts.length >= 3
-                      ? venueParts.length - 2
-                      : venueParts.length - 1;
-                  const city = venueParts[cityIndex];
-
+                } else if (venueParts.length >= 3) {
+                  // Three or more parts - venue, city, country
+                  const venue = venueParts.slice(0, -2).join(", ");
+                  const city = venueParts[venueParts.length - 2];
+                  const country = venueParts[venueParts.length - 1];
+                  
                   return (
                     <span>
-                      {venueParts.map((part, index) => (
-                        <span key={index}>
-                          {index === cityIndex ? (
-                            <Link
-                              href={`/${encodeURIComponent(city.replace(/\s+/g, ""))}`}
-                            >
-                              <a
-                                className="text-primary"
-                                style={{
-                                  textDecoration: "underline",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {part}
-                              </a>
-                            </Link>
-                          ) : (
-                            part
-                          )}
-                          {index < venueParts.length - 1 && ", "}
-                        </span>
-                      ))}
+                      <Link
+                        href={`/venue/${encodeURIComponent(venue)}`}
+                        className="text-primary"
+                        style={{
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {venue}
+                      </Link>
+                      ,{" "}
+                      <Link
+                        href={`/city/${encodeURIComponent(city)}`}
+                        className="text-primary"
+                        style={{
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {city}
+                      </Link>
+                      ,{" "}
+                      <Link
+                        href={`/country/${encodeURIComponent(country)}`}
+                        className="text-primary"
+                        style={{
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {country}
+                      </Link>
                     </span>
                   );
                 }

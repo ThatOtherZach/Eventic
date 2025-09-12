@@ -18,6 +18,7 @@ import { execFile } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { nftMintingService } from './services/nft-minting';
+import { isCountry } from '@shared/countries';
 
 // Rate limiter configuration for ticket purchases
 const purchaseRateLimiter = rateLimit({
@@ -697,7 +698,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Location-based event filtering
+  // Unified location-based event filtering with type support
+  app.get("/api/events/location", async (req: AuthenticatedRequest, res) => {
+    try {
+      const type = req.query.type as string; // 'venue', 'city', or 'country'
+      const value = (req.query.value as string || '').trim().toLowerCase();
+      
+      if (!type || !value) {
+        return res.status(400).json({ message: "Missing type or value parameter" });
+      }
+      
+      if (!['venue', 'city', 'country'].includes(type)) {
+        return res.status(400).json({ message: "Invalid type parameter. Must be venue, city, or country" });
+      }
+      
+      // Get all public events only - private events must never appear in location listings
+      let events = (await storage.getEvents()).filter(event => !event.isPrivate);
+      
+      // Only get featured events if this is a city (not a country or venue)
+      const isLocationACountry = type === 'country';
+      const featuredEvents = (type === 'city') ? await storage.getActiveFeaturedEvents() : [];
+      const featuredEventIds = new Set(featuredEvents.map(fe => fe.eventId));
+      
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
+      events = events.filter(event => isEventActive(event));
+      
+      // Filter by location type
+      const filteredEvents = events.filter(event => {
+        // Double-check that event is not private (safety check)
+        if (event.isPrivate) return false;
+        if (!event.venue) return false;
+        
+        const venueLower = event.venue.toLowerCase();
+        const venueParts = venueLower.split(',').map(part => part.trim());
+        
+        switch (type) {
+          case 'venue':
+            // For venue, match the entire venue string
+            return venueLower.includes(value);
+            
+          case 'city':
+            // For city, typically the second-to-last part after splitting by comma
+            // e.g., "123 Main St, London, United Kingdom" -> ["123 Main St", "London", "United Kingdom"]
+            if (venueParts.length >= 2) {
+              // Try to match the city part (usually second-to-last)
+              const cityPart = venueParts[venueParts.length - 2] || '';
+              return cityPart.includes(value) || value.includes(cityPart);
+            }
+            // Fallback to checking all parts
+            return venueParts.some(part => part.includes(value) || value.includes(part));
+            
+          case 'country':
+            // For country, typically the last part after splitting by comma
+            if (venueParts.length >= 1) {
+              const countryPart = venueParts[venueParts.length - 1] || '';
+              // Also check if it's a known country using the isCountry helper
+              return countryPart.includes(value) || value.includes(countryPart) || 
+                     (isCountry(value) && venueParts.some(part => part.includes(value)));
+            }
+            return false;
+            
+          default:
+            return false;
+        }
+      });
+      
+      // Sort events
+      filteredEvents.sort((a, b) => {
+        // For country and venue pages, just sort by date (no boosting)
+        if (type !== 'city') {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateA - dateB;
+        }
+        
+        // For city pages, apply boosting logic
+        const aIsBoosted = featuredEventIds.has(a.id);
+        const bIsBoosted = featuredEventIds.has(b.id);
+        
+        // If both are boosted, sort by position
+        if (aIsBoosted && bIsBoosted) {
+          const aFeatured = featuredEvents.find(fe => fe.eventId === a.id);
+          const bFeatured = featuredEvents.find(fe => fe.eventId === b.id);
+          return (aFeatured?.position || 999) - (bFeatured?.position || 999);
+        }
+        
+        // Boosted events come first (only for cities)
+        if (aIsBoosted && !bIsBoosted) return -1;
+        if (!aIsBoosted && bIsBoosted) return 1;
+        
+        // Both regular events, sort by date
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+      });
+      
+      // Add current price with surge pricing to each event
+      const eventsWithPricing = await Promise.all(filteredEvents.map(async (event) => {
+        const currentPrice = await storage.getCurrentPrice(event.id);
+        return {
+          ...event,
+          currentPrice
+        };
+      }));
+      
+      res.json(eventsWithPricing);
+    } catch (error) {
+      await logError(error, "GET /api/events/location", {
+        request: req,
+        metadata: { type: req.query.type, value: req.query.value }
+      });
+      res.status(500).json({ message: "Failed to fetch events by location" });
+    }
+  });
+
+  // Legacy location-based event filtering (kept for backward compatibility, will be removed)
   app.get("/api/events/location/:location", async (req: AuthenticatedRequest, res) => {
     try {
       const location = decodeURIComponent(req.params.location).trim().toLowerCase();
@@ -705,8 +820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all public events only - private events must never appear in location listings
       let events = (await storage.getEvents()).filter(event => !event.isPrivate);
       
-      // Import isCountry helper to check if location is a country
-      const { isCountry } = require("@shared/countries");
+      // Use the imported isCountry helper
       
       // Only get featured events if this is a city (not a country)
       const isLocationACountry = isCountry(location);

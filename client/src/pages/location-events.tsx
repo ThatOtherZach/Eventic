@@ -32,26 +32,40 @@ interface Event {
 }
 
 export function LocationEventsPage() {
-  const { location } = useParams<{ location: string }>();
-  const [, setLocation] = useLocation();
+  const params = useParams<{ value: string }>();
+  const [pathname, setLocation] = useLocation();
   
-  // Handle collapsed space format (e.g., "NewYork" -> "New York")
-  const processedLocation = (location || "")
+  // Determine the location type from the URL path
+  const getLocationType = () => {
+    if (pathname.startsWith('/venue/')) return 'venue';
+    if (pathname.startsWith('/city/')) return 'city';
+    if (pathname.startsWith('/country/')) return 'country';
+    return null;
+  };
+  
+  const locationType = getLocationType();
+  const locationValue = params.value || "";
+  
+  // Process the location value (handle special characters and formatting)
+  const processedValue = locationValue
     .trim()
     // Add spaces before capital letters that follow lowercase letters
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .toLowerCase();
+    .replace(/([a-z])([A-Z])/g, '$1 $2');
   
   const { data: events = [], isLoading, error } = useQuery<Event[]>({
-    queryKey: ["/api/events/location", processedLocation],
+    queryKey: ["/api/events/location", locationType, processedValue],
     queryFn: async () => {
-      const response = await fetch(`/api/events/location/${encodeURIComponent(processedLocation)}`);
+      const queryParams = new URLSearchParams({
+        type: locationType || '',
+        value: processedValue
+      });
+      const response = await fetch(`/api/events/location?${queryParams}`);
       if (!response.ok) {
         throw new Error("Failed to fetch events");
       }
       return response.json();
     },
-    enabled: !!processedLocation,
+    enabled: !!processedValue && !!locationType,
   });
 
   // Get current date for special effects
@@ -73,11 +87,11 @@ export function LocationEventsPage() {
   
   const currentMonthColor = monthColors[currentMonth];
 
-  if (!processedLocation) {
+  if (!processedValue || !locationType) {
     return (
       <div className="container mt-4">
         <div className="alert alert-warning">
-          No location specified. Please use a URL like /London or /NewYork
+          No location specified. Please use a URL like /venue/Madison%20Square%20Garden, /city/New%20York or /country/USA
         </div>
       </div>
     );
@@ -99,7 +113,7 @@ export function LocationEventsPage() {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger">
-          Failed to load events for {processedLocation}
+          Failed to load events for {processedValue}
         </div>
       </div>
     );
@@ -112,7 +126,12 @@ export function LocationEventsPage() {
           <div>
             <h2 className="h3 fw-bold text-dark d-flex align-items-center gap-2">
               <img src={globeIcon} alt="Globe" style={{ width: 28, height: 28 }} />
-              <span>{processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events</span>
+              <span>
+                {locationType === 'venue' && 'Events at '}
+                {locationType === 'city' && 'Events in '}
+                {locationType === 'country' && 'Events in '}
+                {processedValue.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+              </span>
             </h2>
             <p className="text-muted">
               {events.length} {events.length === 1 ? 'event' : 'events'} found
@@ -125,7 +144,7 @@ export function LocationEventsPage() {
         <div className="card">
           <div className="card-body text-center py-5">
             <img src={globeIcon} alt="Globe" className="mb-3" style={{ width: 48, height: 48, opacity: 0.5 }} />
-            <h5 className="text-muted">No {processedLocation.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Events found</h5>
+            <h5 className="text-muted">No events found for {processedValue.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</h5>
             <p className="text-muted">Check back later or explore events in other locations</p>
             <Link href="/">
               <a className="btn btn-primary mt-3" style={{ textDecoration: 'none' }} data-testid="button-go-home">

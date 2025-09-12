@@ -55,7 +55,9 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/hashtag/:hashtag">{(params) => <HashtagEventsPage />}</Route>
       <Route path="/type/:type">{(params) => <EventTypePage />}</Route>
-      <Route path="/:location">{(params) => <LocationEventsPage />}</Route>
+      <Route path="/venue/:value">{(params) => <LocationEventsPage />}</Route>
+      <Route path="/city/:value">{(params) => <LocationEventsPage />}</Route>
+      <Route path="/country/:value">{(params) => <LocationEventsPage />}</Route>
       <Route component={NotFound} />
     </Switch>
   );
