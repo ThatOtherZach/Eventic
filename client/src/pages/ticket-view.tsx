@@ -769,24 +769,17 @@ export default function TicketViewPage(): React.ReactElement {
                   </h6>
                   <p className="text-muted small mb-3">
                     Charge your ticket for better odds of special effects.
-                    <HelpCircle
-                      size={14}
-                      className="ms-1"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="top"
-                      data-bs-title="Charging improves the odds of receiving special effects (not golden tickets). Effects include seasonal animations, monthly themes, and other visual enhancements."
-                      style={{ cursor: "help" }}
-                    />
                   </p>
                   <div className="alert alert-info small mb-3">
                     <strong>How it works:</strong>
                     <ul className="mb-0 mt-2">
-                      <li>You have {userCredits} tickets, it costs 3 tickets to charge.</li>
                       <li>
-                        
+                        You have {userCredits} tickets, it costs 3 tickets to
+                        charge.
                       </li>
                       <li>
-                        Special effects odds will be improved for better chances.
+                        Special effects odds will be improved for better
+                        chances.
                       </li>
                       <li>
                         Includes seasonal effects, stickers, and other stuff.
@@ -1606,7 +1599,7 @@ export default function TicketViewPage(): React.ReactElement {
                         <div>
                           <h6 className="mb-1">Location Required</h6>
                           <p className="mb-0 small">
-                            Validation must occur within 690 meters of the event
+                            Validation must occur within 300 meters of the event
                             venue
                           </p>
                         </div>
