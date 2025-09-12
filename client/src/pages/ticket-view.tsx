@@ -781,7 +781,7 @@ export default function TicketViewPage(): React.ReactElement {
                   <div className="alert alert-info small mb-3">
                     <strong>How it works:</strong>
                     <ul className="mb-0 mt-2">
-                      <li>You have {userCredits} tickets, it costs 3 tickets to charge.<li>
+                      <li>You have {userCredits} tickets, it costs 3 tickets to charge.</li>
                       <li>
                         
                       </li>
