@@ -51,6 +51,7 @@ export default function AccountPage() {
   // Set page SEO
   useSEO(SEO_CONFIG.profile);
   const [ticketsDisplayed, setTicketsDisplayed] = useState(10);
+  const [eventsDisplayed, setEventsDisplayed] = useState(10);
   const [secretCode, setSecretCode] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState(12);
   const [paymentMethod, setPaymentMethod] = useState("Stripe");
@@ -1985,25 +1986,26 @@ export default function AccountPage() {
               </div>
             </div>
           ) : (
-            <div className="card">
-              <div className="card-body p-0">
-                {events?.map((event, index) => (
-                  <div
-                    key={event.id}
-                    className={`p-3 ${index !== events.length - 1 ? "border-bottom" : ""}`}
-                  >
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <h6 className="mb-1">
-                          <Link
-                            href={`/events/${event.id}`}
-                            className="text-decoration-none text-dark"
-                          >
-                            {event.name}
-                          </Link>
-                        </h6>
-                        <p className="text-muted small mb-0">
-                          {event.date} • {event.time} • {event.venue}
+            <>
+              <div className="card">
+                <div className="card-body p-0">
+                  {events?.slice(0, eventsDisplayed).map((event, index) => (
+                    <div
+                      key={event.id}
+                      className={`p-3 ${index !== Math.min(eventsDisplayed, events.length) - 1 ? "border-bottom" : ""}`}
+                    >
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="mb-1">
+                            <Link
+                              href={`/events/${event.id}`}
+                              className="text-decoration-none text-dark"
+                            >
+                              {event.name}
+                            </Link>
+                          </h6>
+                          <p className="text-muted small mb-0">
+                            {event.date} • {event.time} • {event.venue}
                         </p>
                       </div>
                       <div className="text-end">
@@ -2015,6 +2017,38 @@ export default function AccountPage() {
                 ))}
               </div>
             </div>
+            {events && events.length > eventsDisplayed && (
+              <div className="text-center mt-4">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() =>
+                    setEventsDisplayed((prev) =>
+                      Math.min(prev + 10, events.length),
+                    )
+                  }
+                  data-testid="button-show-more-events"
+                >
+                  Show {Math.min(10, events.length - eventsDisplayed)} More
+                </button>
+                <div className="text-muted small mt-2">
+                  Showing {eventsDisplayed} of {events.length} events
+                </div>
+              </div>
+            )}
+            {events &&
+              events.length > 10 &&
+              eventsDisplayed >= events.length && (
+                <div className="text-center mt-3">
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => setEventsDisplayed(10)}
+                    data-testid="button-show-less-events"
+                  >
+                    Show Less
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
