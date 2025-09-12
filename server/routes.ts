@@ -121,7 +121,52 @@ function getTimeInTimezone(date: Date, timezone: string): Date {
   return new Date(localDateStr);
 }
 
-
+// Helper function to check if an event is active (upcoming or ongoing with 1-hour buffer)
+function isEventActive(event: any): boolean {
+  const now = new Date();
+  const timezone = event.timezone || 'America/New_York';
+  
+  try {
+    // Get event start time
+    let startDate: Date;
+    if (event.startAtUtc) {
+      startDate = new Date(event.startAtUtc);
+    } else if (event.date && event.time) {
+      startDate = convertEventTimeToUtc(event.date, event.time, timezone);
+    } else if (event.date) {
+      // If only date is provided, assume it starts at midnight
+      startDate = convertEventTimeToUtc(event.date, '00:00', timezone);
+    } else {
+      // If no date information, include the event
+      return true;
+    }
+    
+    // Get event end time with 1-hour buffer
+    let endDateWithBuffer: Date;
+    
+    if (event.endAtUtc) {
+      // Use pre-computed UTC end time if available
+      endDateWithBuffer = new Date(event.endAtUtc);
+      endDateWithBuffer.setTime(endDateWithBuffer.getTime() + 60 * 60 * 1000); // Add 1-hour buffer
+    } else if (event.endDate && event.endTime) {
+      // Event has explicit end date/time
+      endDateWithBuffer = convertEventTimeToUtc(event.endDate, event.endTime, timezone);
+      endDateWithBuffer.setTime(endDateWithBuffer.getTime() + 60 * 60 * 1000); // Add 1-hour buffer
+    } else {
+      // Single-day event: assume 3 hours duration + 1 hour buffer = 4 hours total from start
+      endDateWithBuffer = new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
+    }
+    
+    // Event is active if:
+    // - It hasn't ended yet (including buffer), OR
+    // - It's a future event
+    return now <= endDateWithBuffer;
+    
+  } catch (error) {
+    // If there's any error parsing dates, include the event to be safe
+    return true;
+  }
+}
 
 // Helper function to check if a ticket is within its valid time window
 function isTicketWithinValidTime(event: any): { valid: boolean; message?: string } {
@@ -668,30 +713,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const featuredEvents = !isLocationACountry ? await storage.getActiveFeaturedEvents() : [];
       const featuredEventIds = new Set(featuredEvents.map(fe => fe.eventId));
       
-      // Filter out past events (only if more than 24 hours past)
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      events = events.filter(event => {
-        if (event.endDate) {
-          try {
-            const endDate = new Date(event.endDate);
-            if (!isNaN(endDate.getTime())) {
-              endDate.setHours(23, 59, 59, 999);
-              return endDate >= twentyFourHoursAgo;
-            }
-          } catch {}
-        } else if (event.date && event.time) {
-          try {
-            const [year, month, day] = event.date.split('-').map(Number);
-            const [hours, minutes] = event.time.split(':').map(Number);
-            const eventDateTime = new Date(year, month - 1, day, hours, minutes);
-            
-            // Include events that ended less than 24 hours ago
-            return eventDateTime >= twentyFourHoursAgo;
-          } catch {}
-        }
-        return true;
-      });
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
+      events = events.filter(event => isEventActive(event));
       
       // Filter by location (city or country) and ensure no private events slip through
       const filteredEvents = events.filter(event => {
@@ -771,30 +794,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const featuredEvents = await storage.getActiveFeaturedEvents();
       const featuredEventIds = new Set(featuredEvents.map(fe => fe.eventId));
       
-      // Filter out past events (only if more than 24 hours past)
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      events = events.filter(event => {
-        if (event.endDate) {
-          try {
-            const endDate = new Date(event.endDate);
-            if (!isNaN(endDate.getTime())) {
-              endDate.setHours(23, 59, 59, 999);
-              return endDate >= twentyFourHoursAgo;
-            }
-          } catch {}
-        } else if (event.date && event.time) {
-          try {
-            const [year, month, day] = event.date.split('-').map(Number);
-            const [hours, minutes] = event.time.split(':').map(Number);
-            const eventDateTime = new Date(year, month - 1, day, hours, minutes);
-            
-            // Include events that ended less than 24 hours ago
-            return eventDateTime >= twentyFourHoursAgo;
-          } catch {}
-        }
-        return true;
-      });
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
+      events = events.filter(event => isEventActive(event));
       
       // Filter by hashtag
       const filteredEvents = events.filter(event => {
@@ -1354,23 +1355,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
 
       
-      // Filter out past events (only if more than 24 hours past) and sort by date (soonest first)
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const activeEvents = publicEvents.filter(event => {
-        try {
-          // Parse date and time separately to handle properly
-          const [year, month, day] = event.date.split('-').map(Number);
-          const [hours, minutes] = event.time.split(':').map(Number);
-          const eventDateTime = new Date(year, month - 1, day, hours, minutes);
-          
-          // Include events that haven't started yet OR ended less than 24 hours ago
-          return eventDateTime > twentyFourHoursAgo;
-        } catch (error) {
-          // If date parsing fails, include the event to be safe
-          return true;
-        }
-      });
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
+      const activeEvents = publicEvents.filter(event => isEventActive(event));
       
       // Sort events: boosted events first (sorted by position), then by date/time with 24-hour prioritization
       const sortedEvents = activeEvents.sort((a, b) => {
@@ -5053,40 +5039,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let featuredEvents = await storage.getFeaturedEventsWithDetails();
       
-      // Filter out past events
-      const now = new Date();
-      featuredEvents = featuredEvents.filter(featuredEvent => {
-        const event = featuredEvent.event;
-        
-        // Check if event has an end date
-        if (event.endDate) {
-          try {
-            const endDate = new Date(event.endDate);
-            if (!isNaN(endDate.getTime())) {
-              // Set end date to end of day for comparison
-              endDate.setHours(23, 59, 59, 999);
-              // Keep event if it hasn't ended yet
-              return now <= endDate;
-            }
-          } catch {
-            // If date parsing fails, keep the event
-          }
-        } else if (event.date) {
-          // No end date, check if event hasn't started yet (for single-day events)
-          try {
-            const startDate = new Date(event.date);
-            if (!isNaN(startDate.getTime())) {
-              // Keep event if it hasn't started yet
-              return now <= startDate;
-            }
-          } catch {
-            // If date parsing fails, keep the event
-          }
-        }
-        
-        // If no valid dates, keep the event
-        return true;
-      });
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
+      featuredEvents = featuredEvents.filter(featuredEvent => isEventActive(featuredEvent.event));
       
       // Add isAdminCreated field and current price to each event
       const featuredEventsWithAdmin = await Promise.all(featuredEvents.map(async (featuredEvent) => {
@@ -5129,58 +5083,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all regular events for random selection (exclude private events)
       let allEvents = (await storage.getEvents()).filter(event => !event.isPrivate);
       
-      // Filter out past events from both featured and regular events
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      
-      const isEventNotPast = (event: any) => {
-        // Check if event has an end date
-        if (event.endDate) {
-          try {
-            const endDate = new Date(event.endDate);
-            if (!isNaN(endDate.getTime())) {
-              // Set end date to end of day for comparison
-              endDate.setHours(23, 59, 59, 999);
-              // Keep event if it ended less than 24 hours ago
-              return endDate >= twentyFourHoursAgo;
-            }
-          } catch {
-            // If date parsing fails, keep the event
-          }
-        } else if (event.date && event.time) {
-          // No end date, single day event - check if it started less than 24 hours ago
-          try {
-            const eventDateTime = new Date(`${event.date}T${event.time}:00`);
-            if (!isNaN(eventDateTime.getTime())) {
-              // Add 24 hours to the event start time for single-day events
-              const eventEndTime = new Date(eventDateTime.getTime() + 24 * 60 * 60 * 1000);
-              return eventEndTime >= now;
-            }
-          } catch {
-            // If date parsing fails, keep the event
-          }
-        } else if (event.date) {
-          // Just date, no time - assume end of day
-          try {
-            const eventDate = new Date(event.date);
-            if (!isNaN(eventDate.getTime())) {
-              eventDate.setHours(23, 59, 59, 999);
-              // Add 24 hours buffer for single-day events
-              const bufferTime = new Date(eventDate.getTime() + 24 * 60 * 60 * 1000);
-              return bufferTime >= now;
-            }
-          } catch {
-            // If date parsing fails, keep the event
-          }
-        }
-        
-        // If no valid dates, keep the event
-        return true;
-      };
-      
-      // Apply past event filtering
-      featuredEvents = featuredEvents.filter(fe => isEventNotPast(fe.event));
-      allEvents = allEvents.filter(isEventNotPast);
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
+      featuredEvents = featuredEvents.filter(fe => isEventActive(fe.event));
+      allEvents = allEvents.filter(event => isEventActive(event));
       
       // Get total available events (boosted + regular)
       const featuredEventIds = new Set(featuredEvents.map(fe => fe.event.id));

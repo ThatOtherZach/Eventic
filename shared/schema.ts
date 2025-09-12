@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb, unique, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -178,7 +178,10 @@ export const events = pgTable("events", {
   startAtUtc: timestamp("start_at_utc"), // Event start time in UTC
   endAtUtc: timestamp("end_at_utc"), // Event end time in UTC (if endDate/endTime provided)
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  // Index for filtering active events efficiently
+  activeEventsIdx: index("active_events_idx").on(table.startAtUtc, table.endAtUtc, table.isEnabled, table.isPrivate),
+}));
 
 export const cryptoPaymentIntents = pgTable("crypto_payment_intents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
