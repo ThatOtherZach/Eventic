@@ -206,11 +206,12 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         )}
       </div>
 
-      {/* Event Feature Badge Bar at Bottom - Format: [Mission][Validated]---colors---[#] */}
+      {/* Event Feature Badge Bar at Bottom - Format: [Mission][Limited][Validated]---colors---[#] */}
       {(() => {
         // Check what badges we need to show
         const hasMission = (event as any).isAdminCreated;
         const isValidated = showBadges && Boolean(ticket.isValidated);
+        const isLimited = showBadges && Boolean((event as any).oneTicketPerUser);
         const isPass = showBadges && event.reentryType && event.reentryType !== 'No Reentry (Single Use)';
         const passUses = isPass ? (event.reentryType === 'No Limit' ? '∞' : String(ticket.useCount || 0)) : null;
         
@@ -227,6 +228,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         if (event.stickerUrl) colorSegments.push('#EC4899'); // Pink
         if (event.recurringType) colorSegments.push('#059669'); // Green
         if (event.endDate && event.endDate !== event.date) colorSegments.push('#6B7280'); // Gray for multi-day
+        if ((event as any).oneTicketPerUser) colorSegments.push('#14B8A6'); // Teal for Limited
         
         // Add special ticket status to colors
         if (showBadges) {
@@ -235,7 +237,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
         }
 
         // If nothing to show, don't show the bar
-        if (!hasMission && !isValidated && colorSegments.length === 0 && !passUses) return null;
+        if (!hasMission && !isLimited && !isValidated && colorSegments.length === 0 && !passUses) return null;
 
         return (
           <div 
@@ -266,7 +268,27 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
               </div>
             )}
             
-            {/* Validated Badge - Second */}
+            {/* Limited Badge - Second */}
+            {isLimited && (
+              <div
+                style={{
+                  backgroundColor: '#14B8A6',
+                  color: '#fff',
+                  padding: '0 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+                data-testid="badge-limited"
+              >
+                LIMITED
+              </div>
+            )}
+            
+            {/* Validated Badge - Third */}
             {isValidated && (
               <div
                 style={{
@@ -301,7 +323,7 @@ export function TicketCard({ ticket, event, showQR = true, dynamicQrUrl, isValid
             )}
             
             {/* If no color segments but we need space filler, add empty space */}
-            {colorSegments.length === 0 && (hasMission || isValidated) && passUses && (
+            {colorSegments.length === 0 && (hasMission || isLimited || isValidated) && passUses && (
               <div className="flex-grow-1" />
             )}
             
