@@ -27,7 +27,10 @@ interface FeatureGridProps {
     recurringType?: string | null;
     p2pValidation?: boolean;
     maxTickets?: number | null;
+    oneTicketPerUser?: boolean;
+    treasureHunt?: boolean;
     endDate?: string | null;
+    date?: string;
     reentryType?: string | null;
     maxUses?: number | null;
   };
@@ -135,12 +138,12 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({ event }) => {
       description: `${event.recurringType} recurring event`
     },
     {
-      enabled: !!event.maxTickets,
+      enabled: !!event.oneTicketPerUser,
       color: '#14B8A6',
       label: 'Limited',
       href: '/type/limited',
       icon: clockIcon,
-      description: `Limited to ${event.maxTickets} tickets`
+      description: 'One ticket per user'
     },
     {
       enabled: !!event.endDate && event.endDate !== event.date,

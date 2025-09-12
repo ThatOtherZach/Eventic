@@ -1385,6 +1385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const [hoursB, minutesB] = b.time.split(':').map(Number);
           const dateTimeB = new Date(yearB, monthB - 1, dayB, hoursB, minutesB);
           
+          const now = new Date();
           const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
           
           // Check if events are within next 24 hours

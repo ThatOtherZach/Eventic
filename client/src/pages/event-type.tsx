@@ -35,6 +35,7 @@ interface Event {
   maxTickets?: number | null;
   rollingTimezone?: boolean | null;
   treasureHunt?: boolean | null;
+  oneTicketPerUser?: boolean | null;
 }
 
 // Map URL parameters to display names and field checks
@@ -122,7 +123,7 @@ const eventTypeConfig: Record<string, {
     label: 'Limited Tickets Events', 
     color: '#14B8A6',
     imageIcon: '/limited-icon.png',
-    checkField: (e) => !!e.maxTickets 
+    checkField: (e) => !!e.oneTicketPerUser 
   },
   sync: { 
     label: "Global Sync'd Events", 

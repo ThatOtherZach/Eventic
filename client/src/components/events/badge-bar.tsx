@@ -47,6 +47,7 @@ const BadgeBar: React.FC<BadgeBarProps> = ({ event, ticket }) => {
   if (event.enableVoting) colorSegments.push('#EAB308'); // Yellow
   if (event.recurringType) colorSegments.push('#059669'); // Green
   if (event.endDate && event.endDate !== event.date) colorSegments.push('#6B7280'); // Gray for multi-day
+  if (event.oneTicketPerUser) colorSegments.push('#14B8A6'); // Teal for Limited
 
   // If nothing to show, return null
   if (!hasMission && !isValidated && !shouldShowPassUses && colorSegments.length === 0) {

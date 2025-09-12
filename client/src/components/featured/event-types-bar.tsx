@@ -35,6 +35,7 @@ const badgeTypes = [
   { key: 'enableVoting', color: '#EAB308', label: 'Voting Enabled', searchParam: 'voting' },
   { key: 'recurringType', color: '#059669', label: 'Recurring', searchParam: 'recurring' },
   { key: 'endDate', color: '#6B7280', label: 'Multi-day', searchParam: 'multiday' },
+  { key: 'oneTicketPerUser', color: '#14B8A6', label: 'Limited Sales', searchParam: 'limited' },
 ];
 
 export function EventTypesBar({ events }: EventTypesBarProps) {
