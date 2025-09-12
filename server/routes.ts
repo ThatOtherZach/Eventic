@@ -13,6 +13,7 @@ import { extractAuthUser, requireAuth, extractUserId, extractUserEmail, Authenti
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
+import { generateUniqueHuntCode } from "./utils/hunt-code-generator";
 import { getTicketCaptureService, getFFmpegPath } from "./ticketCapture";
 import { execFile } from 'child_process';
 import path from 'path';
@@ -1781,8 +1782,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Hunt secret code if Treasure Hunt is enabled
       if (createData.treasureHunt && createData.huntCode && createData.latitude && createData.longitude) {
         try {
+          // Check for hunt code collision and regenerate if needed
+          let uniqueHuntCode = createData.huntCode.toUpperCase();
+          let attempts = 0;
+          const maxAttempts = 100;
+          
+          // Check if the provided hunt code already exists
+          while (await storage.huntCodeExists(uniqueHuntCode) && attempts < maxAttempts) {
+            // Generate a new hunt code server-side
+            uniqueHuntCode = await generateUniqueHuntCode(storage, 1); // Only need 1 attempt per iteration
+            attempts++;
+            
+            if (attempts > 10) {
+              await logWarning(
+                'Multiple hunt code collisions detected',
+                'POST /api/events',
+                {
+                  request: req as AuthenticatedRequest,
+                  metadata: { 
+                    originalCode: createData.huntCode,
+                    attempts,
+                    finalCode: uniqueHuntCode
+                  }
+                }
+              );
+            }
+          }
+          
+          // If we exhausted all attempts, add a timestamp suffix
+          if (attempts >= maxAttempts) {
+            uniqueHuntCode = `${uniqueHuntCode}_${Date.now()}`;
+            await logError(
+              new Error('Max hunt code collision attempts reached'),
+              'POST /api/events',
+              {
+                request: req as AuthenticatedRequest,
+                metadata: { 
+                  originalCode: createData.huntCode,
+                  attempts: maxAttempts,
+                  finalCode: uniqueHuntCode
+                }
+              }
+            );
+          }
+          
           await storage.createSecretCode({
-            code: createData.huntCode.toUpperCase(),
+            code: uniqueHuntCode,
             ticketAmount: 2, // Default ticket reward for Hunt codes
             maxUses: null, // Unlimited uses
             createdBy: userId,
@@ -1791,6 +1836,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             huntLatitude: createData.latitude,
             huntLongitude: createData.longitude,
           });
+          
+          // Log if we had to change the hunt code
+          if (uniqueHuntCode !== createData.huntCode.toUpperCase()) {
+            await logInfo(
+              'Hunt code changed due to collision',
+              'POST /api/events',
+              {
+                request: req as AuthenticatedRequest,
+                metadata: { 
+                  originalCode: createData.huntCode,
+                  finalCode: uniqueHuntCode,
+                  eventId: event.id
+                }
+              }
+            );
+          }
         } catch (error) {
           console.error('Failed to create Hunt secret code:', error);
           // Don't fail the event creation if secret code creation fails

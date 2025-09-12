@@ -41,6 +41,7 @@ export interface IStorage {
   deleteEvent(id: string): Promise<boolean>;
   archiveEvent(eventId: string): Promise<boolean>;
   getEventByHuntCode(huntCode: string): Promise<Event | undefined>;
+  huntCodeExists(huntCode: string): Promise<boolean>;
   
   // Tickets
   getTickets(): Promise<Ticket[]>;
@@ -940,6 +941,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(events.id, secretCode.eventId));
     
     return event || undefined;
+  }
+  
+  async huntCodeExists(huntCode: string): Promise<boolean> {
+    const [result] = await db.select({ count: count() })
+      .from(secretCodes)
+      .where(and(
+        eq(secretCodes.code, huntCode.toUpperCase()),
+        eq(secretCodes.codeType, "hunt")
+      ))
+      .limit(1);
+    return result.count > 0;
   }
 
   async getEventsByUserId(userId: string): Promise<Event[]> {
