@@ -314,21 +314,20 @@ export default function AccountPage() {
   });
 
   // Admin claim queries and mutations
-  const { data: userRoles } = useQuery<any[]>({
-    queryKey: [`/api/users/${user?.id}/roles`],
+  const { data: authPermissions } = useQuery<{
+    roles: Array<{ name: string; displayName: string }>;
+    permissions: string[];
+    isAdmin: boolean;
+  }>({
+    queryKey: ['/api/auth/permissions'],
     queryFn: async () => {
-      const response = await apiRequest(
-        "GET",
-        `/api/users/${user?.id}/roles`,
-      );
+      const response = await apiRequest("GET", "/api/auth/permissions");
       return response.json();
     },
-    enabled: !!user?.id,
+    enabled: !!user,
   });
 
-  const isAdmin = userRoles?.some(role => 
-    role.name === 'super_admin' || role.name === 'event_moderator'
-  );
+  const isAdmin = authPermissions?.isAdmin || false;
 
   const { data: adminClaimStatus } = useQuery<{
     canClaim: boolean;
