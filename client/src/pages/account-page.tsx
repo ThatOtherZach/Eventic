@@ -1788,67 +1788,43 @@ export default function AccountPage() {
       {(() => {
         const now = new Date();
         
-        const upcomingTickets = tickets?.filter(ticket => {
-          const event = ticket.event;
-          
-          // Use UTC timestamps for accurate comparison
+        // Helper function to determine if an event is past
+        const isEventPast = (event: any) => {
           if (event.startAtUtc) {
-            const startTime = new Date(event.startAtUtc);
-            const endTime = event.endAtUtc ? new Date(event.endAtUtc) : null;
-            
-            // Event is ongoing if it has started and hasn't ended yet
-            const isOngoing = now >= startTime && (!endTime || now <= endTime);
-            
-            // Event is upcoming if it hasn't started yet
-            const isUpcoming = now < startTime;
-            
-            // Include both ongoing and upcoming events
-            return isOngoing || isUpcoming;
-          } else {
-            // Fallback to display date if UTC timestamps not available
-            const eventDate = new Date(event.date);
-            eventDate.setHours(0, 0, 0, 0);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            return eventDate >= today;
-          }
-        }).sort((a, b) => {
-          // Sort by start time (use UTC if available, fallback to display date)
-          const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
-          const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
-          return aTime - bTime;
-        });
-        
-        const pastTickets = tickets?.filter(ticket => {
-          const event = ticket.event;
-          
-          // Use UTC timestamps for accurate comparison
-          if (event.startAtUtc) {
-            const endTime = event.endAtUtc ? new Date(event.endAtUtc) : new Date(event.startAtUtc);
-            
-            // Event is past if it has ended (or if single-day event, if it has started and we assume it's over)
-            // For events without endAtUtc, we consider them past if they started more than 24 hours ago
-            if (!event.endAtUtc) {
+            if (event.endAtUtc) {
+              // Has explicit end time - past if end time has passed
+              return now > new Date(event.endAtUtc);
+            } else {
+              // No end time - consider it a single-day event
+              // Past if start time + 24 hours has passed
               const startTime = new Date(event.startAtUtc);
               const twentyFourHoursLater = new Date(startTime.getTime() + 24 * 60 * 60 * 1000);
               return now > twentyFourHoursLater;
             }
-            
-            return now > endTime;
           } else {
             // Fallback to display date if UTC timestamps not available
             const eventDate = new Date(event.date);
-            eventDate.setHours(0, 0, 0, 0);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            return eventDate < today;
+            eventDate.setHours(23, 59, 59, 999); // End of the event day
+            return now > eventDate;
           }
-        }).sort((a, b) => {
-          // Sort by start time descending (most recent first)
-          const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
-          const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
-          return bTime - aTime;
-        });
+        };
+        
+        // Split tickets into two mutually exclusive groups
+        const upcomingTickets = tickets?.filter(ticket => !isEventPast(ticket.event))
+          .sort((a, b) => {
+            // Sort by start time (use UTC if available, fallback to display date)
+            const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
+            const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
+            return aTime - bTime;
+          });
+        
+        const pastTickets = tickets?.filter(ticket => isEventPast(ticket.event))
+          .sort((a, b) => {
+            // Sort by start time descending (most recent first)
+            const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
+            const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
+            return bTime - aTime;
+          });
         
         return (
           <>
