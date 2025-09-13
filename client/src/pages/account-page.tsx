@@ -28,6 +28,7 @@ import { useNotifications } from "@/hooks/use-notifications";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { PastEvents } from "@/components/archive/past-events";
 import { HTMLViewer } from "@/components/nft/html-viewer";
+import { GPSPermissionDialog } from "@/components/gps-permission-dialog";
 import type {
   Ticket as TicketType,
   Event,
@@ -59,6 +60,8 @@ export default function AccountPage() {
   const [secretCodeExpanded, setSecretCodeExpanded] = useState(false);
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [showGPSDialog, setShowGPSDialog] = useState(false);
+  const [pendingHuntCode, setPendingHuntCode] = useState<string | null>(null);
   const [multiplyAndSave, setMultiplyAndSave] = useState(false);
   const [demandLevel, setDemandLevel] = useState<
     "low" | "medium" | "high" | "very-high"
@@ -455,8 +458,10 @@ export default function AccountPage() {
   };
 
   // Handle secret code redemption
-  const handleRedeemCode = async () => {
-    if (!secretCode.trim()) {
+  const handleRedeemCode = async (latitude?: number, longitude?: number) => {
+    const codeToRedeem = pendingHuntCode || secretCode.trim();
+    
+    if (!codeToRedeem) {
       toast({
         title: "Error",
         description: "Please enter a code",
@@ -467,19 +472,18 @@ export default function AccountPage() {
 
     setIsRedeeming(true);
     try {
-      let requestBody: any = { code: secretCode.trim() };
+      let requestBody: any = { code: codeToRedeem };
 
-      // Check if this looks like a Hunt code and get GPS if so
-      if (isLikelyHuntCode(secretCode.trim())) {
-        try {
-          const location = await getCurrentLocation();
-          requestBody.latitude = location.latitude;
-          requestBody.longitude = location.longitude;
-        } catch (locationError) {
-          // If GPS fails for a Hunt code, still try redemption
-          // The server will provide a proper error message
-          console.warn("Could not get location for Hunt code:", locationError);
-        }
+      // If GPS coordinates were provided, include them
+      if (latitude !== undefined && longitude !== undefined) {
+        requestBody.latitude = latitude;
+        requestBody.longitude = longitude;
+      } else if (isLikelyHuntCode(codeToRedeem) && !pendingHuntCode) {
+        // For Hunt codes entered directly, show GPS dialog first
+        setPendingHuntCode(codeToRedeem);
+        setShowGPSDialog(true);
+        setIsRedeeming(false);
+        return;
       }
 
       const response = await apiRequest(
@@ -491,7 +495,7 @@ export default function AccountPage() {
 
       if (response.ok) {
         // Don't show toast for URM1550N code
-        if (secretCode.trim() !== "URM1550N") {
+        if (codeToRedeem !== "URM1550N") {
           toast({
             title: "Success!",
             description:
@@ -501,13 +505,22 @@ export default function AccountPage() {
           });
         }
         setSecretCode("");
+        setPendingHuntCode(null);
         queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       } else {
-        toast({
-          title: "Failed",
-          description: data.message || "Invalid code",
-          variant: "destructive",
-        });
+        // Check if it's a location error for Hunt codes
+        if (data.message?.includes("Hunt codes require your location")) {
+          // Show GPS dialog
+          setPendingHuntCode(codeToRedeem);
+          setShowGPSDialog(true);
+        } else {
+          toast({
+            title: "Failed",
+            description: data.message || "Invalid code",
+            variant: "destructive",
+          });
+          setPendingHuntCode(null);
+        }
       }
     } catch (error) {
       toast({
@@ -515,9 +528,27 @@ export default function AccountPage() {
         description: "Failed to redeem code",
         variant: "destructive",
       });
+      setPendingHuntCode(null);
     } finally {
       setIsRedeeming(false);
     }
+  };
+
+  // Handle GPS permission granted
+  const handleGPSGranted = async (latitude: number, longitude: number) => {
+    if (pendingHuntCode) {
+      await handleRedeemCode(latitude, longitude);
+    }
+  };
+
+  // Handle GPS permission denied
+  const handleGPSDenied = () => {
+    setPendingHuntCode(null);
+    toast({
+      title: "Location Required",
+      description: "Hunt codes require location verification to claim rewards",
+      variant: "destructive",
+    });
   };
 
   // Handle ticket purchase
@@ -937,7 +968,7 @@ export default function AccountPage() {
                       />
                       <button
                         className="btn btn-outline-primary"
-                        onClick={handleRedeemCode}
+                        onClick={() => handleRedeemCode()}
                         disabled={isRedeeming || !secretCode.trim()}
                       >
                         {isRedeeming ? "Hmmmm..." : "Execute"}
@@ -2240,6 +2271,19 @@ export default function AccountPage() {
           )}
         </div>
       </div>
+      {/* GPS Permission Dialog for Hunt Codes */}
+      <GPSPermissionDialog
+        open={showGPSDialog}
+        onClose={() => {
+          setShowGPSDialog(false);
+          setPendingHuntCode(null);
+        }}
+        onLocationGranted={handleGPSGranted}
+        onLocationDenied={handleGPSDenied}
+        huntCode={pendingHuntCode || undefined}
+        title="Hunt Code Detected!"
+        description="To claim your reward, we need to verify you're at the event location."
+      />
     </div>
   );
 }
