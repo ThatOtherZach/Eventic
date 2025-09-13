@@ -1829,7 +1829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.createSecretCode({
             code: uniqueHuntCode,
             ticketAmount: 2, // Default ticket reward for Hunt codes
-            maxUses: null, // Unlimited uses
+            maxUses: createData.maxTickets || 100, // Use event capacity as max uses
             createdBy: userId,
             codeType: 'hunt',
             eventId: event.id,
