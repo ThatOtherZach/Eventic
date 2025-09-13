@@ -166,6 +166,8 @@ export const events = pgTable("events", {
   timezone: text("timezone").default("America/New_York"), // Timezone for the event (IANA timezone format)
   // Hashtags extracted from description
   hashtags: text("hashtags").array().default(sql`ARRAY[]::text[]`), // Array of hashtags found in description
+  // Bonus content for treasure hunt events
+  bonusContent: text("bonus_content"), // Special content revealed after Hunt Code validation (max 1690 chars)
   // Payment processing configuration
   paymentProcessing: text("payment_processing").default("None"), // None, Ethereum, Bitcoin, USDC, Dogecoin
   walletAddress: text("wallet_address"), // Event owner's wallet address for receiving crypto payments
@@ -511,6 +513,7 @@ export const registryRecords = pgTable("registry_records", {
   eventHashtags: text("event_hashtags").array(), // Hashtags from description
   eventTreasureHunt: boolean("event_treasure_hunt").default(false), // Hunt feature enabled
   eventHuntCode: text("event_hunt_code"), // Unique Hunt code (e.g., "BlueTiger")
+  eventBonusContent: text("event_bonus_content"), // Bonus content from treasure hunt
   
   // User data preservation
   creatorUsername: text("creator_username").notNull(),

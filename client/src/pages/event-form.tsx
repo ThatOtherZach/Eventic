@@ -156,6 +156,7 @@ export default function EventForm() {
       stickerUrl: "",
       stickerOdds: 25,
       allowMinting: false,
+      bonusContent: undefined,
       isPrivate: false,
       oneTicketPerUser: false,
       surgePricing: false,
@@ -2816,6 +2817,41 @@ export default function EventForm() {
                             />
                           )}
 
+                          {/* Bonus Content for Treasure Hunt */}
+                          {form.watch("treasureHunt") && !isEditMode && (
+                            <FormField
+                              control={form.control}
+                              name="bonusContent"
+                              render={({ field }) => (
+                                <FormItem className="mt-3 ms-4">
+                                  <FormLabel>
+                                    🎁 Bonus Content
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Textarea
+                                      {...field}
+                                      className="form-control"
+                                      rows={5}
+                                      maxLength={1690}
+                                      placeholder="Enter special content that will be revealed to users after they validate your Hunt Code..."
+                                      value={field.value || ""}
+                                      onChange={(e) => field.onChange(e.target.value)}
+                                      data-testid="textarea-bonuscontent"
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Special content revealed to users after they validate your Hunt Code
+                                    <br />
+                                    <small className="text-muted">
+                                      {countCharacters(field.value || "")}/1690 characters
+                                    </small>
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+
                           {form.watch("geofence") &&
                             isEditMode &&
                             event?.treasureHunt && (
@@ -2852,6 +2888,14 @@ export default function EventForm() {
                                     </div>
                                   )}
                                 </div>
+                                {event?.bonusContent && (
+                                  <div className="mt-3">
+                                    <label className="form-label">🎁 Bonus Content</label>
+                                    <div className="p-3 bg-light rounded">
+                                      <small className="text-muted">{event.bonusContent}</small>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                         </div>

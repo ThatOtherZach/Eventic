@@ -127,6 +127,7 @@ export function RegistryTicketPage() {
     hashtags: record.eventHashtags || [],
     treasureHunt: record.eventTreasureHunt || false,
     huntCode: record.eventHuntCode || null,
+    bonusContent: record.eventBonusContent || null,
     goldenTickets: [],
     accountBalance: null,
     likedByUser: false,
@@ -163,6 +164,17 @@ export function RegistryTicketPage() {
           </h1>
           {preservedEvent.contactDetails && (
             <p className="text-muted fst-italic">{preservedEvent.contactDetails}</p>
+          )}
+          {/* Bonus Content for Hunt NFTs */}
+          {preservedEvent.bonusContent && 
+           preservedTicket.isValidated && 
+           (preservedTicket.ticketNumber?.startsWith("HUNT-") || preservedEvent.treasureHunt) && (
+            <div className="mt-4 p-3 bg-light rounded border">
+              <h6 className="mb-2 d-flex align-items-center">
+                🎁 Hunt Bonus Content
+              </h6>
+              <p className="mb-0">{preservedEvent.bonusContent}</p>
+            </div>
           )}
         </div>
       </div>
