@@ -1787,20 +1787,68 @@ export default function AccountPage() {
       {/* Split tickets into current/upcoming and past */}
       {(() => {
         const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
         
         const upcomingTickets = tickets?.filter(ticket => {
-          const eventDate = new Date(ticket.event.date);
-          // Include events from today onwards (including events happening today)
-          return eventDate >= todayStart;
-        }).sort((a, b) => new Date(a.event.date).getTime() - new Date(b.event.date).getTime());
+          const event = ticket.event;
+          
+          // Use UTC timestamps for accurate comparison
+          if (event.startAtUtc) {
+            const startTime = new Date(event.startAtUtc);
+            const endTime = event.endAtUtc ? new Date(event.endAtUtc) : null;
+            
+            // Event is ongoing if it has started and hasn't ended yet
+            const isOngoing = now >= startTime && (!endTime || now <= endTime);
+            
+            // Event is upcoming if it hasn't started yet
+            const isUpcoming = now < startTime;
+            
+            // Include both ongoing and upcoming events
+            return isOngoing || isUpcoming;
+          } else {
+            // Fallback to display date if UTC timestamps not available
+            const eventDate = new Date(event.date);
+            eventDate.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return eventDate >= today;
+          }
+        }).sort((a, b) => {
+          // Sort by start time (use UTC if available, fallback to display date)
+          const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
+          const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
+          return aTime - bTime;
+        });
         
         const pastTickets = tickets?.filter(ticket => {
-          const eventDate = new Date(ticket.event.date);
-          // Only include events that ended before today
-          return eventDate < todayStart;
-        }).sort((a, b) => new Date(b.event.date).getTime() - new Date(a.event.date).getTime());
+          const event = ticket.event;
+          
+          // Use UTC timestamps for accurate comparison
+          if (event.startAtUtc) {
+            const endTime = event.endAtUtc ? new Date(event.endAtUtc) : new Date(event.startAtUtc);
+            
+            // Event is past if it has ended (or if single-day event, if it has started and we assume it's over)
+            // For events without endAtUtc, we consider them past if they started more than 24 hours ago
+            if (!event.endAtUtc) {
+              const startTime = new Date(event.startAtUtc);
+              const twentyFourHoursLater = new Date(startTime.getTime() + 24 * 60 * 60 * 1000);
+              return now > twentyFourHoursLater;
+            }
+            
+            return now > endTime;
+          } else {
+            // Fallback to display date if UTC timestamps not available
+            const eventDate = new Date(event.date);
+            eventDate.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return eventDate < today;
+          }
+        }).sort((a, b) => {
+          // Sort by start time descending (most recent first)
+          const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
+          const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
+          return bTime - aTime;
+        });
         
         return (
           <>
