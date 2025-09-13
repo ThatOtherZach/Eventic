@@ -646,13 +646,12 @@ export default function TicketViewPage(): React.ReactElement {
           {event.contactDetails && (
             <p className="text-muted fst-italic">{event.contactDetails}</p>
           )}
-          {/* Bonus Content for Hunt Tickets */}
+          {/* Bonus Content for Validated Tickets */}
           {event.bonusContent && 
-           ticket.isValidated && 
-           (ticket.ticketNumber?.startsWith("HUNT-") || event.treasureHunt) && (
+           ticket.isValidated && (
             <div className="mt-4 p-3 bg-light rounded border">
               <h6 className="mb-2 d-flex align-items-center">
-                🎁 Hunt Bonus Content
+                🎁 Bonus Content
               </h6>
               <p className="mb-0">{event.bonusContent}</p>
             </div>

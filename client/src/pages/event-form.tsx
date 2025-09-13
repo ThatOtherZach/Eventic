@@ -1211,6 +1211,40 @@ export default function EventForm() {
                       />
                     </div>
 
+                    {/* Bonus Content Field - Available for all events */}
+                    <div className="col-12">
+                      <FormField
+                        control={form.control}
+                        name="bonusContent"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Bonus Content
+                              <span className="text-muted small ms-2">
+                                ({field.value?.length || 0}/1690)
+                              </span>
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Special content revealed to attendees after ticket validation"
+                                className="form-control"
+                                rows={4}
+                                maxLength={1690}
+                                data-testid="input-bonus-content"
+                                style={{ resize: "vertical" }}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Special content revealed to attendees after ticket validation
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
                     {/* Interactive Map for Location Selection */}
                     <div className="col-12 mt-3">
                       <div className="mb-2">
@@ -2817,40 +2851,6 @@ export default function EventForm() {
                             />
                           )}
 
-                          {/* Bonus Content for Treasure Hunt */}
-                          {form.watch("treasureHunt") && !isEditMode && (
-                            <FormField
-                              control={form.control}
-                              name="bonusContent"
-                              render={({ field }) => (
-                                <FormItem className="mt-3 ms-4">
-                                  <FormLabel>
-                                    🎁 Bonus Content
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Textarea
-                                      {...field}
-                                      className="form-control"
-                                      rows={5}
-                                      maxLength={1690}
-                                      placeholder="Enter special content that will be revealed to users after they validate your Hunt Code..."
-                                      value={field.value || ""}
-                                      onChange={(e) => field.onChange(e.target.value)}
-                                      data-testid="textarea-bonuscontent"
-                                    />
-                                  </FormControl>
-                                  <FormDescription>
-                                    Special content revealed to users after they validate your Hunt Code
-                                    <br />
-                                    <small className="text-muted">
-                                      {countCharacters(field.value || "")}/1690 characters
-                                    </small>
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          )}
 
                           {form.watch("geofence") &&
                             isEditMode &&

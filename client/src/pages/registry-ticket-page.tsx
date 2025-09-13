@@ -165,13 +165,12 @@ export function RegistryTicketPage() {
           {preservedEvent.contactDetails && (
             <p className="text-muted fst-italic">{preservedEvent.contactDetails}</p>
           )}
-          {/* Bonus Content for Hunt NFTs */}
+          {/* Bonus Content for Validated NFTs */}
           {preservedEvent.bonusContent && 
-           preservedTicket.isValidated && 
-           (preservedTicket.ticketNumber?.startsWith("HUNT-") || preservedEvent.treasureHunt) && (
+           preservedTicket.isValidated && (
             <div className="mt-4 p-3 bg-light rounded border">
               <h6 className="mb-2 d-flex align-items-center">
-                🎁 Hunt Bonus Content
+                🎁 Bonus Content
               </h6>
               <p className="mb-0">{preservedEvent.bonusContent}</p>
             </div>
