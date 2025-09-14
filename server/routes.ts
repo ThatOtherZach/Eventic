@@ -2774,7 +2774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newTicket = await storage.createTicket({
         eventId: event.id,
         userId,
-        ticketNumber: `${code}-${username}-${ticketSequence}`,
+        ticketNumber: `${event.huntCode}-${username}-${ticketSequence}`,
         qrData,
         validationCode,
         recipientName: userEmail?.split('@')[0] || 'Hunter',
