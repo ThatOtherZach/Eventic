@@ -921,12 +921,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEventByHuntCode(huntCode: string): Promise<Event | undefined> {
-    // First find the secret code with this hunt code
+    // First find the secret code with this hunt code (case-insensitive)
     const [secretCode] = await db
       .select()
       .from(secretCodes)
       .where(and(
-        eq(secretCodes.code, huntCode),
+        sql`LOWER(${secretCodes.code}) = LOWER(${huntCode})`,
         eq(secretCodes.codeType, "hunt")
       ));
     
@@ -947,7 +947,7 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.select({ count: count() })
       .from(secretCodes)
       .where(and(
-        eq(secretCodes.code, huntCode.toUpperCase()),
+        sql`LOWER(${secretCodes.code}) = LOWER(${huntCode})`,
         eq(secretCodes.codeType, "hunt")
       ))
       .limit(1);
