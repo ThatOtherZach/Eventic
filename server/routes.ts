@@ -2619,6 +2619,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if Hunt code is valid (without GPS)
+  app.post('/api/hunt/validate', requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { code } = req.body;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ 
+          valid: false,
+          message: "Login required" 
+        });
+      }
+
+      if (!code) {
+        return res.status(400).json({ 
+          valid: false,
+          message: "Code is required" 
+        });
+      }
+
+      // Check if this looks like a Hunt code pattern
+      const huntPattern = /^[A-Z][a-z0-9]+[A-Z][a-z0-9]+$/i;
+      if (!huntPattern.test(code.trim())) {
+        return res.json({ 
+          valid: false,
+          isHuntCode: false,
+          message: "Not a Hunt code format" 
+        });
+      }
+
+      // Lookup event by hunt code
+      const event = await storage.getEventByHuntCode(code.trim());
+      if (!event || !event.treasureHunt) {
+        return res.json({ 
+          valid: false,
+          message: "Invalid Hunt code - this code doesn't exist" 
+        });
+      }
+
+      // Check if user already has a ticket
+      const existingTickets = await storage.getTicketsByEventAndUser(event.id, userId);
+      if (existingTickets.length > 0) {
+        return res.json({
+          valid: false,
+          message: "You've already claimed this Hunt code",
+          alreadyClaimed: true
+        });
+      }
+
+      // Check ticket availability
+      const ticketCount = await storage.getTotalTicketCountForEvent(event.id);
+      if (event.maxTickets && ticketCount >= event.maxTickets) {
+        return res.json({
+          valid: false,
+          message: "No tickets available for this event",
+          soldOut: true
+        });
+      }
+
+      // Check if event timing is valid
+      const timeCheck = isTicketWithinValidTime(event);
+      if (!timeCheck.valid) {
+        return res.json({
+          valid: false,
+          message: timeCheck.message || "Event hasn't started yet",
+          notInTimeWindow: true
+        });
+      }
+
+      // Event requires location
+      if (!event.latitude || !event.longitude) {
+        return res.json({
+          valid: false,
+          message: "This Hunt event doesn't have a location configured",
+          noLocation: true
+        });
+      }
+
+      // Code is valid and can be redeemed!
+      res.json({
+        valid: true,
+        message: "Hunt code is valid! Please allow location access to claim your reward.",
+        eventName: event.name,
+        requiresLocation: true
+      });
+    } catch (error) {
+      console.error('Hunt code validation error:', error);
+      res.status(500).json({ 
+        valid: false,
+        message: 'Error validating Hunt code' 
+      });
+    }
+  });
+
   // New Hunt Code Redemption endpoint
   app.post('/api/hunt/redeem', requireAuth, async (req: AuthenticatedRequest, res) => {
     try {

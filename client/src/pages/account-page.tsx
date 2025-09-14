@@ -476,9 +476,29 @@ export default function AccountPage() {
     try {
       // Check if this is a Hunt code
       if (isLikelyHuntCode(codeToRedeem)) {
-        // For Hunt codes, we need location FIRST
+        // For Hunt codes, validate the code exists BEFORE asking for location
         if (!pendingHuntCode && (latitude === undefined || longitude === undefined)) {
-          // First time entering Hunt code - show GPS dialog
+          // First validate the Hunt code exists
+          const validateResponse = await apiRequest(
+            "POST",
+            "/api/hunt/validate",
+            { code: codeToRedeem }
+          );
+          const validateData = await validateResponse.json();
+          
+          if (!validateData.valid) {
+            // Show specific error message
+            toast({
+              title: "Invalid Hunt Code",
+              description: validateData.message,
+              variant: "destructive",
+            });
+            setIsRedeeming(false);
+            setSecretCode(""); // Clear the input
+            return;
+          }
+          
+          // Code is valid, now show GPS dialog
           setPendingHuntCode(codeToRedeem);
           setShowGPSDialog(true);
           setIsRedeeming(false);
