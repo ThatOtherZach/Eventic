@@ -327,7 +327,7 @@ export default function AccountPage() {
     permissions: string[];
     isAdmin: boolean;
   }>({
-    queryKey: ['/api/auth/permissions'],
+    queryKey: ["/api/auth/permissions"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/auth/permissions");
       return response.json();
@@ -467,7 +467,7 @@ export default function AccountPage() {
   // Handle secret code redemption
   const handleRedeemCode = async (latitude?: number, longitude?: number) => {
     const codeToRedeem = pendingHuntCode || secretCode.trim();
-    
+
     if (!codeToRedeem) {
       toast({
         title: "Error",
@@ -482,26 +482,29 @@ export default function AccountPage() {
       // Check if this is a Hunt code
       if (isLikelyHuntCode(codeToRedeem)) {
         // For Hunt codes, validate the code exists BEFORE asking for location
-        if (!pendingHuntCode && (latitude === undefined || longitude === undefined)) {
+        if (
+          !pendingHuntCode &&
+          (latitude === undefined || longitude === undefined)
+        ) {
           // First validate the Hunt code exists
           const validateResponse = await apiRequest(
             "POST",
             "/api/hunt/validate",
-            { code: codeToRedeem }
+            { code: codeToRedeem },
           );
           const validateData = await validateResponse.json();
-          
+
           if (!validateData.valid) {
             // Show error message in info box
             setValidationMessage({
               type: "error",
-              message: validateData.message
+              message: validateData.message,
             });
             setIsRedeeming(false);
             setSecretCode(""); // Clear the input
             return;
           }
-          
+
           // Code is valid, now show GPS dialog
           setPendingHuntCode(codeToRedeem);
           setShowGPSDialog(true);
@@ -510,49 +513,46 @@ export default function AccountPage() {
         }
 
         // We have location coordinates, call Hunt endpoint
-        const response = await apiRequest(
-          "POST",
-          "/api/hunt/redeem",
-          { 
-            code: codeToRedeem,
-            lat: latitude,
-            lon: longitude
-          }
-        );
+        const response = await apiRequest("POST", "/api/hunt/redeem", {
+          code: codeToRedeem,
+          lat: latitude,
+          lon: longitude,
+        });
         const data = await response.json();
 
         if (data.success) {
           // Show success message in info box
           setValidationMessage({
             type: "success",
-            message: data.message
+            message: data.message,
           });
-          
+
           // Clear the code and refresh data
           setSecretCode("");
           setPendingHuntCode(null);
           setShowGPSDialog(false);
-          
+
           // Invalidate tickets query to show the new/validated ticket
           queryClient.invalidateQueries({ queryKey: ["/api/user/tickets"] });
           queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-          
+
           // Add notification
           if (data.newTicket) {
             addNotification({
               type: "hunt_completed",
-              title: "Hunt Completed!",
-              description: "You successfully completed a treasure hunt and earned a ticket!"
+              title: "Completed!",
+              description:
+                "You completed a treasure hunt and claimed a ticket!",
             });
           }
         } else {
           // Show specific error message
           let errorTitle = "Failed";
-          let errorMessage = data.message || "Invalid Hunt code";
-          
-          if (data.message === "Invalid Hunt code") {
+          let errorMessage = data.message || "Invalid Code";
+
+          if (data.message === "Invalid Code") {
             errorTitle = "Invalid Code";
-            errorMessage = "This Hunt code doesn't exist. Please check the code and try again.";
+            errorMessage = "This code doesn't exist. Please try again.";
           } else if (data.outsideGeofence) {
             errorTitle = "Too Far Away";
             errorMessage = data.message;
@@ -563,13 +563,13 @@ export default function AccountPage() {
             errorTitle = "Sold Out";
             errorMessage = data.message;
           }
-          
+
           // Show error message in info box
           setValidationMessage({
             type: "error",
-            message: errorMessage
+            message: errorMessage,
           });
-          
+
           // Clear the pending code and close dialog on error
           setPendingHuntCode(null);
           setShowGPSDialog(false);
@@ -591,16 +591,20 @@ export default function AccountPage() {
           if (codeToRedeem !== "URM1550N") {
             setValidationMessage({
               type: "success",
-              message: data.message || `Successfully redeemed ${data.ticketAmount} tickets!`
+              message:
+                data.message ||
+                `Successfully redeemed ${data.ticketAmount} tickets!`,
             });
           }
           setSecretCode("");
           setPendingHuntCode(null);
-          queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
+          queryClient.invalidateQueries({
+            queryKey: ["/api/currency/balance"],
+          });
         } else {
           setValidationMessage({
             type: "error",
-            message: data.message || "Invalid code"
+            message: data.message || "Invalid code",
           });
           setPendingHuntCode(null);
         }
@@ -608,7 +612,7 @@ export default function AccountPage() {
     } catch (error) {
       setValidationMessage({
         type: "error",
-        message: "Failed to redeem code. Please try again."
+        message: "Failed to redeem code. Please try again.",
       });
       setPendingHuntCode(null);
     } finally {
@@ -628,7 +632,7 @@ export default function AccountPage() {
     setPendingHuntCode(null);
     setValidationMessage({
       type: "error",
-      message: "Location access required to claim Hunt codes"
+      message: "Location access required to claim Hunt codes",
     });
   };
 
@@ -822,7 +826,7 @@ export default function AccountPage() {
                       width: "16px",
                       height: "16px",
                       marginRight: "4px",
-                      verticalAlign: "middle"
+                      verticalAlign: "middle",
                     }}
                   />
                   {scheduleDeleteMutation.isPending
@@ -989,7 +993,7 @@ export default function AccountPage() {
                     </button>
                   </div>
                 )}
-                
+
                 {/* Admin Claim Button - Show only for admins when not claimed */}
                 {isAdmin && adminClaimStatus && adminClaimStatus.canClaim && (
                   <div className="mt-2">
@@ -1070,16 +1074,16 @@ export default function AccountPage() {
                       <Lock size={14} className="me-1" />
                       Redeem codes for stuff
                     </small>
-                    
+
                     {/* Validation Message Box */}
                     {validationMessage && (
-                      <div 
+                      <div
                         className={`mt-2 p-2 rounded-2 small d-flex align-items-start gap-2 ${
-                          validationMessage.type === "error" 
+                          validationMessage.type === "error"
                             ? "bg-danger bg-opacity-10 border border-danger border-opacity-25"
                             : validationMessage.type === "success"
-                            ? "bg-success bg-opacity-10 border border-success border-opacity-25"
-                            : "bg-info bg-opacity-10 border border-info border-opacity-25"
+                              ? "bg-success bg-opacity-10 border border-success border-opacity-25"
+                              : "bg-info bg-opacity-10 border border-info border-opacity-25"
                         }`}
                       >
                         <div style={{ minWidth: "16px" }}>
@@ -1091,13 +1095,15 @@ export default function AccountPage() {
                             <Info size={16} className="text-info" />
                           )}
                         </div>
-                        <div className={`${
-                          validationMessage.type === "error" 
-                            ? "text-danger"
-                            : validationMessage.type === "success"
-                            ? "text-success"
-                            : "text-info"
-                        }`}>
+                        <div
+                          className={`${
+                            validationMessage.type === "error"
+                              ? "text-danger"
+                              : validationMessage.type === "success"
+                                ? "text-success"
+                                : "text-info"
+                          }`}
+                        >
                           {validationMessage.message}
                         </div>
                       </div>
@@ -1942,7 +1948,7 @@ export default function AccountPage() {
       {/* Split tickets into current/upcoming and past */}
       {(() => {
         const now = new Date();
-        
+
         // Helper function to determine if an event is past
         const isEventPast = (event: any) => {
           if (event.startAtUtc) {
@@ -1953,7 +1959,9 @@ export default function AccountPage() {
               // No end time - consider it a single-day event
               // Past if start time + 24 hours has passed
               const startTime = new Date(event.startAtUtc);
-              const twentyFourHoursLater = new Date(startTime.getTime() + 24 * 60 * 60 * 1000);
+              const twentyFourHoursLater = new Date(
+                startTime.getTime() + 24 * 60 * 60 * 1000,
+              );
               return now > twentyFourHoursLater;
             }
           } else {
@@ -1963,24 +1971,34 @@ export default function AccountPage() {
             return now > eventDate;
           }
         };
-        
+
         // Split tickets into two mutually exclusive groups
-        const upcomingTickets = tickets?.filter(ticket => !isEventPast(ticket.event))
+        const upcomingTickets = tickets
+          ?.filter((ticket) => !isEventPast(ticket.event))
           .sort((a, b) => {
             // Sort by start time (use UTC if available, fallback to display date)
-            const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
-            const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
+            const aTime = a.event.startAtUtc
+              ? new Date(a.event.startAtUtc).getTime()
+              : new Date(a.event.date).getTime();
+            const bTime = b.event.startAtUtc
+              ? new Date(b.event.startAtUtc).getTime()
+              : new Date(b.event.date).getTime();
             return aTime - bTime;
           });
-        
-        const pastTickets = tickets?.filter(ticket => isEventPast(ticket.event))
+
+        const pastTickets = tickets
+          ?.filter((ticket) => isEventPast(ticket.event))
           .sort((a, b) => {
             // Sort by start time descending (most recent first)
-            const aTime = a.event.startAtUtc ? new Date(a.event.startAtUtc).getTime() : new Date(a.event.date).getTime();
-            const bTime = b.event.startAtUtc ? new Date(b.event.startAtUtc).getTime() : new Date(b.event.date).getTime();
+            const aTime = a.event.startAtUtc
+              ? new Date(a.event.startAtUtc).getTime()
+              : new Date(a.event.date).getTime();
+            const bTime = b.event.startAtUtc
+              ? new Date(b.event.startAtUtc).getTime()
+              : new Date(b.event.date).getTime();
             return bTime - aTime;
           });
-        
+
         return (
           <>
             {/* My Tickets Section (Upcoming/Current) */}
@@ -2019,7 +2037,7 @@ export default function AccountPage() {
                           width: "48px",
                           height: "48px",
                           opacity: 0.5,
-                          marginBottom: "12px"
+                          marginBottom: "12px",
                         }}
                       />
                       <h6 className="text-muted">No upcoming tickets</h6>
@@ -2065,7 +2083,7 @@ export default function AccountPage() {
                         height: "20px",
                         marginRight: "8px",
                         verticalAlign: "text-bottom",
-                        opacity: 0.7
+                        opacity: 0.7,
                       }}
                     />
                     Ticket Log
@@ -2101,10 +2119,13 @@ export default function AccountPage() {
                         }
                         data-testid="button-show-more-past-tickets"
                       >
-                        Show {Math.min(10, pastTickets.length - ticketsDisplayed)} More
+                        Show{" "}
+                        {Math.min(10, pastTickets.length - ticketsDisplayed)}{" "}
+                        More
                       </button>
                       <div className="text-muted small mt-2">
-                        Showing {ticketsDisplayed} of {pastTickets.length} past tickets
+                        Showing {ticketsDisplayed} of {pastTickets.length} past
+                        tickets
                       </div>
                     </div>
                   )}
@@ -2287,7 +2308,7 @@ export default function AccountPage() {
                     width: "48px",
                     height: "48px",
                     opacity: 0.5,
-                    marginBottom: "12px"
+                    marginBottom: "12px",
                   }}
                 />
                 <h6 className="text-muted">No events yet</h6>
@@ -2321,7 +2342,7 @@ export default function AccountPage() {
                                   style={{
                                     width: "48px",
                                     height: "48px",
-                                    objectFit: "cover"
+                                    objectFit: "cover",
                                   }}
                                 />
                               ) : (
@@ -2350,7 +2371,9 @@ export default function AccountPage() {
                           </div>
                           <div className="col-auto">
                             <div className="text-end">
-                              <div className="fw-semibold">${event.ticketPrice}</div>
+                              <div className="fw-semibold">
+                                ${event.ticketPrice}
+                              </div>
                               <div className="text-muted small">per ticket</div>
                             </div>
                           </div>
@@ -2405,8 +2428,8 @@ export default function AccountPage() {
         onLocationGranted={handleGPSGranted}
         onLocationDenied={handleGPSDenied}
         huntCode={pendingHuntCode || undefined}
-        title="Secret Code Detected!"
-        description="To claim your reward, we need to verify you're at the event location."
+        title="GPS Location Required"
+        description="To claim your secret code, we need to verify you're at the right location."
       />
     </div>
   );

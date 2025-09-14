@@ -26,8 +26,8 @@ export function GPSPermissionDialog({
   onClose,
   onLocationGranted,
   onLocationDenied,
-  title = "Hunt Code Detected!",
-  description = "To claim your reward, we need to verify you're at the event location.",
+  title = "GPS Location Required",
+  description = "To claim, we need to verify you're at the right location.",
   huntCode,
 }: GPSPermissionDialogProps) {
   const [isRequesting, setIsRequesting] = useState(false);
@@ -51,10 +51,12 @@ export function GPSPermissionDialog({
       },
       (error) => {
         setIsRequesting(false);
-        
+
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setError("Location permission denied. Please enable location access in your browser settings.");
+            setError(
+              "Location permission denied. Please enable location access in your browser settings.",
+            );
             onLocationDenied();
             break;
           case error.POSITION_UNAVAILABLE:
@@ -72,7 +74,7 @@ export function GPSPermissionDialog({
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 60000, // Use cached location up to 1 minute old
-      }
+      },
     );
   };
 
@@ -86,7 +88,6 @@ export function GPSPermissionDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
             <DialogTitle data-testid="dialog-hunt-title">{title}</DialogTitle>
           </div>
           <DialogDescription className="space-y-3">
@@ -95,19 +96,19 @@ export function GPSPermissionDialog({
                 {huntCode}
               </div>
             )}
-            
+
             <div className="flex items-start gap-2 text-sm">
-              <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <span>{description}</span>
             </div>
 
             <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
               <AlertDescription className="text-sm">
-                <strong>What happens next:</strong>
+                <strong>What happens:</strong>
                 <ul className="mt-2 space-y-1 list-disc list-inside">
-                  <li>We'll check if you're within 300 meters of the event</li>
-                  <li>You'll be automatically registered for the event</li>
-                  <li>You'll receive <strong>2 bonus tickets</strong> as a reward!</li>
+                  <li>
+                    We'll check if you're within 300 meters of the location
+                  </li>
+                  <li>Automatic RVSP and validation for your ticket.</li>
                 </ul>
               </AlertDescription>
             </Alert>
@@ -123,15 +124,7 @@ export function GPSPermissionDialog({
 
         <DialogFooter className="gap-2">
           <Button
-            variant="outline"
-            onClick={handleDeny}
-            disabled={isRequesting}
-            data-testid="button-deny-location"
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={requestLocation} 
+            onClick={requestLocation}
             disabled={isRequesting}
             className="gap-2"
             data-testid="button-allow-location"
@@ -147,6 +140,14 @@ export function GPSPermissionDialog({
                 Allow Location Access
               </>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDeny}
+            disabled={isRequesting}
+            data-testid="button-deny-location"
+          >
+            Cancel
           </Button>
         </DialogFooter>
       </DialogContent>
