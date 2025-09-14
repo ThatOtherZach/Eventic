@@ -2405,7 +2405,7 @@ export default function AccountPage() {
         onLocationGranted={handleGPSGranted}
         onLocationDenied={handleGPSDenied}
         huntCode={pendingHuntCode || undefined}
-        title="Secret Code Detected!"
+        title="Secret Code Accp!"
         description="To claim your reward, we need to verify you're at the event location."
       />
     </div>
