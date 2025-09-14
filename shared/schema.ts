@@ -183,6 +183,12 @@ export const events = pgTable("events", {
 }, (table) => ({
   // Index for filtering active events efficiently
   activeEventsIdx: index("active_events_idx").on(table.startAtUtc, table.endAtUtc, table.isEnabled, table.isPrivate),
+  // Index for efficient hunt code lookups (case-insensitive)
+  huntCodeIdx: index("hunt_code_idx").on(table.huntCode, table.treasureHunt),
+  // Index for country-based filtering
+  countryIdx: index("country_idx").on(table.country),
+  // Composite index for hunt code lookups filtered by country
+  huntCodeCountryIdx: index("hunt_code_country_idx").on(table.country, table.huntCode, table.treasureHunt),
 }));
 
 export const cryptoPaymentIntents = pgTable("crypto_payment_intents", {

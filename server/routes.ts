@@ -407,6 +407,18 @@ const validationRateLimiter = rateLimit({
   skipFailedRequests: false,
 });
 
+// Hunt code redemption rate limiter (stricter limits)
+const huntRedemptionRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // Only 5 hunt redemption attempts per minute per IP
+  message:
+    "Too many hunt code attempts. Please wait a minute and try again.",
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful redemptions
+  skipFailedRequests: false,
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
@@ -3084,13 +3096,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return R * c; // Distance in meters
   }
 
+  // Helper function to get approximate country from GPS coordinates
+  // This is a simplified approach using coordinate ranges
+  function getCountryFromCoordinates(lat: number, lon: number): string | undefined {
+    // USA (approximate boundaries)
+    if (lat >= 24.5 && lat <= 49.4 && lon >= -125 && lon <= -66.9) {
+      return "United States";
+    }
+    // Canada
+    if (lat >= 41.7 && lat <= 83.1 && lon >= -141 && lon <= -52.6) {
+      return "Canada";
+    }
+    // Mexico
+    if (lat >= 14.5 && lat <= 32.7 && lon >= -118.5 && lon <= -86.7) {
+      return "Mexico";
+    }
+    // United Kingdom
+    if (lat >= 49.9 && lat <= 60.9 && lon >= -8.6 && lon <= 1.8) {
+      return "United Kingdom";
+    }
+    // France
+    if (lat >= 41.3 && lat <= 51.1 && lon >= -5.1 && lon <= 9.6) {
+      return "France";
+    }
+    // Germany
+    if (lat >= 47.3 && lat <= 55.1 && lon >= 5.9 && lon <= 15.0) {
+      return "Germany";
+    }
+    // Australia
+    if (lat >= -43.6 && lat <= -10.7 && lon >= 113.3 && lon <= 153.6) {
+      return "Australia";
+    }
+    // Japan
+    if (lat >= 24.4 && lat <= 45.5 && lon >= 122.9 && lon <= 153.9) {
+      return "Japan";
+    }
+    // Brazil
+    if (lat >= -33.8 && lat <= 5.3 && lon >= -73.9 && lon <= -34.8) {
+      return "Brazil";
+    }
+    // India
+    if (lat >= 8.1 && lat <= 37.1 && lon >= 68.2 && lon <= 97.4) {
+      return "India";
+    }
+    // China
+    if (lat >= 18.2 && lat <= 53.6 && lon >= 73.6 && lon <= 134.8) {
+      return "China";
+    }
+    // South Africa
+    if (lat >= -34.8 && lat <= -22.1 && lon >= 16.5 && lon <= 32.9) {
+      return "South Africa";
+    }
+    // Spain
+    if (lat >= 35.9 && lat <= 43.8 && lon >= -9.3 && lon <= 4.3) {
+      return "Spain";
+    }
+    // Italy
+    if (lat >= 35.5 && lat <= 47.1 && lon >= 6.6 && lon <= 18.5) {
+      return "Italy";
+    }
+    // Netherlands
+    if (lat >= 50.8 && lat <= 53.5 && lon >= 3.4 && lon <= 7.2) {
+      return "Netherlands";
+    }
+    
+    // Return undefined if country cannot be determined
+    return undefined;
+  }
+
   // Hunt validation endpoint
   // Get event by hunt code (for redirects)
   app.get("/api/hunt/:huntCode/event", async (req, res) => {
     try {
       const { huntCode } = req.params;
 
-      // Get event by hunt code
+      // Get event by hunt code (no GPS optimization needed for GET request)
       const event = await storage.getEventByHuntCode(huntCode);
       if (!event || !event.treasureHunt) {
         return res.status(404).json({ message: "Hunt code not found" });
@@ -3107,6 +3187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/hunt/validate",
     requireAuth,
+    huntRedemptionRateLimiter,
     async (req: AuthenticatedRequest, res) => {
       try {
         const { code } = req.body;
@@ -3136,8 +3217,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Lookup event by hunt code
-        const event = await storage.getEventByHuntCode(code.trim());
+        // Try to get country from GPS if available for optimization
+        let country: string | undefined;
+        if (req.body.lat && req.body.lon) {
+          country = getCountryFromCoordinates(req.body.lat, req.body.lon);
+        }
+        
+        // Lookup event by hunt code, using country filter if available
+        const event = await storage.getEventByHuntCode(code.trim(), country);
         if (!event || !event.treasureHunt) {
           return res.json({
             valid: false,
@@ -3208,6 +3295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/hunt/redeem",
     requireAuth,
+    huntRedemptionRateLimiter,
     async (req: AuthenticatedRequest, res) => {
       try {
         const { code, lat, lon } = req.body;
@@ -3229,8 +3317,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Lookup event by hunt code
-        const event = await storage.getEventByHuntCode(code.trim());
+        // Get country from GPS coordinates for optimized lookup
+        const country = getCountryFromCoordinates(lat, lon);
+        
+        // Lookup event by hunt code with country filter
+        const event = await storage.getEventByHuntCode(code.trim(), country);
         if (!event || !event.treasureHunt) {
           return res.status(404).json({
             success: false,

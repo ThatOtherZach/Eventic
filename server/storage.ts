@@ -40,7 +40,7 @@ export interface IStorage {
   updateEventMaxTickets(id: string, maxTickets: number): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
   archiveEvent(eventId: string): Promise<boolean>;
-  getEventByHuntCode(huntCode: string): Promise<Event | undefined>;
+  getEventByHuntCode(huntCode: string, country?: string): Promise<Event | undefined>;
   huntCodeExists(huntCode: string): Promise<boolean>;
   
   // Tickets
@@ -922,15 +922,22 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getEventByHuntCode(huntCode: string): Promise<Event | undefined> {
+  async getEventByHuntCode(huntCode: string, country?: string): Promise<Event | undefined> {
     // Hunt codes are now stored directly on the events table
+    // Use country filter if provided to narrow down the search
+    const conditions = [
+      sql`LOWER(${events.huntCode}) = LOWER(${huntCode})`,
+      eq(events.treasureHunt, true)
+    ];
+    
+    if (country) {
+      conditions.push(eq(events.country, country));
+    }
+    
     const [event] = await db
       .select()
       .from(events)
-      .where(and(
-        sql`LOWER(${events.huntCode}) = LOWER(${huntCode})`,
-        eq(events.treasureHunt, true)
-      ));
+      .where(and(...conditions));
     
     return event || undefined;
   }
