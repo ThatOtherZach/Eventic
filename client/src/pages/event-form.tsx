@@ -2830,9 +2830,9 @@ export default function EventForm() {
                                       form.watch("huntCode") && (
                                         <div className="mt-2 p-2 bg-light border rounded">
                                           <strong>
-                                            Your Event's Secret Code:{" "}
+                                            Your Event's Secret Code:{form.watch("huntCode")}
                                             <code>
-                                              {form.watch("huntCode")}
+                                              
                                             </code>
                                           </strong>
                                           <br />
