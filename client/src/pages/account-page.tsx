@@ -507,6 +507,7 @@ export default function AccountPage() {
           // Clear the code and refresh data
           setSecretCode("");
           setPendingHuntCode(null);
+          setShowGPSDialog(false);
           
           // Invalidate tickets query to show the new/validated ticket
           queryClient.invalidateQueries({ queryKey: ["/api/user/tickets"] });
@@ -521,18 +522,34 @@ export default function AccountPage() {
             });
           }
         } else {
-          // Check if location is required
-          if (data.requiresLocation) {
-            setPendingHuntCode(codeToRedeem);
-            setShowGPSDialog(true);
-          } else {
-            toast({
-              title: "Failed",
-              description: data.message || "Invalid Hunt code",
-              variant: "destructive",
-            });
-            setPendingHuntCode(null);
+          // Show specific error message
+          let errorTitle = "Failed";
+          let errorMessage = data.message || "Invalid Hunt code";
+          
+          if (data.message === "Invalid Hunt code") {
+            errorTitle = "Invalid Code";
+            errorMessage = "This Hunt code doesn't exist. Please check the code and try again.";
+          } else if (data.outsideGeofence) {
+            errorTitle = "Too Far Away";
+            errorMessage = data.message;
+          } else if (data.message.includes("already")) {
+            errorTitle = "Already Claimed";
+            errorMessage = data.message;
+          } else if (data.message.includes("No tickets")) {
+            errorTitle = "Sold Out";
+            errorMessage = data.message;
           }
+          
+          toast({
+            title: errorTitle,
+            description: errorMessage,
+            variant: "destructive",
+          });
+          
+          // Clear the pending code and close dialog on error
+          setPendingHuntCode(null);
+          setShowGPSDialog(false);
+          setSecretCode(""); // Clear the input too
         }
       } else {
         // Regular secret code - use the currency endpoint
