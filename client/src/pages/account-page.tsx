@@ -17,6 +17,7 @@ import {
   Gift,
   Info,
   AlertTriangle,
+  AlertCircle,
   ChevronDown,
   Lock,
   Trash2,
@@ -62,6 +63,10 @@ export default function AccountPage() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showGPSDialog, setShowGPSDialog] = useState(false);
   const [pendingHuntCode, setPendingHuntCode] = useState<string | null>(null);
+  const [validationMessage, setValidationMessage] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
   const [multiplyAndSave, setMultiplyAndSave] = useState(false);
   const [demandLevel, setDemandLevel] = useState<
     "low" | "medium" | "high" | "very-high"
@@ -487,11 +492,10 @@ export default function AccountPage() {
           const validateData = await validateResponse.json();
           
           if (!validateData.valid) {
-            // Show specific error message
-            toast({
-              title: "Invalid Hunt Code",
-              description: validateData.message,
-              variant: "destructive",
+            // Show error message in info box
+            setValidationMessage({
+              type: "error",
+              message: validateData.message
             });
             setIsRedeeming(false);
             setSecretCode(""); // Clear the input
@@ -518,10 +522,10 @@ export default function AccountPage() {
         const data = await response.json();
 
         if (data.success) {
-          toast({
-            title: "Success!",
-            description: data.message,
-            variant: "success",
+          // Show success message in info box
+          setValidationMessage({
+            type: "success",
+            message: data.message
           });
           
           // Clear the code and refresh data
@@ -560,10 +564,10 @@ export default function AccountPage() {
             errorMessage = data.message;
           }
           
-          toast({
-            title: errorTitle,
-            description: errorMessage,
-            variant: "destructive",
+          // Show error message in info box
+          setValidationMessage({
+            type: "error",
+            message: errorMessage
           });
           
           // Clear the pending code and close dialog on error
@@ -583,33 +587,28 @@ export default function AccountPage() {
         const data = await response.json();
 
         if (response.ok) {
-          // Don't show toast for URM1550N code
+          // Don't show message for URM1550N code
           if (codeToRedeem !== "URM1550N") {
-            toast({
-              title: "Success!",
-              description:
-                data.message ||
-                `Successfully redeemed ${data.ticketAmount} tickets!`,
-              variant: "success",
+            setValidationMessage({
+              type: "success",
+              message: data.message || `Successfully redeemed ${data.ticketAmount} tickets!`
             });
           }
           setSecretCode("");
           setPendingHuntCode(null);
           queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
         } else {
-          toast({
-            title: "Failed",
-            description: data.message || "Invalid code",
-            variant: "destructive",
+          setValidationMessage({
+            type: "error",
+            message: data.message || "Invalid code"
           });
           setPendingHuntCode(null);
         }
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to redeem code",
-        variant: "destructive",
+      setValidationMessage({
+        type: "error",
+        message: "Failed to redeem code. Please try again."
       });
       setPendingHuntCode(null);
     } finally {
@@ -627,10 +626,9 @@ export default function AccountPage() {
   // Handle GPS permission denied
   const handleGPSDenied = () => {
     setPendingHuntCode(null);
-    toast({
-      title: "Location Required",
-      description: "Hunt codes require location verification to claim rewards",
-      variant: "destructive",
+    setValidationMessage({
+      type: "error",
+      message: "Location access required to claim Hunt codes"
     });
   };
 
@@ -1042,6 +1040,8 @@ export default function AccountPage() {
                         value={secretCode}
                         onChange={(e) => {
                           const value = e.target.value;
+                          // Clear validation message when user starts typing
+                          setValidationMessage(null);
                           // For Hunt codes (ColorNoun pattern), preserve CamelCase
                           // For regular codes, use uppercase
                           if (/^[A-Z][a-z0-9]*[A-Z]?[a-z0-9]*$/i.test(value)) {
@@ -1070,6 +1070,38 @@ export default function AccountPage() {
                       <Lock size={14} className="me-1" />
                       Redeem codes for stuff
                     </small>
+                    
+                    {/* Validation Message Box */}
+                    {validationMessage && (
+                      <div 
+                        className={`mt-2 p-2 rounded-2 small d-flex align-items-start gap-2 ${
+                          validationMessage.type === "error" 
+                            ? "bg-danger bg-opacity-10 border border-danger border-opacity-25"
+                            : validationMessage.type === "success"
+                            ? "bg-success bg-opacity-10 border border-success border-opacity-25"
+                            : "bg-info bg-opacity-10 border border-info border-opacity-25"
+                        }`}
+                      >
+                        <div style={{ minWidth: "16px" }}>
+                          {validationMessage.type === "error" ? (
+                            <AlertCircle size={16} className="text-danger" />
+                          ) : validationMessage.type === "success" ? (
+                            <CheckCircle size={16} className="text-success" />
+                          ) : (
+                            <Info size={16} className="text-info" />
+                          )}
+                        </div>
+                        <div className={`${
+                          validationMessage.type === "error" 
+                            ? "text-danger"
+                            : validationMessage.type === "success"
+                            ? "text-success"
+                            : "text-info"
+                        }`}>
+                          {validationMessage.message}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
