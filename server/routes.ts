@@ -173,6 +173,14 @@ function isEventActive(event: any): boolean {
         timezone,
       );
       endDateWithBuffer.setTime(endDateWithBuffer.getTime() + 60 * 60 * 1000); // Add 1-hour buffer
+    } else if (event.endDate) {
+      // Event has end date but no specific end time - default to end of day (23:59:59)
+      endDateWithBuffer = convertEventTimeToUtc(
+        event.endDate,
+        "23:59",
+        timezone,
+      );
+      endDateWithBuffer.setTime(endDateWithBuffer.getTime() + 60 * 60 * 1000); // Add 1-hour buffer
     } else {
       // Single-day event: assume 3 hours duration + 1 hour buffer = 4 hours total from start
       endDateWithBuffer = new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
