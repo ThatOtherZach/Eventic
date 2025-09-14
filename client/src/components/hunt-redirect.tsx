@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { GPSPermissionDialog } from "@/components/gps-permission-dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Trophy, MapPin, AlertTriangle, CheckCircle } from "lucide-react";
-import type { Event } from "@shared/schema";
 import compassIcon from "@assets/image_1756971767387.png";
 
 export function HuntRedirect() {
@@ -19,17 +16,7 @@ export function HuntRedirect() {
   const [showGPSDialog, setShowGPSDialog] = useState(false);
   const [validationStatus, setValidationStatus] = useState<"pending" | "validating" | "success" | "error">("pending");
   const [validationMessage, setValidationMessage] = useState<string>("");
-  const [event, setEvent] = useState<Event | null>(null);
-
-  // Query to find the event by hunt code
-  const { data: eventData, isLoading: eventLoading } = useQuery<Event>({
-    queryKey: [`/api/hunt/${huntCode}/event`],
-    queryFn: async () => {
-      const response = await apiRequest("GET", `/api/hunt/${huntCode}/event`);
-      return response.json();
-    },
-    enabled: !!huntCode,
-  });
+  const [eventId, setEventId] = useState<string | null>(null);
 
   // Validation mutation - uses the secret code endpoint which handles Hunt codes perfectly
   const validateMutation = useMutation({
@@ -51,6 +38,12 @@ export function HuntRedirect() {
       setValidationStatus("success");
       setValidationMessage(data.message || `Successfully claimed ${data.ticketAmount} tickets!`);
       
+      // Extract event ID from the success message if available
+      // The message format is: "You found {eventName} and earned a validated ticket! Nice."
+      if (data.eventId) {
+        setEventId(data.eventId);
+      }
+      
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/tickets"] });
@@ -61,10 +54,10 @@ export function HuntRedirect() {
         description: data.message || `You've earned ${data.ticketAmount} tickets and been registered for the event!`,
       });
       
-      // Redirect to event page after 3 seconds
+      // Redirect to events page or specific event after 3 seconds
       setTimeout(() => {
-        if (eventData) {
-          setLocation(`/events/${eventData.id}`);
+        if (data.eventId) {
+          setLocation(`/events/${data.eventId}`);
         } else {
           setLocation("/events");
         }
@@ -73,9 +66,13 @@ export function HuntRedirect() {
     onError: (error: any) => {
       setValidationStatus("error");
       setValidationMessage(error.message || "Failed to validate Hunt code");
+      setShowGPSDialog(false);
       
-      // If it's not a location error, redirect to home after 3 seconds
-      if (!error.message?.includes("within") && !error.message?.includes("location")) {
+      // Check if it's a distance error (user too far away)
+      const isDistanceError = error.message?.includes("away from") || error.message?.includes("within");
+      
+      // For distance errors, give them a chance to retry; otherwise redirect
+      if (!isDistanceError) {
         setTimeout(() => {
           setLocation("/");
         }, 3000);

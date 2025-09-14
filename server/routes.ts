@@ -6115,7 +6115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           success: true,
           ticketAmount: result.ticketAmount,
-          message: result.message || `Successfully redeemed ${result.ticketAmount} tickets!`
+          message: result.message || `Successfully redeemed ${result.ticketAmount} tickets!`,
+          eventId: result.eventId // Pass through the eventId if it exists (for Hunt codes)
         });
       } else {
         res.status(400).json({ 

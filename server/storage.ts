@@ -250,7 +250,7 @@ export interface IStorage {
   
   // Secret Codes
   validateSecretCode(code: string): Promise<SecretCode | undefined>;
-  redeemSecretCode(code: string, userId: string): Promise<{ success: boolean; ticketAmount?: number; error?: string }>;
+  redeemSecretCode(code: string, userId: string, latitude?: number, longitude?: number): Promise<{ success: boolean; ticketAmount?: number; error?: string; message?: string; eventId?: string }>;
   hasUserRedeemedCode(userId: string, codeId: string): Promise<boolean>;
   
   // Ticket Purchases
@@ -4554,7 +4554,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async redeemSecretCode(code: string, userId: string, latitude?: number, longitude?: number): Promise<{ success: boolean; ticketAmount?: number; error?: string; message?: string }> {
+  async redeemSecretCode(code: string, userId: string, latitude?: number, longitude?: number): Promise<{ success: boolean; ticketAmount?: number; error?: string; message?: string; eventId?: string }> {
     try {
       // Check if it looks like a Hunt code pattern but doesn't exist
       const huntPattern = /^[A-Z][a-z]+[A-Z][a-z]+$/;
@@ -4695,7 +4695,8 @@ export class DatabaseStorage implements IStorage {
         return { 
           success: true, 
           ticketAmount: secretCode.ticketAmount,
-          message: `You found ${event.name} and earned a validated ticket! Nice.`
+          message: `You found ${event.name} and earned a validated ticket! Nice.`,
+          eventId: event.id
         };
       }
       
