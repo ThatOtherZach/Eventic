@@ -2767,8 +2767,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       const username = user?.displayName || userEmail?.split('@')[0] || 'hunter';
       
-      // Use the already fetched existingTickets to generate sequential number
-      const ticketSequence = String(existingTickets.length + 1).padStart(3, '0');
+      // Use the total ticket count for this event to generate the ticket number
+      // This shows the order in which people completed the Hunt
+      const ticketSequence = String(ticketCount + 1).padStart(3, '0');
       
       const newTicket = await storage.createTicket({
         eventId: event.id,
