@@ -1,5 +1,6 @@
 import type { Express, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { randomUUID } from "crypto";
 import { storage } from "./storage";
 import { insertEventSchema, insertTicketSchema, insertFeaturedEventSchema, insertNotificationSchema, insertNotificationPreferencesSchema } from "@shared/schema";
 import { z } from "zod";
@@ -2615,6 +2616,185 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Hunt code lookup error:', error);
       res.status(500).json({ message: 'Error looking up Hunt code' });
+    }
+  });
+
+  // New Hunt Code Redemption endpoint
+  app.post('/api/hunt/redeem', requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { code, lat, lon } = req.body;
+      const userId = req.user?.id;
+      const userEmail = req.user?.email;
+      const userIp = req.ip || 'unknown';
+
+      if (!userId || !userEmail) {
+        return res.status(401).json({ 
+          success: false,
+          message: "Login required to redeem Hunt codes" 
+        });
+      }
+
+      if (!code) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Hunt code is required" 
+        });
+      }
+
+      // Lookup event by hunt code
+      const event = await storage.getEventByHuntCode(code.trim());
+      if (!event || !event.treasureHunt) {
+        return res.status(404).json({ 
+          success: false,
+          message: "Invalid Hunt code" 
+        });
+      }
+
+      // Check if location is provided
+      if (!lat || !lon) {
+        return res.status(400).json({
+          success: false,
+          message: "Location required for Hunt codes",
+          requiresLocation: true
+        });
+      }
+
+      // Check geofence - Hunt always requires being within 300m
+      if (event.latitude && event.longitude) {
+        const distance = calculateDistance(
+          Number(event.latitude),
+          Number(event.longitude),
+          lat,
+          lon
+        );
+        
+        if (distance > 300) {
+          return res.status(400).json({
+            success: false,
+            message: `You're too far from the event (must be within 300m). You are ${Math.round(distance)}m away`,
+            outsideGeofence: true,
+            distance: Math.round(distance)
+          });
+        }
+      } else {
+        // Event doesn't have location set
+        return res.status(400).json({
+          success: false,
+          message: "This Hunt event doesn't have a location configured"
+        });
+      }
+
+      // Check if event timing is valid
+      const timeCheck = isTicketWithinValidTime(event);
+      if (!timeCheck.valid) {
+        return res.status(400).json({
+          success: false,
+          message: timeCheck.message || "Event hasn't started yet"
+        });
+      }
+
+      // Check if user already has a ticket for this event
+      const existingTickets = await storage.getTicketsByEventAndUser(event.id, userId);
+      
+      if (existingTickets.length > 0) {
+        // User already has a ticket - validate it if not already validated
+        const ticket = existingTickets[0];
+        if (ticket.isValidated) {
+          return res.json({
+            success: true,
+            message: "You've already completed this Hunt!",
+            alreadyValidated: true,
+            ticket
+          });
+        }
+
+        // Validate the existing ticket
+        const validatedTicket = await storage.validateTicket(ticket.id);
+        
+        await logInfo(
+          'Hunt code redeemed (existing ticket validated)',
+          req.path,
+          {
+            userId,
+            eventId: event.id,
+            ticketId: ticket.id,
+            metadata: { huntCode: code }
+          }
+        );
+
+        return res.json({
+          success: true,
+          message: "Hunt completed! Your ticket has been validated!",
+          ticket: validatedTicket
+        });
+      }
+
+      // Check ticket availability
+      const ticketCount = await storage.getTotalTicketCountForEvent(event.id);
+      if (event.maxTickets && ticketCount >= event.maxTickets) {
+        return res.status(400).json({
+          success: false,
+          message: "No tickets available for this event"
+        });
+      }
+
+      // Create a new free ticket for the Hunt
+      const qrData = randomUUID();
+      const validationCode = randomUUID().slice(0, 8).toUpperCase();
+      
+      const newTicket = await storage.createTicket({
+        eventId: event.id,
+        userId,
+        ticketNumber: `HUNT-${Date.now()}`,
+        qrData,
+        validationCode,
+        recipientName: userEmail?.split('@')[0] || 'Hunter',
+        recipientEmail: userEmail || '',
+        ticketType: 'hunt',
+        purchaserIp: userIp,
+        status: 'sent',
+        transferable: false
+      });
+
+      // Immediately validate the ticket
+      const validatedTicket = await storage.validateTicket(newTicket.id);
+
+      await logInfo(
+        'Hunt code redeemed (new ticket created)',
+        req.path,
+        {
+          userId,
+          eventId: event.id,
+          ticketId: newTicket.id,
+          metadata: { huntCode: code }
+        }
+      );
+
+      return res.json({
+        success: true,
+        message: "Hunt completed! Ticket created and validated!",
+        ticket: validatedTicket,
+        newTicket: true
+      });
+
+    } catch (error) {
+      await logError(
+        'Hunt code redemption error',
+        req.path,
+        {
+          userId: req.user?.id,
+          metadata: {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            code: req.body.code
+          }
+        }
+      );
+      
+      console.error('Hunt redemption error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error redeeming Hunt code' 
+      });
     }
   });
 

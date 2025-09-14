@@ -473,49 +473,91 @@ export default function AccountPage() {
 
     setIsRedeeming(true);
     try {
-      let requestBody: any = { code: codeToRedeem };
-
-      // If GPS coordinates were provided, include them
-      if (latitude !== undefined && longitude !== undefined) {
-        requestBody.latitude = latitude;
-        requestBody.longitude = longitude;
-      } else if (isLikelyHuntCode(codeToRedeem) && !pendingHuntCode) {
-        // For Hunt codes entered directly, ALWAYS show GPS dialog first
-        setPendingHuntCode(codeToRedeem);
-        setShowGPSDialog(true);
-        setIsRedeeming(false);
-        return;
-      }
-
-      const response = await apiRequest(
-        "POST",
-        "/api/currency/redeem-code",
-        requestBody,
-      );
-      const data = await response.json();
-
-      if (response.ok) {
-        // Don't show toast for URM1550N code
-        if (codeToRedeem !== "URM1550N") {
-          toast({
-            title: "Success!",
-            description:
-              data.message ||
-              `Successfully redeemed ${data.ticketAmount} tickets!`,
-            variant: "success",
-          });
-        }
-        setSecretCode("");
-        setPendingHuntCode(null);
-        queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
-      } else {
-        // Check if it's a location error for Hunt codes
-        if (data.message?.includes("Hunt codes require your location") || 
-            data.message?.includes("GPS location") ||
-            data.message?.includes("location")) {
-          // Show GPS dialog
+      // Check if this is a Hunt code
+      if (isLikelyHuntCode(codeToRedeem)) {
+        // For Hunt codes, we need location FIRST
+        if (!pendingHuntCode && (latitude === undefined || longitude === undefined)) {
+          // First time entering Hunt code - show GPS dialog
           setPendingHuntCode(codeToRedeem);
           setShowGPSDialog(true);
+          setIsRedeeming(false);
+          return;
+        }
+
+        // We have location coordinates, call Hunt endpoint
+        const response = await apiRequest(
+          "POST",
+          "/api/hunt/redeem",
+          { 
+            code: codeToRedeem,
+            lat: latitude,
+            lon: longitude
+          }
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          toast({
+            title: "Success!",
+            description: data.message,
+            variant: "success",
+          });
+          
+          // Clear the code and refresh data
+          setSecretCode("");
+          setPendingHuntCode(null);
+          
+          // Invalidate tickets query to show the new/validated ticket
+          queryClient.invalidateQueries({ queryKey: ["/api/user/tickets"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+          
+          // Add notification
+          if (data.newTicket) {
+            addNotification({
+              type: "hunt_completed",
+              title: "Hunt Completed!",
+              description: "You successfully completed a treasure hunt and earned a ticket!"
+            });
+          }
+        } else {
+          // Check if location is required
+          if (data.requiresLocation) {
+            setPendingHuntCode(codeToRedeem);
+            setShowGPSDialog(true);
+          } else {
+            toast({
+              title: "Failed",
+              description: data.message || "Invalid Hunt code",
+              variant: "destructive",
+            });
+            setPendingHuntCode(null);
+          }
+        }
+      } else {
+        // Regular secret code - use the currency endpoint
+        let requestBody: any = { code: codeToRedeem };
+
+        const response = await apiRequest(
+          "POST",
+          "/api/currency/redeem-code",
+          requestBody,
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          // Don't show toast for URM1550N code
+          if (codeToRedeem !== "URM1550N") {
+            toast({
+              title: "Success!",
+              description:
+                data.message ||
+                `Successfully redeemed ${data.ticketAmount} tickets!`,
+              variant: "success",
+            });
+          }
+          setSecretCode("");
+          setPendingHuntCode(null);
+          queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
         } else {
           toast({
             title: "Failed",
