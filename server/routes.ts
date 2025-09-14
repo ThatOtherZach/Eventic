@@ -2649,6 +2649,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Invalid Hunt code" 
         });
       }
+      
+      // Get the secret code ID for tracking redemption
+      const secretCode = await storage.getSecretCodeByCodeAndEvent(code.trim(), event.id);
+      if (!secretCode) {
+        return res.status(404).json({ 
+          success: false,
+          message: "Hunt code not properly configured" 
+        });
+      }
+      
+      // Check if user already redeemed this Hunt code
+      const hasRedeemed = await storage.hasUserRedeemedCode(userId, secretCode.id);
+      if (hasRedeemed) {
+        return res.status(400).json({
+          success: false,
+          message: "You've already redeemed this Hunt code"
+        });
+      }
 
       // Check if location is provided
       if (!lat || !lon) {
@@ -2711,6 +2729,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Validate the existing ticket
         const validatedTicket = await storage.validateTicket(ticket.id);
         
+        // Record the Hunt code redemption so it counts towards secret codes
+        await storage.recordCodeRedemption(secretCode.id, userId);
+        
         await logInfo(
           'Hunt code redeemed (existing ticket validated)',
           req.path,
@@ -2758,6 +2779,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Immediately validate the ticket
       const validatedTicket = await storage.validateTicket(newTicket.id);
+      
+      // Record the Hunt code redemption so it counts towards secret codes
+      await storage.recordCodeRedemption(secretCode.id, userId);
 
       await logInfo(
         'Hunt code redeemed (new ticket created)',

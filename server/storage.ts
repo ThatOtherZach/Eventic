@@ -252,6 +252,8 @@ export interface IStorage {
   validateSecretCode(code: string): Promise<SecretCode | undefined>;
   redeemSecretCode(code: string, userId: string, latitude?: number, longitude?: number): Promise<{ success: boolean; ticketAmount?: number; error?: string; message?: string; eventId?: string }>;
   hasUserRedeemedCode(userId: string, codeId: string): Promise<boolean>;
+  getSecretCodeByCodeAndEvent(code: string, eventId: string): Promise<SecretCode | undefined>;
+  recordCodeRedemption(codeId: string, userId: string): Promise<void>;
   
   // Ticket Purchases
   createTicketPurchase(purchase: InsertTicketPurchase): Promise<TicketPurchase>;
@@ -4801,6 +4803,41 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error checking code redemption:', error);
       return false;
+    }
+  }
+  
+  async getSecretCodeByCodeAndEvent(code: string, eventId: string): Promise<SecretCode | undefined> {
+    try {
+      const [secretCode] = await db.select()
+        .from(secretCodes)
+        .where(and(
+          sql`LOWER(${secretCodes.code}) = LOWER(${code})`,
+          eq(secretCodes.eventId, eventId),
+          eq(secretCodes.codeType, 'hunt')
+        ));
+      return secretCode || undefined;
+    } catch (error) {
+      console.error('Error getting secret code by code and event:', error);
+      return undefined;
+    }
+  }
+  
+  async recordCodeRedemption(codeId: string, userId: string): Promise<void> {
+    try {
+      await db.insert(codeRedemptions).values({
+        codeId,
+        userId
+      });
+      
+      // Update the usage count on the secret code
+      await db.update(secretCodes)
+        .set({ 
+          currentUses: sql`COALESCE(${secretCodes.currentUses}, 0) + 1` 
+        })
+        .where(eq(secretCodes.id, codeId));
+    } catch (error) {
+      console.error('Error recording code redemption:', error);
+      throw error;
     }
   }
 
