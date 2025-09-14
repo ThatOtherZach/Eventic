@@ -3238,23 +3238,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Get the secret code ID for tracking redemption
-        const secretCode = await storage.getSecretCodeByCodeAndEvent(
-          code.trim(),
+        // Check if user already redeemed this Hunt code by checking if they have a ticket
+        const existingRedeemedTickets = await storage.getTicketsByEventAndUser(
           event.id,
-        );
-        if (!secretCode) {
-          return res.status(404).json({
-            success: false,
-            message: "This code may not be not properly configured...",
-          });
-        }
-
-        // Check if user already redeemed this Hunt code
-        const hasRedeemed = await storage.hasUserRedeemedCode(
           userId,
-          secretCode.id,
         );
+        const hasRedeemed = existingRedeemedTickets.some(t => t.ticketType === 'hunt');
         if (hasRedeemed) {
           return res.status(400).json({
             success: false,
@@ -3326,8 +3315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Validate the existing ticket
           const validatedTicket = await storage.validateTicket(ticket.id);
 
-          // Record the Hunt code redemption so it counts towards secret codes
-          await storage.recordCodeRedemption(secretCode.id, userId);
+          // Hunt code redemption is tracked via the ticket itself
 
           await logInfo("Secret code claimed (ticket validated)", req.path, {
             userId,
@@ -3382,8 +3370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Immediately validate the ticket
         const validatedTicket = await storage.validateTicket(newTicket.id);
 
-        // Record the Hunt code redemption so it counts towards secret codes
-        await storage.recordCodeRedemption(secretCode.id, userId);
+        // Hunt code redemption is tracked via the ticket itself
 
         await logInfo("Secret code redeemed (new ticket)", req.path, {
           userId,

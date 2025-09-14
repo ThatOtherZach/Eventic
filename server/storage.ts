@@ -923,34 +923,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEventByHuntCode(huntCode: string): Promise<Event | undefined> {
-    // First find the secret code with this hunt code (case-insensitive)
-    const [secretCode] = await db
-      .select()
-      .from(secretCodes)
-      .where(and(
-        sql`LOWER(${secretCodes.code}) = LOWER(${huntCode})`,
-        eq(secretCodes.codeType, "hunt")
-      ));
-    
-    if (!secretCode || !secretCode.eventId) {
-      return undefined;
-    }
-    
-    // Then get the associated event
+    // Hunt codes are now stored directly on the events table
     const [event] = await db
       .select()
       .from(events)
-      .where(eq(events.id, secretCode.eventId));
+      .where(and(
+        sql`LOWER(${events.huntCode}) = LOWER(${huntCode})`,
+        eq(events.treasureHunt, true)
+      ));
     
     return event || undefined;
   }
   
   async huntCodeExists(huntCode: string): Promise<boolean> {
     const [result] = await db.select({ count: count() })
-      .from(secretCodes)
+      .from(events)
       .where(and(
-        sql`LOWER(${secretCodes.code}) = LOWER(${huntCode})`,
-        eq(secretCodes.codeType, "hunt")
+        sql`LOWER(${events.huntCode}) = LOWER(${huntCode})`,
+        eq(events.treasureHunt, true)
       ))
       .limit(1);
     return result.count > 0;
