@@ -631,7 +631,7 @@ export default function EventForm() {
       if (ticketPrice < 1.0) {
         form.setError("ticketPrice", {
           type: "manual",
-          message: "Ticket price must be at least $1.00 for surge pricing",
+          message: "Ticket price must be at least $1.00",
         });
         return;
       }
@@ -760,7 +760,7 @@ export default function EventForm() {
     eventId: "sample",
     userId: user?.id || "",
     ticketNumber: "PREVIEW-001",
-    qrData: "sample-qr-data", // Need QR data to show QR code in preview
+    qrData: "sample-qr-data", // no
     isValidated:
       specialEffectsEnabled || (stickerEnabled && !!form.watch("stickerUrl")), // Mark as validated for preview when special effects or sticker enabled
     validatedAt: null,
@@ -1237,7 +1237,8 @@ export default function EventForm() {
                               />
                             </FormControl>
                             <FormDescription>
-                              Special content revealed to attendees after ticket validation
+                              Special content revealed to attendees after ticket
+                              validation
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -2821,26 +2822,27 @@ export default function EventForm() {
                                     </label>
                                   </div>
                                   <div className="form-text">
-                                    Enable geocaching-style validation. Hide a
-                                    unique URL in the real world for attendees
-                                    to discover. Ticket holders can enter the
-                                    Secret Code on their account page for instant
-                                    validation.
+                                    Hide a secret code in the real world for
+                                    people to discover. Claiming the Secret Code
+                                    on your Account page gives the you a
+                                    validated ticket for the event.
                                     {form.watch("treasureHunt") &&
                                       form.watch("huntCode") && (
                                         <div className="mt-2 p-2 bg-light border rounded">
-                                          <strong>Your Secret Code URL:</strong>
+                                          <strong>
+                                            Your Event's Secret Code:{" "}
+                                            <code>
+                                              {form.watch("huntCode")}
+                                            </code>
+                                          </strong>
                                           <br />
                                           <code className="text-primary">
-                                            https://eventic.quest/hunt/
                                             {form.watch("huntCode")}
                                           </code>
                                           <br />
                                           <small className="text-muted">
-                                            Share this URL or hide it for
-                                            anyone to find! Remember your
-                                            Secret Code: "
-                                            {form.watch("huntCode")}".
+                                            Write down your secret code or save
+                                            it, you'll only see it once!
                                           </small>
                                         </div>
                                       )}
@@ -2850,7 +2852,6 @@ export default function EventForm() {
                               )}
                             />
                           )}
-
 
                           {form.watch("geofence") &&
                             isEditMode &&
@@ -2880,19 +2881,23 @@ export default function EventForm() {
                                 <div className="form-text">
                                   {event?.huntCode && (
                                     <div className="mt-2 p-2 bg-light border rounded">
-                                      <strong>Hunt URL:</strong>
+                                      <strong>Secret Code</strong>
                                       <br />
                                       <code className="text-primary">
-                                        www.eventic.quest/hunt/{event.huntCode}
+                                        {event.huntCode}
                                       </code>
                                     </div>
                                   )}
                                 </div>
                                 {event?.bonusContent && (
                                   <div className="mt-3">
-                                    <label className="form-label">🎁 Bonus Content</label>
+                                    <label className="form-label">
+                                      Bonus Content Unlocked
+                                    </label>
                                     <div className="p-3 bg-light rounded">
-                                      <small className="text-muted">{event.bonusContent}</small>
+                                      <small className="text-muted">
+                                        {event.bonusContent}
+                                      </small>
                                     </div>
                                   </div>
                                 )}
