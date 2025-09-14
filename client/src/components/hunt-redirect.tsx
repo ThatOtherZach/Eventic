@@ -31,7 +31,7 @@ export function HuntRedirect() {
     enabled: !!huntCode,
   });
 
-  // Validation mutation
+  // Validation mutation - uses the secret code endpoint which handles Hunt codes perfectly
   const validateMutation = useMutation({
     mutationFn: async ({ latitude, longitude }: { latitude: number; longitude: number }) => {
       const response = await apiRequest("POST", `/api/currency/redeem-code`, {
@@ -54,16 +54,19 @@ export function HuntRedirect() {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       
       toast({
         title: "Hunt Success!",
-        description: `You've earned ${data.ticketAmount} tickets and been registered for the event!`,
+        description: data.message || `You've earned ${data.ticketAmount} tickets and been registered for the event!`,
       });
       
       // Redirect to event page after 3 seconds
       setTimeout(() => {
         if (eventData) {
           setLocation(`/events/${eventData.id}`);
+        } else {
+          setLocation("/events");
         }
       }, 3000);
     },
@@ -83,57 +86,47 @@ export function HuntRedirect() {
   // Initialize when component mounts
   useEffect(() => {
     if (!user) {
-      // Not logged in, redirect to auth page
+      // Not logged in, redirect to auth page with return URL
       toast({
         title: "Login Required",
-        description: "Please log in to claim Hunt codes",
+        description: "Please log in to claim this Hunt code",
         variant: "destructive",
       });
       setLocation(`/auth?redirect=/hunt/${huntCode}`);
       return;
     }
 
-    if (eventData && !showGPSDialog && validationStatus === "pending") {
-      setEvent(eventData);
-      // Show GPS dialog after event is loaded
+    // For Hunt codes, we always need GPS - show dialog immediately when user is logged in
+    if (user && huntCode && !showGPSDialog && validationStatus === "pending") {
       setShowGPSDialog(true);
-    } else if (!eventLoading && !eventData && huntCode) {
-      // Invalid hunt code
-      setValidationStatus("error");
-      setValidationMessage("Hunt code not found");
-      setTimeout(() => {
-        setLocation("/");
-      }, 2000);
     }
-  }, [eventData, eventLoading, huntCode, user, showGPSDialog, validationStatus, setLocation, toast]);
+  }, [huntCode, user, showGPSDialog, validationStatus, setLocation, toast]);
 
   const handleGPSGranted = async (latitude: number, longitude: number) => {
     setValidationStatus("validating");
+    setShowGPSDialog(false);
     await validateMutation.mutateAsync({ latitude, longitude });
   };
 
   const handleGPSDenied = () => {
+    setShowGPSDialog(false);
     setValidationStatus("error");
-    setValidationMessage("Location access is required to claim Hunt codes");
+    setValidationMessage("GPS location is required to claim Hunt codes. You must be at the event location.");
     
     toast({
       title: "Location Required",
-      description: "Hunt codes require location verification to claim rewards",
+      description: "Hunt codes can only be claimed when you're at the event location",
       variant: "destructive",
     });
     
-    // Redirect to event page after 3 seconds
+    // Redirect to home after 3 seconds
     setTimeout(() => {
-      if (eventData) {
-        setLocation(`/events/${eventData.id}`);
-      } else {
-        setLocation("/");
-      }
+      setLocation("/");
     }, 3000);
   };
 
-  // Loading state
-  if (eventLoading || (!eventData && validationStatus === "pending")) {
+  // Loading state (only show briefly while checking auth)
+  if (!user || (validationStatus === "pending" && !showGPSDialog)) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "50vh" }}>
         <div className="text-center">
@@ -149,11 +142,11 @@ export function HuntRedirect() {
             />
           </div>
           <div>
-            <h5>Discovering Hunt...</h5>
-            <p className="text-muted">Loading Hunt code details</p>
+            <h5>Discovering Hunt Code...</h5>
+            <p className="text-muted">Preparing location verification</p>
           </div>
         </div>
-        <style jsx>{`
+        <style>{`
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -228,8 +221,8 @@ export function HuntRedirect() {
         onLocationGranted={handleGPSGranted}
         onLocationDenied={handleGPSDenied}
         huntCode={huntCode}
-        title={`Hunt Code: ${huntCode}`}
-        description={event ? `Verify you're at ${event.name} to claim your reward!` : "Verify your location to claim your reward!"}
+        title={`Hunt Code Detected: ${huntCode}`}
+        description={"To claim your reward and event ticket, we need to verify you're at the event location. Make sure you're within 300 meters of the venue!"}
       />
       
       {/* Initial loading state while dialog is pending */}
