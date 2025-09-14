@@ -2763,10 +2763,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const qrData = randomUUID();
       const validationCode = randomUUID().slice(0, 8).toUpperCase();
       
+      // Get user info for ticket number
+      const user = await storage.getUser(userId);
+      const username = user?.displayName || userEmail?.split('@')[0] || 'hunter';
+      
+      // Use the already fetched existingTickets to generate sequential number
+      const ticketSequence = String(existingTickets.length + 1).padStart(3, '0');
+      
       const newTicket = await storage.createTicket({
         eventId: event.id,
         userId,
-        ticketNumber: `HUNT-${Date.now()}`,
+        ticketNumber: `${code}-${username}-${ticketSequence}`,
         qrData,
         validationCode,
         recipientName: userEmail?.split('@')[0] || 'Hunter',

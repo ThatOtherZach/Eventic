@@ -7,6 +7,7 @@ This is a full-stack event ticketing application built with React and Express.js
 Preferred communication style: Simple, everyday language.
 
 ## Recent Updates
+- **Hunt Code System Fixed (2025-09-14)**: Fixed Hunt codes to work exclusively through Secret Code input with mandatory GPS validation. Hunt codes now use case-insensitive matching, proper time validation, and track redemptions in secret codes count. Hunt tickets use special format: `[HuntCode]-[Username]-###` (e.g., `Oran9eGlaci3r-alice-001`).
 - **Admin Credit Claim Feature (2025-09-12)**: Replaced admin allowance with dedicated admin claim button giving 250 credits once per 24 hours. Only visible to users with super_admin or event_moderator roles. Admin claims tracked separately from regular daily claims.
 - **Fixed Timezone Validation Bug (2025-09-11)**: Resolved critical issue where events in non-UTC timezones (especially Mountain Time) were incorrectly validating tickets. Solution: Added UTC timestamp columns (startAtUtc, endAtUtc) to events table, converting local times to UTC on save. Validation now uses simple UTC comparisons instead of complex runtime timezone parsing.
 
