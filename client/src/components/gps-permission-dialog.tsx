@@ -88,7 +88,7 @@ export function GPSPermissionDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
-            <DialogTitle data-testid="dialog-hunt-title">{title}</DialogTitle>
+            <DialogTitle data-testid="dialog-secret-title">{title}</DialogTitle>
           </div>
           <DialogDescription className="space-y-3">
             {huntCode && (

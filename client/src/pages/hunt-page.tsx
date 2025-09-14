@@ -74,7 +74,7 @@ export default function HuntPage() {
         setGpsStatus("error");
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setLocationError("Please allow location access to validate the Hunt URL");
+            setLocationError("Please allow location access to validate the Secret Code");
             break;
           case error.POSITION_UNAVAILABLE:
             setLocationError("Location information is unavailable");
@@ -100,7 +100,7 @@ export default function HuntPage() {
   }, []);
 
   const handleLogin = () => {
-    // Store the Hunt URL in session storage so we can redirect back after login
+    // Store the Secret Code URL in session storage so we can redirect back after login
     sessionStorage.setItem("huntRedirect", `/hunt/${huntCode}`);
     setLocation("/login");
   };
@@ -122,7 +122,7 @@ export default function HuntPage() {
               <Alert className="border-yellow-200 bg-yellow-50">
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
                 <AlertDescription className="text-yellow-800">
-                  You need to log in to validate this Hunt URL
+                  You need to log in to validate this Secret Code
                 </AlertDescription>
               </Alert>
               <Button onClick={handleLogin} className="w-full">
@@ -148,7 +148,7 @@ export default function HuntPage() {
               <Alert className="border-orange-200 bg-orange-50">
                 <TicketIcon className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">
-                  You need a ticket for this event to validate the Hunt URL
+                  You need a ticket for this event to validate the Secret Code
                 </AlertDescription>
               </Alert>
               <Button onClick={() => setLocation(`/events/${event.id}`)} className="w-full">
@@ -174,7 +174,7 @@ export default function HuntPage() {
               <Alert className="border-red-200 bg-red-50">
                 <MapPin className="h-4 w-4 text-red-600" />
                 <AlertDescription className="text-red-800">
-                  You're {distance}m away from the venue. You need to be within 300 meters to validate this Hunt URL.
+                  You're {distance}m away from the venue. You need to be within 300 meters to validate this Secret Code.
                 </AlertDescription>
               </Alert>
               <Button onClick={requestLocation} className="w-full" disabled={gpsStatus === "loading"}>
@@ -201,7 +201,7 @@ export default function HuntPage() {
               <Alert className="border-green-200 bg-green-50">
                 <Trophy className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
-                  Congratulations! You found the hidden Hunt URL and your ticket has been validated!
+                  Congratulations! You found the hidden Secret Code and your ticket has been validated!
                 </AlertDescription>
               </Alert>
               {event && (
@@ -225,7 +225,7 @@ export default function HuntPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-6 w-6 text-yellow-500" />
-                Hunt Validation
+                Secret Code Validation
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -255,7 +255,7 @@ export default function HuntPage() {
             Treasure Hunt Validation
           </CardTitle>
           <CardDescription>
-            Validating Hunt code: {huntCode}
+            Validating Secret Code: {huntCode}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -281,7 +281,7 @@ export default function HuntPage() {
             <Alert>
               <Clock className="h-4 w-4 animate-spin" />
               <AlertDescription>
-                Validating Hunt URL...
+                Validating Secret Code...
               </AlertDescription>
             </Alert>
           )}
@@ -290,7 +290,7 @@ export default function HuntPage() {
             <Alert className="border-red-200 bg-red-50">
               <AlertCircle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                {(validateHunt.error as any)?.message || "Error validating Hunt URL"}
+                {(validateHunt.error as any)?.message || "Error validating Secret Code"}
               </AlertDescription>
             </Alert>
           )}
@@ -301,7 +301,7 @@ export default function HuntPage() {
             disabled={gpsStatus === "loading" || validateHunt.isPending}
           >
             <Navigation className="mr-2 h-4 w-4" />
-            {gpsStatus === "loading" ? "Getting Location..." : "Validate Hunt URL"}
+            {gpsStatus === "loading" ? "Getting Location..." : "Validate Secret Code"}
           </Button>
         </CardContent>
       </Card>

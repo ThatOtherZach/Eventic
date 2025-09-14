@@ -186,7 +186,7 @@ export default function EventForm() {
     }
   }, [userBalance, creditBalance, isEditMode, form]);
 
-  // Leetspeak transformation function for hunt codes
+  // Leetspeak transformation function for secret codes
   const applyLeetspeak = (text: string): string => {
     // Define leetspeak mappings
     const leetMap: { [key: string]: string } = {
@@ -224,7 +224,7 @@ export default function EventForm() {
       .join("");
   };
 
-  // Generate Hunt code with leetspeak variations
+  // Generate Secret Code with leetspeak variations
   const generateHuntCodeWithLeetspeak = (): string => {
     const colors = [
       "Red",
@@ -380,7 +380,7 @@ export default function EventForm() {
     return baseCode;
   };
 
-  // Generate Hunt code when Treasure Hunt is enabled
+  // Generate Secret Code when Treasure Hunt is enabled
   useEffect(() => {
     const treasureHunt = form.watch("treasureHunt");
     const currentHuntCode = form.watch("huntCode");
@@ -637,7 +637,7 @@ export default function EventForm() {
       }
     }
 
-    // Generate Hunt code if Treasure Hunt is enabled (use the same function as above)
+    // Generate Secret Code if Treasure Hunt is enabled (use the same function as above)
     const generateHuntCode = () => {
       return generateHuntCodeWithLeetspeak();
     };
@@ -2824,12 +2824,12 @@ export default function EventForm() {
                                     Enable geocaching-style validation. Hide a
                                     unique URL in the real world for attendees
                                     to discover. Ticket holders can enter the
-                                    Hunt code on their account page for instant
+                                    Secret Code on their account page for instant
                                     validation.
                                     {form.watch("treasureHunt") &&
                                       form.watch("huntCode") && (
                                         <div className="mt-2 p-2 bg-light border rounded">
-                                          <strong>Your hunt URL:</strong>
+                                          <strong>Your Secret Code URL:</strong>
                                           <br />
                                           <code className="text-primary">
                                             https://eventic.quest/hunt/
@@ -2838,8 +2838,8 @@ export default function EventForm() {
                                           <br />
                                           <small className="text-muted">
                                             Share this URL or hide it for
-                                            anyoneone to find! Remember your
-                                            hunt codee: "
+                                            anyone to find! Remember your
+                                            Secret Code: "
                                             {form.watch("huntCode")}".
                                           </small>
                                         </div>

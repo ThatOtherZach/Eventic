@@ -425,9 +425,9 @@ export default function AccountPage() {
     }
   };
 
-  // Helper function to detect if code might be a Hunt code
+  // Helper function to detect if code might be a Secret Code
   const isLikelyHuntCode = (code: string): boolean => {
-    // Hunt codes follow the ColorNoun format (e.g., BlueTiger, RedDragon)
+    // Secret codes follow the ColorNoun format (e.g., BlueTiger, RedDragon)
     // Can have leetspeak variations like R3dBear or G0ldenTiger
     // Case-insensitive check since users might type in different cases
     const huntPattern = /^[A-Z][a-z0-9]+[A-Z][a-z0-9]+$/i;
@@ -479,14 +479,14 @@ export default function AccountPage() {
 
     setIsRedeeming(true);
     try {
-      // Check if this is a Hunt code
+      // Check if this is a Secret Code
       if (isLikelyHuntCode(codeToRedeem)) {
-        // For Hunt codes, validate the code exists BEFORE asking for location
+        // For Secret codes, validate the code exists BEFORE asking for location
         if (
           !pendingHuntCode &&
           (latitude === undefined || longitude === undefined)
         ) {
-          // First validate the Hunt code exists
+          // First validate the Secret Code exists
           const validateResponse = await apiRequest(
             "POST",
             "/api/hunt/validate",
@@ -512,7 +512,7 @@ export default function AccountPage() {
           return;
         }
 
-        // We have location coordinates, call Hunt endpoint
+        // We have location coordinates, call Secret Code endpoint
         const response = await apiRequest("POST", "/api/hunt/redeem", {
           code: codeToRedeem,
           lat: latitude,
@@ -632,7 +632,7 @@ export default function AccountPage() {
     setPendingHuntCode(null);
     setValidationMessage({
       type: "error",
-      message: "Location access required to claim Hunt codes",
+      message: "Location access required to claim Secret Codes",
     });
   };
 
@@ -1046,10 +1046,10 @@ export default function AccountPage() {
                           const value = e.target.value;
                           // Clear validation message when user starts typing
                           setValidationMessage(null);
-                          // For Hunt codes (ColorNoun pattern), preserve CamelCase
+                          // For Secret codes (ColorNoun pattern), preserve CamelCase
                           // For regular codes, use uppercase
                           if (/^[A-Z][a-z0-9]*[A-Z]?[a-z0-9]*$/i.test(value)) {
-                            // Looks like it might be a Hunt code - preserve case
+                            // Looks like it might be a Secret Code - preserve case
                             setSecretCode(value);
                           } else {
                             // Regular code - uppercase it
@@ -1060,7 +1060,7 @@ export default function AccountPage() {
                           e.key === "Enter" && handleRedeemCode()
                         }
                         disabled={isRedeeming}
-                        // Don't force uppercase display to allow Hunt codes
+                        // Don't force uppercase display to allow Secret Codes
                       />
                       <button
                         className="btn btn-outline-primary"
@@ -2418,7 +2418,7 @@ export default function AccountPage() {
           )}
         </div>
       </div>
-      {/* GPS Permission Dialog for Hunt Codes */}
+      {/* GPS Permission Dialog for Secret Codes */}
       <GPSPermissionDialog
         open={showGPSDialog}
         onClose={() => {
