@@ -424,7 +424,8 @@ export default function AccountPage() {
   const isLikelyHuntCode = (code: string): boolean => {
     // Hunt codes follow the ColorNoun format (e.g., BlueTiger, RedDragon)
     // Can have leetspeak variations like R3dBear or G0ldenTiger
-    const huntPattern = /^[A-Z][a-z0-9]+[A-Z][a-z0-9]+$/;
+    // Case-insensitive check since users might type in different cases
+    const huntPattern = /^[A-Z][a-z0-9]+[A-Z][a-z0-9]+$/i;
     return huntPattern.test(code.trim());
   };
 
@@ -1002,14 +1003,23 @@ export default function AccountPage() {
                         className="form-control"
                         placeholder="Enter code"
                         value={secretCode}
-                        onChange={(e) =>
-                          setSecretCode(e.target.value.toUpperCase())
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // For Hunt codes (ColorNoun pattern), preserve CamelCase
+                          // For regular codes, use uppercase
+                          if (/^[A-Z][a-z0-9]*[A-Z]?[a-z0-9]*$/i.test(value)) {
+                            // Looks like it might be a Hunt code - preserve case
+                            setSecretCode(value);
+                          } else {
+                            // Regular code - uppercase it
+                            setSecretCode(value.toUpperCase());
+                          }
+                        }}
                         onKeyDown={(e) =>
                           e.key === "Enter" && handleRedeemCode()
                         }
                         disabled={isRedeeming}
-                        style={{ textTransform: "uppercase" }}
+                        // Don't force uppercase display to allow Hunt codes
                       />
                       <button
                         className="btn btn-outline-primary"
