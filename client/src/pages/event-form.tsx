@@ -2829,14 +2829,11 @@ export default function EventForm() {
                                     {form.watch("treasureHunt") &&
                                       form.watch("huntCode") && (
                                         <div className="mt-2 p-2 bg-light border rounded">
-                                          <strong>
-                                            Your Event's Secret Code:{" "}
-                                            <span {form.watch("huntCode")}</span>
-                                          </strong>
+                                          Your Secret Code:
                                           <br />
-                                          <code className="text-primary">
+                                          <strong className="text-primary">
                                             {form.watch("huntCode")}
-                                          </code>
+                                          </strong>
                                           <br />
                                           <small className="text-muted">
                                             Write down your secret code or save
