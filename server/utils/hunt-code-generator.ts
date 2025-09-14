@@ -40,6 +40,7 @@ function applyLeetspeak(text: string): string {
 // Generate Hunt code with leetspeak variations
 export function generateHuntCodeWithLeetspeak(): string {
   const colors = [
+    // Basic colors
     "Red",
     "Blue",
     "Green",
@@ -51,10 +52,47 @@ export function generateHuntCodeWithLeetspeak(): string {
     "Golden",
     "Black",
     "White",
+    "Gray",
+    "Brown",
+    // Gemstone colors
     "Emerald",
     "Ruby",
     "Sapphire",
     "Diamond",
+    "Pearl",
+    "Jade",
+    "Amber",
+    "Onyx",
+    "Crystal",
+    "Opal",
+    // Nature colors
+    "Crimson",
+    "Azure",
+    "Violet",
+    "Scarlet",
+    "Indigo",
+    "Coral",
+    "Turquoise",
+    "Magenta",
+    "Cyan",
+    "Lime",
+    // Metallic colors
+    "Bronze",
+    "Copper",
+    "Platinum",
+    "Iron",
+    "Steel",
+    "Titanium",
+    // Descriptive colors
+    "Neon",
+    "Dark",
+    "Bright",
+    "Shadow",
+    "Mystic",
+    "Electric",
+    "Frozen",
+    "Burning",
+    "Glowing",
   ];
   
   const nouns = [
