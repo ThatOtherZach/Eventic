@@ -4610,12 +4610,57 @@ export class DatabaseStorage implements IStorage {
         
         // Get event info and check availability
         if (!secretCode.eventId) {
-          return { success: false, error: 'Sorry, it\'s gone :(' };
+          return { success: false, error: 'Hunt code has no associated event' };
         }
         
         const event = await this.getEvent(secretCode.eventId);
         if (!event) {
-          return { success: false, error: 'Sorry, it\'s gone :(' };
+          return { success: false, error: 'Event not found' };
+        }
+        
+        // Check if event is within valid time window
+        const now = new Date();
+        let startDate: Date;
+        let endDate: Date | null = null;
+        
+        // Use UTC timestamps if available
+        if (event.startAtUtc) {
+          startDate = new Date(event.startAtUtc);
+        } else {
+          // Fallback: combine date and time
+          startDate = new Date(`${event.date}T${event.time}:00`);
+        }
+        
+        if (event.endAtUtc) {
+          endDate = new Date(event.endAtUtc);
+        } else if (event.endDate && event.endTime) {
+          endDate = new Date(`${event.endDate}T${event.endTime}:00`);
+        }
+        
+        // Check time validation based on earlyValidation setting
+        if (event.earlyValidation === 'At Start Time') {
+          if (now < startDate) {
+            const hoursUntil = Math.ceil((startDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+            return { 
+              success: false, 
+              error: `Event hasn't started yet. Starts in ${hoursUntil} hour${hoursUntil !== 1 ? 's' : ''}` 
+            };
+          }
+        } else if (event.earlyValidation === '1 Hour Before') {
+          const oneHourBefore = new Date(startDate.getTime() - 60 * 60 * 1000);
+          if (now < oneHourBefore) {
+            const hoursUntil = Math.ceil((oneHourBefore.getTime() - now.getTime()) / (1000 * 60 * 60));
+            return { 
+              success: false, 
+              error: `Too early to validate. Can validate in ${hoursUntil} hour${hoursUntil !== 1 ? 's' : ''}` 
+            };
+          }
+        }
+        // '3 Hours Before' and 'Anytime' allow validation now
+        
+        // Check if event has ended
+        if (endDate && now > endDate) {
+          return { success: false, error: 'Event has already ended' };
         }
         
         // Check if event has available tickets
@@ -4624,7 +4669,7 @@ export class DatabaseStorage implements IStorage {
         const ticketsAvailable = event.maxTickets ? event.maxTickets - ticketsSold : 1;
         
         if (ticketsAvailable <= 0) {
-          return { success: false, error: 'Sorry, it\'s gone :(' };
+          return { success: false, error: 'No tickets available for this event' };
         }
         
         // Check if user already has a ticket for this event

@@ -423,8 +423,9 @@ export default function AccountPage() {
   // Helper function to detect if code might be a Hunt code
   const isLikelyHuntCode = (code: string): boolean => {
     // Hunt codes follow the ColorNoun format (e.g., BlueTiger, RedDragon)
-    const huntPattern = /^[A-Z][a-z]+[A-Z][a-z]+$/;
-    return huntPattern.test(code);
+    // Can have leetspeak variations like R3dBear or G0ldenTiger
+    const huntPattern = /^[A-Z][a-z0-9]+[A-Z][a-z0-9]+$/;
+    return huntPattern.test(code.trim());
   };
 
   // Helper function to get GPS location
@@ -479,7 +480,7 @@ export default function AccountPage() {
         requestBody.latitude = latitude;
         requestBody.longitude = longitude;
       } else if (isLikelyHuntCode(codeToRedeem) && !pendingHuntCode) {
-        // For Hunt codes entered directly, show GPS dialog first
+        // For Hunt codes entered directly, ALWAYS show GPS dialog first
         setPendingHuntCode(codeToRedeem);
         setShowGPSDialog(true);
         setIsRedeeming(false);
@@ -509,7 +510,9 @@ export default function AccountPage() {
         queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       } else {
         // Check if it's a location error for Hunt codes
-        if (data.message?.includes("Hunt codes require your location")) {
+        if (data.message?.includes("Hunt codes require your location") || 
+            data.message?.includes("GPS location") ||
+            data.message?.includes("location")) {
           // Show GPS dialog
           setPendingHuntCode(codeToRedeem);
           setShowGPSDialog(true);
