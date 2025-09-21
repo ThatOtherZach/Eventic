@@ -1287,7 +1287,10 @@ export default function EventDetailPage() {
                     const shortcode = event.id.substring(0, 8);
                     const eventUrl = `${window.location.origin}/e/${shortcode}`;
                     navigator.clipboard.writeText(eventUrl).then(() => {
-                      // Optional: Add a toast or some feedback that link was copied
+                      toast({
+                        title: "Link copied!",
+                        description: "Event link copied to clipboard",
+                      });
                     });
                   }}
                   data-testid="button-copy-link"
@@ -1302,6 +1305,41 @@ export default function EventDetailPage() {
                     }}
                   />
                   Copy Link
+                </button>
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={() => {
+                    // Prepare the data to copy - only specific fields
+                    const copiedEventData = {
+                      name: event.name,
+                      description: event.description,
+                      surgePricing: event.surgePricing || false,
+                      earlyValidation: event.earlyValidation || "Allow at Anytime",
+                      reentryType: event.reentryType || "No Reentry (Single Use)",
+                      isPrivate: event.isPrivate || false,
+                      oneTicketPerUser: event.oneTicketPerUser || false,
+                      p2pValidation: event.p2pValidation || false,
+                      enableVoting: event.enableVoting || false,
+                      goldenTicketEnabled: event.goldenTicketEnabled || false,
+                      goldenTicketCount: event.goldenTicketEnabled ? event.goldenTicketCount : undefined,
+                      specialEffectsEnabled: event.specialEffectsEnabled || false,
+                    };
+
+                    // Navigate to event creation page with the copied data
+                    setLocation("/events/create", { state: { copiedEventData } });
+                  }}
+                  data-testid="button-copy-event"
+                >
+                  <img
+                    src={certificateIcon}
+                    alt=""
+                    style={{
+                      width: "14px",
+                      height: "14px",
+                      marginRight: "4px",
+                    }}
+                  />
+                  Copy Event
                 </button>
                 <button
                   className="btn btn-sm btn-outline-danger"
