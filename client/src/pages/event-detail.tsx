@@ -1330,12 +1330,6 @@ export default function EventDetailPage() {
                     
                     // Navigate to event creation page
                     setLocation("/events/create");
-                    
-                    // Show a toast notification
-                    toast({
-                      title: "Event copied!",
-                      description: "Creating a new event with copied settings",
-                    });
                   }}
                   data-testid="button-copy-event"
                 >
