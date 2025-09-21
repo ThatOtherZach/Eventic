@@ -51,6 +51,7 @@ import { LocationPicker } from "@/components/location-picker";
 import goldenTicketIcon from "@assets/world_star-0_1756849251180.png";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
 import certificateIcon from "@assets/briefcase-4_1756934281378.png";
+import copyEventIcon from "@assets/web_file_set-3_1758498505239.png";
 import gpsIcon from "@assets/gps-1_1756849430189.png";
 import checkIcon from "@assets/check-0_1756849706987.png";
 import usersIcon from "@assets/users_green-4_1756849357200.png";
@@ -1334,7 +1335,7 @@ export default function EventDetailPage() {
                   data-testid="button-copy-event"
                 >
                   <img
-                    src={certificateIcon}
+                    src={copyEventIcon}
                     alt=""
                     style={{
                       width: "14px",
