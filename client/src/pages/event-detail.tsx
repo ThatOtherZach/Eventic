@@ -1325,8 +1325,17 @@ export default function EventDetailPage() {
                       specialEffectsEnabled: event.specialEffectsEnabled || false,
                     };
 
-                    // Navigate to event creation page with the copied data
-                    setLocation("/events/create", { state: { copiedEventData } });
+                    // Store the copied data in sessionStorage
+                    sessionStorage.setItem('copiedEventData', JSON.stringify(copiedEventData));
+                    
+                    // Navigate to event creation page
+                    setLocation("/events/create");
+                    
+                    // Show a toast notification
+                    toast({
+                      title: "Event copied!",
+                      description: "Creating a new event with copied settings",
+                    });
                   }}
                   data-testid="button-copy-event"
                 >

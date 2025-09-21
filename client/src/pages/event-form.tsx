@@ -64,15 +64,24 @@ export default function EventForm() {
   const { toast } = useToast();
   const { user, isAdmin: checkIsAdmin } = useAuth();
   const { addNotification } = useNotifications();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [stickerEnabled, setStickerEnabled] = useState(false);
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = checkIsAdmin();
   
-  // Get copied event data from navigation state if available
-  const copiedEventData = (location as any)?.state?.copiedEventData;
+  // Get copied event data from sessionStorage if available
+  const [copiedEventData, setCopiedEventData] = useState<any>(null);
+  
+  useEffect(() => {
+    const storedData = sessionStorage.getItem('copiedEventData');
+    if (storedData && !isEditMode) {
+      setCopiedEventData(JSON.parse(storedData));
+      // Clear the data after retrieving it
+      sessionStorage.removeItem('copiedEventData');
+    }
+  }, [isEditMode]);
 
   // Set page SEO
   useSEO(isEditMode ? SEO_CONFIG.editEvent : SEO_CONFIG.createEvent);
@@ -138,8 +147,8 @@ export default function EventForm() {
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
     defaultValues: {
-      name: copiedEventData?.name || "",
-      description: copiedEventData?.description || "",
+      name: "",
+      description: "",
       contactDetails: "",
       venue: "",
       date: "",
@@ -150,21 +159,21 @@ export default function EventForm() {
       maxTickets: Math.min(creditBalance || 100, 5000),
       imageUrl: undefined,
       ticketBackgroundUrl: undefined,
-      earlyValidation: copiedEventData?.earlyValidation || "Allow at Anytime",
-      reentryType: copiedEventData?.reentryType || "No Reentry (Single Use)",
+      earlyValidation: "Allow at Anytime",
+      reentryType: "No Reentry (Single Use)",
       maxUses: 1,
-      goldenTicketEnabled: copiedEventData?.goldenTicketEnabled || false,
-      goldenTicketCount: copiedEventData?.goldenTicketCount || undefined,
-      specialEffectsEnabled: copiedEventData?.specialEffectsEnabled || false,
+      goldenTicketEnabled: false,
+      goldenTicketCount: undefined,
+      specialEffectsEnabled: false,
       stickerUrl: "",
       stickerOdds: 25,
       allowMinting: false,
       bonusContent: undefined,
-      isPrivate: copiedEventData?.isPrivate || false,
-      oneTicketPerUser: copiedEventData?.oneTicketPerUser || false,
-      surgePricing: copiedEventData?.surgePricing || false,
-      p2pValidation: copiedEventData?.p2pValidation || false,
-      enableVoting: copiedEventData?.enableVoting || false,
+      isPrivate: false,
+      oneTicketPerUser: false,
+      surgePricing: false,
+      p2pValidation: false,
+      enableVoting: false,
       geofence: false,
       ticketPurchasesEnabled: true,
       timezone: "America/New_York",
@@ -174,6 +183,24 @@ export default function EventForm() {
       allowPrepay: false,
     },
   });
+  
+  // Apply copied event data to form when available
+  useEffect(() => {
+    if (copiedEventData && !isEditMode) {
+      form.setValue("name", copiedEventData.name || "");
+      form.setValue("description", copiedEventData.description || "");
+      form.setValue("surgePricing", copiedEventData.surgePricing || false);
+      form.setValue("earlyValidation", copiedEventData.earlyValidation || "Allow at Anytime");
+      form.setValue("reentryType", copiedEventData.reentryType || "No Reentry (Single Use)");
+      form.setValue("isPrivate", copiedEventData.isPrivate || false);
+      form.setValue("oneTicketPerUser", copiedEventData.oneTicketPerUser || false);
+      form.setValue("p2pValidation", copiedEventData.p2pValidation || false);
+      form.setValue("enableVoting", copiedEventData.enableVoting || false);
+      form.setValue("goldenTicketEnabled", copiedEventData.goldenTicketEnabled || false);
+      form.setValue("goldenTicketCount", copiedEventData.goldenTicketCount || undefined);
+      form.setValue("specialEffectsEnabled", copiedEventData.specialEffectsEnabled || false);
+    }
+  }, [copiedEventData, isEditMode, form]);
 
   // Update maxTickets default when user balance loads (for create mode)
   useEffect(() => {
