@@ -1277,14 +1277,14 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {/* Calendar and Location Buttons - Only for signed-in users */}
-          {user && (
-            <div className="mb-4">
-              <div className="d-flex gap-2 flex-wrap">
+          {/* Calendar and Location Buttons */}
+          <div className="mb-4">
+            <div className="d-flex gap-2 flex-wrap">
                 <button
                   className="btn btn-sm btn-outline-danger"
                   onClick={() => {
-                    const eventUrl = `${window.location.origin}/events/${event.id}`;
+                    const shortcode = event.id.substring(0, 8);
+                    const eventUrl = `${window.location.origin}/e/${shortcode}`;
                     navigator.clipboard.writeText(eventUrl).then(() => {
                       // Optional: Add a toast or some feedback that link was copied
                     });
@@ -1387,11 +1387,10 @@ export default function EventDetailPage() {
                   Find Location
                 </button>
               </div>
-            </div>
-          )}
+          </div>
 
-          {/* Venue Location Map - Only for signed-in users */}
-          {user && event.latitude && event.longitude && (
+          {/* Venue Location Map */}
+          {event.latitude && event.longitude && (
             <div className="mb-4">
               <h5>Map</h5>
               <LocationPicker
