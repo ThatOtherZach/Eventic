@@ -64,12 +64,15 @@ export default function EventForm() {
   const { toast } = useToast();
   const { user, isAdmin: checkIsAdmin } = useAuth();
   const { addNotification } = useNotifications();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [imageUrl, setImageUrl] = useState<string>("");
   const [stickerEnabled, setStickerEnabled] = useState(false);
   const [ticketsSold, setTicketsSold] = useState(0);
   const isEditMode = !!id;
   const isAdmin = checkIsAdmin();
+  
+  // Get copied event data from navigation state if available
+  const copiedEventData = (location as any)?.state?.copiedEventData;
 
   // Set page SEO
   useSEO(isEditMode ? SEO_CONFIG.editEvent : SEO_CONFIG.createEvent);
@@ -135,8 +138,8 @@ export default function EventForm() {
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
     defaultValues: {
-      name: "",
-      description: "",
+      name: copiedEventData?.name || "",
+      description: copiedEventData?.description || "",
       contactDetails: "",
       venue: "",
       date: "",
@@ -147,21 +150,21 @@ export default function EventForm() {
       maxTickets: Math.min(creditBalance || 100, 5000),
       imageUrl: undefined,
       ticketBackgroundUrl: undefined,
-      earlyValidation: "Allow at Anytime",
-      reentryType: "No Reentry (Single Use)",
+      earlyValidation: copiedEventData?.earlyValidation || "Allow at Anytime",
+      reentryType: copiedEventData?.reentryType || "No Reentry (Single Use)",
       maxUses: 1,
-      goldenTicketEnabled: false,
-      goldenTicketCount: undefined,
-      specialEffectsEnabled: false,
+      goldenTicketEnabled: copiedEventData?.goldenTicketEnabled || false,
+      goldenTicketCount: copiedEventData?.goldenTicketCount || undefined,
+      specialEffectsEnabled: copiedEventData?.specialEffectsEnabled || false,
       stickerUrl: "",
       stickerOdds: 25,
       allowMinting: false,
       bonusContent: undefined,
-      isPrivate: false,
-      oneTicketPerUser: false,
-      surgePricing: false,
-      p2pValidation: false,
-      enableVoting: false,
+      isPrivate: copiedEventData?.isPrivate || false,
+      oneTicketPerUser: copiedEventData?.oneTicketPerUser || false,
+      surgePricing: copiedEventData?.surgePricing || false,
+      p2pValidation: copiedEventData?.p2pValidation || false,
+      enableVoting: copiedEventData?.enableVoting || false,
       geofence: false,
       ticketPurchasesEnabled: true,
       timezone: "America/New_York",
