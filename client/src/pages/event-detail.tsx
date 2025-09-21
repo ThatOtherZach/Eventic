@@ -1338,8 +1338,8 @@ export default function EventDetailPage() {
                     src={copyEventIcon}
                     alt=""
                     style={{
-                      width: "14px",
-                      height: "14px",
+                      width: "15px",
+                      height: "15px",
                       marginRight: "4px",
                     }}
                   />
