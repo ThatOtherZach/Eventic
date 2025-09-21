@@ -177,7 +177,8 @@ export default function EventDetailPage() {
   // Generate QR code for event URL
   useEffect(() => {
     if (event?.id) {
-      const fullUrl = `${window.location.origin}/events/${event.id}`;
+      const shortcode = event.id.substring(0, 8);
+      const fullUrl = `${window.location.origin}/e/${shortcode}`;
 
       // Generate QR code as data URL
       QRCode.toDataURL(fullUrl, {
