@@ -255,7 +255,7 @@ export default function EventDetailPage() {
 
   const addValidatorMutation = useMutation({
     mutationFn: async (email: string) => {
-      return apiRequest("POST", `/api/events/${id}/validators`, { email });
+      return apiRequest("POST", `/api/events/${eventId}/validators`, { email });
     },
     onSuccess: () => {
       toast({
@@ -263,7 +263,7 @@ export default function EventDetailPage() {
         description: "Delegated validator added successfully",
       });
       queryClient.invalidateQueries({
-        queryKey: [`/api/events/${id}/validators`],
+        queryKey: [`/api/events/${eventId}/validators`],
       });
       setValidatorEmail("");
       setIsAddingValidator(false);
@@ -282,7 +282,7 @@ export default function EventDetailPage() {
     mutationFn: async (validatorId: string) => {
       return apiRequest(
         "DELETE",
-        `/api/events/${id}/validators/${validatorId}`,
+        `/api/events/${eventId}/validators/${validatorId}`,
         {},
       );
     },
@@ -292,7 +292,7 @@ export default function EventDetailPage() {
         description: "Validator removed successfully",
       });
       queryClient.invalidateQueries({
-        queryKey: [`/api/events/${id}/validators`],
+        queryKey: [`/api/events/${eventId}/validators`],
       });
     },
     onError: (error: any) => {
@@ -309,7 +309,7 @@ export default function EventDetailPage() {
       if (!user) {
         throw new Error("Please sign in to expand tickets");
       }
-      return apiRequest("POST", `/api/events/${id}/expand`, {});
+      return apiRequest("POST", `/api/events/${eventId}/expand`, {});
     },
     onSuccess: () => {
       addNotification({
@@ -344,7 +344,7 @@ export default function EventDetailPage() {
     onSuccess: (data) => {
       // Refresh tickets and event data
       queryClient.invalidateQueries({
-        queryKey: [`/api/events/${id}/user-tickets`],
+        queryKey: [`/api/events/${eventId}/user-tickets`],
       });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
@@ -386,12 +386,12 @@ export default function EventDetailPage() {
         setLocation("/auth");
         throw new Error("Please sign in to purchase tickets");
       }
-      return apiRequest("POST", `/api/events/${id}/tickets`, {});
+      return apiRequest("POST", `/api/events/${eventId}/tickets`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
       queryClient.invalidateQueries({
-        queryKey: [`/api/events/${id}/user-tickets`],
+        queryKey: [`/api/events/${eventId}/user-tickets`],
       });
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       setIsPurchasing(false);
@@ -521,7 +521,7 @@ export default function EventDetailPage() {
           </div>
           <div className="mt-3">
             <Link
-              href={`/auth?redirect=/events/${id}`}
+              href={`/auth?redirect=/events/${eventId}`}
               className="btn btn-primary me-2"
             >
               Sign In to View Event
@@ -2116,7 +2116,7 @@ export default function EventDetailPage() {
               {canEdit && (
                 <div>
                   <Link
-                    href={`/events/${id}/edit`}
+                    href={`/events/${eventId}/edit`}
                     className="btn btn-secondary w-100 mb-2"
                   >
                     <img

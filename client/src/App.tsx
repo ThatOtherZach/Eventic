@@ -27,6 +27,7 @@ import NerdStats from "@/pages/nerd-stats";
 import { RegistryPage } from "@/pages/registry-page";
 import { RegistryTicketPage } from "@/pages/registry-ticket-page";
 import NotFound from "@/pages/not-found";
+import HuntRedirect from "@/pages/hunt-redirect";
 import { ScrollToTop } from "@/components/scroll-to-top";
 
 function Router() {
@@ -35,8 +36,9 @@ function Router() {
       <Route path="/" component={Events} />
       <Route path="/events" component={Events} />
       <ProtectedRoute path="/events/create" component={EventForm} />
-      <Route path="/events/:id">{(params) => <EventDetail />}</Route>
-      <Route path="/e/:shortcode">{(params) => <EventDetail />}</Route>
+      <Route path="/events/:id" component={EventDetail} />
+      <Route path="/e/:shortcode" component={EventDetail} />
+      <Route path="/hunt/:huntCode" component={HuntRedirect} />
       <ProtectedRoute path="/events/:id/edit" component={EventForm} />
       <Route path="/scanner" component={Scanner} />
       <ProtectedRoute path="/account" component={AccountPage} />
