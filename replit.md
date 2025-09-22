@@ -50,6 +50,19 @@ The system includes client-side QR code generation for tickets and server-side v
 - **Economic Model Philosophy**: The platform uses "tickets" as action points with gentle inflation designed to reward good actors and discourage malicious behavior. Event creation costs tickets (equal to capacity), while attendance is free. Rating system: thumbs up earns +1 ticket (one-time), thumbs down costs -1 ticket (one-time), switching ratings is free. Surge pricing uses logarithmic scaling for demand (max 25% increase) and gentle time-based urgency (25%/13%/5%/2% for last day/3 days/week/2 weeks). This creates subtle economic friction that makes bad behavior slightly costly while rewarding community builders with reputation discounts and easier platform use.
 - **Crypto Payment Processing**: Events can accept Bitcoin, Ethereum, or USDC payments with wallet addresses. System tracks payment intents with unique references for transaction matching. Event owners can export payment data as CSV for accounting. Terminal-style display shows wallet information and payment status. Payment intents follow the 69-day retention policy and are archived with event data.
 
+## Future Features
+
+### API Monetization
+- **Partner API Program**: Expose event management API as a paid service for developers
+  - Read-only event endpoints (listings, search, featured events)
+  - Validation primitives (ticket validation, hunt codes)
+  - Tiered pricing model (Free/Starter/Growth/Enterprise)
+  - Simple API key authentication initially
+  - Usage tracking and rate limiting per customer
+  - Target segments: App developers, white-label solutions, Web3 projects needing ticketing
+  - MVP approach: Manual key issuance, Stripe payment links, basic docs
+  - Future expansion: Self-serve portal, webhooks, SDKs, full CRUD operations
+
 ## External Dependencies
 
 ### Core Framework Dependencies
