@@ -26,7 +26,7 @@ The application uses Drizzle ORM with PostgreSQL for database operations. It def
 The project is configured for seamless development using Vite dev server (with HMR), ESBuild for server bundling, and TypeScript for strict type checking. Path aliases (`@/`, `@shared/`) are used for clean imports.
 
 ### QR Code System
-The system includes client-side QR code generation for tickets and server-side validation through QR data lookup, complemented by a web-based QR scanner interface.
+The system includes client-side QR code generation for events, only on the events detail page for now. QR tickets do not at present exist.
 
 ### Key Features & Design Decisions
 - **Role-Based Access Control (RBAC)**: Comprehensive permission system with four user roles (Super Admin, Event Moderator, Support, User) and granular permissions (manage_events, manage_users, manage_settings, view_analytics, manage_payments). Replaces hardcoded email domain checks with proper permission-based authorization. Super Admin role automatically assigned to @saymservices.com users during migration.
