@@ -135,7 +135,7 @@ export function MintNFTButtonV2({ ticket, event }: MintNFTButtonProps) {
     },
   });
 
-  // Execute mint on blockchain
+  // Execute mint on blockchain with client-side monitoring
   const executeMint = async (params: MintParameters) => {
     if (!signer || !provider) {
       throw new Error("Wallet not connected");
@@ -143,6 +143,7 @@ export function MintNFTButtonV2({ ticket, event }: MintNFTButtonProps) {
 
     setIsMinting(true);
     setTransactionStatus('pending');
+    let monitoringSessionId: string | null = null;
 
     try {
       // Create contract instance
@@ -165,6 +166,14 @@ export function MintNFTButtonV2({ ticket, event }: MintNFTButtonProps) {
 
       setTransactionHash(tx.hash);
       
+      // Create monitoring session (10-minute window)
+      const sessionResponse = await apiRequest("POST", "/api/monitoring-sessions", {
+        registryId: params.registryId,
+        transactionHash: tx.hash
+      });
+      const session = await sessionResponse.json();
+      monitoringSessionId = session.id;
+      
       toast({
         title: "Transaction Submitted",
         description: (
@@ -182,16 +191,58 @@ export function MintNFTButtonV2({ ticket, event }: MintNFTButtonProps) {
         ),
       });
 
-      // Wait for transaction confirmation
-      const receipt = await waitForTransaction(tx.hash);
+      // Client-side transaction monitoring (poll every 3 seconds for up to 10 minutes)
+      const maxAttempts = 200; // 10 minutes / 3 seconds = 200 attempts
+      let attempts = 0;
+      let receipt = null;
+      
+      while (attempts < maxAttempts) {
+        try {
+          receipt = await provider.getTransactionReceipt(tx.hash);
+          
+          if (receipt) {
+            break; // Transaction has been mined
+          }
+          
+          // Wait 3 seconds before next check
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          attempts++;
+        } catch (error) {
+          console.error("Error checking transaction status:", error);
+          // Continue polling despite errors
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          attempts++;
+        }
+      }
       
       if (receipt && receipt.status === 1) {
         setTransactionStatus('confirmed');
         
+        // Extract token ID from event logs
+        let tokenId = null;
+        if (receipt.logs && receipt.logs.length > 0) {
+          // Parse the Transfer event to get the token ID
+          for (const log of receipt.logs) {
+            if (log.topics && log.topics.length >= 4) {
+              // Transfer event has signature in topics[0], from in topics[1], to in topics[2], tokenId in topics[3]
+              tokenId = parseInt(log.topics[3], 16).toString();
+              break;
+            }
+          }
+        }
+        
+        // Update monitoring session status
+        if (monitoringSessionId) {
+          await apiRequest("POST", `/api/monitoring-sessions/${monitoringSessionId}/update-status`, {
+            status: 'confirmed',
+            tokenId: tokenId
+          });
+        }
+        
         // Confirm mint on server
         await apiRequest("POST", `/api/tickets/${ticket.id}/confirm-mint`, {
           transactionHash: tx.hash,
-          tokenId: receipt.logs[0]?.topics[1] // Extract token ID from event
+          tokenId: tokenId
         });
 
         toast({
@@ -202,11 +253,25 @@ export function MintNFTButtonV2({ ticket, event }: MintNFTButtonProps) {
         setShowMintModal(false);
         queryClient.invalidateQueries({ queryKey: [`/api/tickets/${ticket.id}/mint-status`] });
         queryClient.invalidateQueries({ queryKey: ["/api/user/registry"] });
+      } else if (receipt && receipt.status === 0) {
+        // Transaction failed
+        throw new Error("Transaction was reverted by the contract");
+      } else if (attempts >= maxAttempts) {
+        // Timeout - monitoring window expired
+        throw new Error("Transaction confirmation timeout (10 minutes). Please check the transaction on BaseScan.");
       } else {
         throw new Error("Transaction failed");
       }
     } catch (error: any) {
       setTransactionStatus('failed');
+      
+      // Update monitoring session status as failed
+      if (monitoringSessionId) {
+        await apiRequest("POST", `/api/monitoring-sessions/${monitoringSessionId}/update-status`, {
+          status: 'failed',
+          errorReason: error.message
+        });
+      }
       
       // Refund tickets if transaction failed
       if (transactionHash) {
