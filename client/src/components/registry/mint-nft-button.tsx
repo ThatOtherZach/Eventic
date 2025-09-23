@@ -43,7 +43,7 @@ export function MintNFTButton({ registry }: MintNFTButtonProps) {
         data-testid="button-already-minted"
       >
         <CheckCircle className="me-2" size={16} />
-        NFT Minted (Token #{registry.nftTokenId})
+        NFT Minted (Blockchain ID: #{registry.nftTokenId})
       </Button>
     );
   }
@@ -200,19 +200,19 @@ export function MintNFTButton({ registry }: MintNFTButtonProps) {
         data-testid="button-mint-nft"
       >
         <Sparkles className="me-2" size={16} />
-        Mint as NFT (Permanent Save)
+        Mint NFT
       </Button>
 
       <Modal open={showMintModal} onOpenChange={setShowMintModal}>
         <ModalHeader onClose={() => setShowMintModal(false)}>
-          Permanently Save as NFT
+          Mint Your Collectible as NFT
         </ModalHeader>
         <ModalBody>
           <div className="alert alert-info mb-3" role="alert">
-            <strong>What this does:</strong> Converts your registry record into a permanent NFT on the blockchain<br/>
+            <strong>What this does:</strong> Mints your digital collectible as a permanent NFT on the blockchain<br/>
             <strong>Gas Cost:</strong> ~$0.01 - $0.50 (paid by you from your wallet)<br/>
             <strong>Network:</strong> Base L2 (Ethereum Layer 2)<br/>
-            <strong>Royalty:</strong> {registry.withRoyalty ? '2.69% on resales' : 'No royalty fees'}
+            <strong>Royalty:</strong> 2.69% on resales
           </div>
 
           {/* Wallet Connection */}
@@ -220,7 +220,7 @@ export function MintNFTButton({ registry }: MintNFTButtonProps) {
             <div className="mb-4 p-4 border rounded bg-gray-50">
               <h5 className="mb-3">Connect Your Wallet</h5>
               <p className="text-sm text-gray-600 mb-3">
-                To mint this registry record as an NFT, connect your wallet. You'll pay the gas fees (~$0.01-$0.50) directly.
+                To mint this digital collectible as an NFT, connect your wallet. You'll pay the gas fees (~$0.01-$0.50) directly.
               </p>
               <WalletConnectButton />
             </div>
@@ -240,13 +240,13 @@ export function MintNFTButton({ registry }: MintNFTButtonProps) {
             </div>
           )}
 
-          {/* Registry Info */}
+          {/* Collectible Info */}
           <div className="mb-3">
-            <h6>Registry Details</h6>
+            <h6>Collectible Details</h6>
             <div className="small text-muted">
               <div>Event: {registry.eventName}</div>
               <div>Ticket: #{registry.ticketNumber}</div>
-              <div>Validated: {new Date(registry.ticketValidatedAt).toLocaleDateString()}</div>
+              <div>Validated: {registry.ticketValidatedAt ? new Date(registry.ticketValidatedAt).toLocaleDateString() : 'N/A'}</div>
             </div>
           </div>
 

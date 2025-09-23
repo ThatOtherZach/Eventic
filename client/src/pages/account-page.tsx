@@ -2148,13 +2148,13 @@ export default function AccountPage() {
         );
       })()}
 
-      {/* NFT Registry Section - Only show if user has minted NFTs */}
+      {/* Digital Collectibles Section - Only show if user has collectibles */}
       {registryRecords && registryRecords.length > 0 && (
         <div className="row mb-4">
           <div className="col-12">
             <h4 className="h5 fw-semibold mb-3">
               <Sparkles className="me-2" size={20} />
-              My NFT Collection
+              My Digital Collectibles
             </h4>
 
             {registryLoading ? (

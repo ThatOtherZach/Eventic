@@ -5,7 +5,7 @@ import { Sparkles } from "lucide-react";
 
 export function RegistryPage() {
   const [, setLocation] = useLocation();
-  const { data: registryRecords, isLoading } = useQuery({
+  const { data: registryRecords, isLoading } = useQuery<any[]>({
     queryKey: ["/api/registry"],
   });
 
@@ -14,7 +14,7 @@ export function RegistryPage() {
       <div className="container py-5">
         <div className="row mb-4">
           <div className="col">
-            <h1 className="h3 fw-bold mb-0">NFT Registry</h1>
+            <h1 className="h3 fw-bold mb-0">Digital Collectibles</h1>
           </div>
         </div>
         <div className="card">
@@ -33,8 +33,7 @@ export function RegistryPage() {
     <div className="container py-5">
       <div className="row mb-4">
         <div className="col">
-          <h1 className="h3 fw-bold mb-0">NFT Registry</h1>
-          <p className="text-muted">Permanently preserved event tickets</p>
+          <h1 className="h3 fw-bold mb-0">Digital Collectibles</h1>
         </div>
       </div>
 
@@ -42,8 +41,8 @@ export function RegistryPage() {
         <div className="card">
           <div className="card-body text-center py-5">
             <Sparkles className="text-muted mb-3 mx-auto" size={48} />
-            <h6 className="text-muted">No NFTs in the registry yet</h6>
-            <p className="text-muted small">Validated tickets that have been minted as NFTs will appear here</p>
+            <h6 className="text-muted">No digital collectibles yet</h6>
+            <p className="text-muted small">No digital collectibles yet</p>
           </div>
         </div>
       ) : (
@@ -76,6 +75,13 @@ export function RegistryPage() {
               isCharged: record.ticketIsCharged,
               validationCode: record.ticketValidationCode,
               nftMediaUrl: record.ticketNftMediaUrl,
+              purchaserEmail: record.ticketPurchaserEmail || null,
+              purchaserIp: record.ticketPurchaserIp || null,
+              purchasePrice: record.ticketPurchasePrice || null,
+              resellStatus: record.ticketResellStatus || 'not_for_resale',
+              originalOwnerId: record.ticketOriginalOwnerId || null,
+              scheduledDeletion: null,
+              paymentConfirmed: true,
             };
 
             // Reconstruct event object from preserved data
@@ -111,6 +117,29 @@ export function RegistryPage() {
               specialEffectsEnabled: record.eventSpecialEffectsEnabled,
               geofence: record.eventGeofence ? JSON.parse(record.eventGeofence) : null,
               isAdminCreated: record.eventIsAdminCreated,
+              isEnabled: record.eventIsEnabled !== false,
+              ticketPurchasesEnabled: record.eventTicketPurchasesEnabled !== false,
+              contactDetails: record.eventContactDetails || null,
+              country: record.eventCountry || null,
+              earlyValidation: record.eventEarlyValidation || 'Allow at Anytime',
+              maxUses: record.eventMaxUses || 1,
+              stickerOdds: record.eventStickerOdds || 25,
+              latitude: record.eventLatitude || null,
+              longitude: record.eventLongitude || null,
+              parentEventId: record.eventParentEventId || null,
+              lastRecurrenceCreated: record.eventLastRecurrenceCreated || null,
+              timezone: record.eventTimezone || 'America/New_York',
+              rollingTimezone: record.eventRollingTimezone || false,
+              hashtags: record.eventHashtags || [],
+              treasureHunt: record.eventTreasureHunt || false,
+              huntCode: record.eventHuntCode || null,
+              bonusContent: record.eventBonusContent || null,
+              allowPrepay: false,
+              startAtUtc: null,
+              endAtUtc: null,
+              paymentProcessing: 'none',
+              walletAddress: null,
+              paymentProcessingFee: null,
             };
 
             return (

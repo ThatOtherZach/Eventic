@@ -506,7 +506,7 @@ export default function AdminSettings() {
             </TabsTrigger>
             <TabsTrigger value="nft" className="admin-tab-trigger">
               <Ticket className="h-4 w-4" />
-              NFT Settings
+              Digital Collectibles
             </TabsTrigger>
             <TabsTrigger value="content" className="admin-tab-trigger">
               <FileText className="h-4 w-4" />
@@ -1456,9 +1456,9 @@ export default function AdminSettings() {
         <TabsContent value="nft" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>NFT Configuration</CardTitle>
+              <CardTitle>Digital Collectibles Configuration</CardTitle>
               <CardDescription>
-                Configure decentralized NFT minting where users pay tickets and mint NFTs themselves on Base L2 blockchain.
+                Configure digital collectibles where users pay tickets to create permanent memories of their validated tickets.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1471,18 +1471,18 @@ export default function AdminSettings() {
                 <div className="text-sm text-gray-700 space-y-2">
                   <p><strong>Revenue Model:</strong></p>
                   <ul className="ml-4 space-y-1">
-                    <li>• Users pay <strong>12 tickets</strong> to create registry records (main revenue)</li>
+                    <li>• Users pay <strong>12 tickets</strong> to create digital collectibles (main revenue)</li>
                     <li>• NFT minting is optional "permanent save" feature on registry pages</li>
                     <li>• Users mint directly from their wallet, paying gas (~$0.01-$0.50 on Base L2)</li>
                   </ul>
                   <p className="mt-3"><strong>How it works:</strong></p>
                   <ul className="ml-4 space-y-1">
-                    <li>1. User validates ticket and creates registry (pays tickets)</li>
-                    <li>2. Registry page shows "Mint as NFT" button</li>
+                    <li>1. User validates ticket and creates digital collectible (pays tickets)</li>
+                    <li>2. Collectible page shows "Mint NFT" button</li>
                     <li>3. User connects wallet and pays gas directly</li>
                     <li>4. NFT minted to user's address on Base L2</li>
                   </ul>
-                  <p className="text-xs text-gray-600 mt-2">Registry records preserve complete event and ticket data permanently, with or without NFT minting.</p>
+                  <p className="text-xs text-gray-600 mt-2">Digital collectibles preserve complete event and ticket data permanently, with or without NFT minting.</p>
                 </div>
               </div>
               
@@ -1490,9 +1490,9 @@ export default function AdminSettings() {
               <div className="p-4 border rounded-lg space-y-4">
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <Label htmlFor="nft-status">NFT Feature Status</Label>
+                    <Label htmlFor="nft-status">Digital Collectibles Status</Label>
                     <p className="text-sm text-gray-500">
-                      Control whether users can mint validated tickets as NFTs using decentralized minting
+                      Control whether users can create digital collectibles from validated tickets
                     </p>
                   </div>
                   <Select

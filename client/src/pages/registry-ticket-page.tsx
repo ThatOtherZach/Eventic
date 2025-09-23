@@ -29,14 +29,14 @@ export function RegistryTicketPage() {
     return (
       <div className="container py-5">
         <div className="alert alert-danger">
-          <h5>Registry record not found</h5>
+          <h5>Digital collectible not found</h5>
           <p>
-            The NFT you're looking for doesn't exist or has been removed.
+            The digital collectible you're looking for doesn't exist or has been removed.
           </p>
           <Link href="/registry">
             <a className="btn btn-primary mt-3">
               <ArrowLeft size={18} className="me-2" />
-              Back to Registry
+              Back to Collectibles
             </a>
           </Link>
         </div>
@@ -154,7 +154,7 @@ export function RegistryTicketPage() {
         <Link href="/registry">
           <a className="btn btn-outline-secondary">
             <ArrowLeft size={18} className="me-2" />
-            Back to Registry
+            Back to Collectibles
           </a>
         </Link>
       </div>
@@ -189,7 +189,7 @@ export function RegistryTicketPage() {
           <div className="d-flex align-items-center text-success">
             <Sparkles size={18} className="me-2" />
             <span>
-              Permanent NFT Registry Record
+              Digital Collectible
               {record.nftMinted && record.walletAddress && (
                 <span className="ms-1">• Minted to {record.walletAddress.slice(0, 6)}...{record.walletAddress.slice(-4)}</span>
               )}
@@ -364,7 +364,7 @@ export function RegistryTicketPage() {
             <div className="card mb-4">
               <div className="card-body">
                 <h6 className="card-title mb-3">Mint as NFT</h6>
-                <p className="text-muted small">Permanently save this registry record on the blockchain. You'll pay gas fees (~$0.01-$0.50) directly from your wallet.</p>
+                <p className="text-muted small">Permanently save this digital collectible on the blockchain. You'll pay gas fees (~$0.01-$0.50) directly from your wallet.</p>
                 <MintNFTButton registry={record} />
               </div>
             </div>
@@ -373,10 +373,10 @@ export function RegistryTicketPage() {
           {/* NFT Information */}
           <div className="card">
             <div className="card-body">
-              <h6 className="card-title mb-3">NFT Registry Information</h6>
+              <h6 className="card-title mb-3">Collectible Details</h6>
               <div className="row g-3">
                 <div className="col-6">
-                  <div className="text-muted small">Registry ID</div>
+                  <div className="text-muted small">Collectible ID</div>
                   <div className="font-monospace small">{record.id}</div>
                 </div>
                 <div className="col-6">
