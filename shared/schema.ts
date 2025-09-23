@@ -447,8 +447,7 @@ export const registryRecords = pgTable("registry_records", {
   ticketValidatedAt: timestamp("ticket_validated_at"), // When ticket was validated
   ticketValidatedBy: varchar("ticket_validated_by"), // Who validated it
   ticketCreatedAt: timestamp("ticket_created_at").notNull(),
-  ticketRecipientName: text("ticket_recipient_name").notNull(),
-  ticketRecipientEmail: text("ticket_recipient_email").notNull(),
+  // PII removed - no longer storing recipient name/email
   ticketSeatNumber: text("ticket_seat_number"),
   ticketType: text("ticket_type"),
   ticketTransferable: boolean("ticket_transferable").default(false),
@@ -461,8 +460,7 @@ export const registryRecords = pgTable("registry_records", {
   ticketVoteCount: integer("ticket_vote_count").default(0), // Number of votes received
   ticketIsDoubleGolden: boolean("ticket_is_double_golden").default(false), // Both random golden AND most voted
   ticketSpecialEffect: text("ticket_special_effect"), // Locked special effect type
-  ticketPurchaserEmail: text("ticket_purchaser_email"), // Email of the purchaser
-  ticketPurchaserIp: text("ticket_purchaser_ip"), // IP address of the purchaser
+  // PII removed - no longer storing purchaser email/IP
   ticketPurchasePrice: decimal("ticket_purchase_price", { precision: 10, scale: 2 }), // Original purchase price
   ticketResellStatus: text("ticket_resell_status"), // not_for_resale, for_resale, sold
   ticketOriginalOwnerId: varchar("ticket_original_owner_id"), // Original owner for resell tracking

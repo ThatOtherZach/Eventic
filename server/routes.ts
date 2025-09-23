@@ -5820,10 +5820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ticketValidatedAt: ticket.validatedAt || null,
           ticketValidatedBy: null, // validatedBy not tracked in current schema
           ticketCreatedAt: ticket.createdAt || new Date(),
-          ticketRecipientName:
-            ticket.recipientName || owner?.displayName || "Unknown",
-          ticketRecipientEmail:
-            ticket.recipientEmail || owner?.email || "unknown@example.com",
+          // PII fields removed - no longer storing recipient name/email
           ticketSeatNumber: ticket.seatNumber || null,
           ticketType: ticket.ticketType || null,
           ticketTransferable: ticket.transferable || false,
@@ -5836,8 +5833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ticketVoteCount: ticket.voteCount || 0,
           ticketIsDoubleGolden: ticket.isDoubleGolden || false,
           ticketSpecialEffect: ticket.specialEffect || null,
-          ticketPurchaserEmail: ticket.purchaserEmail || null,
-          ticketPurchaserIp: ticket.purchaserIp || null,
+          // PII fields removed - no longer storing purchaser email/IP
           ticketPurchasePrice: ticket.purchasePrice || null,
           ticketResellStatus: ticket.resellStatus || "not_for_resale",
           ticketOriginalOwnerId: ticket.originalOwnerId || null,
@@ -6094,8 +6090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Required ticket fields
           ticketNumber: ticket.ticketNumber,
           ticketStatus: ticket.status || "pending",
-          ticketRecipientName: ticket.recipientName || "",
-          ticketRecipientEmail: ticket.recipientEmail || "",
+          // PII fields removed - no longer storing recipient name/email
 
           // Preserve ticket data
           ticketCreatedAt: ticket.createdAt || new Date(),

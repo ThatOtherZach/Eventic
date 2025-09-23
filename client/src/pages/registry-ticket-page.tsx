@@ -56,8 +56,8 @@ export function RegistryTicketPage() {
     validatedAt: record.ticketValidatedAt,
     validatedBy: record.ticketValidatedBy || null,
     createdAt: record.ticketCreatedAt,
-    recipientName: record.ticketRecipientName,
-    recipientEmail: record.ticketRecipientEmail,
+    recipientName: '', // PII removed from registry
+    recipientEmail: '', // PII removed from registry
     seatNumber: record.ticketSeatNumber || null,
     ticketType: record.ticketType || null,
     transferable: record.ticketTransferable || false,
@@ -71,8 +71,8 @@ export function RegistryTicketPage() {
     isCharged: record.ticketIsCharged || false,
     validationCode: record.ticketValidationCode || null,
     nftMediaUrl: record.ticketGifData || record.ticketNftMediaUrl || null,
-    purchaserEmail: record.ticketPurchaserEmail || null,
-    purchaserIp: record.ticketPurchaserIp || null,
+    purchaserEmail: null, // PII removed from registry
+    purchaserIp: null, // PII removed from registry
     purchasePrice: record.ticketPurchasePrice || null,
     resellStatus: record.ticketResellStatus || 'not_for_resale',
     originalOwnerId: record.ticketOriginalOwnerId || null,
