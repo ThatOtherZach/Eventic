@@ -6490,7 +6490,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt.setMinutes(expiresAt.getMinutes() + 10);
         
         const session = await storage.createMonitoringSession({
-          id: randomUUID(),
           registryId,
           transactionHash,
           status: 'pending',
