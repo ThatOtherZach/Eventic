@@ -57,6 +57,7 @@ contract TicketRegistry is ERC721, ERC721URIStorage, ERC2981, Ownable {
     
     /**
      * @dev Mint a new NFT for a validated ticket
+     * Anyone can call this function after paying tickets through the platform
      * @param recipient The wallet address to receive the NFT
      * @param registryId The registry ID from the platform
      * @param metadataPath The path to append to baseMetadataURI (e.g., "abc123/metadata")
@@ -67,7 +68,7 @@ contract TicketRegistry is ERC721, ERC721URIStorage, ERC2981, Ownable {
         string memory registryId,
         string memory metadataPath,
         bool withRoyalty
-    ) public onlyOwner returns (uint256) {
+    ) public returns (uint256) {
         require(registryToToken[registryId] == 0, "Ticket already minted");
         require(recipient != address(0), "Invalid recipient");
         
