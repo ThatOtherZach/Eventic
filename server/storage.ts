@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type AdminClaim, type InsertAdminClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, adminClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type NftMonitoringSession, type InsertNftMonitoringSession, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type AdminClaim, type InsertAdminClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, nftMonitoringSessions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, adminClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { generateValidationCode, addCodeToEvent, validateCodeInstant, queueValidation, getPendingValidations, preloadP2PEventCodes, clearEventCodes } from "./codePoolManager";
@@ -123,6 +123,14 @@ export interface IStorage {
   canMintTicket(ticketId: string): Promise<boolean>;
   createRegistryTransaction(transaction: InsertRegistryTransaction): Promise<RegistryTransaction>;
   updateRegistryLastAccessed(id: string): Promise<void>;
+  
+  // NFT Monitoring Sessions
+  createMonitoringSession(session: InsertNftMonitoringSession): Promise<NftMonitoringSession>;
+  getMonitoringSession(id: string): Promise<NftMonitoringSession | undefined>;
+  getActiveMonitoringSessionByTxHash(txHash: string): Promise<NftMonitoringSession | undefined>;
+  updateMonitoringSessionStatus(id: string, status: string, tokenId?: string, errorReason?: string): Promise<void>;
+  cleanupExpiredMonitoringSessions(): Promise<number>;
+  updateRegistryNftStatus(registryId: string, status: 'confirmed' | 'failed', txHash: string, tokenId?: string): Promise<void>;
   
   // Featured Events Management
   getActiveFeaturedEvents(): Promise<FeaturedEvent[]>;
@@ -2607,6 +2615,96 @@ export class DatabaseStorage implements IStorage {
       .update(registryRecords)
       .set({ lastAccessed: new Date() })
       .where(eq(registryRecords.id, id));
+  }
+
+  // NFT Monitoring Sessions
+  async createMonitoringSession(session: InsertNftMonitoringSession): Promise<NftMonitoringSession> {
+    const [newSession] = await db.insert(nftMonitoringSessions).values(session).returning();
+    return newSession;
+  }
+  
+  async getMonitoringSession(id: string): Promise<NftMonitoringSession | undefined> {
+    const [session] = await db.select().from(nftMonitoringSessions).where(eq(nftMonitoringSessions.id, id));
+    return session || undefined;
+  }
+  
+  async getActiveMonitoringSessionByTxHash(txHash: string): Promise<NftMonitoringSession | undefined> {
+    const now = new Date();
+    const [session] = await db
+      .select()
+      .from(nftMonitoringSessions)
+      .where(
+        and(
+          eq(nftMonitoringSessions.transactionHash, txHash),
+          gt(nftMonitoringSessions.expiresAt, now)
+        )
+      );
+    return session || undefined;
+  }
+  
+  async updateMonitoringSessionStatus(
+    id: string, 
+    status: string, 
+    tokenId?: string, 
+    errorReason?: string
+  ): Promise<void> {
+    const updates: any = {
+      status,
+      lastCheckedAt: new Date()
+    };
+    
+    if (status === 'confirmed' && tokenId) {
+      updates.tokenId = tokenId;
+      updates.confirmedAt = new Date();
+    }
+    
+    if (status === 'failed' && errorReason) {
+      updates.errorReason = errorReason;
+    }
+    
+    await db
+      .update(nftMonitoringSessions)
+      .set(updates)
+      .where(eq(nftMonitoringSessions.id, id));
+  }
+  
+  async cleanupExpiredMonitoringSessions(): Promise<number> {
+    const now = new Date();
+    const result = await db
+      .update(nftMonitoringSessions)
+      .set({ status: 'expired' })
+      .where(
+        and(
+          lte(nftMonitoringSessions.expiresAt, now),
+          eq(nftMonitoringSessions.status, 'pending')
+        )
+      );
+    
+    return result.rowCount || 0;
+  }
+  
+  async updateRegistryNftStatus(
+    registryId: string, 
+    status: 'confirmed' | 'failed', 
+    txHash: string, 
+    tokenId?: string
+  ): Promise<void> {
+    const updates: any = {
+      nftTransactionHash: txHash,
+      nftMintingStatus: status === 'confirmed' ? 'minted' : 'failed',
+      nftMinted: status === 'confirmed'
+    };
+    
+    if (status === 'confirmed' && tokenId) {
+      updates.nftTokenId = tokenId;
+      updates.nftMintedAt = new Date();
+      updates.nftContractAddress = process.env.NFT_CONTRACT_ADDRESS;
+    }
+    
+    await db
+      .update(registryRecords)
+      .set(updates)
+      .where(eq(registryRecords.id, registryId));
   }
 
   // Featured Events Management

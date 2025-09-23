@@ -569,6 +569,31 @@ export const registryTransactions = pgTable("registry_transactions", {
   transactionDate: timestamp("transaction_date").defaultNow(),
 });
 
+// NFT transaction monitoring sessions - user-initiated, time-limited tracking
+export const nftMonitoringSessions = pgTable("nft_monitoring_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  registryId: varchar("registry_id").references(() => registryRecords.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  transactionHash: text("transaction_hash").notNull(),
+  walletAddress: text("wallet_address").notNull(),
+  chainId: integer("chain_id").notNull().default(8453), // Base mainnet
+  status: text("status").notNull().default("pending"), // pending, confirmed, failed, expired
+  confirmations: integer("confirmations").default(0),
+  tokenId: text("token_id"), // NFT token ID if minted successfully
+  blockNumber: integer("block_number"), // Block where transaction was included
+  gasUsed: text("gas_used"), // Actual gas used
+  effectiveGasPrice: text("effective_gas_price"), // Gas price in wei
+  errorReason: text("error_reason"), // Error message if failed
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(), // 10 minutes from creation
+  lastCheckedAt: timestamp("last_checked_at"),
+  confirmedAt: timestamp("confirmed_at"), // When transaction was confirmed
+}, (table) => ({
+  transactionHashIdx: index("nft_monitoring_tx_hash_idx").on(table.transactionHash),
+  expiresAtIdx: index("nft_monitoring_expires_idx").on(table.expiresAt),
+  userIdx: index("nft_monitoring_user_idx").on(table.userId),
+}));
+
 // Notifications table for the notifications center
 export const notifications = pgTable("notifications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -926,6 +951,15 @@ export const insertRegistryTransactionSchema = createInsertSchema(registryTransa
   transactionDate: true,
 });
 
+export const insertNftMonitoringSessionSchema = createInsertSchema(nftMonitoringSessions).omit({
+  id: true,
+  createdAt: true,
+  confirmations: true,
+  status: true,
+  lastCheckedAt: true,
+  confirmedAt: true,
+});
+
 export const insertFeaturedEventSchema = createInsertSchema(featuredEvents).omit({
   id: true,
   createdAt: true,
@@ -1076,6 +1110,8 @@ export type InsertRegistryRecord = z.infer<typeof insertRegistryRecordSchema>;
 export type RegistryRecord = typeof registryRecords.$inferSelect;
 export type InsertRegistryTransaction = z.infer<typeof insertRegistryTransactionSchema>;
 export type RegistryTransaction = typeof registryTransactions.$inferSelect;
+export type InsertNftMonitoringSession = z.infer<typeof insertNftMonitoringSessionSchema>;
+export type NftMonitoringSession = typeof nftMonitoringSessions.$inferSelect;
 export type InsertFeaturedEvent = z.infer<typeof insertFeaturedEventSchema>;
 export type FeaturedEvent = typeof featuredEvents.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
