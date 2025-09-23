@@ -169,7 +169,8 @@ export function MintNFTButtonV2({ ticket, event }: MintNFTButtonProps) {
       // Create monitoring session (10-minute window)
       const sessionResponse = await apiRequest("POST", "/api/monitoring-sessions", {
         registryId: params.registryId,
-        transactionHash: tx.hash
+        transactionHash: tx.hash,
+        walletAddress: address
       });
       const session = await sessionResponse.json();
       monitoringSessionId = session.id;

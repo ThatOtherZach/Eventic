@@ -6471,7 +6471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(401).json({ message: "Unauthorized" });
         }
 
-        const { registryId, transactionHash } = req.body;
+        const { registryId, transactionHash, walletAddress } = req.body;
         
         // Validate registry record belongs to user
         const registryRecord = await storage.getRegistryRecord(registryId);
@@ -6491,11 +6491,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const session = await storage.createMonitoringSession({
           registryId,
+          userId,
           transactionHash,
-          status: 'pending',
-          expiresAt,
-          checkCount: 0,
-          createdAt: new Date()
+          walletAddress: walletAddress || registryRecord.walletAddress,
+          expiresAt
         });
         
         res.json(session);
