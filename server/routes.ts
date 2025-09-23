@@ -6460,6 +6460,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Prepare mint parameters for registry NFT
+  app.post(
+    "/api/registry/:id/mint-parameters",
+    requireAuth,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { id } = req.params;
+        const { walletAddress } = req.body;
+
+        if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+          return res.status(400).json({ message: "Valid wallet address required" });
+        }
+
+        // Get the registry record
+        const registryRecord = await storage.getRegistryRecord(id);
+        if (!registryRecord) {
+          return res.status(404).json({ message: "Registry record not found" });
+        }
+
+        // Check ownership
+        if (registryRecord.ownerId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+
+        // Check if already minted
+        if (registryRecord.nftTokenId) {
+          return res.status(400).json({ message: "NFT already minted for this registry record" });
+        }
+
+        // Check if NFT is globally enabled
+        const nftEnabledSetting = await storage.getSystemSetting("nft_enabled");
+        const isEnabled = nftEnabledSetting?.value === "true";
+        if (!isEnabled) {
+          return res.status(400).json({ message: "NFT minting is not enabled" });
+        }
+
+        // Get contract ABI
+        let contractABI;
+        try {
+          contractABI = require('../contracts/TicketRegistryABI.json');
+        } catch (error) {
+          console.error("Failed to load contract ABI:", error);
+          return res.status(500).json({ message: "Contract configuration error" });
+        }
+
+        // Prepare mint parameters
+        const contractAddress = process.env.NFT_CONTRACT_ADDRESS;
+        if (!contractAddress) {
+          return res.status(500).json({ message: "NFT contract not configured" });
+        }
+
+        // Use the metadata from the registry record or create a default URL
+        const metadataUrl = registryRecord.metadata || `https://metadata.eventic.app/registry/${id}`;
+
+        // Estimate gas (typically 150,000 - 200,000 for NFT minting)
+        const estimatedGas = "200000";
+
+        // Check if this registry was created with royalty (infer from metadata or default to true)
+        let withRoyalty = true; // Default to standard minting with royalty
+        try {
+          const meta = JSON.parse(registryRecord.metadata);
+          if (meta && typeof meta.withRoyalty === 'boolean') {
+            withRoyalty = meta.withRoyalty;
+          }
+        } catch (e) {
+          // If metadata parsing fails, use default
+        }
+
+        res.json({
+          contractAddress,
+          contractABI,
+          registryId: id,
+          metadataPath: metadataUrl,
+          withRoyalty,
+          estimatedGas
+        });
+      } catch (error) {
+        await logError(error, "POST /api/registry/:id/mint-parameters", {
+          request: req,
+        });
+        res.status(500).json({ message: "Failed to prepare mint parameters" });
+      }
+    }
+  );
+
+  // Confirm mint after user executes transaction
+  app.post(
+    "/api/registry/:id/confirm-mint",
+    requireAuth,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { id } = req.params;
+        const { transactionHash, tokenId } = req.body;
+
+        if (!transactionHash) {
+          return res.status(400).json({ message: "Transaction hash required" });
+        }
+
+        // Get the registry record
+        const registryRecord = await storage.getRegistryRecord(id);
+        if (!registryRecord) {
+          return res.status(404).json({ message: "Registry record not found" });
+        }
+
+        // Check ownership
+        if (registryRecord.ownerId !== userId) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+
+        // Update the registry record with NFT details
+        await storage.updateRegistryNftStatus(
+          id,
+          'confirmed',
+          transactionHash,
+          tokenId
+        );
+
+        res.json({
+          success: true,
+          tokenId,
+          openSeaUrl: `https://opensea.io/assets/base/${process.env.NFT_CONTRACT_ADDRESS}/${tokenId}`,
+          baseScanUrl: `https://basescan.org/tx/${transactionHash}`,
+        });
+      } catch (error) {
+        await logError(error, "POST /api/registry/:id/confirm-mint", {
+          request: req,
+        });
+        res.status(500).json({ message: "Failed to confirm mint" });
+      }
+    }
+  );
+
   // NFT Monitoring Session endpoints
   app.post(
     "/api/monitoring-sessions",

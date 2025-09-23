@@ -1462,22 +1462,27 @@ export default function AdminSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Decentralized Minting Info */}
+              {/* Simplified NFT Model Info */}
               <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg space-y-3">
                 <div className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-blue-600" />
-                  <h4 className="font-medium text-blue-900">Decentralized NFT Minting Model</h4>
+                  <h4 className="font-medium text-blue-900">Simplified NFT Model</h4>
                 </div>
                 <div className="text-sm text-gray-700 space-y-2">
-                  <p>Users control their own NFT minting process:</p>
+                  <p><strong>Revenue Model:</strong></p>
                   <ul className="ml-4 space-y-1">
-                    <li>• Pay <strong>12 tickets</strong> for NFTs with 2.69% royalties on resales</li>
-                    <li>• Pay <strong>15 tickets</strong> for NFTs without royalties</li>
-                    <li>• Receive unsigned transaction data to mint on Base L2</li>
-                    <li>• Pay gas fees directly (typically very low on Base L2)</li>
-                    <li>• Complete minting through their own wallet</li>
+                    <li>• Users pay <strong>12 tickets</strong> to create registry records (main revenue)</li>
+                    <li>• NFT minting is optional "permanent save" feature on registry pages</li>
+                    <li>• Users mint directly from their wallet, paying gas (~$0.01-$0.50 on Base L2)</li>
                   </ul>
-                  <p className="text-xs text-gray-600 mt-2">Registry records preserve complete event and ticket data in base64 format for permanent storage.</p>
+                  <p className="mt-3"><strong>How it works:</strong></p>
+                  <ul className="ml-4 space-y-1">
+                    <li>1. User validates ticket and creates registry (pays tickets)</li>
+                    <li>2. Registry page shows "Mint as NFT" button</li>
+                    <li>3. User connects wallet and pays gas directly</li>
+                    <li>4. NFT minted to user's address on Base L2</li>
+                  </ul>
+                  <p className="text-xs text-gray-600 mt-2">Registry records preserve complete event and ticket data permanently, with or without NFT minting.</p>
                 </div>
               </div>
               

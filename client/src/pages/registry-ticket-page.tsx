@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { ArrowLeft, MapPin, Clock, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import { MintNFTButton } from "@/components/registry/mint-nft-button";
 import type { RegistryRecord } from "@shared/schema";
 
 export function RegistryTicketPage() {
@@ -76,6 +77,7 @@ export function RegistryTicketPage() {
     resellStatus: record.ticketResellStatus || 'not_for_resale',
     originalOwnerId: record.ticketOriginalOwnerId || null,
     scheduledDeletion: null,
+    paymentConfirmed: true,
   };
 
   // Reconstruct event object from preserved data - use base64 images when available
@@ -140,6 +142,9 @@ export function RegistryTicketPage() {
     paymentProcessingFee: null,
     paymentProcessing: 'none',
     walletAddress: null,
+    allowPrepay: false,
+    startAtUtc: null,
+    endAtUtc: null,
   };
 
   return (
@@ -350,6 +355,17 @@ export function RegistryTicketPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mint Button - Show only if not already minted */}
+          {!record.nftTokenId && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <h6 className="card-title mb-3">Mint as NFT</h6>
+                <p className="text-muted small">Permanently save this registry record on the blockchain. You'll pay gas fees (~$0.01-$0.50) directly from your wallet.</p>
+                <MintNFTButton registry={record} />
               </div>
             </div>
           )}
