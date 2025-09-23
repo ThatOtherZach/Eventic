@@ -6460,6 +6460,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NFT Monitoring Session endpoints
+  app.post(
+    "/api/monitoring-sessions",
+    requireAuth,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { registryId, transactionHash } = req.body;
+        
+        // Validate registry record belongs to user
+        const registryRecord = await storage.getRegistryRecord(registryId);
+        if (!registryRecord || registryRecord.ownerId !== userId) {
+          return res.status(403).json({ message: "Registry record not found or unauthorized" });
+        }
+        
+        // Check if a session already exists for this transaction
+        const existingSession = await storage.getActiveMonitoringSessionByTxHash(transactionHash);
+        if (existingSession) {
+          return res.json(existingSession);
+        }
+        
+        // Create new 10-minute monitoring session
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+        
+        const session = await storage.createMonitoringSession({
+          id: randomUUID(),
+          registryId,
+          transactionHash,
+          status: 'pending',
+          expiresAt,
+          checkCount: 0,
+          createdAt: new Date()
+        });
+        
+        res.json(session);
+      } catch (error) {
+        await logError(error, "POST /api/monitoring-sessions", {
+          request: req,
+        });
+        res.status(500).json({ message: "Failed to create monitoring session" });
+      }
+    }
+  );
+  
+  app.get(
+    "/api/monitoring-sessions/:id",
+    requireAuth,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        
+        const { id } = req.params;
+        const session = await storage.getMonitoringSession(id);
+        
+        if (!session) {
+          return res.status(404).json({ message: "Monitoring session not found" });
+        }
+        
+        // Verify ownership
+        const registryRecord = await storage.getRegistryRecord(session.registryId);
+        if (!registryRecord || registryRecord.ownerId !== userId) {
+          return res.status(403).json({ message: "Unauthorized" });
+        }
+        
+        res.json(session);
+      } catch (error) {
+        await logError(error, "GET /api/monitoring-sessions/:id", {
+          request: req,
+        });
+        res.status(500).json({ message: "Failed to fetch monitoring session" });
+      }
+    }
+  );
+  
+  app.post(
+    "/api/monitoring-sessions/:id/update-status",
+    requireAuth,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        
+        const { id } = req.params;
+        const { status, tokenId, errorReason } = req.body;
+        
+        // Get session and verify ownership
+        const session = await storage.getMonitoringSession(id);
+        if (!session) {
+          return res.status(404).json({ message: "Monitoring session not found" });
+        }
+        
+        const registryRecord = await storage.getRegistryRecord(session.registryId);
+        if (!registryRecord || registryRecord.ownerId !== userId) {
+          return res.status(403).json({ message: "Unauthorized" });
+        }
+        
+        // Update session status
+        await storage.updateMonitoringSessionStatus(id, status, tokenId, errorReason);
+        
+        // If confirmed, update the registry record
+        if (status === 'confirmed' && tokenId) {
+          await storage.updateRegistryNftStatus(
+            session.registryId, 
+            'confirmed', 
+            session.transactionHash, 
+            tokenId
+          );
+        } else if (status === 'failed') {
+          await storage.updateRegistryNftStatus(
+            session.registryId, 
+            'failed', 
+            session.transactionHash
+          );
+        }
+        
+        res.json({ success: true });
+      } catch (error) {
+        await logError(error, "POST /api/monitoring-sessions/:id/update-status", {
+          request: req,
+        });
+        res.status(500).json({ message: "Failed to update monitoring session" });
+      }
+    }
+  );
+
   // NFT Metadata endpoint for OpenSea/marketplaces
   app.get(
     "/api/registry/:id/metadata",
