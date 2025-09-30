@@ -43,9 +43,8 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   const [ticketBackgroundUrl, setTicketBackgroundUrl] = useState<string>("");
   
   // Calculate min and max dates for event creation
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split('T')[0];
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
   
   const fiveYearsFromNow = new Date();
   fiveYearsFromNow.setFullYear(fiveYearsFromNow.getFullYear() + 5);
@@ -103,18 +102,14 @@ export function CreateEventModal({ open, onOpenChange }: CreateEventModalProps) 
   });
 
   const onSubmit = (data: InsertEvent) => {
-    // Validate start date is at least 1 day in the future
+    // Validate start date is in the future
     const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0); // Set to start of day
-    
     const eventDate = new Date(`${data.date}T${data.time}`);
     
-    if (eventDate < tomorrow) {
+    if (eventDate <= now) {
       form.setError('date', {
         type: 'manual',
-        message: 'Event must be scheduled at least one day in advance'
+        message: 'Event must be scheduled in the future'
       });
       return;
     }
