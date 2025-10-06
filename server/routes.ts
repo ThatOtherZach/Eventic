@@ -16,6 +16,7 @@ import { supabaseSyncService } from "./supabaseSync";
 import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
 import fetch from "node-fetch";
 import { logError, logWarning, logInfo } from "./logger";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import {
   extractAuthUser,
   requireAuth,
@@ -24,7 +25,7 @@ import {
   AuthenticatedRequest,
   requirePermission,
   isAdmin,
-} from "./auth";
+} from "./authHelpers";
 import { validateBody, validateQuery, paginationSchema } from "./validation";
 import rateLimit from "express-rate-limit";
 import { generateUniqueDisplayName } from "./utils/display-name-generator";
@@ -422,16 +423,47 @@ const huntRedemptionRateLimiter = rateLimit({
 export async function registerRoutes(app: Express): Promise<Server> {
   const objectStorageService = new ObjectStorageService();
 
-  // Set trust proxy for accurate IP detection
+  // Setup Replit Auth first
+  await setupAuth(app);
+
+  // Set trust proxy for accurate IP detection (already done in setupAuth but kept for clarity)
   app.set("trust proxy", 1);
 
   // Apply general rate limiting to all routes
   app.use(generalRateLimiter);
 
-  // Apply authentication middleware to extract user from JWT on all routes
-  app.use(extractAuthUser);
+  // Auth routes for Replit Auth
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
-  // New login endpoint with rate limiting
+  // Get user permissions
+  app.get('/api/auth/permissions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const permissions = await storage.getUserPermissions(userId);
+      const roles = await storage.getUserRoles(userId);
+      const isAdmin = await storage.hasPermission(userId, 'manage_events');
+      
+      res.json({
+        permissions,
+        roles,
+        isAdmin
+      });
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      res.status(500).json({ message: "Failed to fetch permissions" });
+    }
+  });
+
+  // DEPRECATED: Old login endpoint - keeping for backwards compatibility but returns error
   app.post("/api/auth/login", async (req: AuthenticatedRequest, res) => {
     const { checkLoginRateLimit } = await import("./authLimiter");
 

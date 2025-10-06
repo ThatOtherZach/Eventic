@@ -5,12 +5,17 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: text("email").notNull().unique(),
+  email: text("email").unique(), // Made nullable for Replit Auth (some providers don't provide email)
   displayName: text("display_name"),
   memberStatus: text("member_status").default("Legacy"), // Track account signup periods
+  // Replit Auth fields
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   createdAt: timestamp("created_at").defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
   deletionScheduledAt: timestamp("deletion_scheduled_at"), // When account deletion was scheduled (90-day grace period)
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Roles table for defining user roles
@@ -109,8 +114,8 @@ export const authEvents = pgTable("auth_events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Sessions table for managing user sessions
-export const sessions = pgTable("sessions", {
+// Old sessions table - renamed to preserve existing data
+export const userSessions = pgTable("user_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
@@ -120,6 +125,18 @@ export const sessions = pgTable("sessions", {
   lastActiveAt: timestamp("last_active_at").defaultNow(),
   refreshToken: varchar("refresh_token", { length: 255 }),
 });
+
+// Sessions table for Replit Auth (connect-pg-simple)
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
 
 export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1088,6 +1105,8 @@ export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+// UpsertUser type for Replit Auth
+export type UpsertUser = typeof users.$inferInsert;
 export type InsertAuthToken = z.infer<typeof insertAuthTokenSchema>;
 export type AuthToken = typeof authTokens.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;

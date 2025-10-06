@@ -1,4 +1,4 @@
-import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type NftMonitoringSession, type InsertNftMonitoringSession, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type AdminClaim, type InsertAdminClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, nftMonitoringSessions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, adminClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
+import { type Event, type InsertEvent, type Ticket, type InsertTicket, type User, type InsertUser, type UpsertUser, type AuthToken, type InsertAuthToken, type DelegatedValidator, type InsertDelegatedValidator, type SystemLog, type ArchivedEvent, type InsertArchivedEvent, type ArchivedTicket, type InsertArchivedTicket, type RegistryRecord, type InsertRegistryRecord, type RegistryTransaction, type InsertRegistryTransaction, type NftMonitoringSession, type InsertNftMonitoringSession, type FeaturedEvent, type InsertFeaturedEvent, type Notification, type InsertNotification, type NotificationPreferences, type InsertNotificationPreferences, type LoginAttempt, type InsertLoginAttempt, type BlockedIp, type InsertBlockedIp, type AuthMonitoring, type InsertAuthMonitoring, type AuthQueue, type InsertAuthQueue, type AuthEvent, type InsertAuthEvent, type Session, type InsertSession, type ResellQueue, type InsertResellQueue, type ResellTransaction, type InsertResellTransaction, type EventRating, type InsertEventRating, type CurrencyLedger, type InsertCurrencyLedger, type AccountBalance, type InsertAccountBalance, type TransactionTemplate, type InsertTransactionTemplate, type CurrencyHold, type InsertCurrencyHold, type DailyClaim, type InsertDailyClaim, type AdminClaim, type InsertAdminClaim, type SecretCode, type InsertSecretCode, type CodeRedemption, type InsertCodeRedemption, type TicketPurchase, type InsertTicketPurchase, type CryptoPaymentIntent, type InsertCryptoPaymentIntent, type Role, type InsertRole, type Permission, type InsertPermission, type RolePermission, type InsertRolePermission, type UserRole, type InsertUserRole, type PlatformHeader, type InsertPlatformHeader, type SystemSetting, type InsertSystemSetting, users, authTokens, events, tickets, cryptoPaymentIntents, delegatedValidators, systemLogs, archivedEvents, archivedTickets, registryRecords, registryTransactions, nftMonitoringSessions, featuredEvents, notifications, notificationPreferences, loginAttempts, blockedIps, authMonitoring, authQueue, authEvents, sessions, resellQueue, resellTransactions, eventRatings, userReputationCache, validationActions, currencyLedger, accountBalances, transactionTemplates, currencyHolds, dailyClaims, adminClaims, secretCodes, codeRedemptions, ticketPurchases, roles, permissions, rolePermissions, userRoles, scheduledJobs, platformHeaders, systemSettings } from "@shared/schema";
 import { db } from "./db";
 import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDate } from "./jobScheduler";
 import { generateValidationCode, addCodeToEvent, validateCodeInstant, queueValidation, getPendingValidations, preloadP2PEventCodes, clearEventCodes } from "./codePoolManager";
@@ -12,6 +12,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>; // Required for Replit Auth
   updateUserLoginTime(id: string): Promise<User | undefined>;
   updateUserDisplayName(id: string, displayName: string): Promise<User | undefined>;
   getTotalUsersCount(): Promise<number>;
@@ -484,6 +485,53 @@ export class DatabaseStorage implements IStorage {
     }
     
     return user;
+  }
+
+  // Upsert user for Replit Auth - creates new or updates existing
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    // Check if user already exists
+    const existingUser = await this.getUser(userData.id);
+    
+    if (existingUser) {
+      // Update existing user with Replit Auth data
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          email: userData.email || existingUser.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          lastLoginAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userData.id))
+        .returning();
+      
+      return updatedUser;
+    } else {
+      // Create new user
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          ...userData,
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      
+      // Give new users a welcome bonus of 10 Tickets
+      if (newUser && newUser.id) {
+        await this.creditUserAccount(
+          newUser.id,
+          10,
+          'Welcome bonus - one time credit for new account',
+          { type: 'welcome_bonus' }
+        );
+      }
+      
+      return newUser;
+    }
   }
 
   async updateUserLoginTime(id: string): Promise<User | undefined> {

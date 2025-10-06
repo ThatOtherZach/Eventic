@@ -1,13 +1,10 @@
-import { createContext, ReactNode, useContext, useEffect, useState, useRef } from "react";
-import { User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
-import { useNotifications } from "@/hooks/use-notifications";
-import { useLocation } from "wouter";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { User } from "@shared/schema";
 
-// Extended user type that includes our custom fields
+// Extended user type that includes permissions and roles
 type ExtendedUser = User & {
-  displayName?: string;
-  memberStatus?: string;
   permissions?: string[];
   roles?: { name: string; displayName: string }[];
   isAdmin?: boolean;
@@ -20,335 +17,73 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   isAdmin: () => boolean;
+  isAuthenticated: boolean;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Global variable to prevent multiple initializations during HMR
-let hasGloballyInitialized = false;
-
-// Check if we've already synced (persists across HMR)
-function hasEverSynced() {
-  return localStorage.getItem('auth-synced') === 'true';
-}
-
-function markAsSynced() {
-  localStorage.setItem('auth-synced', 'true');
-}
-
-// Helper to get the correct redirect URL
-function getRedirectUrl() {
-  // Check if we're running on Replit
-  const replitDomain = import.meta.env.VITE_REPLIT_DEV_DOMAIN || import.meta.env.REPLIT_DEV_DOMAIN;
-  
-  if (replitDomain) {
-    // We're on Replit, use the public URL
-    return `https://${replitDomain}`;
-  }
-  
-  // Fallback to current origin (works for both localhost and production)
-  return window.location.origin;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { addNotification } = useNotifications();
-  const [user, setUser] = useState<ExtendedUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [, setLocation] = useLocation();
-  const hasInitialized = useRef(false);
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [roles, setRoles] = useState<{ name: string; displayName: string }[]>([]);
   
-  // Helper function to fetch user permissions
-  const fetchPermissions = async (accessToken: string): Promise<Partial<ExtendedUser>> => {
-    try {
-      const permResponse = await fetch('/api/auth/permissions', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-      if (permResponse.ok) {
-        const permData = await permResponse.json();
-        return {
-          permissions: permData.permissions || [],
-          roles: permData.roles || [],
-          isAdmin: permData.isAdmin || false,
-        };
-      }
-    } catch (error) {
-      console.error('Failed to fetch permissions:', error);
-    }
-    return {};
-  };
-
+  // Fetch user data using React Query
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+  
+  // Fetch permissions when user is authenticated
   useEffect(() => {
-    if (hasInitialized.current || hasGloballyInitialized) return;
-    hasInitialized.current = true;
-    hasGloballyInitialized = true;
-    
-    let mounted = true;
-
-    const initialize = async () => {
-      try {
-        // Check for magic link authentication in URL first
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        
-        if (accessToken && refreshToken) {
-          // We have tokens from a magic link, set the session
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          
-          if (data.session && mounted) {
-            setUser(data.session.user);
-            
-            // Sync user to local database (will generate display name if missing)
-            try {
-              const syncResponse = await fetch('/api/auth/sync-user', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                  email: data.session.user.email,
-                  name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0],
-                }),
-              });
-              if (syncResponse.ok) {
-                const userData = await syncResponse.json();
-                // Fetch permissions
-                const permissions = await fetchPermissions(accessToken);
-                // Update user object with any new data (like displayName, memberStatus, and permissions)
-                if (mounted) {
-                  const extendedUser = { 
-                    ...data.session.user, 
-                    displayName: userData.displayName, 
-                    memberStatus: userData.memberStatus,
-                    ...permissions
-                  };
-                  setUser(extendedUser);
-                }
-              }
-            } catch (error) {
-              console.error('Failed to sync user:', error);
-            }
-            
-            
-            // Clean up the URL
-            window.location.hash = '';
-            setLocation('/');
-          } else if (error) {
-            console.error('Failed to set session:', error);
+    if (user?.id) {
+      // Fetch user permissions
+      fetch('/api/auth/permissions')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            setPermissions(data.permissions || []);
+            setRoles(data.roles || []);
           }
-        } else {
-          // Check for existing session
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user && mounted) {
-            setUser(session.user);
-            
-            // Sync user to local database (will generate display name if missing)
-            try {
-              const syncResponse = await fetch('/api/auth/sync-user', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                  email: session.user.email,
-                  name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
-                }),
-              });
-              if (syncResponse.ok) {
-                const userData = await syncResponse.json();
-                // Fetch permissions
-                const permissions = await fetchPermissions(session.access_token);
-                // Update user object with any new data (like displayName, memberStatus, and permissions)
-                if (mounted) {
-                  const extendedUser = { 
-                    ...session.user, 
-                    displayName: userData.displayName, 
-                    memberStatus: userData.memberStatus,
-                    ...permissions
-                  };
-                  setUser(extendedUser);
-                }
-              }
-            } catch (error) {
-              console.error('Failed to sync user:', error);
-            }
-          }
-        }
-        
-        // Handle error messages in URL (like expired links)
-        const errorCode = hashParams.get('error_code');
-        const errorDescription = hashParams.get('error_description');
-        
-        if (errorCode === 'otp_expired') {
-          addNotification({
-            type: "error",
-            title: "Link Expired",
-            description: "This login link has expired. Please request a new one.",
-          });
-          // Clean up the URL
-          window.location.hash = '';
-          setLocation('/auth');
-        } else if (errorCode) {
-          addNotification({
-            type: "error",
-            title: "Authentication Error",
-            description: errorDescription || "There was an error with authentication.",
-          });
-          // Clean up the URL
-          window.location.hash = '';
-        }
-        
-        if (mounted) {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    // Listen for auth state changes (but don't sync user on every change)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      
-      if (session?.user) {
-        // When we have a session, fetch the extended user data including permissions
-        try {
-          const syncResponse = await fetch('/api/auth/sync-user', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              email: session.user.email,
-              name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
-            }),
-          });
-          
-          if (syncResponse.ok) {
-            const userData = await syncResponse.json();
-            // Fetch permissions
-            const permissions = await fetchPermissions(session.access_token);
-            // Update user object with extended data
-            if (mounted) {
-              const extendedUser = { 
-                ...session.user, 
-                displayName: userData.displayName, 
-                memberStatus: userData.memberStatus,
-                ...permissions
-              };
-              setUser(extendedUser);
-            }
-          } else {
-            // If sync fails, still set basic user
-            setUser(session.user);
-          }
-        } catch (error) {
-          console.error('Failed to sync user on auth state change:', error);
-          // Still set basic user even if sync fails
-          setUser(session.user);
-        }
-      } else {
-        setUser(null);
-      }
-      
-      // Only redirect on initial sign-in from auth page, not on session refresh
-      // This prevents redirecting when switching tabs or on page reload
-      if (event === 'SIGNED_IN' && session?.user && window.location.pathname === '/auth') {
-        setLocation('/');
-      }
-    });
-
-    initialize();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []); // Only run once on mount
+        })
+        .catch(console.error);
+    } else {
+      setPermissions([]);
+      setRoles([]);
+    }
+  }, [user?.id]);
 
   const signUp = async (email: string) => {
-    try {
-      const redirectTo = getRedirectUrl();
-      console.log('Using redirect URL:', redirectTo);
-      
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: redirectTo,
-          shouldCreateUser: true,
-        },
-      });
-      
-      if (error) throw error;
-      
-      addNotification({
-        type: "success",
-        title: "Email sent!",
-        description: "Check your inbox for the login link.",
-      });
-    } catch (error: any) {
-      addNotification({
-        type: "error",
-        title: "Error",
-        description: error.message || "Failed to send login email",
-      });
-      throw error;
-    }
+    // With Replit Auth, redirect to login
+    window.location.href = '/api/login';
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      addNotification({
-        type: "info",
-        title: "Signed out",
-        description: "You've been successfully signed out.",
-      });
-    } catch (error: any) {
-      addNotification({
-        type: "error",
-        title: "Error",
-        description: error.message || "Failed to sign out",
-      });
-      throw error;
-    }
+    // Redirect to Replit Auth logout
+    window.location.href = '/api/logout';
   };
-  
-  // Permission checking helper functions
-  const hasPermission = (permission: string): boolean => {
-    if (!user) return false;
-    return user.permissions?.includes(permission) || false;
+
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
   };
-  
-  const isAdmin = (): boolean => {
-    if (!user) return false;
-    return user.isAdmin || false;
+
+  const isAdmin = () => {
+    return roles.some(role => 
+      role.name === 'super_admin' || 
+      role.name === 'event_moderator'
+    );
+  };
+
+  const value: AuthContextType = {
+    user: user ? { ...user, permissions, roles, isAdmin: isAdmin() } : null,
+    isLoading,
+    isAuthenticated: !!user,
+    signUp,
+    signOut,
+    hasPermission,
+    isAdmin,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        signUp,
-        signOut,
-        hasPermission,
-        isAdmin,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -356,10 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  
   return context;
 }
