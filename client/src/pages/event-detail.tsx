@@ -322,6 +322,7 @@ export default function EventDetailPage() {
       // Refresh event data and user balance
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/currency/balance`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setIsExpanding(false);
     },
     onError: (error: any) => {
@@ -350,6 +351,8 @@ export default function EventDetailPage() {
       });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
     },
     onError: (error: any) => {
       // Extract the actual error message from the formatted error
@@ -397,6 +400,8 @@ export default function EventDetailPage() {
         queryKey: [`/api/events/${eventId}/user-tickets`],
       });
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
       setIsPurchasing(false);
     },
     onError: (error: any) => {
