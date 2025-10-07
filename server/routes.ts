@@ -1341,7 +1341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/tickets/:ticketId", async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user?.id || null;
+      const userId = extractUserId(req);
       const ticket = await storage.getTicket(req.params.ticketId);
 
       if (!ticket) {
@@ -1426,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(
     "/api/tickets/:ticketId/validation-token",
     async (req: AuthenticatedRequest, res) => {
-      const userId = req.user?.id || null;
+      const userId = extractUserId(req);
       try {
         const ticket = await storage.getTicket(req.params.ticketId);
 
