@@ -266,6 +266,7 @@ export default function TicketViewPage(): React.ReactElement {
       // Invalidate balance query if reward was credited or debited
       if (data.rewardCredited || data.ticketDebited) {
         queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       }
       // Invalidate event owner's reputation query to reflect the new rating
       if (event?.userId) {
