@@ -608,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -760,7 +760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -1388,7 +1388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/tickets/:ticketId/validate-session",
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id || null;
+        const userId = extractUserId(req);
         const { lat, lng } = req.body; // Get location data from ticket holder
         const ticket = await storage.getTicket(req.params.ticketId);
 
@@ -1588,7 +1588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/tickets/:ticketId/generate-nft-media",
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id || null;
+        const userId = extractUserId(req);
         const ticket = await storage.getTicket(req.params.ticketId);
 
         if (!ticket) {
@@ -1666,7 +1666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -1731,7 +1731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -1909,8 +1909,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     eventCreationRateLimiter,
     validateBody(insertEventSchema),
     async (req: AuthenticatedRequest, res) => {
-      const userId = req.user?.id;
-      const userEmail = req.user?.email;
+      const userId = extractUserId(req);
+      const userEmail = extractUserEmail(req);
 
       try {
         // Check if user is scheduled for deletion
@@ -2228,7 +2228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -2613,7 +2613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -2660,7 +2660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.json([]);
         }
@@ -2702,8 +2702,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     purchaseRateLimiter,
     validateBody(insertTicketSchema.partial()),
     async (req: AuthenticatedRequest, res) => {
-      const userId = req.user?.id;
-      const userEmail = req.user?.email;
+      const userId = extractUserId(req);
+      const userEmail = extractUserEmail(req);
       const userIp = req.ip || req.connection.remoteAddress || "unknown";
 
       try {
@@ -2871,7 +2871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -2909,7 +2909,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -3014,7 +3014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -3223,7 +3223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         const { code } = req.body;
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
 
         if (!userId) {
           return res.status(401).json({
@@ -3331,8 +3331,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         const { code, lat, lon } = req.body;
-        const userId = req.user?.id;
-        const userEmail = req.user?.email;
+        const userId = extractUserId(req);
+        const userEmail = extractUserEmail(req);
         const userIp = req.ip || "unknown";
 
         if (!userId || !userEmail) {
@@ -3532,8 +3532,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { huntCode } = req.params;
         const { latitude, longitude } = req.body;
-        const userId = req.user?.id;
-        const userEmail = req.user?.email;
+        const userId = extractUserId(req);
+        const userEmail = extractUserEmail(req);
 
         if (!userId || !userEmail) {
           return res.status(401).json({
@@ -3667,8 +3667,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "QR data is required" });
         }
 
-        const userId = req.user?.id || null;
-        const userEmail = req.user?.email || null;
+        const userId = extractUserId(req);
+        const userEmail = extractUserEmail(req);
 
         // For 4-digit codes (with or without suffix), try memory-first validation for P2P events
         if (/^\d{4}[SPU]?$/.test(qrData)) {
@@ -3978,8 +3978,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .json({ message: "Validation code is required" });
         }
 
-        const userId = req.user?.id;
-        const userEmail = req.user?.email;
+        const userId = extractUserId(req);
+        const userEmail = extractUserEmail(req);
         if (!userId || !userEmail) {
           return res
             .status(401)
@@ -4518,8 +4518,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
-        const userEmail = req.user?.email;
+        const userId = extractUserId(req);
+        const userEmail = extractUserEmail(req);
 
         // Check admin access
         if (
@@ -4566,7 +4566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/events", async (req: AuthenticatedRequest, res) => {
     try {
       // Check admin access
-      const userId = req.user?.id;
+      const userId = extractUserId(req);
       if (!userId || !(await storage.hasPermission(userId, "manage_events"))) {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -4586,7 +4586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         // Check admin access
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_events"))
@@ -4637,7 +4637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         // Check admin access
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4670,7 +4670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         // Check admin access
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4704,7 +4704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         // Check admin access
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_events"))
@@ -4727,7 +4727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         // Check admin access
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_events"))
@@ -4800,7 +4800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4825,7 +4825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4864,7 +4864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4902,7 +4902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4933,7 +4933,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4964,7 +4964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -4987,7 +4987,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (
           !userId ||
           !(await storage.hasPermission(userId, "manage_settings"))
@@ -5274,7 +5274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/events/:eventId/validators",
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id || null;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5304,7 +5304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5346,7 +5346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5374,7 +5374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5430,7 +5430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5473,7 +5473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5546,7 +5546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         const userEmail = extractUserEmail(req);
 
         if (!userId) {
@@ -5590,7 +5590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5612,7 +5612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5650,7 +5650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -5987,7 +5987,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { ethers } = await import("ethers");
 
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6247,7 +6247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6299,7 +6299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6370,7 +6370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6437,7 +6437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6493,7 +6493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6583,7 +6583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6635,7 +6635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6681,7 +6681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -6714,7 +6714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7020,7 +7020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: AuthenticatedRequest, res) => {
       try {
         const { id } = req.params;
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
 
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
@@ -7075,7 +7075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { id } = req.params;
         const { duration, isBump = false } = req.body;
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
 
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
@@ -7258,7 +7258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7279,7 +7279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7312,7 +7312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7342,7 +7342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7365,7 +7365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7388,7 +7388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7425,7 +7425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7582,7 +7582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -7773,7 +7773,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "User not authenticated" });
         }
@@ -7794,7 +7794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "User not authenticated" });
         }
@@ -7820,7 +7820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "User not authenticated" });
         }
@@ -7842,7 +7842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "User not authenticated" });
         }
@@ -7877,7 +7877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "User not authenticated" });
         }
@@ -7899,7 +7899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "User not authenticated" });
         }
@@ -7949,7 +7949,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "User not authenticated" });
         }
@@ -8065,8 +8065,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
-        const userEmail = req.user?.email;
+        const userId = extractUserId(req);
+        const userEmail = extractUserEmail(req);
 
         if (!userId || !userEmail) {
           return res.status(401).json({ message: "User not authenticated" });
@@ -8389,7 +8389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8443,7 +8443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8548,7 +8548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8627,7 +8627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8737,7 +8737,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8786,7 +8786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8815,7 +8815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8851,7 +8851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8881,7 +8881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8906,7 +8906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -8964,7 +8964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -9014,7 +9014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -9063,7 +9063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = req.user?.id;
+        const userId = extractUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
