@@ -26,9 +26,17 @@ export function ProtectedRoute({
   }
 
   if (!user) {
+    // Redirect to Replit Auth login
+    window.location.href = "/api/login";
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <div className="d-flex align-items-center justify-content-center min-vh-100">
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Redirecting to login...</span>
+            </div>
+          </div>
+        </div>
       </Route>
     );
   }

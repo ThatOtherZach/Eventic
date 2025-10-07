@@ -129,16 +129,14 @@ export function Navigation() {
               </>
             ) : (
               <li className="nav-item">
-                <Link
-                  href="/auth"
-                  className={`nav-link d-flex align-items-center ${
-                    location === "/auth" ? "active" : ""
-                  }`}
+                <a
+                  href="/api/login"
+                  className="nav-link d-flex align-items-center"
                   data-testid="link-nav-signin"
                 >
                   <LogIn className="me-1" size={18} />
                   Sign In
-                </Link>
+                </a>
               </li>
             )}
           </ul>

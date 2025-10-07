@@ -102,7 +102,8 @@ export default function HuntPage() {
   const handleLogin = () => {
     // Store the Secret Code URL in session storage so we can redirect back after login
     sessionStorage.setItem("huntRedirect", `/hunt/${huntCode}`);
-    setLocation("/login");
+    // Redirect to Replit Auth login
+    window.location.href = "/api/login";
   };
 
   if (validateHunt.data) {

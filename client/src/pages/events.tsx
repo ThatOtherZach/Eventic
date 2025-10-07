@@ -47,7 +47,8 @@ export default function Events() {
   };
 
   const handleSignIn = () => {
-    setLocation("/auth");
+    // Redirect to Replit Auth login
+    window.location.href = "/api/login";
   };
 
   return (

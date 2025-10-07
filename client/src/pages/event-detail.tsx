@@ -385,7 +385,8 @@ export default function EventDetailPage() {
   const purchaseTicketMutation = useMutation({
     mutationFn: async () => {
       if (!user) {
-        setLocation("/auth");
+        // Redirect to Replit Auth login
+        window.location.href = "/api/login";
         throw new Error("Please sign in to purchase tickets");
       }
       return apiRequest("POST", `/api/events/${eventId}/tickets`, {});
@@ -452,7 +453,8 @@ export default function EventDetailPage() {
         title: "Sign In Required",
         description: "Please sign in to RVSP",
       });
-      setLocation("/auth");
+      // Redirect to Replit Auth login
+      window.location.href = "/api/login";
       return;
     }
     setIsPurchasing(true);
