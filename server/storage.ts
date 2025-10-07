@@ -4,6 +4,7 @@ import { scheduleEventDeletion, updateEventDeletionSchedule, calculateDeletionDa
 import { generateValidationCode, addCodeToEvent, validateCodeInstant, queueValidation, getPendingValidations, preloadP2PEventCodes, clearEventCodes } from "./codePoolManager";
 import { eq, desc, and, count, gt, lt, gte, lte, notInArray, sql, isNotNull, ne, isNull, inArray, or, not, asc, like } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { generateUniqueDisplayName } from "./utils/display-name-generator";
 
 export interface IStorage {
   // Users
@@ -509,11 +510,23 @@ export class DatabaseStorage implements IStorage {
       
       return updatedUser;
     } else {
-      // Create new user
+      // Generate unique display name for new users
+      const allUsers = await this.getAllUsers();
+      const existingDisplayNames = allUsers
+        .map(u => u.displayName)
+        .filter(Boolean) as string[];
+      
+      const displayName = generateUniqueDisplayName(
+        existingDisplayNames,
+        new Date()
+      );
+      
+      // Create new user with display name
       const [newUser] = await db
         .insert(users)
         .values({
           ...userData,
+          displayName,
           createdAt: new Date(),
           lastLoginAt: new Date(),
           updatedAt: new Date(),
