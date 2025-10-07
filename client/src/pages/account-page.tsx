@@ -311,6 +311,7 @@ export default function AccountPage() {
       queryClient.invalidateQueries({
         queryKey: ["/api/currency/daily-claim-status"],
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: (error: any) => {
       toast({
@@ -364,6 +365,7 @@ export default function AccountPage() {
       queryClient.invalidateQueries({
         queryKey: ["/api/currency/admin-claim-status"],
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
     onError: (error: any) => {
       toast({
