@@ -1748,8 +1748,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/events", async (req: AuthenticatedRequest, res) => {
     try {
       const events = await storage.getEvents();
-      // Filter out private events from general listing
-      let publicEvents = events.filter((event) => !event.isPrivate);
+      // Filter out private and suspended events from general listing
+      let publicEvents = events.filter((event) => !event.isPrivate && event.isEnabled);
 
       // Get featured events to check which events are boosted
       const featuredEvents = await storage.getActiveFeaturedEvents();

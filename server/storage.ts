@@ -2975,13 +2975,21 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(events)
+      .where(and(
+        eq(events.isPrivate, false),
+        eq(events.isEnabled, true)
+      ))
       .orderBy(desc(events.createdAt))
       .limit(limit)
       .offset(offset);
   }
 
   async getTotalEventsCount(): Promise<number> {
-    const [result] = await db.select({ count: count() }).from(events);
+    const [result] = await db.select({ count: count() }).from(events)
+      .where(and(
+        eq(events.isPrivate, false),
+        eq(events.isEnabled, true)
+      ));
     return result?.count || 0;
   }
 
