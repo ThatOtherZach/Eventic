@@ -871,9 +871,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
       }
 
-      // Get all public events only - private events must never appear in location listings
+      // Get all public and enabled events only - private and suspended events must never appear in location listings
       let events = (await storage.getEvents()).filter(
-        (event) => !event.isPrivate,
+        (event) => !event.isPrivate && event.isEnabled,
       );
 
       // Only get featured events if this is a city (not a country or venue)
@@ -887,8 +887,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Filter by location type
       const filteredEvents = events.filter((event) => {
-        // Double-check that event is not private (safety check)
-        if (event.isPrivate) return false;
+        // Double-check that event is not private or suspended (safety check)
+        if (event.isPrivate || !event.isEnabled) return false;
         if (!event.venue) return false;
 
         const venueLower = event.venue.toLowerCase();
@@ -991,9 +991,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .trim()
           .toLowerCase();
 
-        // Get all public events only - private events must never appear in location listings
+        // Get all public and enabled events only - private and suspended events must never appear in location listings
         let events = (await storage.getEvents()).filter(
-          (event) => !event.isPrivate,
+          (event) => !event.isPrivate && event.isEnabled,
         );
 
         // Use the imported isCountry helper
@@ -1010,10 +1010,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Filter to show only upcoming and ongoing events (with 1-hour buffer)
         events = events.filter((event) => isEventActive(event));
 
-        // Filter by location (city or country) and ensure no private events slip through
+        // Filter by location (city or country) and ensure no private or suspended events slip through
         const filteredEvents = events.filter((event) => {
-          // Double-check that event is not private (safety check)
-          if (event.isPrivate) return false;
+          // Double-check that event is not private or suspended (safety check)
+          if (event.isPrivate || !event.isEnabled) return false;
 
           if (!event.venue) return false;
           const venueLower = event.venue.toLowerCase();
@@ -1090,9 +1090,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .trim()
           .toLowerCase();
 
-        // Get all public events only - private events must never appear in hashtag listings
+        // Get all public and enabled events only - private and suspended events must never appear in hashtag listings
         let events = (await storage.getEvents()).filter(
-          (event) => !event.isPrivate,
+          (event) => !event.isPrivate && event.isEnabled,
         );
 
         // Get featured events to check which events are boosted
@@ -1106,8 +1106,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Filter by hashtag
         const filteredEvents = events.filter((event) => {
-          // Double-check that event is not private (safety check)
-          if (event.isPrivate) return false;
+          // Double-check that event is not private or suspended (safety check)
+          if (event.isPrivate || !event.isEnabled) return false;
 
           // Check if event has this hashtag
           if (event.hashtags && Array.isArray(event.hashtags)) {
