@@ -2137,8 +2137,8 @@ export default function EventDetailPage() {
                 )}
               </button>
 
-              {/* Boost Button for event owners and ticket holders - not shown for private events */}
-              {!event.isPrivate &&
+              {/* Boost Button for event owners and ticket holders - not shown for private or suspended events */}
+              {!event.isPrivate && event.ticketPurchasesEnabled &&
                 (isOwner ||
                   (userTickets &&
                     userTickets.filter(
