@@ -747,6 +747,8 @@ export default function EventForm() {
         paymentProcessing: data.paymentProcessing || "None",
         walletAddress: data.walletAddress || undefined,
         allowPrepay: data.allowPrepay || false,
+        // Include isPrivate field to allow toggling privacy settings
+        isPrivate: data.isPrivate || false,
       };
 
       updateEventMutation.mutate(updateData);
