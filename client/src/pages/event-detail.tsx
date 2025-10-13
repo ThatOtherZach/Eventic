@@ -88,7 +88,7 @@ interface EventWithStats extends Event {
 export default function EventDetailPage() {
   const { id, shortcode } = useParams<{ id?: string; shortcode?: string }>();
   const eventId = id || shortcode;
-  const { user } = useAuth();
+  const { user, isAdmin: checkIsAdmin } = useAuth();
   const { toast } = useToast();
   const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
@@ -426,6 +426,39 @@ export default function EventDetailPage() {
     },
   });
 
+  const toggleSuspendMutation = useMutation({
+    mutationFn: async (suspend: boolean) => {
+      if (!isAdmin) {
+        throw new Error("Admin access required");
+      }
+      if (!event?.id) {
+        throw new Error("Event data not loaded");
+      }
+      return apiRequest("PUT", `/api/admin/events/${event.id}/toggle`, {
+        field: "ticketPurchasesEnabled",
+        value: !suspend, // Inverse because suspend=true means ticketPurchasesEnabled=false
+      });
+    },
+    onSuccess: (_, suspend) => {
+      toast({
+        title: suspend ? "Event Suspended" : "Event Unsuspended",
+        description: suspend 
+          ? "This event has been suspended and is now private" 
+          : "This event is now active and accepting RSVPs",
+      });
+      // Refresh event data
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update event",
+        description: error.message || "Could not suspend/unsuspend event",
+        variant: "destructive",
+      });
+    },
+  });
+
   const canResellTicket = (ticket: TicketType) => {
     if (!event) return false;
 
@@ -662,7 +695,7 @@ export default function EventDetailPage() {
 
   const isSoldOut = event.ticketsAvailable === 0;
   const isOwner = user && event.userId === user.id;
-  const isAdmin = user?.email?.endsWith("@saymservices.com");
+  const isAdmin = checkIsAdmin();
 
   // Calculate if event has started using date and time
   const eventHasStarted = (() => {
@@ -2179,6 +2212,39 @@ export default function EventDetailPage() {
                     />
                     Edit Event
                   </Link>
+
+                  {/* Suspend/Unsuspend Button - Only for admin users */}
+                  {isAdmin && event && (
+                    <button
+                      className={`btn ${event.ticketPurchasesEnabled ? 'btn-warning' : 'btn-success'} w-100 mb-2`}
+                      onClick={() => {
+                        const shouldSuspend = event.ticketPurchasesEnabled;
+                        if (shouldSuspend) {
+                          if (confirm("Are you sure you want to suspend this event? It will become private and stop accepting new RSVPs.")) {
+                            toggleSuspendMutation.mutate(true);
+                          }
+                        } else {
+                          toggleSuspendMutation.mutate(false);
+                        }
+                      }}
+                      disabled={toggleSuspendMutation.isPending || !event?.id}
+                    >
+                      <img
+                        src={event.ticketPurchasesEnabled ? "/lock-icon.png" : "/unlock-icon.png"}
+                        alt=""
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          marginRight: "8px",
+                        }}
+                      />
+                      {toggleSuspendMutation.isPending 
+                        ? "Processing..." 
+                        : event.ticketPurchasesEnabled 
+                          ? "Suspend Event" 
+                          : "Unsuspend Event"}
+                    </button>
+                  )}
 
                   {/* Download Transactions Button - Show for crypto events based on prepay setting */}
                   {event.paymentProcessing &&
