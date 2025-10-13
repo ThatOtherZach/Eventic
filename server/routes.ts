@@ -6874,9 +6874,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let featuredEvents = await storage.getFeaturedEventsWithDetails();
 
-      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer) and enabled events
       featuredEvents = featuredEvents.filter((featuredEvent) =>
-        isEventActive(featuredEvent.event),
+        isEventActive(featuredEvent.event) && featuredEvent.event.isEnabled,
       );
 
       // Add isAdminCreated field and current price to each event
@@ -6923,13 +6923,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get paid boost events (featured events)
       let featuredEvents = await storage.getFeaturedEventsWithDetails();
 
-      // Get all regular events for random selection (exclude private events)
+      // Get all regular events for random selection (exclude private and suspended events)
       let allEvents = (await storage.getEvents()).filter(
-        (event) => !event.isPrivate,
+        (event) => !event.isPrivate && event.isEnabled,
       );
 
-      // Filter to show only upcoming and ongoing events (with 1-hour buffer)
-      featuredEvents = featuredEvents.filter((fe) => isEventActive(fe.event));
+      // Filter to show only upcoming and ongoing events (with 1-hour buffer) and enabled events
+      featuredEvents = featuredEvents.filter((fe) => isEventActive(fe.event) && fe.event.isEnabled);
       allEvents = allEvents.filter((event) => isEventActive(event));
 
       // Get total available events (boosted + regular)
