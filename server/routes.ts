@@ -22,6 +22,7 @@ import {
   requireAuth,
   extractUserId,
   extractUserEmail,
+  extractDatabaseUserId,
   AuthenticatedRequest,
   requirePermission,
   isAdmin,
@@ -2684,25 +2685,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = extractUserId(req);
+        // Get the actual database user ID (not the Replit Auth ID)
+        const userId = await extractDatabaseUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
 
-        // Check if user owns the event
+        // Check if user owns the event or is an admin
         const event = await storage.getEvent(req.params.id);
         if (!event) {
           return res.status(404).json({ message: "Event not found" });
         }
-        if (event.userId !== userId) {
+
+        // Check if user has admin role
+        const hasAdminRole = await isAdmin(userId);
+
+        // Allow deletion if user owns the event OR is an admin
+        if (event.userId !== userId && !hasAdminRole) {
           return res
             .status(403)
-            .json({ message: "You can only delete your own events" });
+            .json({ 
+              message: "You can only delete your own events",
+              isOwner: event.userId === userId,
+              hasAdminRole
+            });
         }
 
-        const deleted = await storage.deleteEvent(req.params.id);
-        res.status(204).send();
+        // Use the new deleteEventImmediately method that handles refunds
+        const result = await storage.deleteEventImmediately(req.params.id, userId);
+        
+        if (!result.success) {
+          return res.status(500).json({ message: "Failed to delete event" });
+        }
+
+        // Return success with refund information
+        res.status(200).json({
+          message: "Event deleted successfully",
+          refundedCount: result.refundedCount,
+          deletedTicketsCount: result.deletedTicketsCount
+        });
       } catch (error) {
+        await logError(error, "DELETE /api/events/:id", {
+          request: req,
+          metadata: { eventId: req.params.id },
+        });
         res.status(500).json({ message: "Failed to delete event" });
       }
     },

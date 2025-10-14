@@ -41,6 +41,7 @@ export interface IStorage {
   updateEvent(id: string, event: Partial<InsertEvent>): Promise<Event | undefined>;
   updateEventMaxTickets(id: string, maxTickets: number): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
+  deleteEventImmediately(eventId: string, deletedByUserId: string): Promise<{ success: boolean; refundedCount: number; deletedTicketsCount: number }>;
   archiveEvent(eventId: string): Promise<boolean>;
   getEventByHuntCode(huntCode: string, country?: string): Promise<Event | undefined>;
   huntCodeExists(huntCode: string): Promise<boolean>;
@@ -1080,6 +1081,114 @@ export class DatabaseStorage implements IStorage {
     // Delete the event
     const result = await db.delete(events).where(eq(events.id, id)).returning();
     return result.length > 0;
+  }
+
+  async deleteEventImmediately(eventId: string, deletedByUserId: string): Promise<{ success: boolean; refundedCount: number; deletedTicketsCount: number }> {
+    try {
+      // Get the event first
+      const event = await this.getEvent(eventId);
+      if (!event) {
+        return { success: false, refundedCount: 0, deletedTicketsCount: 0 };
+      }
+
+      // Get all tickets for this event
+      const eventTickets = await db
+        .select()
+        .from(tickets)
+        .where(eq(tickets.eventId, eventId));
+
+      let refundedCount = 0;
+      let deletedTicketsCount = eventTickets.length;
+
+      // Process refunds for unvalidated tickets
+      const unvalidatedTickets = eventTickets.filter(ticket => !ticket.isValidated);
+      if (unvalidatedTickets.length > 0) {
+        // Group unvalidated tickets by user for batch refunds
+        const refundsByUser = new Map<string, number>();
+        for (const ticket of unvalidatedTickets) {
+          if (ticket.userId && ticket.purchasePrice) {
+            const price = parseFloat(ticket.purchasePrice);
+            if (price > 0) {
+              const currentTotal = refundsByUser.get(ticket.userId) || 0;
+              refundsByUser.set(ticket.userId, currentTotal + price);
+            }
+          }
+        }
+
+        // Process refunds for each user
+        for (const [userId, refundAmount] of Array.from(refundsByUser.entries())) {
+          try {
+            // Create refund transaction
+            await this.createLedgerTransaction({
+              transactionType: 'TICKET_REFUND',
+              description: `Refund for unvalidated tickets - Event: ${event.name} (deleted)`,
+              debits: [{ accountId: 'system_revenue', accountType: 'system', amount: refundAmount }],
+              credits: [{ accountId: userId, accountType: 'user', amount: refundAmount }],
+              metadata: {
+                eventId: event.id,
+                eventName: event.name,
+                reason: 'event_deleted',
+                deletedBy: deletedByUserId,
+                ticketCount: unvalidatedTickets.filter(t => t.userId === userId).length,
+              },
+              relatedEntityId: eventId,
+              relatedEntityType: 'event',
+              createdBy: deletedByUserId,
+            });
+
+            refundedCount += unvalidatedTickets.filter(t => t.userId === userId).length;
+          } catch (error) {
+            console.error(`Failed to refund user ${userId}:`, error);
+          }
+        }
+      }
+
+      // Create notification for the event owner (always, even if they deleted it themselves)
+      if (event.userId) {
+        const isOwnerDeleting = event.userId === deletedByUserId;
+        const title = isOwnerDeleting ? 'Event Deleted Successfully' : 'Event Deleted by Administrator';
+        const description = isOwnerDeleting 
+          ? `Event "${event.name}" has been deleted. ${refundedCount} unvalidated ticket${refundedCount === 1 ? ' was' : 's were'} refunded.`
+          : `Your event "${event.name}" has been deleted by an administrator. ${refundedCount > 0 ? `${refundedCount} unvalidated ticket${refundedCount === 1 ? ' was' : 's were'} refunded.` : 'No refunds were necessary as all tickets were validated.'}`;
+        
+        await this.createNotification({
+          userId: event.userId,
+          type: 'system',
+          title,
+          description,
+        });
+      }
+
+      // Delete tickets from resell queue if any
+      await db.delete(resellQueue).where(eq(resellQueue.eventId, eventId));
+
+      // Delete crypto payment intents
+      await db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
+
+      // Delete the tickets
+      await db.delete(tickets).where(eq(tickets.eventId, eventId));
+
+      // Delete delegated validators
+      await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
+
+      // Delete the event
+      await db.delete(events).where(eq(events.id, eventId));
+
+      // Cancel any scheduled deletion job
+      await db
+        .update(scheduledJobs)
+        .set({ status: 'cancelled' })
+        .where(and(
+          eq(scheduledJobs.targetId, eventId),
+          eq(scheduledJobs.jobType, 'archive_event'),
+          eq(scheduledJobs.status, 'pending')
+        ));
+
+      return { success: true, refundedCount, deletedTicketsCount };
+    } catch (error) {
+      console.error(`Error deleting event ${eventId}:`, error);
+      return { success: false, refundedCount: 0, deletedTicketsCount: 0 };
+    }
   }
 
   // Tickets

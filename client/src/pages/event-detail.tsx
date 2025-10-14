@@ -22,6 +22,7 @@ import {
   HelpCircle,
   AlertTriangle,
   Globe,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -454,6 +455,35 @@ export default function EventDetailPage() {
       toast({
         title: "Failed to update event",
         description: error.message || "Could not suspend/unsuspend event",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEventMutation = useMutation({
+    mutationFn: async () => {
+      if (!event?.id) {
+        throw new Error("Event data not loaded");
+      }
+      return apiRequest("DELETE", `/api/events/${event.id}`);
+    },
+    onSuccess: (data: any) => {
+      // Show a success toast with refund information
+      toast({
+        title: "Event Deleted",
+        description: data.refundedCount > 0 
+          ? `Event deleted successfully. ${data.refundedCount} ticket${data.refundedCount === 1 ? ' was' : 's were'} refunded.`
+          : "Event deleted successfully.",
+      });
+      
+      // Redirect to home page
+      setLocation("/events");
+    },
+    onError: (error: any) => {
+      console.error("Error deleting event:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete event",
         variant: "destructive",
       });
     },
@@ -2212,6 +2242,23 @@ export default function EventDetailPage() {
                     />
                     Edit Event
                   </Link>
+
+                  {/* Delete Event Button - Only for admins or event owner */}
+                  {(isAdmin || isOwner) && (
+                    <button
+                      className="btn btn-danger w-100 mb-2"
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete this event? This action cannot be undone.\n\nValidated tickets will be deleted and unvalidated tickets will be refunded.`)) {
+                          deleteEventMutation.mutate();
+                        }
+                      }}
+                      disabled={deleteEventMutation.isPending}
+                      data-testid="button-delete-event"
+                    >
+                      <Trash2 size={18} className="me-2" />
+                      {deleteEventMutation.isPending ? "Deleting..." : "Delete Event"}
+                    </button>
+                  )}
 
                   {/* Suspend/Unsuspend Button - Only for admin users */}
                   {isAdmin && event && (
