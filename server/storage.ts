@@ -1171,6 +1171,9 @@ export class DatabaseStorage implements IStorage {
       // Delete delegated validators
       await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
 
+      // Delete event ratings
+      await db.delete(eventRatings).where(eq(eventRatings.eventId, eventId));
+
       // Delete the event
       await db.delete(events).where(eq(events.id, eventId));
 
