@@ -1159,33 +1159,41 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      // Delete tickets from resell queue if any
-      await db.delete(resellQueue).where(eq(resellQueue.eventId, eventId));
-
-      // Delete crypto payment intents
-      await db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
-
-      // Delete the tickets
-      await db.delete(tickets).where(eq(tickets.eventId, eventId));
-
-      // Delete delegated validators
-      await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
-
-      // Delete event ratings
+      // Delete ALL related records in the correct order to avoid foreign key constraints
+      
+      // First delete records that reference tickets (since tickets reference events)
       await db.delete(eventRatings).where(eq(eventRatings.eventId, eventId));
-
-      // Delete the event
-      await db.delete(events).where(eq(events.id, eventId));
-
-      // Cancel any scheduled deletion job
-      await db
-        .update(scheduledJobs)
-        .set({ status: 'cancelled' })
-        .where(and(
+      await db.delete(validationActions).where(eq(validationActions.eventId, eventId));
+      
+      // Delete resale related records
+      await db.delete(resellTransactions).where(eq(resellTransactions.eventId, eventId));
+      await db.delete(resellQueue).where(eq(resellQueue.eventId, eventId));
+      
+      // Delete other event-related records
+      await db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
+      await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
+      await db.delete(featuredEvents).where(eq(featuredEvents.eventId, eventId));
+      await db.delete(secretCodes).where(eq(secretCodes.eventId, eventId));
+      
+      // Delete system logs for this event (optional, but keeps DB clean)
+      await db.delete(systemLogs).where(eq(systemLogs.eventId, eventId));
+      
+      // Delete scheduled jobs for this event BEFORE deleting the event
+      await db.delete(scheduledJobs).where(
+        and(
           eq(scheduledJobs.targetId, eventId),
-          eq(scheduledJobs.jobType, 'archive_event'),
-          eq(scheduledJobs.status, 'pending')
-        ));
+          eq(scheduledJobs.jobType, 'archive_event')
+        )
+      );
+      
+      // Note: registry_records has ON DELETE SET NULL, so it will handle itself
+      // We don't delete registry records as they should persist for historical purposes
+      
+      // Delete the tickets (must come after all tables that reference tickets)
+      await db.delete(tickets).where(eq(tickets.eventId, eventId));
+      
+      // Finally, delete the event itself
+      await db.delete(events).where(eq(events.id, eventId));
 
       return { success: true, refundedCount, deletedTicketsCount };
     } catch (error) {
