@@ -35,13 +35,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fetch permissions when user is authenticated
   useEffect(() => {
     if (user?.id) {
-      // Fetch user permissions
+      // Check if user object already has roles (from updated /api/auth/user endpoint)
+      if (user.roles && user.isAdmin !== undefined) {
+        setRoles(user.roles);
+      }
+      
+      // Always fetch permissions separately as they're not included in the user object
       fetch('/api/auth/permissions')
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data) {
             setPermissions(data.permissions || []);
-            setRoles(data.roles || []);
+            // Only update roles if not already set from user object
+            if (!user.roles) {
+              setRoles(data.roles || []);
+            }
           }
         })
         .catch(console.error);
@@ -66,6 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const isAdmin = () => {
+    // First check if the user object has isAdmin flag (from updated backend)
+    if (user && user.isAdmin !== undefined) {
+      return user.isAdmin;
+    }
+    // Fallback to checking roles
     return roles.some(role => 
       role.name === 'super_admin' || 
       role.name === 'event_moderator'

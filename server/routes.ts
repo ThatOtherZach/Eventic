@@ -437,7 +437,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      res.json(user);
+      
+      if (user) {
+        // Get user's roles to include admin status
+        const roles = await storage.getUserRoles(userId);
+        const isAdmin = roles.some(role => role.name === 'super_admin' || role.name === 'event_moderator');
+        
+        // Return user with roles and admin status
+        res.json({
+          ...user,
+          roles,
+          isAdmin
+        });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -629,23 +643,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const hasSuperAdmin = userRoles.some(
               (role) => role.name === "super_admin",
             );
+            
+            console.log(`[AUTH] Checking admin status for ${email}:`, {
+              isInAdminEmails: true,
+              currentRoles: userRoles.map(r => r.name),
+              hasSuperAdmin
+            });
 
             if (!hasSuperAdmin) {
+              // Ensure roles are initialized
+              await storage.initializeRolesAndPermissions();
+              
               // Assign super_admin role
               const superAdminRole = await storage.getRoleByName("super_admin");
               if (superAdminRole) {
                 try {
                   await storage.assignUserRole(userId, superAdminRole.id);
                   console.log(
-                    `[AUTH] Assigned super_admin role to existing user ${email} based on ADMIN_EMAILS environment variable`,
+                    `[AUTH] Successfully assigned super_admin role to existing user ${email} based on ADMIN_EMAILS environment variable`,
                   );
                 } catch (error) {
-                  console.log(
+                  console.error(
                     `[AUTH] Role assignment failed for ${email}:`,
                     error,
                   );
                 }
+              } else {
+                console.error(`[AUTH] super_admin role not found in database`);
               }
+            } else {
+              console.log(`[AUTH] User ${email} already has super_admin role`);
             }
           }
 
@@ -726,21 +753,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             e.trim().toLowerCase(),
           ) || [];
         if (email && adminEmails.includes(email.toLowerCase())) {
+          // Ensure roles are initialized
+          await storage.initializeRolesAndPermissions();
+          
           // Assign super_admin role
           const superAdminRole = await storage.getRoleByName("super_admin");
           if (superAdminRole) {
             try {
               await storage.assignUserRole(userId, superAdminRole.id);
               console.log(
-                `[AUTH] Assigned super_admin role to ${email} based on ADMIN_EMAILS environment variable`,
+                `[AUTH] Successfully assigned super_admin role to new user ${email} based on ADMIN_EMAILS environment variable`,
               );
             } catch (error) {
               // Role might already be assigned, that's okay
-              console.log(
-                `[AUTH] Role assignment skipped for ${email} (may already exist)`,
+              console.error(
+                `[AUTH] Role assignment failed for new user ${email}:`,
+                error,
               );
             }
+          } else {
+            console.error(`[AUTH] super_admin role not found in database for new user ${email}`);
           }
+        } else if (email) {
+          console.log(`[AUTH] User ${email} created without admin role (not in ADMIN_EMAILS)`);
         }
 
         res.json(newUser);
@@ -2241,12 +2276,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if user has admin role
         const hasAdminRole = userId ? await isAdmin(userId) : false;
+        
+        // Log admin check for debugging
+        if (!hasAdminRole && event.userId !== userId) {
+          const userRoles = await storage.getUserRoles(userId);
+          console.log(`[EVENT EDIT] User ${userId} attempted to edit event ${req.params.id}:`, {
+            isOwner: event.userId === userId,
+            hasAdminRole,
+            userRoles: userRoles.map(r => r.name),
+            eventOwnerId: event.userId
+          });
+        }
 
         // Allow editing if user owns the event OR is an admin
         if (event.userId !== userId && !hasAdminRole) {
           return res
             .status(403)
-            .json({ message: "You can only edit your own events" });
+            .json({ 
+              message: "You can only edit your own events",
+              isOwner: event.userId === userId,
+              hasAdminRole
+            });
         }
 
         // Get ticket count for validation
