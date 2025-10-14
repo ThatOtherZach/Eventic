@@ -435,12 +435,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes for Replit Auth
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const replitAuthId = req.user.claims.sub;
+      const userEmail = req.user.claims.email;
+      
+      // First try to find user by email (to handle ID mismatches)
+      let user = userEmail ? await storage.getUserByEmail(userEmail) : null;
+      
+      // If not found by email, try by Replit Auth ID
+      if (!user) {
+        user = await storage.getUser(replitAuthId);
+      }
       
       if (user) {
-        // Get user's roles to include admin status
-        const roles = await storage.getUserRoles(userId);
+        // Get user's roles using their actual database ID
+        const roles = await storage.getUserRoles(user.id);
         const isAdmin = roles.some(role => role.name === 'super_admin' || role.name === 'event_moderator');
         
         // Return user with roles and admin status
@@ -622,49 +630,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = extractUserId(req);
-        if (!userId) {
+        const replitAuthId = extractUserId(req);
+        if (!replitAuthId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
 
         const { email, name } = req.body;
+        const userEmail = email || extractUserEmail(req);
 
-        // Check if user already exists
-        const existingUser = await storage.getUserById(userId);
+        // Check if user already exists by email first, then by ID
+        let existingUser = userEmail 
+          ? await storage.getUserByEmail(userEmail)
+          : null;
+        
+        if (!existingUser) {
+          existingUser = await storage.getUserById(replitAuthId);
+        }
         if (existingUser) {
           // Check if this user should be an admin based on environment variable
           const adminEmails =
             process.env.ADMIN_EMAILS?.split(",").map((e) =>
               e.trim().toLowerCase(),
             ) || [];
-          if (email && adminEmails.includes(email.toLowerCase())) {
-            // Check if they already have the super_admin role
-            const userRoles = await storage.getUserRoles(userId);
+          if (userEmail && adminEmails.includes(userEmail.toLowerCase())) {
+            // Check if they already have the super_admin role using the correct database user ID
+            const actualUserId = existingUser.id;
+            const userRoles = await storage.getUserRoles(actualUserId);
             const hasSuperAdmin = userRoles.some(
               (role) => role.name === "super_admin",
             );
             
-            console.log(`[AUTH] Checking admin status for ${email}:`, {
+            console.log(`[AUTH] Checking admin status for ${userEmail} (ID: ${actualUserId}):`, {
               isInAdminEmails: true,
               currentRoles: userRoles.map(r => r.name),
-              hasSuperAdmin
+              hasSuperAdmin,
+              databaseUserId: actualUserId
             });
 
             if (!hasSuperAdmin) {
               // Ensure roles are initialized
               await storage.initializeRolesAndPermissions();
               
-              // Assign super_admin role
+              // Assign super_admin role using the correct database user ID
               const superAdminRole = await storage.getRoleByName("super_admin");
               if (superAdminRole) {
                 try {
-                  await storage.assignUserRole(userId, superAdminRole.id);
+                  await storage.assignUserRole(actualUserId, superAdminRole.id);
                   console.log(
-                    `[AUTH] Successfully assigned super_admin role to existing user ${email} based on ADMIN_EMAILS environment variable`,
+                    `[AUTH] Successfully assigned super_admin role to existing user ${userEmail} (ID: ${actualUserId}) based on ADMIN_EMAILS environment variable`,
                   );
                 } catch (error) {
                   console.error(
-                    `[AUTH] Role assignment failed for ${email}:`,
+                    `[AUTH] Role assignment failed for ${userEmail} (ID: ${actualUserId}):`,
                     error,
                   );
                 }
@@ -672,7 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.error(`[AUTH] super_admin role not found in database`);
               }
             } else {
-              console.log(`[AUTH] User ${email} already has super_admin role`);
+              console.log(`[AUTH] User ${userEmail} (ID: ${actualUserId}) already has super_admin role`);
             }
           }
 
@@ -1944,7 +1961,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     eventCreationRateLimiter,
     validateBody(insertEventSchema),
     async (req: AuthenticatedRequest, res) => {
-      const userId = extractUserId(req);
+      // Get the actual database user ID
+      const userId = await extractDatabaseUserId(req);
       const userEmail = extractUserEmail(req);
 
       try {
@@ -2263,7 +2281,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     requireAuth,
     async (req: AuthenticatedRequest, res) => {
       try {
-        const userId = extractUserId(req);
+        // Get the actual database user ID (not the Replit Auth ID)
+        const userId = await extractDatabaseUserId(req);
         if (!userId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
@@ -2274,17 +2293,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Event not found" });
         }
 
-        // Check if user has admin role
-        const hasAdminRole = userId ? await isAdmin(userId) : false;
+        // Check if user has admin role using their database ID
+        const hasAdminRole = await isAdmin(userId);
         
         // Log admin check for debugging
         if (!hasAdminRole && event.userId !== userId) {
           const userRoles = await storage.getUserRoles(userId);
-          console.log(`[EVENT EDIT] User ${userId} attempted to edit event ${req.params.id}:`, {
+          const userEmail = extractUserEmail(req);
+          console.log(`[EVENT EDIT] User ${userEmail} (${userId}) attempted to edit event ${req.params.id}:`, {
             isOwner: event.userId === userId,
             hasAdminRole,
             userRoles: userRoles.map(r => r.name),
-            eventOwnerId: event.userId
+            eventOwnerId: event.userId,
+            userDatabaseId: userId
           });
         }
 

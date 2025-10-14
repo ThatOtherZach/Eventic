@@ -490,11 +490,19 @@ export class DatabaseStorage implements IStorage {
 
   // Upsert user for Replit Auth - creates new or updates existing
   async upsertUser(userData: UpsertUser): Promise<User> {
-    // Check if user already exists
-    const existingUser = await this.getUser(userData.id);
+    // First check if user exists by email (to handle ID mismatches)
+    let existingUser = userData.email 
+      ? await this.getUserByEmail(userData.email)
+      : null;
+    
+    // If not found by email, check by ID
+    if (!existingUser) {
+      existingUser = await this.getUser(userData.id);
+    }
     
     if (existingUser) {
       // Update existing user with Replit Auth data
+      // Use the existing user's ID, not the Replit Auth ID
       const [updatedUser] = await db
         .update(users)
         .set({
@@ -505,7 +513,7 @@ export class DatabaseStorage implements IStorage {
           lastLoginAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(users.id, userData.id))
+        .where(eq(users.id, existingUser.id))
         .returning();
       
       return updatedUser;

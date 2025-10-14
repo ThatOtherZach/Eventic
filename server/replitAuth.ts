@@ -57,29 +57,34 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  const userId = claims["sub"];
+  const replitAuthId = claims["sub"];
   
-  // Create or update user
+  // Create or update user - this will now check by email first to find existing users
   const user = await storage.upsertUser({
-    id: userId,
+    id: replitAuthId,
     email: claims["email"] || null,
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
   });
   
-  // Check if this is the first admin user (based on admin email configuration)
-  const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
-  if (claims["email"] && adminEmails.includes(claims["email"])) {
+  // Use the actual database user ID, not the Replit Auth ID
+  const actualUserId = user.id;
+  
+  // Check if this is an admin user (based on admin email configuration)
+  const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
+  if (claims["email"] && adminEmails.includes(claims["email"].toLowerCase())) {
     // Ensure admin role exists and assign it to user
     await storage.initializeRolesAndPermissions();
     const adminRole = await storage.getRoleByName("super_admin");
     if (adminRole) {
-      const userRoles = await storage.getUserRoles(userId);
+      const userRoles = await storage.getUserRoles(actualUserId);
       const hasAdminRole = userRoles.some(role => role.name === "super_admin");
       if (!hasAdminRole) {
-        await storage.assignUserRole(userId, adminRole.id);
-        console.log(`[REPLIT AUTH] Assigned super_admin role to user ${claims["email"]}`);
+        await storage.assignUserRole(actualUserId, adminRole.id);
+        console.log(`[REPLIT AUTH] Assigned super_admin role to user ${claims["email"]} (ID: ${actualUserId})`);
+      } else {
+        console.log(`[REPLIT AUTH] User ${claims["email"]} (ID: ${actualUserId}) already has super_admin role`);
       }
     }
   }

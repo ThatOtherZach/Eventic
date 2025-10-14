@@ -26,7 +26,12 @@ export function requirePermission(permissionName: string) {
       return res.status(401).json({ message: 'Authentication required' });
     }
     
-    const userId = req.user.claims.sub;
+    // Get the actual database user ID
+    const userId = await extractDatabaseUserId(req);
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'User not found' });
+    }
     
     // Check if user has the required permission
     const hasPermission = await storage.hasPermission(userId, permissionName);
@@ -47,7 +52,12 @@ export function requireAnyPermission(...permissionNames: string[]) {
       return res.status(401).json({ message: 'Authentication required' });
     }
     
-    const userId = req.user.claims.sub;
+    // Get the actual database user ID
+    const userId = await extractDatabaseUserId(req);
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'User not found' });
+    }
     
     // Check if user has any of the required permissions
     for (const permission of permissionNames) {
@@ -74,6 +84,24 @@ export function extractUserId(req: AuthenticatedRequest): string | null {
 
 export function extractUserEmail(req: AuthenticatedRequest): string | null {
   return req.user?.claims?.email || null;
+}
+
+// Get actual database user ID by resolving from Replit Auth claims
+export async function extractDatabaseUserId(req: AuthenticatedRequest): Promise<string | null> {
+  const replitAuthId = req.user?.claims?.sub;
+  const userEmail = req.user?.claims?.email;
+  
+  if (!replitAuthId) return null;
+  
+  // First try to find user by email (to handle ID mismatches)
+  let user = userEmail ? await storage.getUserByEmail(userEmail) : null;
+  
+  // If not found by email, try by Replit Auth ID
+  if (!user) {
+    user = await storage.getUser(replitAuthId);
+  }
+  
+  return user?.id || null;
 }
 
 // Middleware to extract user context (for optional auth routes)
