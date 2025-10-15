@@ -200,10 +200,8 @@ export interface IStorage {
   recordAuthEventNew(event: InsertAuthEvent): Promise<AuthEvent>;
   getAuthEvents(userId?: string, limit?: number): Promise<AuthEvent[]>;
   
-  // Sessions
-  createSession(session: InsertSession): Promise<Session>;
-  getSession(id: string): Promise<Session | undefined>;
-  updateSessionActivity(id: string): Promise<Session | undefined>;
+  // Sessions - Note: sessions are managed by express-session/connect-pg-simple
+  // createSession, getSession, updateSessionActivity removed as incompatible with Replit Auth
   cleanupExpiredSessions(): Promise<void>;
   
   // Auth Queue
@@ -496,8 +494,8 @@ export class DatabaseStorage implements IStorage {
       ? await this.getUserByEmail(userData.email)
       : null;
     
-    // If not found by email, check by ID
-    if (!existingUser) {
+    // If not found by email, check by ID (if ID is provided)
+    if (!existingUser && userData.id) {
       existingUser = await this.getUser(userData.id);
     }
     
@@ -777,8 +775,8 @@ export class DatabaseStorage implements IStorage {
       // Delete notification preferences  
       await db.delete(notificationPreferences).where(eq(notificationPreferences.userId, userId));
       
-      // Delete user sessions
-      await db.delete(sessions).where(eq(sessions.userId, userId));
+      // Note: sessions table doesn't have a userId column - it's managed by express-session
+      // Sessions will expire naturally based on TTL settings
       
       // Delete user roles
       await db.delete(userRoles).where(eq(userRoles.userId, userId));
@@ -1173,6 +1171,14 @@ export class DatabaseStorage implements IStorage {
       await db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
       await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
       await db.delete(featuredEvents).where(eq(featuredEvents.eventId, eventId));
+      
+      // Delete code redemptions BEFORE deleting secret codes (FK constraint)
+      const codes = await db.select().from(secretCodes).where(eq(secretCodes.eventId, eventId));
+      for (const code of codes) {
+        await db.delete(codeRedemptions).where(eq(codeRedemptions.codeId, code.id));
+      }
+      
+      // Now we can safely delete the secret codes
       await db.delete(secretCodes).where(eq(secretCodes.eventId, eventId));
       
       // Delete system logs for this event (optional, but keeps DB clean)
@@ -3691,36 +3697,36 @@ export class DatabaseStorage implements IStorage {
     return events;
   }
 
-  // Sessions
-  async createSession(session: InsertSession): Promise<Session> {
-    const [newSession] = await db
-      .insert(sessions)
-      .values(session)
-      .returning();
-    return newSession;
-  }
+  // Sessions - Note: The sessions table is managed by express-session/connect-pg-simple
+  // These functions are commented out as they're incompatible with Replit Auth sessions table
+  // The sessions table only has sid, sess, and expire columns
+  
+  // async createSession(session: InsertSession): Promise<Session> {
+  //   const [newSession] = await db
+  //     .insert(sessions)
+  //     .values(session)
+  //     .returning();
+  //   return newSession;
+  // }
 
-  async getSession(id: string): Promise<Session | undefined> {
-    const [session] = await db
-      .select()
-      .from(sessions)
-      .where(eq(sessions.id, id));
-    return session || undefined;
-  }
+  // async getSession(id: string): Promise<Session | undefined> {
+  //   const [session] = await db
+  //     .select()
+  //     .from(sessions)
+  //     .where(eq(sessions.sid, id));
+  //   return session || undefined;
+  // }
 
-  async updateSessionActivity(id: string): Promise<Session | undefined> {
-    const [updated] = await db
-      .update(sessions)
-      .set({ lastActiveAt: new Date() })
-      .where(eq(sessions.id, id))
-      .returning();
-    return updated || undefined;
-  }
+  // async updateSessionActivity(id: string): Promise<Session | undefined> {
+  //   // Not supported - sessions are managed by express-session
+  //   return undefined;
+  // }
 
   async cleanupExpiredSessions(): Promise<void> {
+    // Clean up expired sessions based on the expire column
     await db
       .delete(sessions)
-      .where(lt(sessions.expiresAt, new Date()));
+      .where(lt(sessions.expire, new Date()));
   }
 
   // Event Ratings
