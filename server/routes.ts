@@ -2915,6 +2915,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Nuclear delete endpoint - disables FK constraints to force delete stuck events (admin only)
+  app.post(
+    "/api/events/:id/nuclear-delete",
+    requireAuth,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        // Get the actual database user ID
+        const userId = await extractDatabaseUserId(req);
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Check if user has admin role - ONLY admins can use nuclear delete
+        const hasAdminRole = await isAdmin(userId);
+        if (!hasAdminRole) {
+          return res
+            .status(403)
+            .json({ message: "Nuclear delete requires admin permissions" });
+        }
+
+        // Get the event to verify it exists
+        const event = await storage.getEvent(req.params.id);
+        if (!event) {
+          return res.status(404).json({ message: "Event not found" });
+        }
+
+        // Require explicit confirmation to prevent accidental usage
+        const { deleteConfirmation } = req.body;
+        if (deleteConfirmation !== "DELETE_PERMANENTLY") {
+          return res.status(400).json({
+            message: "Nuclear delete requires explicit confirmation",
+            hint: "Include deleteConfirmation: 'DELETE_PERMANENTLY' in the request body"
+          });
+        }
+
+        const eventId = req.params.id;
+        
+        // Log the nuclear delete attempt
+        await logWarning("NUCLEAR DELETE initiated for event", "POST /api/events/:id/nuclear-delete", {
+          userId,
+          metadata: {
+            eventId,
+            eventName: event.name,
+            eventOwner: event.userId,
+            timestamp: new Date().toISOString()
+          }
+        });
+
+        // Execute the nuclear delete
+        const result = await storage.nuclearDeleteEvent(eventId, userId);
+
+        if (result.success) {
+          await logInfo("NUCLEAR DELETE completed successfully", "POST /api/events/:id/nuclear-delete", {
+            userId,
+            metadata: {
+              eventId,
+              eventName: event.name,
+              deletedRecords: result.deletedRecords,
+              timestamp: new Date().toISOString()
+            }
+          });
+
+          return res.status(200).json({
+            message: "Event nuclear deleted successfully - this action cannot be undone",
+            success: true,
+            eventId,
+            eventName: event.name,
+            deletedRecords: result.deletedRecords,
+            totalDeleted: Object.values(result.deletedRecords).reduce((a, b) => a + b, 0)
+          });
+        } else {
+          await logError(new Error(result.error || "Nuclear delete failed"), "POST /api/events/:id/nuclear-delete", {
+            request: req,
+            metadata: {
+              eventId,
+              eventName: event.name,
+              deletedRecords: result.deletedRecords,
+              error: result.error
+            }
+          });
+
+          return res.status(500).json({
+            message: "Nuclear delete failed",
+            success: false,
+            eventId,
+            eventName: event.name,
+            error: result.error,
+            deletedRecords: result.deletedRecords,
+            hint: "Some records may have been deleted. The database may be in an inconsistent state."
+          });
+        }
+        
+      } catch (error) {
+        await logError(error, "POST /api/events/:id/nuclear-delete", {
+          request: req,
+          metadata: { eventId: req.params.id }
+        });
+        res.status(500).json({ 
+          message: "Critical error during nuclear delete",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    }
+  );
+
   // Tickets routes
   app.get("/api/tickets", async (req, res) => {
     try {

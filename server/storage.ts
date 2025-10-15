@@ -42,6 +42,7 @@ export interface IStorage {
   updateEventMaxTickets(id: string, maxTickets: number): Promise<Event | undefined>;
   deleteEvent(id: string): Promise<boolean>;
   deleteEventImmediately(eventId: string, deletedByUserId: string): Promise<{ success: boolean; refundedCount: number; deletedTicketsCount: number }>;
+  nuclearDeleteEvent(eventId: string, deletedByUserId: string): Promise<{ success: boolean; deletedRecords: Record<string, number>; error?: string }>;
   archiveEvent(eventId: string): Promise<boolean>;
   getEventByHuntCode(huntCode: string, country?: string): Promise<Event | undefined>;
   huntCodeExists(huntCode: string): Promise<boolean>;
@@ -1324,6 +1325,258 @@ export class DatabaseStorage implements IStorage {
       console.error(`[DELETE_EVENT] Constraint violation:`, error.constraint || 'unknown');
       console.error(`[DELETE_EVENT] Error detail:`, error.detail || 'none');
       return { success: false, refundedCount: 0, deletedTicketsCount: 0 };
+    }
+  }
+
+  async nuclearDeleteEvent(eventId: string, deletedByUserId: string): Promise<{ 
+    success: boolean; 
+    deletedRecords: Record<string, number>; 
+    error?: string 
+  }> {
+    console.log(`[NUCLEAR_DELETE] WARNING: Starting NUCLEAR DELETE for event ${eventId} by user ${deletedByUserId}`);
+    
+    const deletedRecords: Record<string, number> = {};
+    
+    try {
+      // First, check if the event exists
+      const event = await this.getEvent(eventId);
+      if (!event) {
+        return { success: false, deletedRecords, error: 'Event not found' };
+      }
+
+      // Log the nuclear deletion attempt
+      await db.insert(systemLogs).values({
+        level: 'error', // Use error level for nuclear operations
+        message: `NUCLEAR DELETE initiated for event ${eventId}: "${event.name}"`,
+        operation: 'nuclear_delete_event',
+        userId: deletedByUserId,
+        eventId: eventId,
+        metadata: { eventName: event.name, timestamp: new Date().toISOString() }
+      });
+
+      // Execute the nuclear deletion with FK constraints disabled
+      const result = await db.transaction(async (tx) => {
+        console.log(`[NUCLEAR_DELETE] Disabling foreign key checks`);
+        
+        // Disable foreign key checks for this session
+        await tx.execute(sql`SET session_replication_role = 'replica'`);
+        
+        try {
+          // STEP 1: Delete code_redemptions (references secret_codes)
+          try {
+            const codes = await tx.select().from(secretCodes).where(eq(secretCodes.eventId, eventId));
+            let redemptionCount = 0;
+            for (const code of codes) {
+              const result = await tx.delete(codeRedemptions).where(eq(codeRedemptions.codeId, code.id));
+              redemptionCount++;
+            }
+            deletedRecords['code_redemptions'] = redemptionCount;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${redemptionCount} code redemptions`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting code_redemptions:`, error);
+            deletedRecords['code_redemptions'] = 0;
+          }
+
+          // STEP 2: Delete secret_codes
+          try {
+            const result = await tx.delete(secretCodes).where(eq(secretCodes.eventId, eventId));
+            deletedRecords['secret_codes'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['secret_codes']} secret codes`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting secret_codes:`, error);
+            deletedRecords['secret_codes'] = 0;
+          }
+
+          // STEP 3: Delete validation_actions
+          try {
+            const result = await tx.delete(validationActions).where(eq(validationActions.eventId, eventId));
+            deletedRecords['validation_actions'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['validation_actions']} validation actions`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting validation_actions:`, error);
+            deletedRecords['validation_actions'] = 0;
+          }
+
+          // STEP 4: Delete event_ratings
+          try {
+            const result = await tx.delete(eventRatings).where(eq(eventRatings.eventId, eventId));
+            deletedRecords['event_ratings'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['event_ratings']} event ratings`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting event_ratings:`, error);
+            deletedRecords['event_ratings'] = 0;
+          }
+
+          // STEP 5: Delete resell_queue
+          try {
+            const result = await tx.delete(resellQueue).where(eq(resellQueue.eventId, eventId));
+            deletedRecords['resell_queue'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['resell_queue']} resell queue entries`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting resell_queue:`, error);
+            deletedRecords['resell_queue'] = 0;
+          }
+
+          // STEP 6: Delete resell_transactions
+          try {
+            const result = await tx.delete(resellTransactions).where(eq(resellTransactions.eventId, eventId));
+            deletedRecords['resell_transactions'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['resell_transactions']} resell transactions`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting resell_transactions:`, error);
+            deletedRecords['resell_transactions'] = 0;
+          }
+
+          // STEP 7: Delete crypto_payment_intents
+          try {
+            const result = await tx.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
+            deletedRecords['crypto_payment_intents'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['crypto_payment_intents']} crypto payment intents`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting crypto_payment_intents:`, error);
+            deletedRecords['crypto_payment_intents'] = 0;
+          }
+
+          // STEP 8: Delete delegated_validators
+          try {
+            const result = await tx.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
+            deletedRecords['delegated_validators'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['delegated_validators']} delegated validators`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting delegated_validators:`, error);
+            deletedRecords['delegated_validators'] = 0;
+          }
+
+          // STEP 9: Delete featured_events
+          try {
+            const result = await tx.delete(featuredEvents).where(eq(featuredEvents.eventId, eventId));
+            deletedRecords['featured_events'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['featured_events']} featured events`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting featured_events:`, error);
+            deletedRecords['featured_events'] = 0;
+          }
+
+          // STEP 10: Delete system_logs for this event
+          try {
+            const result = await tx.delete(systemLogs).where(eq(systemLogs.eventId, eventId));
+            deletedRecords['system_logs'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['system_logs']} system logs`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting system_logs:`, error);
+            deletedRecords['system_logs'] = 0;
+          }
+
+          // STEP 11: Delete scheduled_jobs
+          try {
+            const result = await tx.delete(scheduledJobs).where(
+              and(
+                eq(scheduledJobs.targetId, eventId),
+                eq(scheduledJobs.jobType, 'archive_event')
+              )
+            );
+            deletedRecords['scheduled_jobs'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['scheduled_jobs']} scheduled jobs`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting scheduled_jobs:`, error);
+            deletedRecords['scheduled_jobs'] = 0;
+          }
+
+          // STEP 12: Update registry_records to NULL out eventId
+          try {
+            const result = await tx.update(registryRecords)
+              .set({ eventId: null })
+              .where(eq(registryRecords.eventId, eventId));
+            deletedRecords['registry_records_updated'] = result.count || 0;
+            console.log(`[NUCLEAR_DELETE] Updated ${deletedRecords['registry_records_updated']} registry records`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error updating registry_records:`, error);
+            deletedRecords['registry_records_updated'] = 0;
+          }
+
+          // STEP 13: Delete tickets - This must come before events since tickets reference events
+          try {
+            const ticketCount = await tx.select({ count: count() })
+              .from(tickets)
+              .where(eq(tickets.eventId, eventId));
+            
+            await tx.delete(tickets).where(eq(tickets.eventId, eventId));
+            deletedRecords['tickets'] = ticketCount[0]?.count || 0;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['tickets']} tickets`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting tickets:`, error);
+            deletedRecords['tickets'] = 0;
+          }
+
+          // STEP 14: Delete the event itself (LAST!)
+          try {
+            await tx.delete(events).where(eq(events.id, eventId));
+            deletedRecords['event'] = 1;
+            console.log(`[NUCLEAR_DELETE] Force deleted event ${eventId}`);
+          } catch (error) {
+            console.error(`[NUCLEAR_DELETE] Error deleting event:`, error);
+            deletedRecords['event'] = 0;
+            throw new Error(`Failed to delete event: ${error}`);
+          }
+
+        } finally {
+          // ALWAYS re-enable foreign key checks, even if deletion fails
+          console.log(`[NUCLEAR_DELETE] Re-enabling foreign key checks`);
+          await tx.execute(sql`SET session_replication_role = 'origin'`);
+        }
+
+        return { success: true };
+      });
+
+      // Log successful nuclear deletion
+      await db.insert(systemLogs).values({
+        level: 'warning',
+        message: `NUCLEAR DELETE completed for event ${eventId}`,
+        operation: 'nuclear_delete_event_success',
+        userId: deletedByUserId,
+        eventId: eventId,
+        metadata: { 
+          eventName: event.name,
+          deletedRecords,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      // Create notification for the event owner if they exist
+      if (event.userId && event.userId !== deletedByUserId) {
+        await this.createNotification({
+          userId: event.userId,
+          type: 'system',
+          title: 'Event Force Deleted by Administrator',
+          description: `Your event "${event.name}" has been force deleted by an administrator using nuclear deletion. This action cannot be undone.`,
+        });
+      }
+
+      console.log(`[NUCLEAR_DELETE] Nuclear deletion completed successfully for event ${eventId}`);
+      return { success: true, deletedRecords };
+
+    } catch (error: any) {
+      console.error(`[NUCLEAR_DELETE] CRITICAL ERROR during nuclear deletion:`, error);
+      
+      // Log the failure
+      await db.insert(systemLogs).values({
+        level: 'error',
+        message: `NUCLEAR DELETE FAILED for event ${eventId}`,
+        operation: 'nuclear_delete_event_failed',
+        userId: deletedByUserId,
+        eventId: eventId,
+        metadata: { 
+          error: error.message,
+          deletedRecords,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      return { 
+        success: false, 
+        deletedRecords,
+        error: `Nuclear deletion failed: ${error.message}`
+      };
     }
   }
 
