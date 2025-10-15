@@ -1098,7 +1098,7 @@ export class DatabaseStorage implements IStorage {
       let refundedCount = 0;
       let deletedTicketsCount = eventTickets.length;
 
-      // Process refunds for unvalidated tickets
+      // Process refunds for unvalidated tickets (outside of the deletion transaction)
       const unvalidatedTickets = eventTickets.filter(ticket => !ticket.isValidated);
       if (unvalidatedTickets.length > 0) {
         // Group unvalidated tickets by user for batch refunds
@@ -1157,53 +1157,172 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      // Delete ALL related records in the correct order to avoid foreign key constraints
-      
-      // First delete records that reference tickets (since tickets reference events)
-      await db.delete(eventRatings).where(eq(eventRatings.eventId, eventId));
-      await db.delete(validationActions).where(eq(validationActions.eventId, eventId));
-      
-      // Delete resale related records
-      await db.delete(resellTransactions).where(eq(resellTransactions.eventId, eventId));
-      await db.delete(resellQueue).where(eq(resellQueue.eventId, eventId));
-      
-      // Delete other event-related records
-      await db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
-      await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
-      await db.delete(featuredEvents).where(eq(featuredEvents.eventId, eventId));
-      
-      // Delete code redemptions BEFORE deleting secret codes (FK constraint)
-      const codes = await db.select().from(secretCodes).where(eq(secretCodes.eventId, eventId));
-      for (const code of codes) {
-        await db.delete(codeRedemptions).where(eq(codeRedemptions.codeId, code.id));
-      }
-      
-      // Now we can safely delete the secret codes
-      await db.delete(secretCodes).where(eq(secretCodes.eventId, eventId));
-      
-      // Delete system logs for this event (optional, but keeps DB clean)
-      await db.delete(systemLogs).where(eq(systemLogs.eventId, eventId));
-      
-      // Delete scheduled jobs for this event BEFORE deleting the event
-      await db.delete(scheduledJobs).where(
-        and(
-          eq(scheduledJobs.targetId, eventId),
-          eq(scheduledJobs.jobType, 'archive_event')
-        )
-      );
-      
-      // Note: registry_records has ON DELETE SET NULL, so it will handle itself
-      // We don't delete registry records as they should persist for historical purposes
-      
-      // Delete the tickets (must come after all tables that reference tickets)
-      await db.delete(tickets).where(eq(tickets.eventId, eventId));
-      
-      // Finally, delete the event itself
-      await db.delete(events).where(eq(events.id, eventId));
+      // Delete ALL related records in a transaction with proper sequential order
+      // The deletion order MUST respect foreign key dependencies
+      await db.transaction(async (tx) => {
+        console.log(`[DELETE_EVENT] Starting sequential deletion of event ${eventId}`);
+        
+        // STEP 1: Delete code_redemptions BEFORE secret_codes (code_redemptions references secret_codes)
+        try {
+          const codes = await tx.select().from(secretCodes).where(eq(secretCodes.eventId, eventId));
+          for (const code of codes) {
+            await tx.delete(codeRedemptions).where(eq(codeRedemptions.codeId, code.id));
+          }
+          console.log(`[DELETE_EVENT] Deleted code redemptions for ${codes.length} secret codes`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete code_redemptions: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 2: Delete secret_codes (references events)
+        try {
+          await tx.delete(secretCodes).where(eq(secretCodes.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted secret codes`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete secret_codes: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 3: Delete ticket_purchases (references tickets, but we check for event relation)
+        // Note: ticketPurchases doesn't directly reference events but might have related tickets
+        try {
+          // Get ticket IDs for this event
+          const ticketIds = eventTickets.map(t => t.id);
+          if (ticketIds.length > 0) {
+            // Delete ticket purchases for these tickets if the table has a ticketId column
+            // Since ticketPurchases doesn't have ticketId based on the schema, we skip this
+            console.log(`[DELETE_EVENT] Skipped ticket_purchases deletion (no direct relation to tickets)`);
+          }
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed during ticket_purchases check: ${error.message}`, error.constraint || '');
+          // Non-critical, continue
+        }
+        
+        // STEP 4: Delete validation_actions (references events)
+        try {
+          await tx.delete(validationActions).where(eq(validationActions.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted validation actions`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete validation_actions: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 5: Delete event_ratings (references events)
+        try {
+          await tx.delete(eventRatings).where(eq(eventRatings.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted event ratings`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete event_ratings: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 6: Delete resell_queue (references events)
+        try {
+          await tx.delete(resellQueue).where(eq(resellQueue.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted resell queue entries`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete resell_queue: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 7: Delete resell_transactions (references events)
+        try {
+          await tx.delete(resellTransactions).where(eq(resellTransactions.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted resell transactions`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete resell_transactions: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 8: Delete crypto_payment_intents (references events)
+        try {
+          await tx.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted crypto payment intents`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete crypto_payment_intents: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 9: Delete delegated_validators (references events)
+        try {
+          await tx.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted delegated validators`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete delegated_validators: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 10: Delete featured_events (references events)
+        try {
+          await tx.delete(featuredEvents).where(eq(featuredEvents.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted featured events`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete featured_events: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 11: Delete system_logs (references events)
+        try {
+          await tx.delete(systemLogs).where(eq(systemLogs.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted system logs`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete system_logs: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 12: Delete scheduled_jobs (references events via targetId)
+        try {
+          await tx.delete(scheduledJobs).where(
+            and(
+              eq(scheduledJobs.targetId, eventId),
+              eq(scheduledJobs.jobType, 'archive_event')
+            )
+          );
+          console.log(`[DELETE_EVENT] Deleted scheduled jobs`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete scheduled_jobs: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 13: Handle registry_records (has ON DELETE SET NULL for eventId)
+        // Registry records should be preserved but will have their eventId set to NULL automatically
+        try {
+          // Update registry_records to set eventId to NULL (this happens automatically with ON DELETE SET NULL)
+          // But we log it for clarity
+          const registryCount = await tx
+            .select({ count: count() })
+            .from(registryRecords)
+            .where(eq(registryRecords.eventId, eventId));
+          console.log(`[DELETE_EVENT] Registry records (${registryCount[0]?.count || 0}) will have eventId set to NULL`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed during registry_records check: ${error.message}`, error.constraint || '');
+          // Non-critical, continue
+        }
+        
+        // STEP 14: Delete tickets (references events)
+        try {
+          await tx.delete(tickets).where(eq(tickets.eventId, eventId));
+          console.log(`[DELETE_EVENT] Deleted ${deletedTicketsCount} tickets`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete tickets: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+        
+        // STEP 15: Finally, delete the event itself
+        try {
+          await tx.delete(events).where(eq(events.id, eventId));
+          console.log(`[DELETE_EVENT] Successfully deleted event ${eventId}`);
+        } catch (error: any) {
+          console.error(`[DELETE_EVENT] Failed to delete event: ${error.message}`, error.constraint || '');
+          throw error;
+        }
+      });
 
       return { success: true, refundedCount, deletedTicketsCount };
-    } catch (error) {
-      console.error(`Error deleting event ${eventId}:`, error);
+    } catch (error: any) {
+      console.error(`[DELETE_EVENT] Error deleting event ${eventId}:`, error);
+      console.error(`[DELETE_EVENT] Constraint violation:`, error.constraint || 'unknown');
+      console.error(`[DELETE_EVENT] Error detail:`, error.detail || 'none');
       return { success: false, refundedCount: 0, deletedTicketsCount: 0 };
     }
   }
