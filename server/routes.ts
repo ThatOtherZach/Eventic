@@ -2734,6 +2734,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Force delete endpoint for stuck events (admin only)
+  app.delete(
+    "/api/events/:id/force",
+    requireAuth,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        // Get the actual database user ID
+        const userId = await extractDatabaseUserId(req);
+        if (!userId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        // Check if user has admin role
+        const hasAdminRole = await isAdmin(userId);
+        
+        // Get the event
+        const event = await storage.getEvent(req.params.id);
+        
+        // Allow force delete if user is admin OR owns the event
+        if (!hasAdminRole && (!event || event.userId !== userId)) {
+          return res
+            .status(403)
+            .json({ message: "Admin access required for force delete" });
+        }
+
+        const eventId = req.params.id;
+        
+        // Force delete with detailed error handling
+        try {
+          // First try the normal delete
+          const result = await storage.deleteEventImmediately(eventId, userId);
+          
+          if (result.success) {
+            await logInfo("Event force deleted successfully", "DELETE /api/events/:id/force", {
+              userId,
+              metadata: { eventId, method: "normal" }
+            });
+            
+            return res.status(200).json({
+              message: "Event force deleted successfully (normal method)",
+              refundedCount: result.refundedCount,
+              deletedTicketsCount: result.deletedTicketsCount
+            });
+          }
+        } catch (normalDeleteError) {
+          // If normal delete fails, try manual cleanup
+          await logWarning("Normal delete failed, attempting manual cleanup", "DELETE /api/events/:id/force", {
+            userId,
+            metadata: { 
+              eventId, 
+              error: normalDeleteError instanceof Error ? normalDeleteError.message : String(normalDeleteError)
+            }
+          });
+        }
+        
+        // Manual force delete - ignore foreign key errors and clean up what we can
+        let deletedCount = 0;
+        const errors: string[] = [];
+        
+        try {
+          // Try to delete each dependent table, but don't stop on errors
+          const deletionSteps = [
+            { table: "event_ratings", fn: () => db.delete(eventRatings).where(eq(eventRatings.eventId, eventId)) },
+            { table: "validation_actions", fn: () => db.delete(validationActions).where(eq(validationActions.eventId, eventId)) },
+            { table: "resell_transactions", fn: () => db.delete(resellTransactions).where(eq(resellTransactions.eventId, eventId)) },
+            { table: "resell_queue", fn: () => db.delete(resellQueue).where(eq(resellQueue.eventId, eventId)) },
+            { table: "crypto_payment_intents", fn: () => db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId)) },
+            { table: "delegated_validators", fn: () => db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId)) },
+            { table: "featured_events", fn: () => db.delete(featuredEvents).where(eq(featuredEvents.eventId, eventId)) },
+            { table: "system_logs", fn: () => db.delete(systemLogs).where(eq(systemLogs.eventId, eventId)) },
+            { table: "scheduled_jobs", fn: () => db.delete(scheduledJobs).where(
+              and(
+                eq(scheduledJobs.targetId, eventId),
+                eq(scheduledJobs.jobType, 'archive_event')
+              )
+            )}
+          ];
+          
+          // Delete code redemptions for this event's secret codes
+          try {
+            const codes = await db.select().from(secretCodes).where(eq(secretCodes.eventId, eventId));
+            for (const code of codes) {
+              try {
+                await db.delete(codeRedemptions).where(eq(codeRedemptions.codeId, code.id));
+                deletedCount++;
+              } catch (err) {
+                errors.push(`code_redemptions for code ${code.id}: ${err instanceof Error ? err.message : String(err)}`);
+              }
+            }
+          } catch (err) {
+            errors.push(`fetching secret_codes: ${err instanceof Error ? err.message : String(err)}`);
+          }
+          
+          // Now delete secret codes
+          try {
+            await db.delete(secretCodes).where(eq(secretCodes.eventId, eventId));
+            deletedCount++;
+          } catch (err) {
+            errors.push(`secret_codes: ${err instanceof Error ? err.message : String(err)}`);
+          }
+          
+          // Execute all deletion steps
+          for (const step of deletionSteps) {
+            try {
+              await step.fn();
+              deletedCount++;
+            } catch (err) {
+              errors.push(`${step.table}: ${err instanceof Error ? err.message : String(err)}`);
+            }
+          }
+          
+          // Delete tickets
+          try {
+            await db.delete(tickets).where(eq(tickets.eventId, eventId));
+            deletedCount++;
+          } catch (err) {
+            errors.push(`tickets: ${err instanceof Error ? err.message : String(err)}`);
+          }
+          
+          // Finally, delete the event
+          try {
+            await db.delete(events).where(eq(events.id, eventId));
+            deletedCount++;
+          } catch (err) {
+            errors.push(`events: ${err instanceof Error ? err.message : String(err)}`);
+          }
+          
+          await logInfo("Event force deleted with manual cleanup", "DELETE /api/events/:id/force", {
+            userId,
+            metadata: { 
+              eventId, 
+              deletedCount, 
+              errors: errors.length > 0 ? errors : undefined 
+            }
+          });
+          
+          res.status(200).json({
+            message: "Event force deleted successfully",
+            method: "manual_cleanup",
+            deletedRecords: deletedCount,
+            errors: errors.length > 0 ? errors : undefined
+          });
+          
+        } catch (criticalError) {
+          await logError(criticalError, "DELETE /api/events/:id/force", {
+            request: req,
+            metadata: { eventId, errors }
+          });
+          
+          res.status(500).json({
+            message: "Force delete partially failed",
+            deletedRecords: deletedCount,
+            errors
+          });
+        }
+        
+      } catch (error) {
+        await logError(error, "DELETE /api/events/:id/force", {
+          request: req,
+          metadata: { eventId: req.params.id }
+        });
+        res.status(500).json({ message: "Failed to force delete event" });
+      }
+    }
+  );
+
   // Tickets routes
   app.get("/api/tickets", async (req, res) => {
     try {
