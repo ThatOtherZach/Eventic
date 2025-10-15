@@ -1262,10 +1262,22 @@ export class DatabaseStorage implements IStorage {
           throw error;
         }
         
-        // STEP 11: Delete system_logs (references events)
+        // STEP 11: Delete system_logs (references both events AND tickets)
+        // MUST be done BEFORE deleting tickets to avoid FK constraint violations
         try {
+          // First, get all ticket IDs for this event using the transaction context
+          const txEventTickets = await tx.select().from(tickets).where(eq(tickets.eventId, eventId));
+          const ticketIds = txEventTickets.map(ticket => ticket.id);
+          
+          if (ticketIds.length > 0) {
+            // Delete system logs that reference any of the tickets from this event
+            await tx.delete(systemLogs).where(inArray(systemLogs.ticketId, ticketIds));
+            console.log(`[DELETE_EVENT] Deleted system logs for ${ticketIds.length} tickets`);
+          }
+          
+          // Also delete system logs that directly reference the event
           await tx.delete(systemLogs).where(eq(systemLogs.eventId, eventId));
-          console.log(`[DELETE_EVENT] Deleted system logs`);
+          console.log(`[DELETE_EVENT] Deleted system logs for event`);
         } catch (error: any) {
           console.error(`[DELETE_EVENT] Failed to delete system_logs: ${error.message}`, error.constraint || '');
           throw error;
@@ -1344,13 +1356,13 @@ export class DatabaseStorage implements IStorage {
         return { success: false, deletedRecords, error: 'Event not found' };
       }
 
-      // Log the nuclear deletion attempt
+      // Log the nuclear deletion attempt (we'll delete this log too during the operation)
       await db.insert(systemLogs).values({
         level: 'error', // Use error level for nuclear operations
         message: `NUCLEAR DELETE initiated for event ${eventId}: "${event.name}"`,
         operation: 'nuclear_delete_event',
         userId: deletedByUserId,
-        eventId: eventId,
+        eventId: eventId,  // This will be deleted along with event logs
         metadata: { eventName: event.name, timestamp: new Date().toISOString() }
       });
 
@@ -1457,11 +1469,29 @@ export class DatabaseStorage implements IStorage {
             deletedRecords['featured_events'] = 0;
           }
 
-          // STEP 10: Delete system_logs for this event
+          // STEP 10: Delete system_logs for this event AND its tickets
           try {
-            const result = await tx.delete(systemLogs).where(eq(systemLogs.eventId, eventId));
-            deletedRecords['system_logs'] = result.count || 0;
-            console.log(`[NUCLEAR_DELETE] Force deleted ${deletedRecords['system_logs']} system logs`);
+            // First, get all ticket IDs for this event
+            const eventTickets = await tx.select().from(tickets).where(eq(tickets.eventId, eventId));
+            const ticketIds = eventTickets.map(ticket => ticket.id);
+            
+            let systemLogsDeleted = 0;
+            
+            // Delete system logs that reference any of the tickets
+            if (ticketIds.length > 0) {
+              const ticketLogsResult = await tx.delete(systemLogs).where(inArray(systemLogs.ticketId, ticketIds));
+              const ticketLogsCount = ticketLogsResult.count || 0;
+              systemLogsDeleted += ticketLogsCount;
+              console.log(`[NUCLEAR_DELETE] Force deleted ${ticketLogsCount} system logs for tickets`);
+            }
+            
+            // Delete system logs that reference the event directly
+            const eventLogsResult = await tx.delete(systemLogs).where(eq(systemLogs.eventId, eventId));
+            const eventLogsCount = eventLogsResult.count || 0;
+            systemLogsDeleted += eventLogsCount;
+            console.log(`[NUCLEAR_DELETE] Force deleted ${eventLogsCount} system logs for event`);
+            
+            deletedRecords['system_logs'] = systemLogsDeleted;
           } catch (error) {
             console.error(`[NUCLEAR_DELETE] Error deleting system_logs:`, error);
             deletedRecords['system_logs'] = 0;
@@ -1528,14 +1558,15 @@ export class DatabaseStorage implements IStorage {
         return { success: true };
       });
 
-      // Log successful nuclear deletion
+      // Log successful nuclear deletion - Note: eventId is deleted, so don't reference it
       await db.insert(systemLogs).values({
         level: 'warning',
-        message: `NUCLEAR DELETE completed for event ${eventId}`,
+        message: `NUCLEAR DELETE completed for event ${eventId}: "${event.name}"`,
         operation: 'nuclear_delete_event_success',
         userId: deletedByUserId,
-        eventId: eventId,
+        eventId: null,  // Event is deleted, can't reference it
         metadata: { 
+          deletedEventId: eventId,
           eventName: event.name,
           deletedRecords,
           timestamp: new Date().toISOString()
@@ -1558,14 +1589,15 @@ export class DatabaseStorage implements IStorage {
     } catch (error: any) {
       console.error(`[NUCLEAR_DELETE] CRITICAL ERROR during nuclear deletion:`, error);
       
-      // Log the failure
+      // Log the failure - Event might be partially deleted, so don't reference it
       await db.insert(systemLogs).values({
         level: 'error',
         message: `NUCLEAR DELETE FAILED for event ${eventId}`,
         operation: 'nuclear_delete_event_failed',
         userId: deletedByUserId,
-        eventId: eventId,
+        eventId: null,  // Event might be deleted, can't safely reference it
         metadata: { 
+          failedEventId: eventId,
           error: error.message,
           deletedRecords,
           timestamp: new Date().toISOString()
