@@ -8,7 +8,22 @@ import {
   insertFeaturedEventSchema,
   insertNotificationSchema,
   insertNotificationPreferencesSchema,
+  events,
+  tickets,
+  eventRatings,
+  validationActions,
+  resellTransactions,
+  resellQueue,
+  cryptoPaymentIntents,
+  delegatedValidators,
+  featuredEvents,
+  systemLogs,
+  scheduledJobs,
+  secretCodes,
+  codeRedemptions,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { fromZonedTime } from "date-fns-tz";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
