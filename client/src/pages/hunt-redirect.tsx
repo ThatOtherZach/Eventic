@@ -19,11 +19,15 @@ export default function HuntRedirect() {
 
   useEffect(() => {
     if (event?.id) {
-      // Redirect to the event page using the ID
-      // The backend should handle both full ID and 8-char shortcode
-      setLocation(`/events/${event.id}`);
+      // Redirect to the event page with huntMode and huntCode query params
+      // This indicates the user came from a hunt URL
+      const params = new URLSearchParams({
+        huntMode: 'true',
+        huntCode: huntCode || ''
+      });
+      setLocation(`/events/${event.id}?${params.toString()}`);
     }
-  }, [event, setLocation]);
+  }, [event, setLocation, huntCode]);
 
   useEffect(() => {
     if (error) {

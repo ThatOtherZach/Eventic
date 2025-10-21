@@ -3641,18 +3641,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Check if user already has a ticket
-        const existingTickets = await storage.getTicketsByEventAndUser(
-          event.id,
-          userId,
-        );
-        if (existingTickets.length > 0) {
-          return res.json({
-            valid: false,
-            message: "You've already claimed this code",
-            alreadyClaimed: true,
-          });
-        }
+        // Remove ticket existence check - let /api/hunt/redeem handle ticket logic
+        // The redeem endpoint correctly handles existing tickets by validating them
 
         // Check ticket availability
         const ticketCount = await storage.getTotalTicketCountForEvent(event.id);
@@ -3895,6 +3885,186 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({
           success: false,
           message: "Error redeeming secret code",
+        });
+      }
+    },
+  );
+
+  // New Hunt Claim endpoint - combines validation and ticket creation/validation
+  app.post(
+    "/api/hunt/claim",
+    requireAuth,
+    huntRedemptionRateLimiter,
+    async (req: AuthenticatedRequest, res) => {
+      try {
+        const { huntCode, latitude, longitude } = req.body;
+        const userId = extractUserId(req);
+        const userEmail = extractUserEmail(req);
+        const userIp = req.ip || "unknown";
+
+        if (!userId || !userEmail) {
+          return res.status(401).json({
+            success: false,
+            message: "Login required to claim tickets",
+          });
+        }
+
+        if (!huntCode) {
+          return res.status(400).json({
+            success: false,
+            message: "Hunt code is required",
+          });
+        }
+
+        if (!latitude || !longitude) {
+          return res.status(400).json({
+            success: false,
+            message: "Location is required",
+            requiresLocation: true,
+          });
+        }
+
+        // Lookup event by hunt code
+        const event = await storage.getEventByHuntCode(huntCode.trim());
+        if (!event || !event.treasureHunt) {
+          return res.status(404).json({
+            success: false,
+            message: "Invalid hunt code",
+          });
+        }
+
+        // Check geofence - must be within 300m
+        if (event.latitude && event.longitude) {
+          const distance = calculateDistance(
+            Number(event.latitude),
+            Number(event.longitude),
+            latitude,
+            longitude,
+          );
+
+          if (distance > 300) {
+            return res.status(400).json({
+              success: false,
+              message: `You're too far from the event location. You're ${Math.round(distance)}m away, but need to be within 300m.`,
+              outsideGeofence: true,
+              distance: Math.round(distance),
+            });
+          }
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: "This event doesn't have a location configured.",
+          });
+        }
+
+        // Check if event timing is valid
+        const timeCheck = isTicketWithinValidTime(event);
+        if (!timeCheck.valid) {
+          return res.status(400).json({
+            success: false,
+            message: timeCheck.message || "Event hasn't started yet",
+          });
+        }
+
+        // Check if user already has a ticket for this event
+        const existingTickets = await storage.getTicketsByEventAndUser(
+          event.id,
+          userId,
+        );
+
+        if (existingTickets.length > 0) {
+          // User has a ticket - validate it if not already validated
+          const ticket = existingTickets[0];
+          if (ticket.isValidated) {
+            return res.json({
+              success: true,
+              message: "You've already claimed this event!",
+              alreadyValidated: true,
+              ticket,
+            });
+          }
+
+          // Validate the existing ticket
+          const validatedTicket = await storage.validateTicket(ticket.id);
+
+          await logInfo("Hunt claim - ticket validated", req.path, {
+            userId,
+            eventId: event.id,
+            ticketId: ticket.id,
+            metadata: { huntCode },
+          });
+
+          return res.json({
+            success: true,
+            message: "Success! Your ticket has been validated!",
+            ticket: validatedTicket,
+          });
+        }
+
+        // No existing ticket - check availability and create one
+        const ticketCount = await storage.getTotalTicketCountForEvent(event.id);
+        if (event.maxTickets && ticketCount >= event.maxTickets) {
+          return res.status(400).json({
+            success: false,
+            message: "Sorry, no tickets available for this event",
+          });
+        }
+
+        // Create a new free ticket for the Hunt
+        const qrData = randomUUID();
+        const validationCode = randomUUID().slice(0, 8).toUpperCase();
+
+        // Get user info for ticket number
+        const user = await storage.getUser(userId);
+        const username =
+          user?.displayName || userEmail?.split("@")[0] || "hunter";
+
+        // Use the total ticket count for this event to generate the ticket number
+        const ticketSequence = String(ticketCount + 1).padStart(3, "0");
+
+        const newTicket = await storage.createTicket({
+          eventId: event.id,
+          userId,
+          ticketNumber: `${event.huntCode}-${username}-${ticketSequence}`,
+          qrData,
+          validationCode,
+          recipientName: userEmail?.split("@")[0] || "Hunter",
+          recipientEmail: userEmail || "",
+          ticketType: "hunt",
+          purchaserIp: userIp,
+          status: "sent",
+          transferable: false,
+        });
+
+        // Immediately validate the ticket
+        const validatedTicket = await storage.validateTicket(newTicket.id);
+
+        await logInfo("Hunt claim - new ticket created and validated", req.path, {
+          userId,
+          eventId: event.id,
+          ticketId: newTicket.id,
+          metadata: { huntCode },
+        });
+
+        return res.json({
+          success: true,
+          message: "Success! Ticket created and validated!",
+          ticket: validatedTicket,
+          newTicket: true,
+        });
+      } catch (error) {
+        await logError("Hunt claim error", req.path, {
+          userId: req.user?.id,
+          metadata: {
+            error: error instanceof Error ? error.message : "Unknown error",
+            huntCode: req.body.huntCode,
+          },
+        });
+
+        console.error("Hunt claim error:", error);
+        res.status(500).json({
+          success: false,
+          message: "Error claiming ticket",
         });
       }
     },

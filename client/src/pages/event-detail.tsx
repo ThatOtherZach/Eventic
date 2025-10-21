@@ -49,6 +49,7 @@ import dateIcon from "@assets/image_1756751150943.png";
 import locationIcon from "@assets/globe_map-5_1756751517694.png";
 import clockIcon from "@assets/clock-1_1756752706835.png";
 import { LocationPicker } from "@/components/location-picker";
+import { GPSPermissionDialog } from "@/components/gps-permission-dialog";
 import goldenTicketIcon from "@assets/world_star-0_1756849251180.png";
 import specialEffectsIcon from "@assets/image_1756849316138.png";
 import certificateIcon from "@assets/briefcase-4_1756934281378.png";
@@ -92,7 +93,7 @@ export default function EventDetailPage() {
   const { user, isAdmin: checkIsAdmin } = useAuth();
   const { toast } = useToast();
   const { addNotification } = useNotifications();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [validatorEmail, setValidatorEmail] = useState("");
   const [isAddingValidator, setIsAddingValidator] = useState(false);
@@ -101,6 +102,23 @@ export default function EventDetailPage() {
   const [isExpanding, setIsExpanding] = useState(false);
   const [eventQrCode, setEventQrCode] = useState<string>("");
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Hunt mode state
+  const [isHuntMode, setIsHuntMode] = useState(false);
+  const [huntCode, setHuntCode] = useState<string | null>(null);
+  const [showGPSDialog, setShowGPSDialog] = useState(false);
+  
+  // Check for hunt mode from URL params on component mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const huntModeParam = params.get('huntMode');
+    const huntCodeParam = params.get('huntCode');
+    
+    if (huntModeParam === 'true' && huntCodeParam) {
+      setIsHuntMode(true);
+      setHuntCode(huntCodeParam);
+    }
+  }, [location]);
 
   const {
     data: event,
@@ -386,6 +404,52 @@ export default function EventDetailPage() {
     },
   });
 
+  const huntClaimMutation = useMutation({
+    mutationFn: async ({ latitude, longitude }: { latitude: number; longitude: number }) => {
+      if (!user) {
+        window.location.href = "/api/login";
+        throw new Error("Please sign in to claim tickets");
+      }
+      if (!huntCode) {
+        throw new Error("Hunt code not found");
+      }
+      return apiRequest("POST", `/api/hunt/claim`, {
+        huntCode,
+        latitude,
+        longitude
+      });
+    },
+    onSuccess: (data: any) => {
+      // Show success message
+      addNotification({
+        type: "success",
+        title: data.alreadyValidated ? "Already Claimed!" : "Success!",
+        description: data.message || "Your ticket has been validated!"
+      });
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${id}`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/events/${eventId}/user-tickets`],
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/currency/balance"] });
+      
+      setIsPurchasing(false);
+      setShowGPSDialog(false);
+    },
+    onError: (error: any) => {
+      addNotification({
+        type: "error",
+        title: "Claim Failed",
+        description: error.message || "Failed to claim ticket"
+      });
+      setIsPurchasing(false);
+      setShowGPSDialog(false);
+    }
+  });
+
   const purchaseTicketMutation = useMutation({
     mutationFn: async () => {
       if (!user) {
@@ -519,14 +583,34 @@ export default function EventDetailPage() {
       addNotification({
         type: "warning",
         title: "Sign In Required",
-        description: "Please sign in to RVSP",
+        description: isHuntMode ? "Please sign in to claim" : "Please sign in to RVSP",
       });
       // Redirect to Replit Auth login
       window.location.href = "/api/login";
       return;
     }
+    
+    // If in hunt mode, show GPS dialog instead of direct purchase
+    if (isHuntMode && huntCode) {
+      setShowGPSDialog(true);
+    } else {
+      setIsPurchasing(true);
+      purchaseTicketMutation.mutate();
+    }
+  };
+  
+  const handleLocationGranted = (latitude: number, longitude: number) => {
     setIsPurchasing(true);
-    purchaseTicketMutation.mutate();
+    huntClaimMutation.mutate({ latitude, longitude });
+  };
+  
+  const handleLocationDenied = () => {
+    setShowGPSDialog(false);
+    addNotification({
+      type: "warning",
+      title: "Location Required",
+      description: "GPS location is required to claim tickets through hunt codes"
+    });
   };
 
   const handleExpandTickets = () => {
@@ -2160,9 +2244,11 @@ export default function EventDetailPage() {
                         marginRight: "8px",
                       }}
                     />
-                    {event.currentPrice === 0
-                      ? "RSVP"
-                      : "RSVP - Pay on Arrival"}
+                    {isHuntMode 
+                      ? "Claim"
+                      : event.currentPrice === 0
+                        ? "RSVP"
+                        : "RSVP - Pay on Arrival"}
                   </>
                 )}
               </button>
@@ -2542,6 +2628,17 @@ export default function EventDetailPage() {
             />
           </>
         )}
+
+      {/* GPS Permission Dialog for Hunt Mode */}
+      <GPSPermissionDialog
+        open={showGPSDialog}
+        onClose={() => setShowGPSDialog(false)}
+        onLocationGranted={handleLocationGranted}
+        onLocationDenied={handleLocationDenied}
+        title="Location Verification Required"
+        description="To claim this event ticket, we need to verify you're at the right location."
+        huntCode={huntCode || undefined}
+      />
     </div>
   );
 }
