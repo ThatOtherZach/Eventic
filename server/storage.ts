@@ -3051,20 +3051,26 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      // Delete payment intents (following 69-day retention policy)
-      await db.delete(cryptoPaymentIntents).where(eq(cryptoPaymentIntents.eventId, eventId));
+      // Use deleteEventImmediately to handle all FK constraints properly
+      // This handles all related tables including:
+      // - cryptoPaymentIntents
+      // - tickets  
+      // - delegatedValidators
+      // - validation actions
+      // - event ratings
+      // - featured events
+      // - resell queue/transactions
+      // - scheduled jobs
+      // - and the event itself
+      const deleteResult = await this.deleteEventImmediately(eventId, 'system');
       
-      // Delete the tickets
-      await db.delete(tickets).where(eq(tickets.eventId, eventId));
+      if (deleteResult.success) {
+        console.log(`[ARCHIVE] Successfully archived and deleted event ${eventId} (${deleteResult.deletedTicketsCount} tickets deleted)`);
+      } else {
+        console.log(`[ARCHIVE] Failed to delete event ${eventId} after archiving`);
+      }
       
-      // Delete delegated validators
-      await db.delete(delegatedValidators).where(eq(delegatedValidators.eventId, eventId));
-      
-      // Delete the event
-      await db.delete(events).where(eq(events.id, eventId));
-
-      console.log(`[ARCHIVE] Successfully archived and deleted event ${eventId}`);
-      return true;
+      return deleteResult.success;
     } catch (error) {
       console.error(`[ARCHIVE] Error archiving event ${eventId}:`, error);
       // If the error is because the event doesn't exist, consider it successful
