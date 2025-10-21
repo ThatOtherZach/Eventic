@@ -3632,14 +3632,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Try to get country from GPS if available for optimization
-        let country: string | undefined;
-        if (req.body.lat && req.body.lon) {
-          country = getCountryFromCoordinates(req.body.lat, req.body.lon);
-        }
-        
-        // Lookup event by hunt code, using country filter if available
-        const event = await storage.getEventByHuntCode(code.trim(), country);
+        // Lookup event by hunt code directly (without country filtering)
+        const event = await storage.getEventByHuntCode(code.trim());
         if (!event || !event.treasureHunt) {
           return res.json({
             valid: false,
@@ -3732,11 +3726,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Get country from GPS coordinates for optimized lookup
-        const country = getCountryFromCoordinates(lat, lon);
-        
-        // Lookup event by hunt code with country filter
-        const event = await storage.getEventByHuntCode(code.trim(), country);
+        // Lookup event by hunt code directly (without country filtering)
+        const event = await storage.getEventByHuntCode(code.trim());
         if (!event || !event.treasureHunt) {
           return res.status(404).json({
             success: false,
