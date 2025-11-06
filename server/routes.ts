@@ -27,7 +27,6 @@ import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { fromZonedTime } from "date-fns-tz";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { supabaseSyncService } from "./supabaseSync";
 import { coinbaseService, TICKET_PACKAGES } from "./coinbaseService";
 import fetch from "node-fetch";
 import { logError, logWarning, logInfo } from "./logger";
@@ -517,10 +516,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const ipAddress = req.ip || "unknown";
 
     try {
-      // Check if Supabase is available (you could add a health check here)
-      const isSupabaseAvailable = true; // For now, assume it's available
+      // Check if authentication service is available
+      const isAuthAvailable = true; // For now, assume it's available
 
-      if (!isSupabaseAvailable) {
+      if (!isAuthAvailable) {
         // Add to queue (queuePosition is calculated in addToAuthQueue)
         const queueItem = await storage.addToAuthQueue({
           email,
@@ -553,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { rememberMe } as any,
       });
 
-      // In production, you would trigger Supabase magic link here
+      // In production, you would trigger authentication here
       // For now, return success to continue with existing flow
       res.json({
         message: "Magic link sent to your email",
@@ -640,7 +639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Sync/create user in local database when they login via Supabase
+  // Sync/create user in local database when they login
   app.post(
     "/api/auth/sync-user",
     requireAuth,
@@ -8952,121 +8951,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // Supabase Sync Management Endpoints
-
-  // Get sync status
-  app.get(
-    "/api/sync/status",
-    requireAuth,
-    async (req: AuthenticatedRequest, res) => {
-      try {
-        const stats = await supabaseSyncService.getSyncStats();
-
-        // Get count of unsynced records
-        const unsyncedRecords = await storage.getUnsyncedRegistryRecords();
-
-        res.json({
-          ...stats,
-          pendingCount: unsyncedRecords.length,
-          message: stats.configured
-            ? stats.connected
-              ? `Supabase sync is active. ${unsyncedRecords.length} records pending sync.`
-              : "Supabase is configured but connection failed. Check your SUPABASE_DATABASE_URL."
-            : "Supabase sync is not configured. Add SUPABASE_DATABASE_URL to enable.",
-        });
-      } catch (error) {
-        await logError(error, "GET /api/sync/status", { request: req });
-        res.status(500).json({ message: "Failed to get sync status" });
-      }
-    },
-  );
-
-  // Manually trigger sync for unsynced records
-  app.post(
-    "/api/sync/trigger",
-    requireAuth,
-    async (req: AuthenticatedRequest, res) => {
-      try {
-        const userId = extractUserId(req);
-        if (!userId) {
-          return res.status(401).json({ message: "Unauthorized" });
-        }
-
-        // Check if service is available
-        if (!supabaseSyncService.isAvailable()) {
-          return res.status(503).json({
-            message:
-              "Supabase sync is not available. Please configure SUPABASE_DATABASE_URL.",
-          });
-        }
-
-        // Get all unsynced records
-        const unsyncedRecords = await storage.getUnsyncedRegistryRecords();
-
-        if (unsyncedRecords.length === 0) {
-          return res.json({
-            message: "No records to sync",
-            success: 0,
-            failed: 0,
-          });
-        }
-
-        // Batch sync the records
-        const result =
-          await supabaseSyncService.batchSyncRegistryRecords(unsyncedRecords);
-
-        // Mark successfully synced records in local database
-        const successfulIds = unsyncedRecords
-          .filter((r) => !result.failedIds.includes(r.id))
-          .map((r) => r.id);
-
-        if (successfulIds.length > 0) {
-          await storage.markRegistryRecordsSynced(successfulIds);
-        }
-
-        res.json({
-          message: `Sync completed: ${result.success} succeeded, ${result.failed} failed`,
-          ...result,
-        });
-      } catch (error) {
-        await logError(error, "POST /api/sync/trigger", { request: req });
-        res.status(500).json({ message: "Failed to trigger sync" });
-      }
-    },
-  );
-
-  // Verify a specific registry record is in Supabase
-  app.get(
-    "/api/sync/verify/:registryId",
-    requireAuth,
-    async (req: AuthenticatedRequest, res) => {
-      try {
-        const { registryId } = req.params;
-
-        if (!supabaseSyncService.isAvailable()) {
-          return res.status(503).json({
-            message: "Supabase sync is not available",
-          });
-        }
-
-        const exists =
-          await supabaseSyncService.verifyRecordInSupabase(registryId);
-
-        res.json({
-          registryId,
-          existsInSupabase: exists,
-          message: exists
-            ? "Record found in Supabase backup"
-            : "Record not found in Supabase backup",
-        });
-      } catch (error) {
-        await logError(error, "GET /api/sync/verify/:registryId", {
-          request: req,
-        });
-        res.status(500).json({ message: "Failed to verify record" });
-      }
-    },
-  );
 
   // Coinbase Commerce Endpoints
 

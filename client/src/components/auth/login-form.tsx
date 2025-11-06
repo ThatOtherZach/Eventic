@@ -74,7 +74,7 @@ export function LoginForm() {
         throw new Error(data.message || 'Login failed');
       }
       
-      // Success - now trigger Supabase magic link
+      // Success - trigger authentication
       await signUp(email);
       
       // Store session preference

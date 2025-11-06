@@ -548,10 +548,6 @@ export const registryRecords = pgTable("registry_records", {
   ticketBackgroundData: text("ticket_background_data"), // Base64 encoded ticket background
   ticketGifData: text("ticket_gif_data"), // Base64 encoded generated ticket GIF
   
-  // Sync tracking for Supabase
-  synced: boolean("synced").default(false), // Whether synced to Supabase
-  syncedAt: timestamp("synced_at"), // When last synced to Supabase
-  
   // NFT minting tracking
   walletAddress: text("wallet_address"), // User's wallet address for NFT delivery
   nftMinted: boolean("nft_minted").default(false), // Whether NFT has been minted on-chain
