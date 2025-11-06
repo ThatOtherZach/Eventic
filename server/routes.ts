@@ -724,7 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Update user with display name
             const updatedUser = await storage.updateUserDisplayName(
-              userId,
+              existingUser.id,
               displayName,
             );
             return res.json(updatedUser);
@@ -749,7 +749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               e.trim().toLowerCase(),
             ) || [];
           const isSuperAdmin =
-            email && adminEmails.includes(email.toLowerCase());
+            userEmail && adminEmails.includes(userEmail.toLowerCase());
 
           if (!isSuperAdmin && currentUserCount >= limit) {
             return res.status(403).json({
@@ -774,8 +774,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Create new user in local database
         const newUser = await storage.createUser({
-          id: userId,
-          email: email || `user_${userId}@placeholder.com`,
+          id: replitAuthId,
+          email: userEmail || `user_${replitAuthId}@placeholder.com`,
           displayName,
         });
 
@@ -784,7 +784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           process.env.ADMIN_EMAILS?.split(",").map((e) =>
             e.trim().toLowerCase(),
           ) || [];
-        if (email && adminEmails.includes(email.toLowerCase())) {
+        if (userEmail && adminEmails.includes(userEmail.toLowerCase())) {
           // Ensure roles are initialized
           await storage.initializeRolesAndPermissions();
           
@@ -792,22 +792,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const superAdminRole = await storage.getRoleByName("super_admin");
           if (superAdminRole) {
             try {
-              await storage.assignUserRole(userId, superAdminRole.id);
+              await storage.assignUserRole(newUser.id, superAdminRole.id);
               console.log(
-                `[AUTH] Successfully assigned super_admin role to new user ${email} based on ADMIN_EMAILS environment variable`,
+                `[AUTH] Successfully assigned super_admin role to new user ${userEmail} based on ADMIN_EMAILS environment variable`,
               );
             } catch (error) {
               // Role might already be assigned, that's okay
               console.error(
-                `[AUTH] Role assignment failed for new user ${email}:`,
+                `[AUTH] Role assignment failed for new user ${userEmail}:`,
                 error,
               );
             }
           } else {
-            console.error(`[AUTH] super_admin role not found in database for new user ${email}`);
+            console.error(`[AUTH] super_admin role not found in database for new user ${userEmail}`);
           }
-        } else if (email) {
-          console.log(`[AUTH] User ${email} created without admin role (not in ADMIN_EMAILS)`);
+        } else if (userEmail) {
+          console.log(`[AUTH] User ${userEmail} created without admin role (not in ADMIN_EMAILS)`);
         }
 
         res.json(newUser);
@@ -2076,7 +2076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "Event auto-moderated due to offensive content",
             "POST /api/events",
             {
-              userId,
+              userId: userId || undefined,
               metadata: {
                 eventName: createData.name,
                 triggeredFields: moderationField,
@@ -3190,7 +3190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "Returned ticket purchased",
             "POST /api/events/:eventId/tickets",
             {
-              userId,
+              userId: userId || undefined,
               ticketId: resellTicket.id,
               eventId: req.params.eventId,
               metadata: {
@@ -5580,7 +5580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (searchTerm) {
           filteredUsers = allUsers.filter(
             (user) =>
-              user.email.toLowerCase().includes(searchTerm) ||
+              (user.email && user.email.toLowerCase().includes(searchTerm)) ||
               (user.displayName &&
                 user.displayName.toLowerCase().includes(searchTerm)),
           );
@@ -6472,9 +6472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ownerUsername: owner?.displayName || "unknown",
           ownerDisplayName: owner?.displayName || null,
 
-          // Sync tracking
-          synced: false,
-          syncedAt: null,
+
 
           // NFT minting data
           walletAddress: walletAddress,
@@ -6716,9 +6714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ownerUsername: owner?.displayName || "unknown",
           ownerDisplayName: owner?.displayName || null,
 
-          // Sync tracking
-          synced: false,
-          syncedAt: null,
+
 
           // Binary data storage for complete preservation
           eventImageData: eventImageData,
@@ -9087,7 +9083,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const charge = await coinbaseService.createCharge(
           packageIndex,
           userId,
-          user.email,
+          user.email || "",
           user.displayName || "User",
         );
 
